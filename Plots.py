@@ -29,12 +29,21 @@ import pandas as pd
 from matplotlib.patches import Ellipse
 from matplotlib import patches
 import re
+import sys,os,getpass
+import platform
 #################################################################
+#user = getpass.getuser()
+user = platform.system()
+if   user == 'Linux':
+    home_dir = '/home/victoria.galligani/'
+elif user == 'Darwin'
+    home_dir = '/Users/victoria.galligani'
+
 # Shapefiles for cartopy 
-geo_reg_shp = '/Users/victoria.galligani/Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+geo_reg_shp = home_diri+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
 geo_reg = shpreader.Reader(geo_reg_shp)
 
-countries = shpreader.Reader('/Users/victoria.galligani/Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
 
 
 states_provinces = cfeature.NaturalEarthFeature(
@@ -368,7 +377,7 @@ def read_acps(yoi, moi, doi):
     
     """ Returns all the polygons available for a specific date """
 
-    folder = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/OtherData/'
+    folder = home_dir+'Work/Data/RELAMPAGO_GPM/OtherData/'
     file = 'ACPs.xlsx' 
 
     data_ACPS = pd.ExcelFile(folder+file)
@@ -402,7 +411,7 @@ def read_acps_FULL(yoi, moi, doi):
     
     """ Returns all the polygons available for a specific date """
 
-    folder = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/OtherData/'
+    folder = home_dir+'Work/Data/RELAMPAGO_GPM/OtherData/'
     file = 'ACP_2014_082021-con-area.xlsx' 
 
     data_ACPS = pd.ExcelFile(folder+file)
