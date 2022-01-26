@@ -468,9 +468,8 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     # here mask latlat and lonlon above 2.7 km altitude
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                       (lonlon_check,latlat_check), method='nearest')
+                       (lonlon,latlat), method='nearest')
     counter = 0
-    for i in percentiles:
         LON = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) ))]         
         LAT = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) ))]                
         if counter < 1:
