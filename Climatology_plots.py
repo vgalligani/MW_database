@@ -1542,7 +1542,7 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     MIN85PCT_cat, _, _, _, _, _ = get_categoryPF(MWRPF, selectMWRPF, 'MIN85PCT')
     VOLRAIN_KU_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'VOLRAIN_KU')
     #precipitation area IS estimated by the number of pixels associated with each PF.
-    if PFtype_area == 'Kurpf':
+    if PFtype_area == 'KuRPF':
         NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
     elif PFtype_area == 'GPCTF':
         NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(MWRPF, selectMWRPF, 'NPIXELS_GMI')
