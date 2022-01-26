@@ -723,13 +723,15 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' area intensity category')
-    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
+    if PFtype == 'Kurpf':
+        NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
+    elif PFtype == 'GPCTF': 
+        NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS_GMI')
     #precipitation area IS estimated by the number of pixels associated with each PF.
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
     print('AREA percentiles:', percentiles*5.*5., file=Stats)
-    
     counter = 0
     for i in percentiles:
         LON  = lonlon[np.where(NPIXELS_cat > i)]   
