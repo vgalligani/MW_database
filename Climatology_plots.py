@@ -471,8 +471,8 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
                        (lonlon_check,latlat_check), method='nearest')
     counter = 0
     for i in percentiles:
-        LON = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) )]         
-        LAT = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) )]                
+        LON = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) ))]         
+        LAT = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) ))]                
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
