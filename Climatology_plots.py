@@ -1514,7 +1514,7 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     return
 
 
-def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, areaRPF, selectareaRPF, PFtype1, PFtype2):
+def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, PFtype1, PFtype_area):
 
     import seaborn as sns
     
@@ -1542,7 +1542,11 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     MIN85PCT_cat, _, _, _, _, _ = get_categoryPF(MWRPF, selectMWRPF, 'MIN85PCT')
     VOLRAIN_KU_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'VOLRAIN_KU')
     #precipitation area IS estimated by the number of pixels associated with each PF.
-    NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(areaRPF, selectareaRPF, 'NPIXELS')
+    if PFtype_area == 'Kurpf':
+        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
+    elif PFtype_area == 'GPCTF':
+        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(MWRPF, selectMWRPF, 'NPIXELS_GMI')
+
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
@@ -1559,7 +1563,7 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
             plt.scatter(x_min85, y_area, s=50, marker='o', c = cmap_f(counter))        
         counter = counter+1
     plt.xlabel(PFtype1+' MIN85PCT (K)')
-    plt.ylabel(PFtype2+r' area (km$^2$)')
+    plt.ylabel(PFtype_area+r' area (km$^2$)')
     ax1.set_yscale('log')
     plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class > 90%')        
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class > 99%')             
