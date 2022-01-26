@@ -762,7 +762,7 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
-    plt.tigh_layout()
+    plt.tight_layout()
 
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
