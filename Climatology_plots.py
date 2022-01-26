@@ -427,7 +427,17 @@ def get_orbits_extreme_hi(Kurpf, selectKurpf, vkey):
 def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
 
     import seaborn as sns
+    from scipy.interpolate import griddata
 
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
     # Some matplotlib figure definitions
     plt.matplotlib.rc('font', family='serif', size = 10)
     plt.rcParams['xtick.labelsize']=10
@@ -456,10 +466,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' MIN37PCT intensity category')
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    # here mask latlat and lonlon above 2.7 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon_check,latlat_check), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
-        LAT = latlat[np.where(MIN37PCT_cat < i)]
+        LON = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) )]         
+        LAT = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) )]                
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
