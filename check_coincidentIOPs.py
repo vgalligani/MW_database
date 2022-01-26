@@ -949,20 +949,30 @@ if __name__ == '__main__':
 
     ##############################################################################
     
-    onlyfiles = [f for f in listdir(mhs_dir) if isfile(join(mhs_dir, f))]
-    plot_TBs(onlyfiles, '1C', mhs_dir, opts, '20181102', 'MHS')
+    #onlyfiles = [f for f in listdir(mhs_dir) if isfile(join(mhs_dir, f))]
+    #plot_TBs(onlyfiles, '1C', mhs_dir, opts, '20181102', 'MHS')
 
-    onlyfiles = [f for f in listdir(ssmis_dir) if isfile(join(ssmis_dir, f))]
-    plot_TBs(onlyfiles, '1C', ssmis_dir, opts, '20181102', 'SSMIS')
+    #onlyfiles = [f for f in listdir(ssmis_dir) if isfile(join(ssmis_dir, f))]
+    #plot_TBs(onlyfiles, '1C', ssmis_dir, opts, '20181102', 'SSMIS')
 
-    onlyfiles = [f for f in listdir(atms_dir) if isfile(join(atms_dir, f))]
-    plot_TBs(onlyfiles, '1C', atms_dir, opts, '20181102', 'ATMS')
+    #onlyfiles = [f for f in listdir(atms_dir) if isfile(join(atms_dir, f))]
+    #plot_TBs(onlyfiles, '1C', atms_dir, opts, '20181102', 'ATMS')
 
-    onlyfiles = [f for f in listdir(amsr2_dir) if isfile(join(amsr2_dir, f))]
-    plot_TBs(onlyfiles, '1C', amsr2_dir, opts, '20181102', 'AMSR2')
+    #onlyfiles = [f for f in listdir(amsr2_dir) if isfile(join(amsr2_dir, f))]
+    #plot_TBs(onlyfiles, '1C', amsr2_dir, opts, '20181102', 'AMSR2')
 
     ##############################################################################
-    onlyfiles = [f for f in listdir(mhs_dir) if isfile(join(mhs_dir, f))]
-    plot_TBs_all(onlyfiles, '1C', mhs_dir, opts, 'MHS')
+    #onlyfiles = [f for f in listdir(mhs_dir) if isfile(join(mhs_dir, f))]
+    #plot_TBs_all(onlyfiles, '1C', mhs_dir, opts, 'MHS')
+
+    #onlyfiles = [f for f in listdir(ssmis_dir) if isfile(join(ssmis_dir, f))]
+    #plot_TBs_all(onlyfiles, '1C', ssmis_dir, opts, 'SSMIS')
+
+    onlyfiles = [f for f in listdir(atms_dir) if isfile(join(atms_dir, f))]
+    plot_TBs_all(onlyfiles, '1C', atms_dir, opts, 'ATMS')
+
+    onlyfiles = [f for f in listdir(amsr2_dir) if isfile(join(amsr2_dir, f))]
+    plot_TBs_all(onlyfiles, '1C', amsr2_dir, opts, 'AMSR2')
+
 
 

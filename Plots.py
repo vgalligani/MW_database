@@ -36,11 +36,11 @@ import platform
 user = platform.system()
 if   user == 'Linux':
     home_dir = '/home/victoria.galligani/'
-elif user == 'Darwin'
+elif user == 'Darwin':
     home_dir = '/Users/victoria.galligani'
 
 # Shapefiles for cartopy 
-geo_reg_shp = home_diri+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
 geo_reg = shpreader.Reader(geo_reg_shp)
 
 countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')

@@ -19,6 +19,8 @@ from os import listdir
 from pyhdf import SD
 from scipy.interpolate import griddata
 import Plots as PlottingGMITools
+import gc
+import psutil
 
 #################################################################
 #                   functions 
@@ -128,7 +130,6 @@ def merge_KuRPF_dicts(Kurpf_path):
 #################################################################
 def read_KuRPF(ifile):
         
-    Kurpf_data_main = {} 
     # open the hdf file
     hdf  = SD.SD(ifile)
     # Make dictionary and read the HDF file
@@ -141,7 +142,8 @@ def read_KuRPF(ifile):
         data = ds.get()
         Kurpf_data[name] = data
     hdf.end()
-    
+
+    del data, ds, dsets, dsNames
     return Kurpf_data
 
 #################################################################
@@ -151,19 +153,112 @@ def merge_KuRPF_dicts_all(Kurpf_path):
 
     files = listdir(Kurpf_path)
     for i in files: 
+        print(i)
+        print(psutil.virtual_memory().percent)
+        print('========================================')
         Kurpf = read_KuRPF(Kurpf_path+i)
         for key, value in Kurpf.items():
             Kurpf_data[key].append(value)
+        del Kurpf
+    gc.collect()
+    return Kurpf_data
+
+#################################################################
+def merge_GPCTF_dicts_keys(Kurpf_path):
+
+    Kurpf_data = defaultdict(list)
+
+    files = listdir(Kurpf_path)
+    for i in files: 
+        print(i)
+        Kurpf = read_KuRPF(Kurpf_path+i)
+        Kurpf_data['ORBIT'].append(Kurpf['ORBIT'])
+        Kurpf_data['YEAR'].append(Kurpf['YEAR'])
+        Kurpf_data['MONTH'].append(Kurpf['MONTH'])
+        Kurpf_data['DAY'].append(Kurpf['DAY'])
+        Kurpf_data['HOUR'].append(Kurpf['HOUR'])
+        Kurpf_data['LAT'].append(Kurpf['LAT'])
+        Kurpf_data['LON'].append(Kurpf['LON'])
+        Kurpf_data['NPIXELS_GMI'].append(Kurpf['NPIXELS_GMI'])
+        Kurpf_data['NRAINPIXELS_GMI'].append(Kurpf['NRAINPIXELS_GMI'])
+        Kurpf_data['NRAINAREA_GMI'].append(Kurpf['NRAINAREA_GMI'])
+        Kurpf_data['VOLRAIN_GMI'].append(Kurpf['VOLRAIN_GMI'])
+        Kurpf_data['NLT250'].append(Kurpf['NLT250'])
+        Kurpf_data['NLT225'].append(Kurpf['NLT225'])
+        Kurpf_data['NLT200'].append(Kurpf['NLT200'])
+        Kurpf_data['NLT175'].append(Kurpf['NLT175'])
+        Kurpf_data['N37LT250'].append(Kurpf['N37LT250'])
+        Kurpf_data['N37LT225'].append(Kurpf['N37LT225'])
+        Kurpf_data['N37LT200'].append(Kurpf['N37LT200'])
+        Kurpf_data['MIN85PCT'].append(Kurpf['MIN85PCT'])
+        Kurpf_data['MIN85PCTLAT'].append(Kurpf['MIN85PCTLAT'])
+        Kurpf_data['MIN85PCTLON'].append(Kurpf['MIN85PCTLON'])
+        Kurpf_data['MIN37PCT'].append(Kurpf['MIN37PCT'])
+        Kurpf_data['MIN37PCTLAT'].append(Kurpf['MIN37PCTLAT'])
+        Kurpf_data['MIN37PCTLON'].append(Kurpf['MIN37PCTLON'])
+        Kurpf_data['MIN1833'].append(Kurpf['MIN1833'])
+        Kurpf_data['MIN1838'].append(Kurpf['MIN1838'])
+        Kurpf_data['MIN165V'].append(Kurpf['MIN165V'])
+        Kurpf_data['MIN165H'].append(Kurpf['MIN165H'])
+        Kurpf_data['V19ATMIN37'].append(Kurpf['V19ATMIN37'])
+        Kurpf_data['H19ATMIN37'].append(Kurpf['H19ATMIN37'])
+        Kurpf_data['LANDOCEAN'].append(Kurpf['LANDOCEAN'])
+        gc.collect
+        del Kurpf
 
     return Kurpf_data
 
 
+#################################################################
+def merge_KuRPF_dicts_keys(Kurpf_path):
 
+    Kurpf_data = defaultdict(list)
 
+    files = listdir(Kurpf_path)
+    for i in files: 
+        print(i)
+        Kurpf = read_KuRPF(Kurpf_path+i)
+        Kurpf_data['ORBIT'].append(Kurpf['ORBIT'])
+        Kurpf_data['YEAR'].append(Kurpf['YEAR'])
+        Kurpf_data['MONTH'].append(Kurpf['MONTH'])
+        Kurpf_data['DAY'].append(Kurpf['DAY'])
+        Kurpf_data['HOUR'].append(Kurpf['HOUR'])
+        Kurpf_data['LAT'].append(Kurpf['LAT'])
+        Kurpf_data['LON'].append(Kurpf['LON'])
+        Kurpf_data['NPIXELS'].append(Kurpf['NPIXELS'])
+        Kurpf_data['NPIXELS_20DBZ'].append(Kurpf['NPIXELS_20DBZ'])
+        Kurpf_data['NPIXELS_GMI'].append(Kurpf['NPIXELS_GMI'])
+        Kurpf_data['NRAINPIXELS_KU'].append(Kurpf['NRAINPIXELS_KU'])
+        Kurpf_data['NRAINPIXELS_GMI'].append(Kurpf['NRAINPIXELS_GMI'])
+        Kurpf_data['VOLRAIN_KU'].append(Kurpf['VOLRAIN_KU'])
+        Kurpf_data['MIN85PCT'].append(Kurpf['MIN85PCT'])
+        Kurpf_data['MIN85PCTLAT'].append(Kurpf['MIN85PCTLAT'])
+        Kurpf_data['MIN85PCTLON'].append(Kurpf['MIN85PCTLON'])
+        Kurpf_data['MIN37PCT'].append(Kurpf['MIN37PCT'])
+        Kurpf_data['MIN37PCTLAT'].append(Kurpf['MIN37PCTLAT'])
+        Kurpf_data['MIN37PCTLON'].append(Kurpf['MIN37PCTLON'])
+        Kurpf_data['MIN1833'].append(Kurpf['MIN1833'])
+        Kurpf_data['MIN1838'].append(Kurpf['MIN1838'])
+        Kurpf_data['MIN165V'].append(Kurpf['MIN165V'])
+        Kurpf_data['MIN165H'].append(Kurpf['MIN165H'])
+        Kurpf_data['V19ATMIN37'].append(Kurpf['V19ATMIN37'])
+        Kurpf_data['H19ATMIN37'].append(Kurpf['H19ATMIN37'])
+        Kurpf_data['MAXNSZ'].append(Kurpf['MAXNSZ'])
+        Kurpf_data['MAXDBZ'].append(Kurpf['MAXDBZ'])
+        Kurpf_data['N45DBZ'].append(Kurpf['N45DBZ'])
+        Kurpf_data['MAXHT40'].append(Kurpf['MAXHT40'])
+        Kurpf_data['LANDOCEAN'].append(Kurpf['LANDOCEAN'])
+        Kurpf_data['R_LON'].append(Kurpf['R_LON'])
+        Kurpf_data['R_LAT'].append(Kurpf['R_LAT'])
+        Kurpf_data['R_MAJOR'].append(Kurpf['R_MAJOR'])
+        Kurpf_data['R_MINOR'].append(Kurpf['R_MINOR'])
+        Kurpf_data['R_ORIENTATION'].append(Kurpf['R_ORIENTATION'])
+        Kurpf_data['R_SOLID'].append(Kurpf['R_SOLID'])
+        Kurpf_data['MAXHT20'].append(Kurpf['MAXHT20'])
+        gc.collect
+        del Kurpf
 
-
-
-
+    return Kurpf_data
 
 
 #################################################################
@@ -179,6 +274,22 @@ def get_categoryPF(PF_all, select, vkey):
     landocean = PF_all['LANDOCEAN'][select].copy()
     
     return var, latlat, lonlon, percentiles, hour, landocean
+
+
+#################################################################
+def get_categoryPFV19MIN(PF_all, select, vkey):
+    
+    var        = PF_all[vkey][select].copy()
+    percentiles = np.percentile(var, [10, 1, 0.1, 0.01])
+    
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    hour   = PF_all['HOUR'][select].copy()
+    V19AT  = PF_all['V19ATMIN37'][select].copy() 
+
+    landocean = PF_all['LANDOCEAN'][select].copy()
+    
+    return var, latlat, lonlon, percentiles, hour, landocean, V19AT
 
 #################################################################
 def get_categoryPF_hi(PF_all, select, vkey):
@@ -247,8 +358,6 @@ def get_hourly_normbins_hi(PF, select, vkey):
         
     return normelems, percentiles
 
-
-
 def get_orbits_extreme(Kurpf, selectKurpf, vkey):
     
     var         = Kurpf[vkey][selectKurpf].copy()
@@ -315,9 +424,7 @@ def get_orbits_extreme_hi(Kurpf, selectKurpf, vkey):
     
     return(info) 
 
-
-
-def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf):
+def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
 
     import seaborn as sns
 
@@ -326,8 +433,8 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf):
     plt.rcParams['xtick.labelsize']=10
     plt.rcParams['ytick.labelsize']=10
 
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
 
     # replace highest temperatures with gray
     cmap1 =  plt.cm.get_cmap('tab20c')
@@ -336,14 +443,18 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf):
     cmaplist[0] = cmap1(18)
     cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
     
+            
+    Stats = open(dir+filename+'_'+PFtype+'_info.txt', 'w')
+   
+
     #------------------------- Figure 
-    fig = plt.figure(figsize=(12,12))     
-    gs1 = gridspec.GridSpec(2, 2)
+    fig = plt.figure(figsize=(6,5))     
+    gs1 = gridspec.GridSpec(1, 1)
     #------ MIN37PCT
     ax1 = plt.subplot(gs1[0,0])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MIN37PCT intensity category')
+    plt.title(PFtype+'MIN37PCT intensity category')
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     counter = 0
     for i in percentiles:
@@ -359,12 +470,61 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf):
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, 0.01, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['10', '1', '0.1', '0.01']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+    plt.tight_layout()
+
+    fig.savefig(dir+filename+'only37.png', dpi=300,transparent=False)        
+
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(12,12))     
+    gs1 = gridspec.GridSpec(2, 2)
+    #------ MIN37PCT
+    ax1 = plt.subplot(gs1[0,0])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title(PFtype+' MIN37PCT intensity category')
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
+        LAT = latlat[np.where(MIN37PCT_cat < i)]
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))        
+        counter = counter+1
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+
+    print('MIN37PCT_cat percentiles:', percentiles, file=Stats)
     
     #------ MIN85PCT
     ax1 = plt.subplot(gs1[0,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MIN85PCT intensity category')
+    plt.title(PFtype+' MIN85PCT intensity category')
     MIN85PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
     counter = 0
     for i in percentiles:
@@ -380,12 +540,15 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf):
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
+
+    print('MIN85PCT_cat percentiles:', percentiles, file=Stats)
+
     
     #------ MIN165V
     ax1 = plt.subplot(gs1[1,0])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MIN165V intensity category')
+    plt.title(PFtype+' MIN165V intensity category')
     MIN165V_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN165V')
     counter = 0
     for i in percentiles:
@@ -404,11 +567,14 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf):
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     
+    print('MIN165V_cat percentiles:', percentiles, file=Stats)
+
+    
     #------ MIN165V
     ax1 = plt.subplot(gs1[1,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MIN1838 intensity category')
+    plt.title(PFtype+' MIN1838 intensity category')
     MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
     counter = 0
     for i in percentiles:
@@ -431,20 +597,565 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf):
     cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
+   
     
+    print('MIN1838_cat percentiles:', percentiles, file=Stats)
+
     #-colorbar
     ax_cbar = fig.add_axes([p1[0], 0.05, p2[2]-p1[0], 0.02])
     cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
                         orientation="horizontal")
     labels = ['10', '1', '0.1', '0.01']
-    loc = np.arange(0, 4 + 1, 1) + .5
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+
+    plt.tight_layout()
+    fig.savefig(dir+filename+'.png', dpi=300,transparent=False)        
+    plt.close()
+    Stats.close()
+
+    return fig 
+
+
+
+def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf):
+
+
+
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 10)
+    plt.rcParams['xtick.labelsize']=10
+    plt.rcParams['ytick.labelsize']=10
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+
+    Stats = open(dir+filename+'_info.txt', 'w')
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _, V19s = get_categoryPFV19MIN(Kurpf, selectKurpf, 'MIN37PCT')
+    print('MIN37PCT percentiles:', percentiles, file=Stats)
+    print('----------------------- Now for each percentile, the V19[10, 1, 0.1, 0.01] AT MIN37PCT ?', file=Stats)
+    counter = 0
+    percentile_value = [10, 1, 0.1, 0.01]
+    for i in percentiles:
+        print('-------- ', percentile_value[counter], '% ----------', file=Stats)
+        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
+        LAT  = latlat[np.where(MIN37PCT_cat < i)]
+        V19AT37MIN = V19s[np.where(MIN37PCT_cat < i)]
+        # For each percentile I have the correspoding V19s values. So run percentiles at those:    
+        V19percentiles = np.percentile(V19AT37MIN, [10, 1, 0.1, 0.01])
+        print(V19percentiles, file=Stats)
+        # Plot the map of V19AT37MIN?
+        fig = plt.figure(figsize=(6,6))     
+        gs1 = gridspec.GridSpec(1,1)
+        ax1 = plt.subplot(gs1[0,0])
+        img = plt.scatter(LON, LAT, s=15.0, c=V19AT37MIN, cmap='jet')
+        plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+        plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+        plt.xlabel('Longitude')
+        plt.ylabel('Latitude')
+        ax1.set_xlim([-80,-45])
+        ax1.set_ylim([-45,-15])
+        p2 = ax1.get_position().get_points().flatten()
+        ax1.set_title('V19AT37MIN for MIN37PCT('+str(percentile_value[counter])+'%)')
+        #-colorbar
+        ax_cbar = fig.add_axes([p2[0]-0.05, 0.01, p2[2], 0.02])
+        cbar = plt.colorbar(img, cax=ax_cbar,
+                        orientation="horizontal")
+        fig.savefig(dir+filename+'_'+str(percentile_value[counter])+'.png', dpi=300,transparent=False)        
+        plt.close()
+
+        counter=counter+1
+
+    Stats.close()
+    return fig 
+
+
+def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf):
+
+    import seaborn as sns
+
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 10)
+    plt.rcParams['xtick.labelsize']=10
+    plt.rcParams['ytick.labelsize']=10
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+    
+    Stats = open(dir+filename+'_info.txt', 'w')
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(6,6))     
+    gs1 = gridspec.GridSpec(1,1)
+    #------ Npixels_gmi: Number of GMI pixels (#)
+    ax1 = plt.subplot(gs1[0,0])
+    # plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    # plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    # plt.title('PF GMI Npixels intensity category')
+    # NpixelsGMI_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'Npixels_gmi')
+    # counter = 0
+    # for i in percentiles:
+    #     LON  = lonlon[np.where(NpixelsGMI_cat > i)]   
+    #     LAT = latlat[np.where(NpixelsGMI_cat > i)]
+    #     if counter < 1:
+    #         plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+    #     else:
+    #         plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))        
+    #     counter = counter+1
+    # plt.ylabel('Latitude')
+    # ax1.set_xlim([-80,-45])
+    # ax1.set_ylim([-45,-15])
+    # img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    # img.set_visible(False)
+    
+
+    # #------ AREA
+    # ax1 = plt.subplot(gs1[1,1])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title('PF area intensity category')
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
+    #precipitation area IS estimated by the number of pixels associated with each PF.
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    print('AREA percentiles:', percentiles*5.*5., file=Stats)
+    
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(NPIXELS_cat > i)]   
+        LAT = latlat[np.where(NPIXELS_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))
+        counter = counter+1
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.05, 0.05, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['10', '1', '0.1', '0.01']
+    loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
 
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    #plt.close()
-    
+    plt.close()
+    Stats.close()
     return fig 
+
+
+def plot_regional_PCT_percentiles_GMI(dir, filename, Kurpf):
+
+    import seaborn as sns
+    import matplotlib.patches as patches
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 10)
+    plt.rcParams['xtick.labelsize']=10
+    plt.rcParams['ytick.labelsize']=10
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+
+    # Define regionals: 
+    selectKurpf_WCA = np.logical_and(np.logical_and(Kurpf['LON'] >= -69, 
+        Kurpf['LON'] <= -63), np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_PS = np.logical_and(np.logical_and(Kurpf['LON'] >= -63, 
+        Kurpf['LON'] <= -55),np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_NOA = np.logical_and(np.logical_and(Kurpf['LON'] >= -68, 
+        Kurpf['LON'] <= -62),np.logical_and(Kurpf['LAT'] >= -29, Kurpf['LAT'] <= -20))
+    selectKurpf_PN = np.logical_and(np.logical_and(Kurpf['LON'] >= -62, 
+        Kurpf['LON'] <= -53),np.logical_and(Kurpf['LAT'] >= -29,Kurpf['LAT'] <= -20))
+
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(6,5))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MAXHT40
+    ax1 = plt.subplot(gs1[0,0])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title('PF MIN37PCT intensity category')
+
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_WCA, 'MIN37PCT')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
+        LAT = latlat[np.where(MIN37PCT_cat < i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_PS, 'MIN37PCT')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
+        LAT = latlat[np.where(MIN37PCT_cat < i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_NOA, 'MIN37PCT')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
+        LAT = latlat[np.where(MIN37PCT_cat < i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_PN, 'MIN37PCT')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
+        LAT = latlat[np.where(MIN37PCT_cat < i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+    rect1 = patches.Rectangle((-69, -36), 69-63, 36-29, linewidth=2, edgecolor='b', facecolor='none')
+    rect2 = patches.Rectangle((-63, -36), 63-55, 36-29, linewidth=2, edgecolor='m', facecolor='none')
+    rect3 = patches.Rectangle((-68, -29), 68-62, 29-20, linewidth=2, edgecolor='r', facecolor='none')
+    rect4 = patches.Rectangle((-62, -29), 62-53, 29-20, linewidth=2, edgecolor='g', facecolor='none')
+    # plot rectangles
+    ax1.add_patch(rect1)
+    ax1.add_patch(rect2)
+    ax1.add_patch(rect3)
+    ax1.add_patch(rect4)
+    plt.legend((rect1, rect2, rect3, rect4), ('WCA', 'PS', 'NOA', 'PN'))
+
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, -0.04, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['10', '1', '0.1', '0.01']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+    print('here')
+
+    fig.savefig(dir+filename+'onlymin37pct.png', dpi=300,transparent=False, bbox_inches='tight')
+
+    return
+
+
+
+def plot_regional_PCT_percentiles_area(dir, filename, Kurpf):
+
+    import seaborn as sns
+    import matplotlib.patches as patches
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 10)
+    plt.rcParams['xtick.labelsize']=10
+    plt.rcParams['ytick.labelsize']=10
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+
+    # Define regionals: 
+    selectKurpf_WCA = np.logical_and(np.logical_and(Kurpf['LON'] >= -69, 
+        Kurpf['LON'] <= -63), np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_PS = np.logical_and(np.logical_and(Kurpf['LON'] >= -63, 
+        Kurpf['LON'] <= -55),np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_NOA = np.logical_and(np.logical_and(Kurpf['LON'] >= -68, 
+        Kurpf['LON'] <= -62),np.logical_and(Kurpf['LAT'] >= -29, Kurpf['LAT'] <= -20))
+    selectKurpf_PN = np.logical_and(np.logical_and(Kurpf['LON'] >= -62, 
+        Kurpf['LON'] <= -53),np.logical_and(Kurpf['LAT'] >= -29,Kurpf['LAT'] <= -20))
+
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(6,5))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MAXHT40
+    ax1 = plt.subplot(gs1[0,0])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title('PF area category')
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_WCA, 'NPIXELS')
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(NPIXELS_cat > i)]   
+        LAT = latlat[np.where(NPIXELS_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_PS, 'NPIXELS')
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(NPIXELS_cat > i)]   
+        LAT = latlat[np.where(NPIXELS_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_NOA, 'NPIXELS')
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(NPIXELS_cat > i)]   
+        LAT = latlat[np.where(NPIXELS_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+
+
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_PN, 'NPIXELS')
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(NPIXELS_cat > i)]   
+        LAT = latlat[np.where(NPIXELS_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+    rect1 = patches.Rectangle((-69, -36), 69-63, 36-29, linewidth=2, edgecolor='b', facecolor='none')
+    rect2 = patches.Rectangle((-63, -36), 63-55, 36-29, linewidth=2, edgecolor='m', facecolor='none')
+    rect3 = patches.Rectangle((-68, -29), 68-62, 29-20, linewidth=2, edgecolor='r', facecolor='none')
+    rect4 = patches.Rectangle((-62, -29), 62-53, 29-20, linewidth=2, edgecolor='g', facecolor='none')
+    # plot rectangles
+    ax1.add_patch(rect1)
+    ax1.add_patch(rect2)
+    ax1.add_patch(rect3)
+    ax1.add_patch(rect4)
+    plt.legend((rect1, rect2, rect3, rect4), ('WCA', 'PS', 'NOA', 'PN'))
+
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, -0.04, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['90', '99', '99.9', '99.99']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+
+    fig.savefig(dir+filename+'onlyAREA.png', dpi=300,transparent=False,bbox_inches='tight')
+
+    return
+
+
+
+
+def plot_regional_PCT_percentiles_Ku(dir, filename, Kurpf):
+
+    import seaborn as sns
+    import matplotlib.patches as patches
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 10)
+    plt.rcParams['xtick.labelsize']=10
+    plt.rcParams['ytick.labelsize']=10
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+
+    # Define regionals: 
+    selectKurpf_WCA = np.logical_and(np.logical_and(Kurpf['LON'] >= -69, 
+        Kurpf['LON'] <= -63), np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_PS = np.logical_and(np.logical_and(Kurpf['LON'] >= -63, 
+        Kurpf['LON'] <= -55),np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_NOA = np.logical_and(np.logical_and(Kurpf['LON'] >= -68, 
+        Kurpf['LON'] <= -62),np.logical_and(Kurpf['LAT'] >= -29, Kurpf['LAT'] <= -20))
+    selectKurpf_PN = np.logical_and(np.logical_and(Kurpf['LON'] >= -62, 
+        Kurpf['LON'] <= -53),np.logical_and(Kurpf['LAT'] >= -29,Kurpf['LAT'] <= -20))
+
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(6,5))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MAXHT40
+    ax1 = plt.subplot(gs1[0,0])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title('PF MAXHT40T intensity category')
+
+    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf_WCA, 'MAXHT40')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MAXHT40_cat > i)]   
+        LAT = latlat[np.where(MAXHT40_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+
+    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf_PS, 'MAXHT40')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MAXHT40_cat > i)]   
+        LAT = latlat[np.where(MAXHT40_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf_NOA, 'MAXHT40')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MAXHT40_cat > i)]   
+        LAT = latlat[np.where(MAXHT40_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf_PN, 'MAXHT40')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MAXHT40_cat > i)]   
+        LAT = latlat[np.where(MAXHT40_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+    rect1 = patches.Rectangle((-69, -36), 69-63, 36-29, linewidth=2, edgecolor='b', facecolor='none')
+    rect2 = patches.Rectangle((-63, -36), 63-55, 36-29, linewidth=2, edgecolor='m', facecolor='none')
+    rect3 = patches.Rectangle((-68, -29), 68-62, 29-20, linewidth=2, edgecolor='r', facecolor='none')
+    rect4 = patches.Rectangle((-62, -29), 62-53, 29-20, linewidth=2, edgecolor='g', facecolor='none')
+    # plot rectangles
+    ax1.add_patch(rect1)
+    ax1.add_patch(rect2)
+    ax1.add_patch(rect3)
+    ax1.add_patch(rect4)
+    plt.legend((rect1, rect2, rect3, rect4), ('WCA', 'PS', 'NOA', 'PN'))
+
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, -0.04, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['90', '99', '99.9', '99.99']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+
+    fig.savefig(dir+filename+'onlymaxht40.png', dpi=300,transparent=False,bbox_inches='tight')
+
+    return
+
+
 
 
 def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
@@ -456,8 +1167,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.rcParams['xtick.labelsize']=10
     plt.rcParams['ytick.labelsize']=10
 
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
 
     # replace highest temperatures with gray
     cmap1 =  plt.cm.get_cmap('tab20c')
@@ -465,7 +1176,57 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     cmaplist = [cmap(i) for i in range(cmap.N)]
     cmaplist[0] = cmap1(18)
     cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
-    
+
+
+
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(6,5))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MAXHT40
+    ax1 = plt.subplot(gs1[0,0])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title('PF MAXHT40T intensity category')
+    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    counter = 0
+    for i in percentiles:
+        LON  = lonlon[np.where(MAXHT40_cat > i)]   
+        LAT = latlat[np.where(MAXHT40_cat > i)]   
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-80,-45])
+    ax1.set_ylim([-45,-15])
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, 0.01, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['90', '99', '99.9', '99.99']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+
+    fig.savefig(dir+filename+'onlymaxht40.png', dpi=300,transparent=False)        
+
+
+    Stats = open(dir+filename+'_info.txt', 'w')
     #------------------------- Figure 
     fig = plt.figure(figsize=(12,12))     
     gs1 = gridspec.GridSpec(2, 2)
@@ -490,6 +1251,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     
+    print('MAXHT20_cat percentiles:', percentiles, file=Stats)
+    
     #------ MAXHT30
     ax1 = plt.subplot(gs1[0,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
@@ -510,6 +1273,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
+
+    print('MAXHT40_cat percentiles:', percentiles, file=Stats)
     
     #------ VOLRAIN_KU
     ax1 = plt.subplot(gs1[1,0])
@@ -534,6 +1299,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     
+    print('VOLRAIN_KU_cat percentiles:', percentiles, file=Stats)
+
     #------ MAXNSZ
     ax1 = plt.subplot(gs1[1,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
@@ -561,19 +1328,23 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
+
+    print('MAXNSZ_cat percentiles:', percentiles, file=Stats)
+
     
     #-colorbar
     ax_cbar = fig.add_axes([p1[0], 0.05, p2[2]-p1[0], 0.02])
     cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
                         orientation="horizontal")
     labels = ['90', '99', '99.9', '99.99']
-    loc = np.arange(0, 4 + 1, 1) + .5
+    loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
 
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    #plt.close()
-    
+    plt.close()
+    Stats.close()
+
     return fig 
 
 def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf):
@@ -585,8 +1356,8 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf):
     plt.rcParams['xtick.labelsize']=10
     plt.rcParams['ytick.labelsize']=10
 
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
 
     # replace highest temperatures with gray
     cmap1 =  plt.cm.get_cmap('tab20c')
@@ -630,6 +1401,60 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf):
     return
 
 
+def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf):
+
+    import seaborn as sns
+
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 10)
+    plt.rcParams['xtick.labelsize']=10
+    plt.rcParams['ytick.labelsize']=10
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+    
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(12,12))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MIN37PCT
+    ax1 = plt.subplot(gs1[0,0])
+    plt.title('PF MIN1838 intensity distribution')
+    MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    MIN166PCT_cat, _, _, _, _, _= get_categoryPF(Kurpf, selectKurpf, 'MIN165V')
+    MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
+    counter = 0
+    for i in percentiles:
+        x_min37  = MIN37PCT_cat[np.where(MIN1838_cat < i)]   
+        y_min166  = MIN166PCT_cat[np.where(MIN1838_cat < i)]
+        if counter < 1:
+            plt.scatter(x_min37, y_min166, s=15, marker='o', c = cmap_f(counter))
+        elif counter < 3:
+            plt.scatter(x_min37, y_min166, s=30, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(x_min37, y_min166, s=50, marker='o', c = cmap_f(counter))        
+        counter = counter+1
+    plt.xlabel('MIN37PCT (K)')
+    plt.ylabel('MIN165V (K)')
+    plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class < 10%')        
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class < 1%')             
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class < 0.1%')        
+    plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class < 0.11%')        
+    plt.legend()    
+    plt.grid()
+    
+    fig.savefig(dir+filename, dpi=300,transparent=False)        
+    #plt.close()
+    
+    return
+
+
 def plot_MAXHT40_distrib(dir, filename, Kurpf, selectKurpf):
 
     import seaborn as sns
@@ -639,8 +1464,8 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, selectKurpf):
     plt.rcParams['xtick.labelsize']=10
     plt.rcParams['ytick.labelsize']=10
 
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
 
     # replace highest temperatures with gray
     cmap1 =  plt.cm.get_cmap('tab20c')
@@ -688,13 +1513,14 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, selectKurpf):
 
     import seaborn as sns
 
-    # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
 
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+    # Some matplotlib figure definitions
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
 
     # replace highest temperatures with gray
     cmap1 =  plt.cm.get_cmap('tab20c')
@@ -743,15 +1569,21 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, selectKurpf):
     
     return
 
-def plot_regrid_map(lonbins, latbins, zi_37, zi_85, zi_max40ht, filename, main_title):
+def plot_regrid_map(lonbins, latbins, zi_37, zi_85, zi_max40ht, filename, main_title, LON, LAT, MIN37PCT):
 
-    
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+
+
+    xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension 
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
 
     fig = plt.figure(figsize=(12,12))  
     gs1 = gridspec.GridSpec(2, 2)   
-    
     ax1 = plt.subplot(gs1[0,0])
     pc = ax1.pcolor(lonbins, latbins, zi_37, vmin=50, vmax=300)
     plt.colorbar(pc)        
@@ -773,15 +1605,17 @@ def plot_regrid_map(lonbins, latbins, zi_37, zi_85, zi_max40ht, filename, main_t
     ax1 = plt.subplot(gs1[1,0])
     pc = ax1.pcolor(lonbins, latbins, zi_max40ht, vmin=0, vmax=20)
     plt.colorbar(pc)    
-    ax1.set_title('MAXHT40 > 1% percentile')
+    ax1.set_title('MAXHT40 > 99% percentile')
     ax1.set_xlim([-75,-50])
     ax1.set_ylim([-40,-19])   
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+
+    plt.suptitle(main_title,y=0.93)
     
-    plt.suptitle(main_title)
-    
-    fig.savefig(filename, dpi=300,transparent=False)        
+    fig.savefig(filename+'.png', dpi=300,transparent=False)        
 
     return
 
@@ -791,8 +1625,58 @@ def plot_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     latbins = np.arange(-50, -10, 2)
     xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
     
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    max40ht_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    LON         = lonlon[np.where(max40ht_cat > percentiles[1])]   
+    LAT         = latlat[np.where(max40ht_cat > percentiles[1])]
+    PCT_max40ht = max40ht_cat[np.where(max40ht_cat > percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT_max40ht, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)        
+    cbar = plt.colorbar(pc,label='Freq. distribution')    
+    #plt.plot(LON,LAT, 'xr')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #cbar.set_label('# of elements in 2x2 grid')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude') 
+    fig.savefig(filename+'MAXHT40only.png', dpi=300,transparent=False)        
+
+
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    LON         = lonlon[np.where(MIN37PCT_cat < percentiles[1])]   
+    LAT         = latlat[np.where(MIN37PCT_cat < percentiles[1])]
+    PCT37       = MIN37PCT_cat[np.where(MIN37PCT_cat < percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
+    plt.colorbar(pc, label='Freq. distribution')        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #plt.title(main_title)
+    fig.savefig(filename+'MIN37PCTonly.png', dpi=300,transparent=False)        
 
     fig = plt.figure(figsize=(12,12))  
     gs1 = gridspec.GridSpec(2, 2)   
@@ -805,7 +1689,7 @@ def plot_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
     H = np.ma.masked_where(H==0, H) #masking where there was no data
     XX, YY = np.meshgrid(xedges, yedges)
-    pc = ax1.pcolormesh(XX,YY,H.T)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
     #plt.plot(LON,LAT, 'xr')
     plt.colorbar(pc)        
     ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
@@ -842,7 +1726,7 @@ def plot_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     pc = ax1.pcolormesh(XX,YY,H.T)        
     cbar = plt.colorbar(pc)    
     #plt.plot(LON,LAT, 'xr')
-    ax1.set_title('MAXHT40 > 1% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
     ax1.set_xlim([-75,-50])
     ax1.set_ylim([-40,-19])   
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
@@ -850,11 +1734,12 @@ def plot_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
     cbar.set_label('# of elements in 2x2 grid')
-
-    plt.suptitle(main_title)
-
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
     
-    fig.savefig(filename, dpi=300,transparent=False)        
+    plt.suptitle(main_title, y=0.93)
+    
+    fig.savefig(filename+'.png', dpi=300,transparent=False)        
 
     return
 
@@ -867,12 +1752,35 @@ def plot_norm_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     latbins = np.arange(-50, -10, 2)
     xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
     
-    prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
 
-    fig = plt.figure(figsize=(12,12))  
-    gs1 = gridspec.GridSpec(2, 2)   
-    
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    max40ht_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    LON         = lonlon[np.where(max40ht_cat > percentiles[1])]   
+    LAT         = latlat[np.where(max40ht_cat > percentiles[1])]
+    PCT_max40ht = max40ht_cat[np.where(max40ht_cat > percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT_max40ht, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T/Ntot*100)        
+    cbar = plt.colorbar(pc, label='Norm. Freq. disitribution')    
+    #plt.plot(LON,LAT, 'xr')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #plt.title(main_title)
+    fig.savefig(filename+'MAXHT40only.png', dpi=300,transparent=False)        
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
     ax1 = plt.subplot(gs1[0,0])
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     LON         = lonlon[np.where(MIN37PCT_cat < percentiles[1])]   
@@ -881,7 +1789,30 @@ def plot_norm_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
     H = np.ma.masked_where(H==0, H) #masking where there was no data
     XX, YY = np.meshgrid(xedges, yedges)
-    pc = ax1.pcolormesh(XX,YY,H.T/Ntot*100)
+    pc = ax1.pcolormesh(XX,YY,H.T/Ntot*100, vmax=0.013)
+    #plt.plot(LON,LAT, 'xr')
+    plt.colorbar(pc, label='Norm. Freq. distribution')        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #plt.title(main_title)
+    fig.savefig(filename+'MIN37PCTonly.png', dpi=300,transparent=False)        
+
+    fig = plt.figure(figsize=(12,12))  
+    gs1 = gridspec.GridSpec(2, 2)       
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    LON         = lonlon[np.where(MIN37PCT_cat < percentiles[1])]   
+    LAT         = latlat[np.where(MIN37PCT_cat < percentiles[1])]
+    PCT37       = MIN37PCT_cat[np.where(MIN37PCT_cat < percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T/Ntot*100, vmax=0.013)
     #plt.plot(LON,LAT, 'xr')
     plt.colorbar(pc)        
     ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
@@ -918,7 +1849,7 @@ def plot_norm_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     pc = ax1.pcolormesh(XX,YY,H.T/Ntot*100)        
     cbar = plt.colorbar(pc)    
     #plt.plot(LON,LAT, 'xr')
-    ax1.set_title('MAXHT40 > 1% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
     ax1.set_xlim([-75,-50])
     ax1.set_ylim([-40,-19])   
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
@@ -927,10 +1858,10 @@ def plot_norm_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     plt.ylabel('Latitude')
     cbar.set_label('Relative Frequency in 2x2 grid')
 
-    plt.suptitle(main_title)
+    plt.suptitle(main_title, y=0.93)
 
     
-    fig.savefig(filename, dpi=300,transparent=False)        
+    fig.savefig(filename+'.png', dpi=300,transparent=False)        
 
     return
 
