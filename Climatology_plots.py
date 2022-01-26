@@ -454,7 +454,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     ax1 = plt.subplot(gs1[0,0])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title(PFtype+'MIN37PCT intensity category')
+    plt.title(PFtype+' MIN37PCT intensity category')
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     counter = 0
     for i in percentiles:
@@ -619,7 +619,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
 
 
 
-def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf):
+def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFtype):
 
 
 
@@ -658,21 +658,22 @@ def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf):
         ax1.set_xlim([-80,-45])
         ax1.set_ylim([-45,-15])
         p2 = ax1.get_position().get_points().flatten()
-        ax1.set_title('V19AT37MIN for MIN37PCT('+str(percentile_value[counter])+'%)')
+        ax1.set_title(PFtype+' V19AT37MIN for MIN37PCT('+str(percentile_value[counter])+'%)')
         #-colorbar
         ax_cbar = fig.add_axes([p2[0]-0.05, 0.01, p2[2], 0.02])
         cbar = plt.colorbar(img, cax=ax_cbar,
                         orientation="horizontal")
+        plt.tight_layout()
         fig.savefig(dir+filename+'_'+str(percentile_value[counter])+'.png', dpi=300,transparent=False)        
         plt.close()
-
+     
         counter=counter+1
 
     Stats.close()
     return fig 
 
 
-def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf):
+def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
 
     import seaborn as sns
 
@@ -721,7 +722,7 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf):
     # ax1 = plt.subplot(gs1[1,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF area intensity category')
+    plt.title(PFtype+' area intensity category')
     NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
     #precipitation area IS estimated by the number of pixels associated with each PF.
     npixels = NPIXELS_cat.copy()
@@ -759,6 +760,7 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf):
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
+    plt.tigh_layout()
 
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
@@ -1186,7 +1188,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     ax1 = plt.subplot(gs1[0,0])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MAXHT40T intensity category')
+    plt.title('KuRPF MAXHT40T intensity category')
     MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
@@ -1234,7 +1236,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     ax1 = plt.subplot(gs1[0,0])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MAXHT20 intensity category')
+    plt.title('KuRPF MAXHT20 intensity category')
     MAXHT20_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT20')
     counter = 0
     for i in percentiles:
@@ -1257,7 +1259,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     ax1 = plt.subplot(gs1[0,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MAXHT40 intensity category')
+    plt.title('KuRPF MAXHT40 intensity category')
     MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
@@ -1280,7 +1282,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     ax1 = plt.subplot(gs1[1,0])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF VOLRAIN_KU intensity category')
+    plt.title('KuRPF VOLRAIN_KU intensity category')
     VOLRAIN_KU_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'VOLRAIN_KU')
     counter = 0
     for i in percentiles:
@@ -1305,7 +1307,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     ax1 = plt.subplot(gs1[1,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF MAXNSZ intensity category')
+    plt.title('KuRPF MAXNSZ intensity category')
     MAXNSZ_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXNSZ')
     counter = 0
     for i in percentiles:
@@ -1340,14 +1342,15 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
-
+    plt.tight_layout()
+    
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
     Stats.close()
 
     return fig 
 
-def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf):
+def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
 
     import seaborn as sns
 
@@ -1371,7 +1374,7 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf):
     gs1 = gridspec.GridSpec(1, 1)
     #------ MIN37PCT
     ax1 = plt.subplot(gs1[0,0])
-    plt.title('PF MIN1838 intensity distribution')
+    plt.title(PFtype+' MIN1838 intensity distribution')
     MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     MIN85PCT_cat, _, _, _, _, _= get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
     MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
@@ -1386,22 +1389,22 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf):
         else:
             plt.scatter(x_min37, y_min85, s=50, marker='o', c = cmap_f(counter))        
         counter = counter+1
-    plt.xlabel('MIN37PCT (K)')
-    plt.ylabel('MIN85PCT (K)')
+    plt.xlabel(PFtype+' MIN37PCT (K)')
+    plt.ylabel(PFtype+' MIN85PCT (K)')
     plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class < 10%')        
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class < 1%')             
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class < 0.1%')        
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class < 0.11%')        
     plt.legend()    
     plt.grid()
-    
+    plt.tight_layout()     
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    #plt.close()
-    
+    plt.close()
+
     return
 
 
-def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf):
+def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
 
     import seaborn as sns
 
@@ -1425,7 +1428,7 @@ def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf):
     gs1 = gridspec.GridSpec(1, 1)
     #------ MIN37PCT
     ax1 = plt.subplot(gs1[0,0])
-    plt.title('PF MIN1838 intensity distribution')
+    plt.title(PFtype+' MIN1838 intensity distribution')
     MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     MIN166PCT_cat, _, _, _, _, _= get_categoryPF(Kurpf, selectKurpf, 'MIN165V')
     MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
@@ -1440,22 +1443,22 @@ def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf):
         else:
             plt.scatter(x_min37, y_min166, s=50, marker='o', c = cmap_f(counter))        
         counter = counter+1
-    plt.xlabel('MIN37PCT (K)')
-    plt.ylabel('MIN165V (K)')
+    plt.xlabel(PFtype+' MIN37PCT (K)')
+    plt.ylabel(PFtype+' MIN165V (K)')
     plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class < 10%')        
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class < 1%')             
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class < 0.1%')        
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class < 0.11%')        
     plt.legend()    
     plt.grid()
-    
+    plt.tight_layout()
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    #plt.close()
+    plt.close()
     
     return
 
 
-def plot_MAXHT40_distrib(dir, filename, Kurpf, selectKurpf):
+def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, PFtype):
 
     import seaborn as sns
 
@@ -1480,7 +1483,7 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, selectKurpf):
     #------ MAXHT40
     ax1 = plt.subplot(gs1[0,0])
     plt.title('PF MAXHT40 intensity distribution')
-    MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(MWRPF, selectMWRPF, 'MIN37PCT')
     MAXNSZ_cat, _, _, _, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXNSZ')
     MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
@@ -1494,26 +1497,25 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, selectKurpf):
         else:
             plt.scatter(x_min37, y_MAXNSZ, s=50, marker='o', c = cmap_f(counter))        
         counter = counter+1
-    plt.xlabel('MIN37PCT (K)')
-    plt.ylabel('MAXNSZ (dBZ)')
+    plt.xlabel(PFtype+' MIN37PCT (K)')
+    plt.ylabel('KuRPF MAXNSZ (dBZ)')
     plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class > 90%')        
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class > 99%')             
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class > 99.9%')        
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class > 99.99%')        
     plt.legend()    
     plt.grid()
-    
+    plt.tight_layout()
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    #plt.close()
+    plt.close()
     
     return
 
 
-def plot_volrain_Ku_distrib(dir, filename, Kurpf, selectKurpf):
+def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, areaRPF, selectareaRPF, PFtype1, PFtype2):
 
     import seaborn as sns
-
-
+    
     plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
     plt.rcParams['ytick.labelsize']=12
@@ -1534,11 +1536,11 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, selectKurpf):
     gs1 = gridspec.GridSpec(1, 1)
     #------ VOLRAIN_KU
     ax1 = plt.subplot(gs1[0,0])
-    plt.title('PF VOLRAIN_KU intensity distribution')
-    MIN85PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
+    plt.title('KuRPF VOLRAIN_KU intensity distribution')
+    MIN85PCT_cat, _, _, _, _, _ = get_categoryPF(MWRPF, selectMWRPF, 'MIN85PCT')
     VOLRAIN_KU_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'VOLRAIN_KU')
     #precipitation area IS estimated by the number of pixels associated with each PF.
-    NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
+    NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(areaRPF, selectareaRPF, 'NPIXELS')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
@@ -1554,8 +1556,8 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, selectKurpf):
         else:
             plt.scatter(x_min85, y_area, s=50, marker='o', c = cmap_f(counter))        
         counter = counter+1
-    plt.xlabel('MIN85PCT (K)')
-    plt.ylabel(r'PFs area (km$^2$)')
+    plt.xlabel(PFtype1+' MIN85PCT (K)')
+    plt.ylabel(PFtype2+r' area (km$^2$)')
     ax1.set_yscale('log')
     plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class > 90%')        
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class > 99%')             
@@ -1563,9 +1565,9 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, selectKurpf):
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class > 99.99%')        
     plt.legend()    
     plt.grid()
-    
+    plt.tight_layout()
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    #plt.close()
+    plt.close()
     
     return
 
