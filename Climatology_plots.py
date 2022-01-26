@@ -466,13 +466,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' MIN37PCT intensity category')
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
-    # here mask latlat and lonlon above 2.7 km altitude
+    # here mask latlat and lonlon above 2.4 km altitude
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) ))]         
-        LAT = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.6) ))]                
+        LON = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]         
+        LAT = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]                
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -516,10 +516,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' MIN37PCT intensity category')
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
-        LAT = latlat[np.where(MIN37PCT_cat < i)]
+        LON = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]         
+        LAT = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]   
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -539,10 +542,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' MIN85PCT intensity category')
     MIN85PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where(MIN85PCT_cat < i)]   
-        LAT = latlat[np.where(MIN85PCT_cat < i)]   
+        LON = lonlon[( np.where( (MIN85PCT_cat < i) & (sat_alt < 2.4) ))]         
+        LAT = latlat[( np.where( (MIN85PCT_cat < i) & (sat_alt < 2.4) ))]   
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -563,10 +569,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' MIN165V intensity category')
     MIN165V_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN165V')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where(MIN165V_cat < i)]   
-        LAT = latlat[np.where(MIN165V_cat < i)]   
+        LON = lonlon[( np.where( (MIN165V_cat < i) & (sat_alt < 2.4) ))]         
+        LAT = latlat[( np.where( (MIN165V_cat < i) & (sat_alt < 2.4) ))]  
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -589,10 +598,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' MIN1838 intensity category')
     MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where(MIN1838_cat < i)]   
-        LAT = latlat[np.where(MIN1838_cat < i)]   
+        LON = lonlon[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]         
+        LAT = latlat[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]  
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
