@@ -1368,7 +1368,6 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
-    plt.tight_layout()
     
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
@@ -1553,7 +1552,7 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class > 99.99%')        
     plt.legend()    
     plt.grid()
-    plt.tight_layout()
+    
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
     
@@ -1617,7 +1616,7 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class > 99.99%')        
     plt.legend()    
     plt.grid()
-    plt.tight_layout()
+    
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
     
