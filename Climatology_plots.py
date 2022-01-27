@@ -439,9 +439,9 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
     
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -656,9 +656,9 @@ def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFty
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
 
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -721,9 +721,9 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
     import seaborn as sns
 
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -799,9 +799,9 @@ def plot_regional_PCT_percentiles_GMI(dir, filename, Kurpf):
     import seaborn as sns
     import matplotlib.patches as patches
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -924,9 +924,9 @@ def plot_regional_PCT_percentiles_area(dir, filename, Kurpf):
     import seaborn as sns
     import matplotlib.patches as patches
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -1065,9 +1065,9 @@ def plot_regional_PCT_percentiles_Ku(dir, filename, Kurpf):
     import seaborn as sns
     import matplotlib.patches as patches
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -1191,9 +1191,9 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     import seaborn as sns
 
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -1389,9 +1389,9 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     import seaborn as sns
 
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -1454,9 +1454,9 @@ def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     import seaborn as sns
 
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
@@ -1510,9 +1510,9 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     import seaborn as sns
 
     # Some matplotlib figure definitions
-    plt.matplotlib.rc('font', family='serif', size = 10)
-    plt.rcParams['xtick.labelsize']=10
-    plt.rcParams['ytick.labelsize']=10
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
 
     prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
     samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
