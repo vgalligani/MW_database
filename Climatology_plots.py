@@ -503,7 +503,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
-    plt.tight_layout()
+
 
     fig.savefig(dir+filename+'only37.png', dpi=300,transparent=False)        
 
@@ -635,7 +635,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
 
-    plt.tight_layout()
+    
     fig.savefig(dir+filename+'.png', dpi=300,transparent=False)        
     plt.close()
     Stats.close()
@@ -700,6 +700,15 @@ def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFty
 
 def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
 
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
     import seaborn as sns
 
     # Some matplotlib figure definitions
@@ -723,28 +732,7 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
     gs1 = gridspec.GridSpec(1,1)
     #------ Npixels_gmi: Number of GMI pixels (#)
     ax1 = plt.subplot(gs1[0,0])
-    # plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
-    # plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    # plt.title('PF GMI Npixels intensity category')
-    # NpixelsGMI_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'Npixels_gmi')
-    # counter = 0
-    # for i in percentiles:
-    #     LON  = lonlon[np.where(NpixelsGMI_cat > i)]   
-    #     LAT = latlat[np.where(NpixelsGMI_cat > i)]
-    #     if counter < 1:
-    #         plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
-    #     else:
-    #         plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))        
-    #     counter = counter+1
-    # plt.ylabel('Latitude')
-    # ax1.set_xlim([-80,-45])
-    # ax1.set_ylim([-45,-15])
-    # img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
-    # img.set_visible(False)
-    
-
     # #------ AREA
-    # ax1 = plt.subplot(gs1[1,1])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' area intensity category')
@@ -752,15 +740,18 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
         NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
     elif PFtype == 'GPCTF': 
         NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS_GMI')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     #precipitation area IS estimated by the number of pixels associated with each PF.
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
-    print('AREA percentiles:', percentiles*5.*5., file=Stats)
+    print('AREA percentiles:', percentiles*5.*5., file=Stats)    
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where(NPIXELS_cat > i)]   
-        LAT = latlat[np.where(NPIXELS_cat > i)]   
+        LON = lonlon[( np.where( (NPIXELS_cat > i) & (sat_alt < 2.4) ))]         
+        LAT = latlat[( np.where( (NPIXELS_cat > i) & (sat_alt < 2.4) ))]           
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -787,7 +778,6 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
-    plt.tight_layout()
 
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
@@ -1379,6 +1369,15 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
 
 def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
 
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
     import seaborn as sns
 
     # Some matplotlib figure definitions
@@ -1405,10 +1404,13 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     MIN85PCT_cat, _, _, _, _, _= get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
     MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')   
     counter = 0
     for i in percentiles:
-        x_min37  = MIN37PCT_cat[np.where(MIN1838_cat < i)]   
-        y_min85  = MIN85PCT_cat[np.where(MIN1838_cat < i)]
+        x_min37  = MIN37PCT_cat[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]          
+        y_min85  = MIN85PCT_cat[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]          
         if counter < 1:
             plt.scatter(x_min37, y_min85, s=15, marker='o', c = cmap_f(counter))
         elif counter < 3:
@@ -1423,8 +1425,7 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class < 0.1%')        
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class < 0.11%')        
     plt.legend()    
-    plt.grid()
-    plt.tight_layout()     
+    plt.grid()  
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
 
