@@ -331,6 +331,84 @@ def get_hourly_normbins(PF, select, vkey):
         
     return normelems, percentiles
 
+
+def get_hourly_normbins_altfilter(PF, select, vkey):
+
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
+    # e.g. PCT_i_binned[0] is between 00UTC - 01UTC for percentile i 
+    # normalize by the total numer of elements. 
+
+    hour_bins = np.linspace(0, 24, 25)
+    
+    PCT_cat, latlat, lonlon, percentiles, hour, surfFlag = get_categoryPF(PF, select, vkey)
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
+
+    normelems = np.zeros((len(hour_bins)-1, 4)); normelems[:]=np.nan
+    counter = 0
+
+    # NEED TO REMOVE SEA! KEEP ONLY LAND!!
+    # ['LANDOCEAN'] --->    0: over ocean, 1: over land
+    
+    for i in percentiles:
+        HOUR    = hour[np.where( (PCT_cat < i) & (surfFlag == 1) & (sat_alt < 2.4) )]   
+        PCT_i   = PCT_cat[np.where( (PCT_cat < i) & (surfFlag == 1) & (sat_alt < 2.4) )]
+        totalelems_i = len(HOUR)
+        PCT_i_binned = [PCT_i[np.where((HOUR > low) & (HOUR <= high))] for low, high in zip(hour_bins[:-1], hour_bins[1:])]
+        for ih in range(len(hour_bins)-1):
+            normelems[ih, counter] = len(PCT_i_binned[ih].data)/totalelems_i
+        counter = counter+1
+        del HOUR, PCT_i, totalelems_i, PCT_i_binned  
+        
+    return normelems, percentiles
+
+
+def get_hourly_normbins_hi_altfilter(PF, select, vkey):
+
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
+    # e.g. PCT_i_binned[0] is between 00UTC - 01UTC for percentile i 
+    # normalize by the total numer of elements. 
+
+    hour_bins = np.linspace(0, 24, 25)
+    
+    PCT_cat, latlat, lonlon, percentiles, hour, surfFlag = get_categoryPF_hi(PF, select, vkey)
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
+    normelems = np.zeros((len(hour_bins)-1, 4)); normelems[:]=np.nan
+    counter = 0
+
+    # NEED TO REMOVE SEA! KEEP ONLY LAND!!
+    # ['LANDOCEAN'] --->    0: over ocean, 1: over land
+    
+    for i in percentiles:
+        HOUR    = hour[np.where( (PCT_cat < i) & (surfFlag == 1) & (sat_alt < 2.4) )]      
+        PCT_i   = PCT_cat[np.where( (PCT_cat < i) & (surfFlag == 1) & (sat_alt < 2.4) )]   
+        totalelems_i = len(HOUR)
+        PCT_i_binned = [PCT_i[np.where((HOUR > low) & (HOUR <= high))] for low, high in zip(hour_bins[:-1], hour_bins[1:])]
+        for ih in range(len(hour_bins)-1):
+            if totalelems_i > 0:
+                normelems[ih, counter] = len(PCT_i_binned[ih].data)/totalelems_i
+        counter = counter+1
+        del HOUR, PCT_i, totalelems_i, PCT_i_binned  
+        
+    return normelems, percentiles
+
 def get_hourly_normbins_hi(PF, select, vkey):
 
     # e.g. PCT_i_binned[0] is between 00UTC - 01UTC for percentile i 
@@ -357,6 +435,7 @@ def get_hourly_normbins_hi(PF, select, vkey):
         del HOUR, PCT_i, totalelems_i, PCT_i_binned  
         
     return normelems, percentiles
+
 
 def get_orbits_extreme(Kurpf, selectKurpf, vkey):
     
