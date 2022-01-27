@@ -387,7 +387,7 @@ def get_orbits_extreme(Kurpf, selectKurpf, vkey):
         # gs1 = gridspec.GridSpec(1, 1)
         # ax1 = plt.subplot(gs1[0,0])
         # plt.scatter(LON, LAT, c=tb_s1_gmi[inside,7], s=10, cmap=PlottingGMITools.cmaps['turbo_r']) 
-        # ax1.set_xlim([-80,-45])
+        # ax1.set_xlim([-70,-45])
         # ax1.set_ylim([-45,-15])
         # plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
         # plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
@@ -479,13 +479,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))        
         counter = counter+1
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p2 = ax1.get_position().get_points().flatten()
     # 
@@ -529,7 +529,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))        
         counter = counter+1
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
@@ -555,7 +555,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
@@ -583,7 +583,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
         counter = counter+1
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p1 = ax1.get_position().get_points().flatten()
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
@@ -612,7 +612,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
         counter = counter+1
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p2 = ax1.get_position().get_points().flatten()
     # 
@@ -690,7 +690,7 @@ def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFty
         plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
         plt.xlabel('Longitude')
         plt.ylabel('Latitude')
-        ax1.set_xlim([-80,-45])
+        ax1.set_xlim([-70,-45])
         ax1.set_ylim([-45,-15])
         p2 = ax1.get_position().get_points().flatten()
         ax1.set_title(PFtype+' V19AT37MIN for MIN37PCT('+str(percentile_value[counter])+'%)')
@@ -768,7 +768,7 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
         counter = counter+1
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p2 = ax1.get_position().get_points().flatten()
     # 
@@ -887,13 +887,13 @@ def plot_regional_PCT_percentiles_GMI(dir, filename, Kurpf):
     plt.legend((rect1, rect2, rect3, rect4), ('WCA', 'PS', 'NOA', 'PN'))
 
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p2 = ax1.get_position().get_points().flatten()
     # 
@@ -1027,13 +1027,13 @@ def plot_regional_PCT_percentiles_area(dir, filename, Kurpf):
     plt.legend((rect1, rect2, rect3, rect4), ('WCA', 'PS', 'NOA', 'PN'))
 
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
 
     p2 = ax1.get_position().get_points().flatten()
@@ -1153,13 +1153,13 @@ def plot_regional_PCT_percentiles_Ku(dir, filename, Kurpf):
     plt.legend((rect1, rect2, rect3, rect4), ('WCA', 'PS', 'NOA', 'PN'))
 
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
 
     p2 = ax1.get_position().get_points().flatten()
@@ -1226,13 +1226,13 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p2 = ax1.get_position().get_points().flatten()
     # 
@@ -1274,7 +1274,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))        
         counter = counter+1
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
@@ -1297,7 +1297,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
@@ -1321,7 +1321,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
         counter = counter+1
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p1 = ax1.get_position().get_points().flatten()
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
@@ -1346,7 +1346,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
         counter = counter+1
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    ax1.set_xlim([-80,-45])
+    ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
     p2 = ax1.get_position().get_points().flatten()
     # 
@@ -1675,7 +1675,7 @@ def plot_regrid_map(lonbins, latbins, zi_37, zi_85, zi_max40ht, filename, main_t
 
 def plot_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
 
-    lonbins = np.arange(-80, -40, 2) 
+    lonbins = np.arange(-70, -40, 2) 
     latbins = np.arange(-50, -10, 2)
     xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
     
@@ -1802,7 +1802,7 @@ def plot_norm_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     # normalized by dividing each bin by the total pixel number
     Ntot =  Kurpf['MIN37PCT'][selectKurpf].shape[0]   
     
-    lonbins = np.arange(-80, -40, 2) 
+    lonbins = np.arange(-70, -40, 2) 
     latbins = np.arange(-50, -10, 2)
     xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
     
@@ -1922,7 +1922,7 @@ def plot_norm_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
 def plot_seasonal_distributions(Kurpf, selectKurpf, season, dir_name):
 
     from scipy.interpolate import griddata
-    lonbins = np.arange(-80, -40, 2) 
+    lonbins = np.arange(-70, -40, 2) 
     latbins = np.arange(-50, -10, 2)
     xi,yi   = np.meshgrid(lonbins,latbins)
     
