@@ -646,7 +646,14 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
 
 def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFtype):
 
-
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
 
     # Some matplotlib figure definitions
     plt.matplotlib.rc('font', family='serif', size = 10)
@@ -659,15 +666,18 @@ def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFty
 
     Stats = open(dir+filename+'_info.txt', 'w')
     MIN37PCT_cat, latlat, lonlon, percentiles, _, _, V19s = get_categoryPFV19MIN(Kurpf, selectKurpf, 'MIN37PCT')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     print('MIN37PCT percentiles:', percentiles, file=Stats)
     print('----------------------- Now for each percentile, the V19[10, 1, 0.1, 0.01] AT MIN37PCT ?', file=Stats)
     counter = 0
     percentile_value = [10, 1, 0.1, 0.01]
     for i in percentiles:
         print('-------- ', percentile_value[counter], '% ----------', file=Stats)
-        LON  = lonlon[np.where(MIN37PCT_cat < i)]   
-        LAT  = latlat[np.where(MIN37PCT_cat < i)]
-        V19AT37MIN = V19s[np.where(MIN37PCT_cat < i)]
+        LON  = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]           
+        LAT  = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]         
+        V19AT37MIN = V19s[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]         
         # For each percentile I have the correspoding V19s values. So run percentiles at those:    
         V19percentiles = np.percentile(V19AT37MIN, [10, 1, 0.1, 0.01])
         print(V19percentiles, file=Stats)
@@ -688,7 +698,6 @@ def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFty
         ax_cbar = fig.add_axes([p2[0]-0.05, 0.01, p2[2], 0.02])
         cbar = plt.colorbar(img, cax=ax_cbar,
                         orientation="horizontal")
-        plt.tight_layout()
         fig.savefig(dir+filename+'_'+str(percentile_value[counter])+'.png', dpi=300,transparent=False)        
         plt.close()
      
@@ -1434,6 +1443,15 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
 
 def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
 
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+
     import seaborn as sns
 
     # Some matplotlib figure definitions
@@ -1460,10 +1478,13 @@ def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
     MIN166PCT_cat, _, _, _, _, _= get_categoryPF(Kurpf, selectKurpf, 'MIN165V')
     MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        x_min37  = MIN37PCT_cat[np.where(MIN1838_cat < i)]   
-        y_min166  = MIN166PCT_cat[np.where(MIN1838_cat < i)]
+        x_min37   = MIN37PCT_cat[(  np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]           
+        y_min166  = MIN166PCT_cat[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]        
         if counter < 1:
             plt.scatter(x_min37, y_min166, s=15, marker='o', c = cmap_f(counter))
         elif counter < 3:
@@ -1479,7 +1500,6 @@ def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class < 0.11%')        
     plt.legend()    
     plt.grid()
-    plt.tight_layout()
     fig.savefig(dir+filename, dpi=300,transparent=False)        
     plt.close()
     
