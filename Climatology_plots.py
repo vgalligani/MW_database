@@ -64,6 +64,54 @@ def make_colormap(seq):
     return mcolors.LinearSegmentedColormap('CustomMap', cdict)
 
 #################################################################
+def get_categoryPF_altfilter(PF_all, select, vkey):
+    
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+
+    var    = PF_all[vkey][select].copy()
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    varfilt = var[ np.where(sat_alt < 2.4) ]      
+
+    percentiles = np.percentile(varfilt, [10, 1, 0.1, 0.01])
+    
+
+    
+    return varfilt, latlat, lonlon, percentiles
+
+#################################################################
+def get_categoryPF_hi_altfilter(PF_all, select, vkey):
+    
+    
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
+    var    = PF_all[vkey][select].copy()
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    varfilt = var[ np.where(sat_alt < 2.4) ]      
+    percentiles = np.percentile(varfilt, [99.99, 99.9, 99, 90])
+    
+
+    
+    return varfilt, latlat[ np.where(sat_alt < 2.4) ], lonlon[ np.where(sat_alt < 2.4) ], percentiles
+
+#################################################################
 def read_KuRPF_2018(Kurpf_path, imonth):
     
     # Input imonth is string: e.g. "09" 
