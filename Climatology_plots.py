@@ -82,10 +82,9 @@ def get_categoryPF_altfilter(PF_all, select, vkey):
     varfilt = var[ np.where(sat_alt < 2.4) ]      
 
     percentiles = np.percentile(varfilt, [10, 1, 0.1, 0.01])
-    
 
     
-    return varfilt, latlat, lonlon, percentiles
+    return varfilt, latlat[ np.where(sat_alt < 2.4) ] , lonlon[ np.where(sat_alt < 2.4) ] , percentiles
 
 #################################################################
 def get_categoryPF_hi_altfilter(PF_all, select, vkey):
