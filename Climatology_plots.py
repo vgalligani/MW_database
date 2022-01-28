@@ -1789,7 +1789,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         LON  = lonlon[np.where( (MAXHT40_cat > i) & (sat_alt < 2.4) )]        
         LAT = latlat[np.where(  (MAXHT40_cat > i) & (sat_alt < 2.4) )]     
         if counter < 1:
@@ -1839,7 +1839,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         LON  = lonlon[np.where ((MAXHT20_cat > i) & (sat_alt < 2.4) )]        
         LAT = latlat[np.where( (MAXHT20_cat > i) & (sat_alt < 2.4) )]     
         if counter < 1:
@@ -1864,7 +1864,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         LON  = lonlon[np.where( (MAXHT40_cat > i)  & (sat_alt < 2.4) )]     
         LAT = latlat[np.where( (MAXHT40_cat > i)  & (sat_alt < 2.4) )]     
         if counter < 1:
@@ -1889,7 +1889,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')    
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         LON  = lonlon[np.where((VOLRAIN_KU_cat > i) & (sat_alt < 2.4) )]       
         LAT = latlat[np.where((VOLRAIN_KU_cat > i) & (sat_alt < 2.4) )]      
         if counter < 1:
@@ -1917,7 +1917,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         LON  = lonlon[np.where((MAXNSZ_cat > i) & (sat_alt < 2.4) )]       
         LAT = latlat[np.where((MAXNSZ_cat > i) & (sat_alt < 2.4) )]     
         if counter < 1:
