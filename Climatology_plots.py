@@ -1951,7 +1951,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     cbar.ax.set_xticklabels(labels)
     
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    plt.close()
+   
     Stats.close()
 
     return fig 
