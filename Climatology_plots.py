@@ -2518,6 +2518,97 @@ def plot_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_title):
 
     return
 
+
+
+def plot_GPCTF_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_title):
+
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+
+    lonbins = np.arange(-70, -40, 2) 
+    latbins = np.arange(-50, -10, 2)
+    xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
+    
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+   
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]     
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
+    plt.colorbar(pc, label='Freq. distribution')        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #plt.title(main_title)
+    fig.savefig(filename+'MIN37PCTonly.png', dpi=300,transparent=False)        
+
+    fig = plt.figure(figsize=(12,12))  
+    gs1 = gridspec.GridSpec(2, 2)   
+    
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]       
+    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]       
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
+    #plt.plot(LON,LAT, 'xr')
+    plt.colorbar(pc)        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+      
+    ax1 = plt.subplot(gs1[0,1])
+    MIN85PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]      
+    LAT         = latlat[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT85       = MIN85PCT_cat[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT85, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)    
+    #plt.plot(LON,LAT, 'xr')
+    plt.colorbar(pc)    
+    ax1.set_title('MIN85PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+        
+    plt.suptitle(main_title, y=0.93)
+    
+    fig.savefig(filename+'.png', dpi=300,transparent=False)        
+
+    return
+
 def plot_norm_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
     
     # normalized by dividing each bin by the total pixel number
