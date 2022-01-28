@@ -251,9 +251,9 @@ def merge_KuRPF_dicts_keys(Kurpf_path):
         Kurpf_data['R_LON'].append(Kurpf['R_LON'])
         Kurpf_data['R_LAT'].append(Kurpf['R_LAT'])
         Kurpf_data['R_MAJOR'].append(Kurpf['R_MAJOR'])
-        Kurpf_data['R_MINOR'].append(Kurpf['R_MINOR'])
-        Kurpf_data['R_ORIENTATION'].append(Kurpf['R_ORIENTATION'])
-        Kurpf_data['R_SOLID'].append(Kurpf['R_SOLID'])
+        #Kurpf_data['R_MINOR'].append(Kurpf['R_MINOR'])
+        #Kurpf_data['R_ORIENTATION'].append(Kurpf['R_ORIENTATION'])
+        #Kurpf_data['R_SOLID'].append(Kurpf['R_SOLID'])
         Kurpf_data['MAXHT20'].append(Kurpf['MAXHT20'])
         gc.collect
         del Kurpf
