@@ -1782,8 +1782,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
                        (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where( (MAXHT40_cat > i) & (sat_alt < 2.4) ))]        
-        LAT = latlat[np.where(  (MAXHT40_cat > i) & (sat_alt < 2.4) ))]     
+        LON  = lonlon[np.where( (MAXHT40_cat > i) & (sat_alt < 2.4) )]        
+        LAT = latlat[np.where(  (MAXHT40_cat > i) & (sat_alt < 2.4) )]     
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -1832,8 +1832,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
                        (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where ((MAXHT20_cat > i) & (sat_alt < 2.4) ))]        
-        LAT = latlat[np.where( (MAXHT20_cat > i) & (sat_alt < 2.4) ))]     
+        LON  = lonlon[np.where ((MAXHT20_cat > i) & (sat_alt < 2.4) )]        
+        LAT = latlat[np.where( (MAXHT20_cat > i) & (sat_alt < 2.4) )]     
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -1857,8 +1857,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
                        (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where( (MAXHT40_cat > i)  & (sat_alt < 2.4) ))]     
-        LAT = latlat[np.where( (MAXHT40_cat > i)  & (sat_alt < 2.4) ))]     
+        LON  = lonlon[np.where( (MAXHT40_cat > i)  & (sat_alt < 2.4) )]     
+        LAT = latlat[np.where( (MAXHT40_cat > i)  & (sat_alt < 2.4) )]     
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -1882,8 +1882,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
                        (lonlon,latlat), method='nearest')    
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where((VOLRAIN_KU_cat > i) & (sat_alt < 2.4) ))]       
-        LAT = latlat[np.where((VOLRAIN_KU_cat > i) & (sat_alt < 2.4) ))]      
+        LON  = lonlon[np.where((VOLRAIN_KU_cat > i) & (sat_alt < 2.4) )]       
+        LAT = latlat[np.where((VOLRAIN_KU_cat > i) & (sat_alt < 2.4) )]      
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -1910,8 +1910,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
                        (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where((MAXNSZ_cat > i) & (sat_alt < 2.4) ))]       
-        LAT = latlat[np.where((MAXNSZ_cat > i) & (sat_alt < 2.4) ))]     
+        LON  = lonlon[np.where((MAXNSZ_cat > i) & (sat_alt < 2.4) )]       
+        LAT = latlat[np.where((MAXNSZ_cat > i) & (sat_alt < 2.4) )]     
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
