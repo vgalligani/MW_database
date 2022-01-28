@@ -1776,7 +1776,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('KuRPF MAXHT40T intensity category')
-    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
         LON  = lonlon[np.where(MAXHT40_cat > i)]   
@@ -1824,7 +1824,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('KuRPF MAXHT20 intensity category')
-    MAXHT20_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT20')
+    MAXHT20_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT20')
     counter = 0
     for i in percentiles:
         LON  = lonlon[np.where(MAXHT20_cat > i)]   
@@ -1847,7 +1847,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('KuRPF MAXHT40 intensity category')
-    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
         LON  = lonlon[np.where(MAXHT40_cat > i)]   
@@ -1870,7 +1870,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('KuRPF VOLRAIN_KU intensity category')
-    VOLRAIN_KU_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'VOLRAIN_KU')
+    VOLRAIN_KU_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'VOLRAIN_KU')
     counter = 0
     for i in percentiles:
         LON  = lonlon[np.where(VOLRAIN_KU_cat > i)]   
@@ -1895,7 +1895,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('KuRPF MAXNSZ intensity category')
-    MAXNSZ_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXNSZ')
+    MAXNSZ_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
+    #MAXNSZ_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXNSZ')
     counter = 0
     for i in percentiles:
         LON  = lonlon[np.where(MAXNSZ_cat > i)]   
