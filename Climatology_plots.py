@@ -1749,6 +1749,14 @@ def plot_regional_PCT_percentiles_Ku_altfilter(dir, filename, Kurpf):
 
 def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
 
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]   
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+
     import seaborn as sns
 
     # Some matplotlib figure definitions
