@@ -1122,7 +1122,8 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
-            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
 
 
@@ -1134,8 +1135,9 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
-            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
-        counter = counter+1
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
+         counter = counter+1
         
     MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_NOA, 'MIN37PCT')
     counter = 0
@@ -1145,7 +1147,8 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
-            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
         counter = counter+1
     
     MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_PN, 'MIN37PCT')
@@ -1156,7 +1159,8 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
-            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
         counter = counter+1
 
     rect1 = patches.Rectangle((-69, -36), 69-63, 36-29, linewidth=2, edgecolor='b', facecolor='none')
