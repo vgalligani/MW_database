@@ -1114,7 +1114,7 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('PF MIN37PCT intensity category')
 
-    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_WCA, 'MIN37PCT')
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_altfilter(Kurpf, selectKurpf_WCA, 'MIN37PCT')
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                         (lonlon,latlat), method='nearest')
     counter = 0
