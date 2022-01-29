@@ -1098,12 +1098,12 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
     # Define regionals: 
     selectKurpf_WCA = np.logical_and(np.logical_and(Kurpf['LON'] >= -69, 
         Kurpf['LON'] <= -63), np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
-    selectKurpf_PS = np.logical_and(np.logical_and(Kurpf['LON'] >= -63, 
+    selectKurpf_PS = np.logical_and(np.logical_and(Kurpf['LON'] > -63, 
         Kurpf['LON'] <= -55),np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
     selectKurpf_NOA = np.logical_and(np.logical_and(Kurpf['LON'] >= -68, 
-        Kurpf['LON'] <= -62),np.logical_and(Kurpf['LAT'] >= -29, Kurpf['LAT'] <= -20))
-    selectKurpf_PN = np.logical_and(np.logical_and(Kurpf['LON'] >= -62, 
-        Kurpf['LON'] <= -53),np.logical_and(Kurpf['LAT'] >= -29,Kurpf['LAT'] <= -20))
+        Kurpf['LON'] <= -62),np.logical_and(Kurpf['LAT'] > -29, Kurpf['LAT'] <= -20))
+    selectKurpf_PN = np.logical_and(np.logical_and(Kurpf['LON'] > -62, 
+        Kurpf['LON'] <= -53),np.logical_and(Kurpf['LAT'] > -29,Kurpf['LAT'] <= -20))
 
     #------------------------- Figure 
     fig = plt.figure(figsize=(6,5))     
