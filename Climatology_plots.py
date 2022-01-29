@@ -1115,12 +1115,10 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
     plt.title('PF MIN37PCT intensity category')
 
     MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_WCA, 'MIN37PCT')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]    
-        LAT = latlat[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]    
+        LON  = lonlon[np.where( (MIN37PCT_cat < i)  )]    
+        LAT = latlat[np.where( (MIN37PCT_cat < i)  )]    
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -1140,7 +1138,6 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
         counter = counter+1
         
     MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_NOA, 'MIN37PCT')
-
     counter = 0
     for i in percentiles:
         LON  = lonlon[np.where( (MIN37PCT_cat < i)  )]     
@@ -1182,6 +1179,7 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
     plt.ylabel('Latitude')
     ax1.set_xlim([-70,-45])
     ax1.set_ylim([-45,-15])
+    
     p2 = ax1.get_position().get_points().flatten()
     # 
     cmap    = sns.color_palette("tab10", as_cmap=True)
