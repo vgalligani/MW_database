@@ -87,6 +87,31 @@ def get_categoryPF_altfilter(PF_all, select, vkey):
     return varfilt, latlat[ np.where(sat_alt < 2.4) ] , lonlon[ np.where(sat_alt < 2.4) ] , percentiles
 
 #################################################################
+def get_categoryPF_altfilter2(PF_all, select, vkey):
+    
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+
+    var    = PF_all[vkey][select].copy()
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    varfilt = var[ np.where(sat_alt < 2.4) ]      
+    hour   = PF_all['HOUR'][select].copy()
+
+    landocean = PF_all['LANDOCEAN'][select].copy()
+    
+    percentiles = np.percentile(varfilt, [10, 1, 0.1, 0.01])
+
+    
+    return varfilt, latlat[ np.where(sat_alt < 2.4) ], lonlon[ np.where(sat_alt < 2.4) ], percentiles, hour[ np.where(sat_alt < 2.4) ], landocean[ np.where(sat_alt < 2.4) ] 
+#################################################################
 def get_categoryPF_hi_altfilter(PF_all, select, vkey):
     
     
@@ -395,9 +420,7 @@ def get_hourly_normbins_altfilter(PF, select, vkey):
 
     hour_bins = np.linspace(0, 24, 25)
     
-    PCT_cat, latlat, lonlon, percentiles, hour, surfFlag = get_categoryPF(PF, select, vkey)
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                       (lonlon,latlat), method='nearest')
+    PCT_cat, latlat, lonlon, percentiles, hour, surfFlag = get_categoryPF_altfilter2(PF, select, vkey)
 
     normelems = np.zeros((len(hour_bins)-1, 4)); normelems[:]=np.nan
     counter = 0
@@ -406,8 +429,8 @@ def get_hourly_normbins_altfilter(PF, select, vkey):
     # ['LANDOCEAN'] --->    0: over ocean, 1: over land
     
     for i in percentiles:
-        HOUR    = hour[np.where( (PCT_cat < i) & (surfFlag == 1) & (sat_alt < 2.4) )]   
-        PCT_i   = PCT_cat[np.where( (PCT_cat < i) & (surfFlag == 1) & (sat_alt < 2.4) )]
+        HOUR    = hour[np.where( (PCT_cat < i) & (surfFlag == 1) )]   
+        PCT_i   = PCT_cat[np.where( (PCT_cat < i) & (surfFlag == 1)  )]
         totalelems_i = len(HOUR)
         PCT_i_binned = [PCT_i[np.where((HOUR > low) & (HOUR <= high))] for low, high in zip(hour_bins[:-1], hour_bins[1:])]
         for ih in range(len(hour_bins)-1):
