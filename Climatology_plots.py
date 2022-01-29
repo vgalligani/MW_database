@@ -1430,7 +1430,7 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
     counter = 0
-    for i in (percentiles):
+    for i in reversed(percentiles):
         LON  = lonlon[np.where( (NPIXELS_cat > i)  )]       
         LAT = latlat[np.where(  (NPIXELS_cat > i)   )]       
         if counter < 1:
