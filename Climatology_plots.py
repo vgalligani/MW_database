@@ -1128,39 +1128,34 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
         counter = counter+1
 
 
-    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_PS, 'MIN37PCT')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
+    MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_PS, 'MIN37PCT')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]       
-        LAT = latlat[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]    
+        LON  = lonlon[np.where( (MIN37PCT_cat < i) )]       
+        LAT = latlat[np.where( (MIN37PCT_cat < i)  )]    
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
         
-    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_NOA, 'MIN37PCT')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
+    MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_NOA, 'MIN37PCT')
+
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]     
-        LAT = latlat[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]    
+        LON  = lonlon[np.where( (MIN37PCT_cat < i)  )]     
+        LAT = latlat[np.where( (MIN37PCT_cat < i) )]    
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
     
-    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf_PN, 'MIN37PCT')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
+    MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_PN, 'MIN37PCT')
     counter = 0
     for i in percentiles:
-        LON  = lonlon[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]     
-        LAT = latlat[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]    
+        LON  = lonlon[np.where( (MIN37PCT_cat < i)  )]     
+        LAT = latlat[np.where( (MIN37PCT_cat < i)  )]    
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
