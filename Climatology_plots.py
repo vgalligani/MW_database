@@ -1407,49 +1407,28 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('PF area category')
-    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_WCA, 'NPIXELS_GMI')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS_GMI')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
     counter = 0
-    for i in percentiles:
-        LON  = lonlon[np.where( (NPIXELS_cat > i)  & (sat_alt < 2.4) )]      
-        LAT = latlat[np.where( (NPIXELS_cat > i)  & (sat_alt < 2.4) )]    
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (NPIXELS_cat > i)   )]      
+        LAT = latlat[np.where( (NPIXELS_cat > i)  )]    
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
             plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
 
-    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_PS, 'NPIXELS_GMI')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_PS, 'NPIXELS_GMI')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
     counter = 0
-    for i in percentiles:
-        LON  = lonlon[np.where( (NPIXELS_cat > i)  & (sat_alt < 2.4) )]       
-        LAT = latlat[np.where(  (NPIXELS_cat > i)  & (sat_alt < 2.4) )]       
-        if counter < 1:
-            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
-        else:
-            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
-        counter = counter+1
-
-
-    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_NOA, 'NPIXELS_GMI')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')  
-    npixels = NPIXELS_cat.copy()
-    npixels = npixels.astype(np.float32)
-    area    = npixels*5.*5.
-    counter = 0
-    for i in percentiles:
-        LON  = lonlon[np.where( (NPIXELS_cat > i)  & (sat_alt < 2.4) )]     
-        LAT = latlat[np.where( (NPIXELS_cat > i)  & (sat_alt < 2.4) )]    
+    for i in (percentiles):
+        LON  = lonlon[np.where( (NPIXELS_cat > i)  )]       
+        LAT = latlat[np.where(  (NPIXELS_cat > i)   )]       
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -1457,17 +1436,30 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
         counter = counter+1
 
 
-
-    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf_PN, 'NPIXELS_GMI')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_NOA, 'NPIXELS_GMI')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
     counter = 0
-    for i in percentiles:
-        LON  = lonlon[np.where( (NPIXELS_cat > i)  & (sat_alt < 2.4) )]    
-        LAT = latlat[np.where( (NPIXELS_cat > i)  & (sat_alt < 2.4) )]      
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (NPIXELS_cat > i)   )]     
+        LAT = latlat[np.where( (NPIXELS_cat > i)   )]    
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
+
+
+
+    NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_PN, 'NPIXELS_GMI')
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    counter = 0
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (NPIXELS_cat > i)  )]    
+        LAT = latlat[np.where( (NPIXELS_cat > i)   )]      
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
