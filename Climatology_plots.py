@@ -2698,12 +2698,10 @@ def plot_GPCTF_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_titl
     fig = plt.figure(figsize=(6,5))  
     gs1 = gridspec.GridSpec(1, 1)   
     ax1 = plt.subplot(gs1[0,0])
-    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
-    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
-    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
-    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]     
+    MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN37PCT')
+    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1])  )]    
+    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1])  )]    
+    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1]) )]     
     H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
     H = np.ma.masked_where(H==0, H) #masking where there was no data
     XX, YY = np.meshgrid(xedges, yedges)
@@ -2723,12 +2721,10 @@ def plot_GPCTF_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_titl
     gs1 = gridspec.GridSpec(2, 2)   
     
     ax1 = plt.subplot(gs1[0,0])
-    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                        (lonlon,latlat), method='nearest')
-    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]       
-    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
-    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]       
+    MIN37PCT_cat, latlat, lonlon, percentiles, = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN37PCT')
+    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1])  )]       
+    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1]) )]    
+    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1])  )]       
     H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
     H = np.ma.masked_where(H==0, H) #masking where there was no data
     XX, YY = np.meshgrid(xedges, yedges)
@@ -2742,12 +2738,12 @@ def plot_GPCTF_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_titl
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
       
     ax1 = plt.subplot(gs1[0,1])
-    MIN85PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
+    MIN85PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN85PCT')
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                         (lonlon,latlat), method='nearest')
-    LON         = lonlon[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]      
-    LAT         = latlat[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
-    PCT85       = MIN85PCT_cat[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    LON         = lonlon[np.where( (MIN85PCT_cat < percentiles[1]))]      
+    LAT         = latlat[np.where( (MIN85PCT_cat < percentiles[1])  )]    
+    PCT85       = MIN85PCT_cat[np.where( (MIN85PCT_cat < percentiles[1])  )]    
     H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT85, statistic='count', bins = [xbins, ybins])  
     H = np.ma.masked_where(H==0, H) #masking where there was no data
     XX, YY = np.meshgrid(xedges, yedges)
