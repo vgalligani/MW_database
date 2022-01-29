@@ -872,9 +872,11 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title(PFtype+' area intensity category')
     if PFtype == 'Kurpf':
-        NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS')
+        #NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS')
     elif PFtype == 'GPCTF': 
-        NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS_GMI')
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS_GMI')
+        #NPIXELS_cat, latlat, lonlon, percentiles, _, _  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS_GMI')
     # here mask latlat and lonlon above 2.4 km altitude
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
