@@ -1137,7 +1137,7 @@ def plot_regional_PCT_percentiles_GMI_altfilter(dir, filename, Kurpf):
         else:
             for u in range(len(LAT)):
                 plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
-         counter = counter+1
+        counter = counter+1
         
     MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf_NOA, 'MIN37PCT')
     counter = 0
