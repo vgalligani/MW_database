@@ -886,7 +886,7 @@ def plot_PCT_percentiles_GMI_vis(dir, filename, Kurpf, selectKurpf, PFtype):
     area    = npixels*5.*5.
     print('AREA percentiles:', percentiles*5.*5., file=Stats)    
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         LON = lonlon[( np.where( (NPIXELS_cat > i) & (sat_alt < 2.4) ))]         
         LAT = latlat[( np.where( (NPIXELS_cat > i) & (sat_alt < 2.4) ))]           
         if counter < 1:
