@@ -2368,9 +2368,9 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     VOLRAIN_KU_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'VOLRAIN_KU')
     #precipitation area IS estimated by the number of pixels associated with each PF.
     if PFtype_area == 'KuRPF':
-        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS')
+        NPIXELS_cat, _, _, _= get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS')
     elif PFtype_area == 'GPCTF':
-        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi_altfilter(MWRPF, selectMWRPF, 'NPIXELS_GMI')
+        NPIXELS_cat, _, _, _ = get_categoryPF_hi_altfilter(MWRPF, selectMWRPF, 'NPIXELS_GMI')
 
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
