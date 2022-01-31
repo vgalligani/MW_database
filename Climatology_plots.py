@@ -2313,8 +2313,8 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     #------ MAXHT40
     ax1 = plt.subplot(gs1[0,0])
     plt.title('PF MAXHT40 intensity distribution')
-    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter2(MWRPF, selectMWRPF, 'MIN37PCT')
-    MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter2(Kurpf, selectKurpf, 'MAXNSZ')
+    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
+    MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
     MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter2(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
