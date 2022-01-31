@@ -1437,7 +1437,10 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('PF area category')
-    NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS_GMI')
+    if PFtype == 'GPCTF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS_GMI')
+    elif PFtype == 'KuRPF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
@@ -1452,7 +1455,10 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
                 plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
         counter = counter+1
 
-    NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_PS, 'NPIXELS_GMI')
+    if PFtype == 'GPCTF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS_GMI')
+    elif PFtype == 'KuRPF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
@@ -1468,7 +1474,10 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
         counter = counter+1
 
 
-    NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_NOA, 'NPIXELS_GMI')
+    if PFtype == 'GPCTF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS_GMI')
+    elif PFtype == 'KuRPF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
@@ -1485,7 +1494,10 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
 
 
 
-    NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_PN, 'NPIXELS_GMI')
+    if PFtype == 'GPCTF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS_GMI')
+    elif PFtype == 'KuRPF':
+        NPIXELS_cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'NPIXELS')
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
