@@ -1389,7 +1389,7 @@ def plot_regional_PCT_percentiles_area_altfilter(dir, filename, Kurpf):
 
     return
 
-def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf):
+def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf, PFtype):
 
     
     
