@@ -844,19 +844,16 @@ def getV19percentiles_437PCT_percentiles(dir, filename, Kurpf, selectKurpf, PFty
 
 
     Stats = open(dir+filename+'_info.txt', 'w')
-    MIN37PCT_cat, latlat, lonlon, percentiles, _, _, V19s = get_categoryPFV19MIN(Kurpf, selectKurpf, 'MIN37PCT')
-    # here mask latlat and lonlon above 2.4 km altitude
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                       (lonlon,latlat), method='nearest')
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _, V19s = get_categoryPFV19MIN_altfilter(Kurpf, selectKurpf, 'MIN37PCT')
     print('MIN37PCT percentiles:', percentiles, file=Stats)
     print('----------------------- Now for each percentile, the V19[10, 1, 0.1, 0.01] AT MIN37PCT ?', file=Stats)
     counter = 0
     percentile_value = [10, 1, 0.1, 0.01]
     for i in percentiles:
         print('-------- ', percentile_value[counter], '% ----------', file=Stats)
-        LON  = lonlon[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]           
-        LAT  = latlat[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]         
-        V19AT37MIN = V19s[( np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) ))]         
+        LON  = lonlon[( np.where( (MIN37PCT_cat < i) ))]           
+        LAT  = latlat[( np.where( (MIN37PCT_cat < i)  ))]         
+        V19AT37MIN = V19s[( np.where( (MIN37PCT_cat < i)))]         
         # For each percentile I have the correspoding V19s values. So run percentiles at those:    
         V19percentiles = np.percentile(V19AT37MIN, [10, 1, 0.1, 0.01])
         print(V19percentiles, file=Stats)
