@@ -1554,6 +1554,143 @@ def plot_regional_PCT_percentiles_GMIarea_altfilter(dir, filename, Kurpf, PFtype
 
     return
 
+def plot_regional_PCT_percentilesKu_altfilter(dir, filename, Kurpf):
+
+ 
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
+    import seaborn as sns
+    import matplotlib.patches as patches
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+
+    # Define regionals: 
+    selectKurpf_WCA = np.logical_and(np.logical_and(Kurpf['LON'] >= -69, 
+        Kurpf['LON'] <= -63), np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_PS = np.logical_and(np.logical_and(Kurpf['LON'] > -63, 
+        Kurpf['LON'] <= -55),np.logical_and(Kurpf['LAT'] >= -36, Kurpf['LAT'] <= -29))
+    selectKurpf_NOA = np.logical_and(np.logical_and(Kurpf['LON'] >= -68, 
+        Kurpf['LON'] <= -62),np.logical_and(Kurpf['LAT'] > -29, Kurpf['LAT'] <= -20))
+    selectKurpf_PN = np.logical_and(np.logical_and(Kurpf['LON'] > -62, 
+        Kurpf['LON'] <= -53),np.logical_and(Kurpf['LAT'] > -29,Kurpf['LAT'] <= -20))
+
+
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(6,5))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MAXHT40
+    ax1 = plt.subplot(gs1[0,0])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title('PF area category')
+    cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'MAXHT40')
+    counter = 0
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (cat > i)   )]      
+        LAT = latlat[np.where( (cat > i)  )]    
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
+        counter = counter+1
+
+    cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_PS, 'MAXHT40')
+    counter = 0
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (cat > i)  )]       
+        LAT = latlat[np.where(  (cat > i)   )]       
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
+        counter = counter+1
+
+    cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_NOA, 'MAXHT40')
+    counter = 0
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (cat > i)   )]     
+        LAT = latlat[np.where( (cat > i)   )]    
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
+        counter = counter+1
+
+    cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_PN, 'MAXHT40')
+    counter = 0
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (cat > i)  )]    
+        LAT = latlat[np.where( (cat > i)   )]      
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            for u in range(len(LAT)):
+                plt.scatter(LON[u], LAT[u], s=30, marker='o', c = cmap_f(counter))     
+        counter = counter+1
+
+    rect1 = patches.Rectangle((-69, -36), 69-63, 36-29, linewidth=2, edgecolor='b', facecolor='none')
+    rect2 = patches.Rectangle((-63, -36), 63-55, 36-29, linewidth=2, edgecolor='m', facecolor='none')
+    rect3 = patches.Rectangle((-68, -29), 68-62, 29-20, linewidth=2, edgecolor='r', facecolor='none')
+    rect4 = patches.Rectangle((-62, -29), 62-53, 29-20, linewidth=2, edgecolor='g', facecolor='none')
+    # plot rectangles
+    ax1.add_patch(rect1)
+    ax1.add_patch(rect2)
+    ax1.add_patch(rect3)
+    ax1.add_patch(rect4)
+    plt.legend((rect1, rect2, rect3, rect4), ('WCA', 'PS', 'NOA', 'PN'))
+
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-70,-45])
+    ax1.set_ylim([-45,-15])
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-70,-45])
+    ax1.set_ylim([-45,-15])
+
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, -0.04, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['90', '99', '99.9', '99.99']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+
+    fig.savefig(dir+filename+'onlyMAXHT45.png', dpi=300,transparent=False,bbox_inches='tight')
+
+    return
+
 def plot_regional_PCT_percentiles_area(dir, filename, Kurpf):
 
     import seaborn as sns
