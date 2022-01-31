@@ -2257,9 +2257,9 @@ def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     #------ MIN37PCT
     ax1 = plt.subplot(gs1[0,0])
     plt.title(PFtype+' MIN1838 intensity distribution')
-    MIN37PCT_cat, _, _, _  = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN37PCT')
-    MIN166PCT_cat, _, _, _ = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN165V')
-    MIN1838_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN1838')
+    MIN37PCT_cat, _, _, _  = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN37PCT')
+    MIN166PCT_cat, _, _, _ = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN165V')
+    MIN1838_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN1838')
     # here mask latlat and lonlon above 2.4 km altitude
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
@@ -2315,7 +2315,7 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     plt.title('PF MAXHT40 intensity distribution')
     MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
     MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
-    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter2(Kurpf, selectKurpf, 'MAXHT40')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter=(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
         x_min37   = MIN37PCT_cat[np.where(MAXHT40_cat > i)]   
