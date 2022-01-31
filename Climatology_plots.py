@@ -2194,9 +2194,9 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     #------ MIN37PCT
     ax1 = plt.subplot(gs1[0,0])
     plt.title(PFtype+' MIN1838 intensity distribution')
-    MIN37PCT_cat, _, _, _  = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN37PCT')
-    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN85PCT')
-    MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN1838')
+    MIN37PCT_cat, _, _, _  = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN37PCT')
+    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN85PCT')
+    MIN1838_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN1838')
     # here mask latlat and lonlon above 2.4 km altitude  
     counter = 0
     for i in percentiles:
