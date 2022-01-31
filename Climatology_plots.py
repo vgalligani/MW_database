@@ -2326,7 +2326,7 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
     MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         x_min37   = MIN37PCT_cat[np.where(MAXHT40_cat > i)]   
         y_MAXNSZ  = MAXNSZ_cat[np.where(MAXHT40_cat > i)]
         if counter < 1:
@@ -2389,7 +2389,7 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     area    = npixels*5.*5.
     
     counter = 0
-    for i in percentiles:
+    for i in reversed(percentiles):
         x_min85   = MIN85PCT_cat[np.where(VOLRAIN_KU_cat > i)]   
         y_area    = area[np.where(VOLRAIN_KU_cat > i)]
         if counter < 1:
