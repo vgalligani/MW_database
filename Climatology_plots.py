@@ -2346,7 +2346,7 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     plt.grid()
     
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    plt.close()
+    
     
     return
 
@@ -2410,7 +2410,7 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     plt.grid()
     
     fig.savefig(dir+filename, dpi=300,transparent=False)        
-    plt.close()
+    
     
     return
 
