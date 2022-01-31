@@ -352,6 +352,10 @@ def get_categoryPF(PF_all, select, vkey):
 def get_categoryPFV19MIN(PF_all, select, vkey):
     
     var        = PF_all[vkey][select].copy()
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    varfilt = var[ np.where(sat_alt < 2.4) ]      
+
     percentiles = np.percentile(var, [10, 1, 0.1, 0.01])
     
     latlat = PF_all['LAT'][select].copy()
@@ -362,6 +366,32 @@ def get_categoryPFV19MIN(PF_all, select, vkey):
     landocean = PF_all['LANDOCEAN'][select].copy()
     
     return var, latlat, lonlon, percentiles, hour, landocean, V19AT
+
+#################################################################
+def get_categoryPFV19MIN_altfilter(PF_all, select, vkey):
+    
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)    
+  
+    var    = PF_all[vkey][select].copy()
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    varfilt = var[ np.where(sat_alt < 2.4) ]          
+    percentiles = np.percentile(varfilt, [10, 1, 0.1, 0.01])
+    
+    hour   = PF_all['HOUR'][select].copy()
+    V19AT  = PF_all['V19ATMIN37'][select].copy() 
+
+    landocean = PF_all['LANDOCEAN'][select].copy()
+    
+    return varfilt, latlat[np.where(sat_alt < 2.4)], lonlon[np.where(sat_alt < 2.4)], percentiles, hour[np.where(sat_alt < 2.4)], landocean[np.where(sat_alt < 2.4)], V19AT[np.where(sat_alt < 2.4)]
 
 #################################################################
 def get_categoryPF_hi(PF_all, select, vkey):
@@ -2164,16 +2194,14 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     #------ MIN37PCT
     ax1 = plt.subplot(gs1[0,0])
     plt.title(PFtype+' MIN1838 intensity distribution')
-    MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
-    MIN85PCT_cat, _, _, _, _, _= get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
-    MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
-    # here mask latlat and lonlon above 2.4 km altitude
-    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
-                       (lonlon,latlat), method='nearest')   
+    MIN37PCT_cat, _, _, _  = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN37PCT')
+    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN85PCT')
+    MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN1838')
+    # here mask latlat and lonlon above 2.4 km altitude  
     counter = 0
     for i in percentiles:
-        x_min37  = MIN37PCT_cat[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]          
-        y_min85  = MIN85PCT_cat[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]          
+        x_min37  = MIN37PCT_cat[( np.where( (MIN1838_cat < i) ))]          
+        y_min85  = MIN85PCT_cat[( np.where( (MIN1838_cat < i)  ))]          
         if counter < 1:
             plt.scatter(x_min37, y_min85, s=15, marker='o', c = cmap_f(counter))
         elif counter < 3:
@@ -2229,16 +2257,16 @@ def plot_MIN166_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     #------ MIN37PCT
     ax1 = plt.subplot(gs1[0,0])
     plt.title(PFtype+' MIN1838 intensity distribution')
-    MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
-    MIN166PCT_cat, _, _, _, _, _= get_categoryPF(Kurpf, selectKurpf, 'MIN165V')
-    MIN1838_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN1838')
+    MIN37PCT_cat, _, _, _  = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN37PCT')
+    MIN166PCT_cat, _, _, _ = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN165V')
+    MIN1838_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter2(Kurpf, selectKurpf, 'MIN1838')
     # here mask latlat and lonlon above 2.4 km altitude
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
     counter = 0
     for i in percentiles:
-        x_min37   = MIN37PCT_cat[(  np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]           
-        y_min166  = MIN166PCT_cat[( np.where( (MIN1838_cat < i) & (sat_alt < 2.4) ))]        
+        x_min37   = MIN37PCT_cat[(  np.where( (MIN1838_cat < i)  ))]           
+        y_min166  = MIN166PCT_cat[( np.where( (MIN1838_cat < i) ))]        
         if counter < 1:
             plt.scatter(x_min37, y_min166, s=15, marker='o', c = cmap_f(counter))
         elif counter < 3:
@@ -2285,9 +2313,9 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     #------ MAXHT40
     ax1 = plt.subplot(gs1[0,0])
     plt.title('PF MAXHT40 intensity distribution')
-    MIN37PCT_cat, _, _, _, _, _ = get_categoryPF(MWRPF, selectMWRPF, 'MIN37PCT')
-    MAXNSZ_cat, _, _, _, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXNSZ')
-    MAXHT40_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter2(MWRPF, selectMWRPF, 'MIN37PCT')
+    MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter2(Kurpf, selectKurpf, 'MAXNSZ')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter2(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
         x_min37   = MIN37PCT_cat[np.where(MAXHT40_cat > i)]   
@@ -2339,13 +2367,13 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     #------ VOLRAIN_KU
     ax1 = plt.subplot(gs1[0,0])
     plt.title('KuRPF VOLRAIN_KU intensity distribution')
-    MIN85PCT_cat, _, _, _, _, _ = get_categoryPF(MWRPF, selectMWRPF, 'MIN85PCT')
-    VOLRAIN_KU_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'VOLRAIN_KU')
+    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN85PCT')
+    VOLRAIN_KU_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'VOLRAIN_KU')
     #precipitation area IS estimated by the number of pixels associated with each PF.
     if PFtype_area == 'KuRPF':
-        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'NPIXELS')
+        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS')
     elif PFtype_area == 'GPCTF':
-        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi(MWRPF, selectMWRPF, 'NPIXELS_GMI')
+        NPIXELS_cat, _, _, _, _, _ = get_categoryPF_hi_altfilter(MWRPF, selectMWRPF, 'NPIXELS_GMI')
 
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
