@@ -1600,7 +1600,7 @@ def plot_regional_PCT_percentilesKu_altfilter(dir, filename, Kurpf):
     ax1 = plt.subplot(gs1[0,0])
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    plt.title('PF area category')
+    plt.title('KuRPF MAXHT40 category')
     cat, latlat, lonlon, percentiles  = get_categoryPF_hi_altfilter(Kurpf, selectKurpf_WCA, 'MAXHT40')
     counter = 0
     for i in reversed(percentiles):
