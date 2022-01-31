@@ -2315,7 +2315,7 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     plt.title('PF MAXHT40 intensity distribution')
     MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
     MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
-    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter=(Kurpf, selectKurpf, 'MAXHT40')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
     for i in percentiles:
         x_min37   = MIN37PCT_cat[np.where(MAXHT40_cat > i)]   
