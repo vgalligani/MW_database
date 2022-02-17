@@ -1,4 +1,15 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Feb 17 17:26:28 2022
+@author: victoria.galligani
+"""
+# Code that plots initially Zh for the coincident RMA5, RMA1 and PARANA observations for
+# case studies of interest. ver .doc "casos granizo" para más info. 
 
+def plot_ppi_Zh(): 
+  
+  return
 
 
 files_RMA5 = ['cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
