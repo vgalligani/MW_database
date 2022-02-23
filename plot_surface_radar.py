@@ -108,11 +108,11 @@ def set_plot_settings(var):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_ppi(ncfile, fig_dir): 
+def plot_ppi(file, fig_dir, dat_dir): 
     
-    radar = pyart.io.read(ncfile) 
+    radar = pyart.io.read(dat_dir+file) 
     # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP'])
-    
+
     #- Radar sweep
     nelev       = 0
     start_index = radar.sweep_start_ray_index['data'][nelev]
@@ -126,7 +126,7 @@ def plot_ppi(ncfile, fig_dir):
     RHOHV    = radar.fields['RHOHV']['data'][start_index:end_index]
     TH       = radar.fields['TH']['data'][start_index:end_index]
     TV       = radar.fields['TV']['data'][start_index:end_index]
-    KDP      = radar.fields['KDP']['data'][start_index:end_index]
+    ZDR      = TH-TV
     
     # plot figure: 
     fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
@@ -202,8 +202,8 @@ def plot_ppi(ncfile, fig_dir):
     axes[1,1].set_ylabel('Latitude', fontsize=10)
     axes[1,1].grid()     
     #- savefile
-    plt.suptitle('RMA1: ncfile '+str(ncfile[54:65]),fontweight='bold')
-    fig.savefig(fig_dir+str(ncfile)+'.png', dpi=300,transparent=False)    
+    plt.suptitle('RMA1: ncfile '+str(file[6:17]),fontweight='bold')
+    fig.savefig(fig_dir+str(file)+'.png', dpi=300,transparent=False)    
     plt.close() 
     
     
@@ -444,6 +444,7 @@ if __name__ == '__main__':
 
   # start w/ RMA1
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA1/'
+  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA1/'
   for ifiles in range(len(files_RMA1)):
     folder = str(files_RMA1[ifiles][6:14])
     if folder[0:4] == '2021':
@@ -451,11 +452,13 @@ if __name__ == '__main__':
     else:
       yearfolder = folder[0:4]
       ncfile  = '/relampago/datos/salio/RADAR/RMA1/'+ yearfolder + '/' + folder + '/' + files_RMA1[ifiles]
-    print('reading: ' + ncfile)
-    #radar = pyart.io.read('/home/victoria.galligani/Work/cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc')
-    plot_ppi(ncfile, fig_dir)
-    #--------------------------------------------------------------------------------------------
+    print('original file in: ' + ncfile + '// reading in:'+dat_dir+files_RMA1[ifiles])
+    plot_ppi(files_RMA1[ifiles], fig_dir, dat_dir)
+  #--------------------------------------------------------------------------------------------
+  # start w/ RMA5
 
+  #--------------------------------------------------------------------------------------------
+  # start w/ PARANA
     
     
 
