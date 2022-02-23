@@ -9,6 +9,7 @@ Created on Thu Feb 17 17:26:28 2022
 
 from os import listdir
 import pyart
+import matplotlib.pyplot as plt
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -25,7 +26,7 @@ def set_plot_settings(var):
     """
     if var == 'Zhh':
         units = 'Reflectivity [dBZ]'
-        cmap = fun.colormaps('ref')
+        cmap = colormaps('ref')
         vmin = 0
         vmax = 60
         max = 60.01
@@ -34,7 +35,7 @@ def set_plot_settings(var):
         over = 'white'
     elif var == 'Zhh_2':
         units = 'Zh [dBZ]'
-        cmap = fun.colormaps('ref2')
+        cmap = colormaps('ref2')
         vmin = 0
         vmax = 60
         max = 60.01
@@ -43,7 +44,7 @@ def set_plot_settings(var):
         over = 'black'
     elif var == 'Zdr':
         units = '[dBZ]'
-        cmap = fun.colormaps('zdr')
+        cmap = colormaps('zdr')
         vmin = -2
         vmax = 5.5
         max = 5.51
@@ -57,7 +58,7 @@ def set_plot_settings(var):
         max = 0.51
         intt = 0.1
         N = (vmax-vmin)/intt
-        cmap = fun.discrete_cmap(10, 'jet')
+        cmap = discrete_cmap(10, 'jet')
         under = 'white'
         over = 'black'
     elif var == 'Ah':
@@ -67,7 +68,7 @@ def set_plot_settings(var):
         max = 0.51
         intt = 0.05
         N = (vmax-vmin)/intt
-        cmap = fun.discrete_cmap(N, 'brg_r')
+        cmap = discrete_cmap(N, 'brg_r')
         under = 'black'
         over = 'white'
     elif var == 'phidp':
@@ -78,7 +79,7 @@ def set_plot_settings(var):
         intt = 10
         N = (vmax-vmin)/intt
         print(N)
-        cmap = fun.discrete_cmap(int(N), 'jet')
+        cmap = discrete_cmap(int(N), 'jet')
         under = 'white'
         over = 'white'
     elif var == 'rhohv':
@@ -105,17 +106,223 @@ def set_plot_settings(var):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_ppi_Zh(): 
-
+def plot_ppi(radar): 
     
+    # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP'])
+    #- Radar sweep
+    nelev       = 0
+    start_index = radar.sweep_start_ray_index['data'][nelev]
+    end_index   = radar.sweep_end_ray_index['data'][nelev]
+    lats        = radar.gate_latitude['data'][start_index:end_index]
+    lons        = radar.gate_longitude['data'][start_index:end_index]
+    azimuths    = radar.azimuth['data'][start_index:end_index]
     
+    PHIDP    = radar.fields['PHIDP']['data'][start_index:end_index]
+    CM       = radar.fields['CM']['data'][start_index:end_index]
+    RHOHV    = radar.fields['RHOHV']['data'][start_index:end_index]
+    TH       = radar.fields['TH']['data'][start_index:end_index]
+    TV       = radar.fields['TV']['data'][start_index:end_index]
+    KDP      = radar.fields['KDP']['data'][start_index:end_index]
     
-    return
+    # Test different test_transects: including 690 and 685
+    #lon_transect   = np.zeros([radar.nsweeps, lons.shape[1]]); lon_transect[:]     = np.nan
+    #lat_transect   = np.zeros([radar.nsweeps, lons.shape[1]]); lat_transect[:]     = np.nan
+    
+    return lats, lons, TH, KDP, RHOHV, CM, PHIDP
  
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------  
+def colormaps(variable):
+    """
+    Choose colormap for a radar variable
+
+    variable : str
+       Radar variable to define which colormap to use. (e.g. ref,
+       dv, zdr..) More to come
+
+    returns : matplotlib ColorList
+       A Color List for the specified *variable*.
+
+    """
+    import matplotlib.colors as colors
+
+    # Definicion de las disntitas paletas de colores:
+    nws_ref_colors =([ [ 1.0/255.0, 159.0/255.0, 244.0/255.0],
+                    [  3.0/255.0,   0.0/255.0, 244.0/255.0],
+                    [  2.0/255.0, 253.0/255.0,   2.0/255.0],
+                    [  1.0/255.0, 197.0/255.0,   1.0/255.0],
+                    [  0.0/255.0, 142.0/255.0,   0.0/255.0],
+                    [253.0/255.0, 248.0/255.0,   2.0/255.0],
+                    [229.0/255.0, 188.0/255.0,   0.0/255.0],
+                    [253.0/255.0, 149.0/255.0,   0.0/255.0],
+                    [253.0/255.0,   0.0/255.0,   0.0/255.0],
+                    #[212.0/255.0,   0.0/255.0,   0.0/255.0, 0.4],
+                    [188.0/255.0,   0.0/255.0,   0.0/255.0],
+                    [248.0/255.0,   0.0/255.0, 253.0/255.0],
+                    [152.0/255.0,  84.0/255.0, 198.0/255.0]
+                    ])
+    # Definicion de las disntitas paletas de colores:
+    nws_ref_colors_transparent =([ [ 1.0/255.0, 159.0/255.0, 244.0/255.0, 0.3],
+                    [  3.0/255.0,   0.0/255.0, 244.0/255.0, 0.3],
+                    [  2.0/255.0, 253.0/255.0,   2.0/255.0, 0.3],
+                    [  1.0/255.0, 197.0/255.0,   1.0/255.0, 0.3],
+                    [  0.0/255.0, 142.0/255.0,   0.0/255.0, 0.3],
+                    [253.0/255.0, 248.0/255.0,   2.0/255.0, 0.3],
+                    [229.0/255.0, 188.0/255.0,   0.0/255.0, 1],
+                    [253.0/255.0, 149.0/255.0,   0.0/255.0, 1],
+                    [253.0/255.0,   0.0/255.0,   0.0/255.0, 1],
+                    #[212.0/255.0,   0.0/255.0,   0.0/255.0, 0.4],
+                    [188.0/255.0,   0.0/255.0,   0.0/255.0, 1],
+                    [248.0/255.0,   0.0/255.0, 253.0/255.0, 1],
+                    [152.0/255.0,  84.0/255.0, 198.0/255.0, 1]
+                    ])
+    
+    nws_zdr_colors = ([ [  1.0/255.0, 159.0/255.0, 244.0/255.0],
+                    [  3.0/255.0,   0.0/255.0, 244.0/255.0],
+                    [  2.0/255.0, 253.0/255.0,   2.0/255.0],
+                    [  1.0/255.0, 197.0/255.0,   1.0/255.0],
+                    [  0.0/255.0, 142.0/255.0,   0.0/255.0],
+                    [253.0/255.0, 248.0/255.0,   2.0/255.0],
+                    [229.0/255.0, 188.0/255.0,   2.0/255.0],
+                    [253.0/255.0, 149.0/255.0,   0.0/255.0],
+                    [253.0/255.0,   0.0/255.0,   0.0/255.0],
+                    [188.0/255.0,   0.0/255.0,   0.0/255.0],
+                    [152.0/255.0,  84.0/255.0, 198.0/255.0]
+                    ])
+
+    nws_dv_colors = ([  [0,  1,  1],
+                    [0,  0.966666638851166,  1],
+                    [0,  0.933333337306976,  1],
+                    [0,  0.899999976158142,  1],
+                    [0,  0.866666674613953,  1],
+                    [0,  0.833333313465118,  1],
+                    [0,  0.800000011920929,  1],
+                    [0,  0.766666650772095,  1],
+                    [0,  0.733333349227905,  1],
+                    [0,  0.699999988079071,  1],
+                    [0,  0.666666686534882,  1],
+                    [0,  0.633333325386047,  1],
+                    [0,  0.600000023841858,  1],
+                    [0,  0.566666662693024,  1],
+                    [0,  0.533333361148834,  1],
+                    [0,  0.5,  1],
+                    [0,  0.466666668653488,  1],
+                    [0,  0.433333337306976,  1],
+                    [0,  0.400000005960464,  1],
+                    [0,  0.366666674613953,  1],
+                    [0,  0.333333343267441,  1],
+                    [0,  0.300000011920929,  1],
+                    [0,  0.266666680574417,  1],
+                    [0,  0.233333334326744,  1],
+                    [0,  0.200000002980232,  1],
+                    [0,  0.16666667163372,   1],
+                    [0,  0.133333340287209,  1],
+                    [0,  0.100000001490116,  1],
+                    [0,  0.0666666701436043, 1],
+                    [0,  0.0333333350718021, 1],
+                    [0,  0,  1],
+                    [0,  0,  0],
+                    [0,  0,  0],
+                    [0,  0,  0],
+                    [0,  0,  0],
+                    [1,  0,  0],
+                    [1,  0.0322580635547638, 0],
+                    [1,  0.0645161271095276, 0],
+                    [1,  0.0967741906642914, 0],
+                    [1,  0.129032254219055,  0],
+                    [1,  0.161290317773819,  0],
+                    [1,  0.193548381328583,  0],
+                    [1,  0.225806444883347,  0],
+                    [1,  0.25806450843811,   0],
+                    [1,  0.290322571992874,  0],
+                    [1,  0.322580635547638,  0],
+                    [1,  0.354838699102402,  0],
+                    [1,  0.387096762657166,  0],
+                    [1,  0.419354826211929,  0],
+                    [1,  0.451612889766693,  0],
+                    [1,  0.483870953321457,  0],
+                    [1,  0.516129016876221,  0],
+                    [1,  0.548387110233307,  0],
+                    [1,  0.580645143985748,  0],
+                    [1,  0.612903237342834,  0],
+                    [1,  0.645161271095276,  0],
+                    [1,  0.677419364452362,  0],
+                    [1,  0.709677398204803,  0],
+                    [1,  0.74193549156189,   0],
+                    [1,  0.774193525314331,  0],
+                    [1,  0.806451618671417,  0],
+                    [1,  0.838709652423859,  0],
+                    [1,  0.870967745780945,  0],
+                    [1,  0.903225779533386,  0],
+                    [1,  0.935483872890472,  0],
+                    [1,  0.967741906642914,  0],
+                    [1,  1,  0]   ])
+
+
+    cmap_nws_ref = colors.ListedColormap(nws_ref_colors)
+    cmap_nws_zdr = colors.ListedColormap(nws_zdr_colors)
+    cmap_nws_dv = colors.ListedColormap(nws_dv_colors)
+    cmap_nws_ref_trans = colors.ListedColormap(nws_ref_colors_transparent)
+    
+
+    if variable == 'ref':
+       return cmap_nws_ref
+    if variable == 'ref2':
+       return cmap_nws_ref_trans
+        
+
+    if variable == 'zdr':
+       return cmap_nws_zdr
+
+    if variable == 'dv':
+       return cmap_nws_dv
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------  
+def pyplot_rings(lat_radar,lon_radar,radius):
+    """
+    Calculate lat-lon of the maximum range ring
+
+    lat_radar : float32
+       Radar latitude. Positive is north.
+
+    lon_radar : float32
+       Radar longitude. Positive is east.
+
+    radius : float32
+       Radar range in kilometers.
+
+    returns : numpy.array
+       A 2d array containing the 'radius' range latitudes (lat) and longitudes (lon)
+
+    """
+    import numpy as np
+
+    R=12742./2.
+    m=2.*np.pi*R/360.
+    alfa=np.arange(-np.pi,np.pi,0.0001)
+
+    nazim  = 360.0
+    nbins  = 480.0
+    binres = 0.5
+
+    #azimuth = np.transpose(np.tile(np.arange(0,nazim,1), (int(nbins),1)))
+    #rangos  = np.tile(np.arange(0,nbins,1)*binres, (int(nazim),1))
+    #lats    = lat_radar + (rangos/m)*np.cos((azimuth)*np.pi/180.0)
+    #lons    = lon_radar + (rangos/m)*np.sin((azimuth)*np.pi/180.0)/np.cos(lats*np.pi/180)
+
+    lat_radius = lat_radar + (radius/m)*np.sin(alfa)
+    lon_radius = lon_radar + ((radius/m)*np.cos(alfa)/np.cos(lat_radius*np.pi/180))
+
+    return lat_radius, lon_radius
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------  
+
 if __name__ == '__main__':
 
+  plt.matplotlib.rc('font', family='serif', size = 12)    
+  
+    
   files_RMA5 = ['cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
               'cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
               'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc']
@@ -137,17 +344,69 @@ if __name__ == '__main__':
              '2019022315143100dBZ.vol',
              '2020121903100500dBZ.vol']
 
+
+from netCDF4 import Dataset  
+nc_fid   = Dataset(ncfile, 'r')
+export HDF5_USE_FILE_LOCKING='FALSE'
+
   # start w/ RMA1
   for ifiles in range(len(files_RMA1)):
     folder = str(files_RMA1[ifiles][6:14])
     if folder[0:4] == '2021':
-      nfile  = '/relampago/datos/salio/RADAR/RMA1/'+ folder + '/' + files_RMA1[ifiles]
+      ncfile  = '/relampago/datos/salio/RADAR/RMA1/'+ folder + '/' + files_RMA1[ifiles]
     else:
       yearfolder = folder[0:4]
-      nfile  = '/relampago/datos/salio/RADAR/RMA1/'+ yearfolder + '/' + folder + '/' + files_RMA1[ifiles]
+      ncfile  = '/relampago/datos/salio/RADAR/RMA1/'+ yearfolder + '/' + folder + '/' + files_RMA1[ifiles]
     print('reading: ' + nfile)
-    radar = pyart.io.read(nfile) 
+    radar = pyart.io.read(ncfile) 
     # Plot Zh, ZDR, PhiDP, RHO_hv: attenuation corrected and phidp unfolded etc. 
+    
+    
+    #radar = pyart.io.read('/home/victoria.galligani/Work/cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc')
+    [lats, lons, TH, KDP, RHOHV, CM, PHIDP] = plot_ppi(radar)
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    
+    
+    
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+
+   fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
+                        figsize=[8,2])
+        
+    pcm1 = axes[0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+        # cbar = plt.colorbar(shrink=0.7, label=units, ticks = np.arange(vmin,max,int))
+        # cbar.cmap.set_under(under)
+        # cbar.cmap.set_over(over)
+        axes[0].set_title(timeUTC,fontsize=10)
+        # transect
+        target_azimuth = azimuths[test_transect1]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero() 
+        lon_transect[0,:]     = lons1[filas,:]                
+        lat_transect[0,:]     = lats1[filas,:]                
+        axes[0].plot(lon_transect[0,:], lat_transect[0,:], '-k', linewidth=0.8)
+        
+        # Radar rings
+        [lat_radius, lon_radius] = P.pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+        axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        # Todos los reportes
+        for key in reportes_dict.keys():
+            rep_pt = axes[0].scatter(reportes_dict[key][0],reportes_dict[key][1], s=5, marker='d', color='k', zorder=15)
+          
+        axes[0].set_xlim((x_lim[0], x_lim[1] ))
+        axes[0].set_ylim((y_lim[0], y_lim[1] ))  
+        
+        axes[0].set_xlabel('Longitude', fontsize=10)
+        axes[0].set_ylabel('Latitude', fontsize=10)
+
+        axes[0].set_yticks([-35.2, -35.1, -35.0, -34.9])
+        axes[0].set_xticks([-69.3, -69.1, -68.9])
+
+        axes[0].grid()   
+        axes[0].text(-0.1, 1.1, '(a)', transform=axes[0].transAxes, size=12)
+        
+    
     
   
 
