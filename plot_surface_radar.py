@@ -10,6 +10,7 @@ Created on Thu Feb 17 17:26:28 2022
 from os import listdir
 import pyart
 import matplotlib.pyplot as plt
+import numpy as np
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -46,8 +47,8 @@ def set_plot_settings(var):
         units = '[dBZ]'
         cmap = colormaps('zdr')
         vmin = -2
-        vmax = 5.5
-        max = 5.51
+        vmax = 5
+        max = 5.01
         intt = 0.5
         under = 'white'
         over = 'white'
@@ -128,7 +129,7 @@ def plot_ppi(radar):
     #lon_transect   = np.zeros([radar.nsweeps, lons.shape[1]]); lon_transect[:]     = np.nan
     #lat_transect   = np.zeros([radar.nsweeps, lons.shape[1]]); lat_transect[:]     = np.nan
     
-    return lats, lons, TH, KDP, RHOHV, CM, PHIDP
+    return lats, lons, TH, TH-TV, KDP, RHOHV, CM, PHIDP
  
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------  
@@ -320,8 +321,9 @@ def pyplot_rings(lat_radar,lon_radar,radius):
 
 if __name__ == '__main__':
 
-  plt.matplotlib.rc('font', family='serif', size = 12)    
-  
+  plt.matplotlib.rc('font', family='serif', size = 12)
+  plt.rcParams['xtick.labelsize']=12
+  plt.rcParams['ytick.labelsize']=12  
     
   files_RMA5 = ['cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
               'cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
@@ -345,10 +347,6 @@ if __name__ == '__main__':
              '2020121903100500dBZ.vol']
 
 
-from netCDF4 import Dataset  
-nc_fid   = Dataset(ncfile, 'r')
-export HDF5_USE_FILE_LOCKING='FALSE'
-
   # start w/ RMA1
   for ifiles in range(len(files_RMA1)):
     folder = str(files_RMA1[ifiles][6:14])
@@ -359,53 +357,50 @@ export HDF5_USE_FILE_LOCKING='FALSE'
       ncfile  = '/relampago/datos/salio/RADAR/RMA1/'+ yearfolder + '/' + folder + '/' + files_RMA1[ifiles]
     print('reading: ' + nfile)
     radar = pyart.io.read(ncfile) 
-    # Plot Zh, ZDR, PhiDP, RHO_hv: attenuation corrected and phidp unfolded etc. 
-    
-    
     #radar = pyart.io.read('/home/victoria.galligani/Work/cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc')
-    [lats, lons, TH, KDP, RHOHV, CM, PHIDP] = plot_ppi(radar)
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    
-    
-    
-    plt.matplotlib.rc('font', family='serif', size = 12)
-    plt.rcParams['xtick.labelsize']=12
-    plt.rcParams['ytick.labelsize']=12
-
-   fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
+    [lats, lons, TH, ZDR, KDP, RHOHV, CM, PHIDP] = plot_ppi(radar)
+    #--------------------------------------------------------------------------------------------
+    # plot figure: 
+    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
                         figsize=[8,2])
-        
+    #-- Zh: 
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes[0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
-        # cbar = plt.colorbar(shrink=0.7, label=units, ticks = np.arange(vmin,max,int))
-        # cbar.cmap.set_under(under)
-        # cbar.cmap.set_over(over)
-        axes[0].set_title(timeUTC,fontsize=10)
-        # transect
-        target_azimuth = azimuths[test_transect1]
-        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero() 
-        lon_transect[0,:]     = lons1[filas,:]                
-        lat_transect[0,:]     = lats1[filas,:]                
-        axes[0].plot(lon_transect[0,:], lat_transect[0,:], '-k', linewidth=0.8)
-        
-        # Radar rings
-        [lat_radius, lon_radius] = P.pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-        axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-        # Todos los reportes
-        for key in reportes_dict.keys():
-            rep_pt = axes[0].scatter(reportes_dict[key][0],reportes_dict[key][1], s=5, marker='d', color='k', zorder=15)
-          
-        axes[0].set_xlim((x_lim[0], x_lim[1] ))
-        axes[0].set_ylim((y_lim[0], y_lim[1] ))  
-        
-        axes[0].set_xlabel('Longitude', fontsize=10)
-        axes[0].set_ylabel('Latitude', fontsize=10)
-
-        axes[0].set_yticks([-35.2, -35.1, -35.0, -34.9])
-        axes[0].set_xticks([-69.3, -69.1, -68.9])
-
-        axes[0].grid()   
-        axes[0].text(-0.1, 1.1, '(a)', transform=axes[0].transAxes, size=12)
-        
+    cbar = plt.colorbar(pcm1, ax=axes[0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    axes[0].set_xlabel('Longitude', fontsize=10)
+    axes[0].set_ylabel('Latitude', fontsize=10)
+    axes[0].grid()   
+    #-- ZDR: 
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+    pcm1 = axes[1].pcolormesh(lons, lats, ZDR, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    axes[1].set_xlabel('Longitude', fontsize=10)
+    axes[1].set_ylabel('Latitude', fontsize=10)
+    axes[1].grid()         
     
     
   
