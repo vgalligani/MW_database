@@ -44,19 +44,20 @@ def set_plot_settings(var):
         under = 'white'
         over = 'black'
     elif var == 'Zdr':
-        units = '[dBZ]'
-        cmap = colormaps('zdr')
+        units = 'ZDR [dBZ]'
         vmin = -2
-        vmax = 5
-        max = 5.01
-        intt = 0.5
+        vmax = 10
+        max = 10.01
+        intt = 1
+        N = (vmax-vmin)/intt
+        cmap = discrete_cmap(int(N), 'jet') # colormaps('zdr')
         under = 'white'
         over = 'white'
     elif var == 'Kdp':
-        units = '[deg/km]'
-        vmin = -0.5
-        vmax = 0.5
-        max = 0.51
+        units = 'KDP [deg/km]'
+        vmin = -0.1
+        vmax = 0.7
+        max = 0.71
         intt = 0.1
         N = (vmax-vmin)/intt
         cmap = discrete_cmap(10, 'jet')
@@ -73,7 +74,7 @@ def set_plot_settings(var):
         under = 'black'
         over = 'white'
     elif var == 'phidp':
-        units = 'deg'
+        units = 'PHIDP [deg]'
         vmin = 60
         vmax = 180
         max = 180.1
@@ -84,7 +85,7 @@ def set_plot_settings(var):
         under = 'white'
         over = 'white'
     elif var == 'rhohv':
-        units = ''
+        units = r'$\rho_{hv}$'
         vmin = 0.5
         vmax = 1.
         max = 1.01
@@ -107,9 +108,11 @@ def set_plot_settings(var):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_ppi(radar): 
+def plot_ppi(ncfile, fig_dir): 
     
+    radar = pyart.io.read(ncfile) 
     # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP'])
+    
     #- Radar sweep
     nelev       = 0
     start_index = radar.sweep_start_ray_index['data'][nelev]
@@ -125,9 +128,84 @@ def plot_ppi(radar):
     TV       = radar.fields['TV']['data'][start_index:end_index]
     KDP      = radar.fields['KDP']['data'][start_index:end_index]
     
-    # Test different test_transects: including 690 and 685
-    #lon_transect   = np.zeros([radar.nsweeps, lons.shape[1]]); lon_transect[:]     = np.nan
-    #lat_transect   = np.zeros([radar.nsweeps, lons.shape[1]]); lat_transect[:]     = np.nan
+    # plot figure: 
+    fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
+                        figsize=[14,12])
+    #-- Zh: 
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    pcm1 = axes[0,0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[0,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    axes[0,0].grid()   
+    #-- ZDR: 
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+    pcm1 = axes[0,1].pcolormesh(lons, lats, ZDR, cmap=cmap, vmin=vmin, vmax=max)
+    cbar = plt.colorbar(pcm1, ax=axes[0,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    axes[0,1].grid()         
+    #-- PHIDP: 
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[1,0].pcolormesh(lons, lats, PHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    axes[1,0].grid()      
+    #-- RHOHV: 
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+    pcm1 = axes[1,1].pcolormesh(lons, lats, RHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+    axes[1,1].set_xlabel('Longitude', fontsize=10)
+    axes[1,1].set_ylabel('Latitude', fontsize=10)
+    axes[1,1].grid()     
+    #- savefile
+    plt.suptitle('RMA1: ncfile '+str(ncfile[54:65]),fontweight='bold')
+    fig.savefig(fig_dir+str(ncfile)+'.png', dpi=300,transparent=False)    
+    plt.close() 
+    
     
     return lats, lons, TH, TH-TV, KDP, RHOHV, CM, PHIDP
  
@@ -318,6 +396,23 @@ def pyplot_rings(lat_radar,lon_radar,radius):
     return lat_radius, lon_radius
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------  
+def discrete_cmap(N, base_cmap=None):
+    """Create an N-bin discrete colormap from the specified input map"""
+
+    # Note that if base_cmap is a string or None, you can simply do
+    #    return plt.cm.get_cmap(base_cmap, N)
+    # The following works for string, None, or a colormap instance:
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    base = plt.cm.get_cmap(base_cmap)
+    color_list = base(np.linspace(0, 1, N))
+    cmap_name = base.name + str(N)
+    
+    return base.from_list(cmap_name, color_list, N)
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------  
 
 if __name__ == '__main__':
 
@@ -348,6 +443,7 @@ if __name__ == '__main__':
 
 
   # start w/ RMA1
+  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA1/'
   for ifiles in range(len(files_RMA1)):
     folder = str(files_RMA1[ifiles][6:14])
     if folder[0:4] == '2021':
@@ -355,53 +451,16 @@ if __name__ == '__main__':
     else:
       yearfolder = folder[0:4]
       ncfile  = '/relampago/datos/salio/RADAR/RMA1/'+ yearfolder + '/' + folder + '/' + files_RMA1[ifiles]
-    print('reading: ' + nfile)
-    radar = pyart.io.read(ncfile) 
+    print('reading: ' + ncfile)
     #radar = pyart.io.read('/home/victoria.galligani/Work/cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc')
-    [lats, lons, TH, ZDR, KDP, RHOHV, CM, PHIDP] = plot_ppi(radar)
+    plot_ppi(ncfile, fig_dir)
     #--------------------------------------------------------------------------------------------
-    # plot figure: 
-    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
-                        figsize=[8,2])
-    #-- Zh: 
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    pcm1 = axes[0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
-    cbar = plt.colorbar(pcm1, ax=axes[0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-    cbar.cmap.set_under(under)
-    cbar.cmap.set_over(over)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    axes[0].set_xlabel('Longitude', fontsize=10)
-    axes[0].set_ylabel('Latitude', fontsize=10)
-    axes[0].grid()   
-    #-- ZDR: 
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
-    pcm1 = axes[1].pcolormesh(lons, lats, ZDR, cmap=cmap, vmin=vmin, vmax=vmax)
-    cbar = plt.colorbar(pcm1, ax=axes[1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-    cbar.cmap.set_under(under)
-    cbar.cmap.set_over(over)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    axes[1].set_xlabel('Longitude', fontsize=10)
-    axes[1].set_ylabel('Latitude', fontsize=10)
-    axes[1].grid()         
+
     
+    
+
+    
+
     
   
 
