@@ -108,7 +108,7 @@ def set_plot_settings(var):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_ppi(file, fig_dir, dat_dir): 
+def plot_ppi(file, fig_dir, dat_dir, radar_name): 
     
     radar = pyart.io.read(dat_dir+file) 
     # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP'])
@@ -202,7 +202,7 @@ def plot_ppi(file, fig_dir, dat_dir):
     axes[1,1].set_ylabel('Latitude', fontsize=10)
     axes[1,1].grid()     
     #- savefile
-    plt.suptitle('RMA1: ncfile '+str(file[6:17]),fontweight='bold')
+    plt.suptitle(radar_name+': ncfile '+str(file[6:17]),fontweight='bold')
     fig.savefig(fig_dir+str(file)+'.png', dpi=300,transparent=False)    
     plt.close() 
     
@@ -453,13 +453,34 @@ if __name__ == '__main__':
       yearfolder = folder[0:4]
       ncfile  = '/relampago/datos/salio/RADAR/RMA1/'+ yearfolder + '/' + folder + '/' + files_RMA1[ifiles]
     print('original file in: ' + ncfile + '// reading in:'+dat_dir+files_RMA1[ifiles])
-    plot_ppi(files_RMA1[ifiles], fig_dir, dat_dir)
+    plot_ppi(files_RMA1[ifiles], fig_dir, dat_dir, 'RMA1')
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
-
+  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA5/'
+  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA5/'
+  for ifiles in range(len(files_RMA5)):
+    folder = str(files_RMA5[ifiles][6:14])
+    if folder[0:4] == '2021':
+      ncfile  = '/relampago/datos/salio/RADAR/RMA5/'+ folder + '/' + files_RMA5[ifiles]
+    else:
+      yearfolder = folder[0:4]
+      ncfile  = '/relampago/datos/salio/RADAR/RMA5/'+ yearfolder + '/' + folder + '/' + files_RMA5[ifiles]
+    print('original file in: ' + ncfile + '// reading in:'+dat_dir+files_RMA5[ifiles])
+    plot_ppi(files_RMA5[ifiles], fig_dir, dat_dir, 'RMA5')
   #--------------------------------------------------------------------------------------------
   # start w/ PARANA
-    
+  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/PAR/'
+  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/PAR/'
+  for ifiles in range(len(files_PAR)):
+    folder = str(files_PAR[ifiles][6:14])
+    if folder[0:4] == '2021':
+      ncfile  = '/relampago/datos/salio/RADAR/PAR/'+ folder + '/' + files_PAR[ifiles]
+    else:
+      yearfolder = folder[0:4]
+      ncfile  = '/relampago/datos/salio/RADAR/files_PAR/'+ yearfolder + '/' + folder + '/' + files_PAR[ifiles]
+    print('original file in: ' + ncfile + '// reading in:'+dat_dir+files_PAR[ifiles])
+    plot_ppi(files_PAR[ifiles], fig_dir, dat_dir, 'PAR')
+  #--------------------------------------------------------------------------------------------    
     
 
     
