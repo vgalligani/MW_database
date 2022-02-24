@@ -111,8 +111,11 @@ def set_plot_settings(var):
 def plot_ppi(file, fig_dir, dat_dir, radar_name): 
     
     radar = pyart.io.read(dat_dir+file) 
-    # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP'])
-
+    # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP']) for RMA1
+    # dict_keys(['DBZH', 'KDP', 'RHOHV', 'PHIDP', 'CM']) for RMA5
+    # dict_keys(['DBZV', 'DBZH', 'ZDR', 'KDP', 'RHOHV', 'PHIDP', 'VRAD']) for SOME RMA5
+    print(radar.fields.keys())
+    
     #- Radar sweep
     nelev       = 0
     start_index = radar.sweep_start_ray_index['data'][nelev]
@@ -122,11 +125,21 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
     azimuths    = radar.azimuth['data'][start_index:end_index]
     
     PHIDP    = radar.fields['PHIDP']['data'][start_index:end_index]
-    CM       = radar.fields['CM']['data'][start_index:end_index]
+    #CM       = radar.fields['CM']['data'][start_index:end_index]
     RHOHV    = radar.fields['RHOHV']['data'][start_index:end_index]
-    TH       = radar.fields['TH']['data'][start_index:end_index]
-    TV       = radar.fields['TV']['data'][start_index:end_index]
-    ZDR      = TH-TV
+    if radar_name == 'RMA1':
+        TH       = radar.fields['TH']['data'][start_index:end_index]
+        TV       = radar.fields['TV']['data'][start_index:end_index]
+        ZDR      = TH-TV
+    elif radar_name == 'RMA5':
+        TH       = radar.fields['DBZH']['data'][start_index:end_index]
+        if 'VRAD' in radar.fields.keys(): 
+            VRAD       = radar.fields['VRAD']['data'][start_index:end_index]
+        if 'DBZV' in radar.fields.keys(): 
+            TV       = radar.fields['DBZV']['data'][start_index:end_index]     
+            ZDR      = TH-TV
+    elif radar_name == 'PARANA':
+        print('?')
     
     # plot figure: 
     fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
@@ -149,22 +162,23 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
     axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
     axes[0,0].grid()   
     #-- ZDR: 
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
-    pcm1 = axes[0,1].pcolormesh(lons, lats, ZDR, cmap=cmap, vmin=vmin, vmax=max)
-    cbar = plt.colorbar(pcm1, ax=axes[0,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-    cbar.cmap.set_under(under)
-    cbar.cmap.set_over(over)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
-    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
-    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
-    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    axes[0,1].grid()         
+    if 'ZDR' in locals(): 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+        pcm1 = axes[0,1].pcolormesh(lons, lats, ZDR, cmap=cmap, vmin=vmin, vmax=max)
+        cbar = plt.colorbar(pcm1, ax=axes[0,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+        axes[0,1].grid()         
     #-- PHIDP: 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
     pcm1 = axes[1,0].pcolormesh(lons, lats, PHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
@@ -207,7 +221,7 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
     plt.close() 
     
     
-    return lats, lons, TH, TH-TV, KDP, RHOHV, CM, PHIDP
+    return 
  
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------  
@@ -421,8 +435,8 @@ if __name__ == '__main__':
   plt.rcParams['ytick.labelsize']=12  
     
   files_RMA5 = ['cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
-              'cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
-              'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc']
+                'cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
+                'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc']
 
   files_RMA1 = ['cfrad.20171027_034647.0000_to_20171027_034841.0000_RMA1_0123_02.nc',
               'cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc',
@@ -472,13 +486,13 @@ if __name__ == '__main__':
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/PAR/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/PAR/'
   for ifiles in range(len(files_PAR)):
-    folder = str(files_PAR[ifiles][6:14])
+    folder = str(files_PAR[ifiles][0:8])
     if folder[0:4] == '2021':
-      ncfile  = '/relampago/datos/salio/RADAR/PAR/'+ folder + '/' + files_PAR[ifiles]
+      ncfile  = '/relampago/datos/salio/RADAR/PAR/'+ folder + '/vol/' + files_PAR[ifiles]
     else:
       yearfolder = folder[0:4]
-      ncfile  = '/relampago/datos/salio/RADAR/files_PAR/'+ yearfolder + '/' + folder + '/' + files_PAR[ifiles]
-    print('original file in: ' + ncfile + '// reading in:'+dat_dir+files_PAR[ifiles])
+      ncfile  = '/relampago/datos/salio/RADAR/PAR/'+ yearfolder + '/' + folder + '/vol/' + files_PAR[ifiles]
+    #print('cp ' + ncfile + ' '+dat_dir+'.')
     plot_ppi(files_PAR[ifiles], fig_dir, dat_dir, 'PAR')
   #--------------------------------------------------------------------------------------------    
     
