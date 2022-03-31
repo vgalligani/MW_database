@@ -231,7 +231,7 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
     radarZDR = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'ZDR.vol')
     radarW = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'W.vol')         #['spectrum_width']
     radarV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'V.vol')         #['velocity']
-    radaruPhiDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'c.vol')    #['uncorrected_differential_phase']
+    radaruPhiDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'uPhiDP.vol')    #['uncorrected_differential_phase']
     radarRhoHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
     radarPhiDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'PhiDP.vol') #['differential_phase'] 
     radarKDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'KDP.vol')
