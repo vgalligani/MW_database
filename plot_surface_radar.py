@@ -231,28 +231,26 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
     radarZDR = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'ZDR.vol')
     radarW = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'W.vol')         #['spectrum_width']
     radarV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'V.vol')         #['velocity']
-    radaruPhiDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'uPhiDP.vol')    #['uncorrected_differential_phase']
-    radarRhoHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
-    radarPhiDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'PhiDP.vol') #['differential_phase'] 
+    radaruPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'uPhiDP.vol')    #['uncorrected_differential_phase']
+    radarRHOHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
+    radarPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'PhiDP.vol') #['differential_phase'] 
     radarKDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'KDP.vol')
 
     
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
-
+        
+        # Figure
+        fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
+                        figsize=[14,12])
+        #-- Zh: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]
         lats = radar.gate_latitude['data'][start_index:end_index]
         lons = radar.gate_longitude['data'][start_index:end_index]
         azimuths = radar.azimuth['data'][start_index:end_index]
         elevation = radar.elevation['data'][start_index]
-
         TH = radar.fields['reflectivity']['data'][start_index:end_index]
-        print(radar.fields.keys())
-        # Figure
-        fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
-                        figsize=[14,12])
-        #-- Zh: 
-        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         pcm1 = axes[0,0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(pcm1, ax=axes[0,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
         cbar.cmap.set_under(under)
@@ -271,7 +269,14 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
 
         #-- ZDR: 
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
-        pcm1 = axes[0,1].pcolormesh(lons, lats, radarZDR, cmap=cmap, vmin=vmin, vmax=vmax)
+        start_index = radarZDR.sweep_start_ray_index['data'][nlev]
+        end_index   = radarZDR.sweep_end_ray_index['data'][nlev]
+        lats = radarZDR.gate_latitude['data'][start_index:end_index]
+        lons = radarZDR.gate_longitude['data'][start_index:end_index]
+        azimuths = radarZDR.azimuth['data'][start_index:end_index]
+        elevation = radarZDR.elevation['data'][start_index]
+        ZDR = radarZDR.fields['differential_reflectivity']['data'][start_index:end_index]
+        pcm1 = axes[0,1].pcolormesh(lons, lats, ZDR, cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(pcm1, ax=axes[0,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
         cbar.cmap.set_under(under)
         cbar.cmap.set_over(over)
@@ -289,7 +294,14 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
         
          #-- PHIDP: 
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
-        pcm1 = axes[1,0].pcolormesh(lons, lats, radarPHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
+        start_index = radaruPHIDP.sweep_start_ray_index['data'][nlev]
+        end_index   = radaruPHIDP.sweep_end_ray_index['data'][nlev]
+        lats = radaruPHIDP.gate_latitude['data'][start_index:end_index]
+        lons = radaruPHIDP.gate_longitude['data'][start_index:end_index]
+        azimuths = radaruPHIDP.azimuth['data'][start_index:end_index]
+        elevation = radaruPHIDP.elevation['data'][start_index]
+        PHIDP = radaruPHIDP.fields['uncorrected_differential_phase']['data'][start_index:end_index]
+        pcm1 = axes[1,0].pcolormesh(lons, lats, PHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
         cbar.cmap.set_under(under)
         cbar.cmap.set_over(over)
@@ -310,7 +322,14 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
                
          #-- RHOHV: 
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
-        pcm1 = axes[1,0].pcolormesh(lons, lats, radarRHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
+        start_index = radarRHOHV.sweep_start_ray_index['data'][nlev]
+        end_index   = radarRHOHV.sweep_end_ray_index['data'][nlev]
+        lats = radarRHOHV.gate_latitude['data'][start_index:end_index]
+        lons = radarRHOHV.gate_longitude['data'][start_index:end_index]
+        azimuths = radarRHOHV.azimuth['data'][start_index:end_index]
+        elevation = radarRHOHV.elevation['data'][start_index]
+        RHOHV = radarRHOHV.fields['cross_correlation_ratio']['data'][start_index:end_index]
+        pcm1 = axes[1,0].pcolormesh(lons, lats, RHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
         cbar.cmap.set_under(under)
         cbar.cmap.set_over(over)
@@ -661,10 +680,34 @@ if __name__ == '__main__':
     #print('cp ' + ncfile + ' '+dat_dir+'.')
     plot_ppi_parana(files_PAR[ifiles], fig_dir, dat_dir, 'PAR') 
   # Plot all variables:
+  file_PAR_all = '2018032407500500'
+  folder = str(files_PAR[0:8]) 
+  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #
+  file_PAR_all = '2018100907400500'
+  folder = str(files_PAR[0:8]) 
+  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #
+  file_PAR_all = '2018121402400200'
+  folder = str(files_PAR[0:8]) 
+  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  # 
+  file_PAR_all = '2019021109400500'
+  folder = str(files_PAR[0:8]) 
+  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #
   file_PAR_all = '2019022315100200'
   folder = str(files_PAR[0:8]) 
-  plot_ppi_parana_all(file_PAR_all, fig_dir, dat_dir, 'PAR') 
+  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #
+  file_PAR_all = '2020121903100500'
+  folder = str(files_PAR[0:8]) 
+  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
 
+
+    
+    
+    
     
 #--------------------------------------------------------------------------------------------    
    
