@@ -224,6 +224,168 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
     return 
  
 #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
+
+    radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')
+    radarZDR = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'ZDR.vol')
+    radarW = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'W.vol')         #['spectrum_width']
+    radarV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'V.vol')         #['velocity']
+    radaruPhiDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'c.vol')    #['uncorrected_differential_phase']
+    radarRhoHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
+    radarPhiDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'PhiDP.vol') #['differential_phase'] 
+    radarKDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'KDP.vol')
+
+    
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats = radar.gate_latitude['data'][start_index:end_index]
+        lons = radar.gate_longitude['data'][start_index:end_index]
+        azimuths = radar.azimuth['data'][start_index:end_index]
+        elevation = radar.elevation['data'][start_index]
+
+        TH = radar.fields['reflectivity']['data'][start_index:end_index]
+        print(radar.fields.keys())
+        # Figure
+        fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
+                        figsize=[14,12])
+        #-- Zh: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        pcm1 = axes[0,0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes[0,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        axes[0,0].grid()
+
+        #-- ZDR: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+        pcm1 = axes[0,1].pcolormesh(lons, lats, radarZDR, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes[0,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        axes[0,1].grid()       
+        
+         #-- PHIDP: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radarPHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        axes[1,0].grid()
+        axes[1,0].set_xlabel('Longitude', fontsize=10)
+        axes[1,0].set_ylabel('Latitude', fontsize=10)
+        axes[1,0].grid()       
+               
+         #-- RHOHV: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radarRHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        axes[1,1].grid()
+        axes[1,1].set_xlabel('Longitude', fontsize=10)
+        axes[1,1].set_ylabel('Latitude', fontsize=10)
+        
+        #- savefile
+        plt.suptitle(radar_name+' ('+str(elevation)+'): '+str(file[0:12]),fontweight='bold')
+        fig.savefig(fig_dir+'FULL_'+str(file)+'sweep_'+str(nlev)+'.png', dpi=300,transparent=False)
+        plt.close()
+
+    return
+ 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+    def plot_ppi_parana(file, fig_dir, dat_dir, radar_name):
+
+    radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file)
+
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats = radar.gate_latitude['data'][start_index:end_index]
+        lons = radar.gate_longitude['data'][start_index:end_index]
+        azimuths = radar.azimuth['data'][start_index:end_index]
+        elevation = radar.elevation['data'][start_index]
+
+        TH = radar.fields['reflectivity']['data'][start_index:end_index]
+        print(radar.fields.keys())
+        # Figure
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[14,12])
+        #-- Zh: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        pcm1 = axes.pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        axes.grid()
+        axes.set_xlabel('Longitude', fontsize=10)
+        axes.set_ylabel('Latitude', fontsize=10)
+        axes.grid()
+        #- savefile
+        plt.suptitle(radar_name+' ('+str(elevation)+'): '+str(file[0:12]),fontweight='bold')
+        fig.savefig(fig_dir+str(file)+'sweep_'+str(nlev)+'.png', dpi=300,transparent=False)
+        plt.close()
+
+        del TH
+
+
+    return
+
+#------------------------------------------------------------------------------
 #------------------------------------------------------------------------------  
 def colormaps(variable):
     """
@@ -448,12 +610,16 @@ if __name__ == '__main__':
               'cfrad.20190224_061413.0000_to_20190224_061537.0000_RMA1_0301_02.nc',
               'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc']
 
-  files_PAR = ['2018032407543300dBZ.vol',
-             '2018100907443400dBZ.vol',
-             '2018121403043200dBZ.vol',
+  # Files below organized: per line. tested for differente minutes. each line is a case study
+  files_PAR = ['2018032407543300dBZ.vol', '2018032407500500dBZ.vol',
+             '2018100907443400dBZ.vol', '2018100907400500dBZ.vol', '2018100907343300dBZ.vol', '2018100907300500dBZ.vol',
+             '2018121403043200dBZ.vol', '2018121402400200dBZ.vol', 
              '2019021109400500dBZ.vol',
-             '2019022315143100dBZ.vol',
+             '2019022315143100dBZ.vol', '2019022315100200dBZ.vol',
              '2020121903100500dBZ.vol']
+    
+  # the ones finally selected are:
+
 
 
   # start w/ RMA1
@@ -493,9 +659,15 @@ if __name__ == '__main__':
       yearfolder = folder[0:4]
       ncfile  = '/relampago/datos/salio/RADAR/PAR/'+ yearfolder + '/' + folder + '/vol/' + files_PAR[ifiles]
     #print('cp ' + ncfile + ' '+dat_dir+'.')
-    plot_ppi(files_PAR[ifiles], fig_dir, dat_dir, 'PAR')
-  #--------------------------------------------------------------------------------------------    
+    plot_ppi_parana(files_PAR[ifiles], fig_dir, dat_dir, 'PAR') 
+  # Plot all variables:
+  file_PAR_all = '2019022315100200'
+  folder = str(files_PAR[0:8]) 
+  plot_ppi_parana_all(file_PAR_all, fig_dir, dat_dir, 'PAR') 
+
     
+#--------------------------------------------------------------------------------------------    
+   
 
     
 
