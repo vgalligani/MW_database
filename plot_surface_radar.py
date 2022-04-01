@@ -371,6 +371,62 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
 
     return
  
+    
+      
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def plot_pseudo_RHI_paranafile, fig_dir, dat_dir, radar_name):
+
+    
+    radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+    lats0 = radar.gate_latitude['data'][start_index:end_index]
+    lons0 = radar.gate_longitude['data'][start_index:end_index]
+    
+    if exists(dat_dir+file+'ZDR.vol'): 
+        radarZDR = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'ZDR.vol')
+    if exists(dat_dir+file+'uPhiDP.vol'): 
+        radaruPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'uPhiDP.vol')    #['uncorrected_differential_phase']
+    if exists(dat_dir+file+'RhoHV.vol'):  
+        radarRHOHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
+    if exists(dat_dir+file+'KDP.vol'):  
+        radarKDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'KDP.vol')
+       
+    RHI_ZH    = np.zeros( len(radar.sweep_start_ray_index['data']), lats0.shape[0], lats0.shape[1] )
+    RHI_ZDR   = np.zeros( len(radar.sweep_start_ray_index['data']), lats0.shape[0], lats0.shape[1] )
+    RHI_PHIDP = np.zeros( len(radar.sweep_start_ray_index['data']), lats0.shape[0], lats0.shape[1] )   
+    
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]       
+        RHI_ZH[nlev,:,:]    = radar.fields['reflectivity']['data'][start_index:end_index]
+        #
+        start_index = radarZDR.sweep_start_ray_index['data'][nlev]
+        end_index   = radarZDR.sweep_end_ray_index['data'][nlev]       
+        RHI_ZDR[nlev,:,:]   = radarZDR.fields['differential_reflectivity']['data'][start_index:end_index]
+        #
+        start_index = radaruPHIDP.sweep_start_ray_index['data'][nlev]
+        end_index   = radaruPHIDP.sweep_end_ray_index['data'][nlev]       
+        RHI_PHIDP[nlev,:,:] = radaruPHIDP.fields['uncorrected_differential_phase']['data'][start_index:end_index]        
+        #
+        
+        # Figure
+        fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
+                        figsize=[14,12])
+        #-- Zh: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats = radar.gate_latitude['data'][start_index:end_index]
+        lons = radar.gate_longitude['data'][start_index:end_index]
+        azimuths = radar.azimuth['data'][start_index:end_index]
+        elevation = radar.elevation['data'][start_index]
+        TH = radar.fields['reflectivity']['data'][start_index:end_index]
+        pcm1 = axes[0,0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+        
+        
+    return 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def plot_ppi_parana(file, fig_dir, dat_dir, radar_name):
@@ -419,6 +475,78 @@ def plot_ppi_parana(file, fig_dir, dat_dir, radar_name):
         del TH
 
 
+    return
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
+
+    if exists(dat_dir+file+'V.vol'): 
+        radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'V.vol')#['velocity']
+        radarTH = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')#['velocity']
+
+        
+        for nlev in range(len(radar.sweep_start_ray_index['data'])):
+            start_index = radar.sweep_start_ray_index['data'][nlev]
+            end_index   = radar.sweep_end_ray_index['data'][nlev]
+            lats = radar.gate_latitude['data'][start_index:end_index]
+            lons = radar.gate_longitude['data'][start_index:end_index]
+            azimuths = radar.azimuth['data'][start_index:end_index]
+            elevation = radar.elevation['data'][start_index]
+            # For Zh:
+            THstart_index = radarTH.sweep_start_ray_index['data'][nlev]
+            THend_index   = radarTH.sweep_end_ray_index['data'][nlev]
+            THlats = radarTH.gate_latitude['data'][THstart_index:THend_index]
+            THlons = radarTH.gate_longitude['data'][THstart_index:THend_index]
+            # Get countours above 20 dBZ
+            TH = radarTH.fields['reflectivity']['data'][start_index:end_index]            
+            # Doppler velocity
+            VEL = radar.fields['velocity']['data'][start_index:end_index]
+            print(radar.fields.keys())
+            print(radar.instrument_parameters.keys())
+            # Correct doppler velo. 
+            #vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='velocity', 
+            #                                                        nyq=np.min(radar.instrument_parameters['nyquist_velocity']['data']))
+            #radar.add_field('velocity_texture', vel_texture, replace_existing=True)
+            #gatefilter  = pyart.filters.GateFilter(radar)
+            #gatefilter.exclude_above('velocity_texture', 5)
+            #nyq = radar.instrument_parameters['nyquist_velocity']['data'][0]
+            #velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='velocity', nyquist_vel=nyq,
+            #                                            centered=True, gatefilter=gatefilter)
+            #radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
+            #VEL_cor   = radar.fields['corrected_velocity']['data'][start_index:end_index]
+            
+            # Figure
+            fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])
+            #-- Doppler: 
+            [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
+            pcm1 = axes.pcolormesh(lons, lats, VEL, cmap=cmap, vmin=vmin, vmax=vmax)
+            cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+            cbar.cmap.set_under(under)
+            cbar.cmap.set_over(over)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+            axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+            axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+            axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+            axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+            axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            axes.grid()
+            axes.set_xlim(xlims)
+            axes.set_ylim(ylims)
+            axes.set_xlabel('Longitude', fontsize=10)
+            axes.set_ylabel('Latitude', fontsize=10)
+            axes.grid()
+            plt.contour(THlons, THlats, TH,  [30], colors=('k'), linewidths=1.5);
+            #- savefile
+            plt.suptitle(radar_name+' ('+str(elevation)+'): '+str(file[0:12]),fontweight='bold')
+            fig.savefig(fig_dir+str(file)+'sweep_'+str(nlev)+'_DOPPLER.png', dpi=300,transparent=False)
+            plt.close()
+
+            del VEL
     return
 
 #------------------------------------------------------------------------------
@@ -699,28 +827,35 @@ if __name__ == '__main__':
   # Plot all variables:
   file_PAR_all = '2018032407500500' #('2018032407543300dBZ.vol' tampoco tiene polarimetricos)
   folder = str(file_PAR_all[0:8]) 
-  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5,-58], [-32,-29.5]) 
   #
   file_PAR_all = '2018100907400500'
   folder = str(file_PAR_all[0:8]) 
-  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-29.5]) 
   #
   file_PAR_all = '2018121402400200'
   folder = str(file_PAR_all[0:8]) 
-  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR',[-63.3,-58.5], [-34.4,-31.5]) 
+
   # 
   file_PAR_all = '2019021109400500'
   folder = str(file_PAR_all[0:8]) 
-  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR',[-62,-58], [-34,-30]) 
   #
   file_PAR_all = '2019022315100200'
   folder = str(file_PAR_all[0:8]) 
-  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
+
   #
   file_PAR_all = '2020121903100500'
   folder = str(file_PAR_all[0:8]) 
-  plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-
+  #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
+  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR',[-63,-58], [-34,-29.5]) 
 
     
     
