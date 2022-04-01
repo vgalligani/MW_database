@@ -223,7 +223,6 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
     
     
     return 
- 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
@@ -346,7 +345,7 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
             azimuths = radarRHOHV.azimuth['data'][start_index:end_index]
             elevation = radarRHOHV.elevation['data'][start_index]
             RHOHV = radarRHOHV.fields['cross_correlation_ratio']['data'][start_index:end_index]
-            pcm1 = axes[1,0].pcolormesh(lons, lats, RHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
+            pcm1 = axes[1,1].pcolormesh(lons, lats, RHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
             cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
             cbar.cmap.set_under(under)
             cbar.cmap.set_over(over)
@@ -368,6 +367,162 @@ def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
         plt.suptitle(radar_name+' ('+str(elevation)+'): '+str(file[0:12]),fontweight='bold')
         fig.savefig(fig_dir+'FULL_'+str(file)+'sweep_'+str(nlev)+'.png', dpi=300,transparent=False)
         plt.close()
+
+    return
+ 
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def plot_ppi_parana_all_zoom(file, fig_dir, dat_dir, radar_name, xlims, ylims):
+
+    radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')
+    if exists(dat_dir+file+'ZDR.vol'): 
+        radarZDR = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'ZDR.vol')
+    
+    if exists(dat_dir+file+'W.vol'): 
+        radarW = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'W.vol')         #['spectrum_width']
+
+    if exists(dat_dir+file+'V.vol'): 
+        radarV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'V.vol')         #['velocity']
+
+    if exists(dat_dir+file+'uPhiDP.vol'): 
+        radaruPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'uPhiDP.vol')    #['uncorrected_differential_phase']
+
+    if exists(dat_dir+file+'RhoHV.vol'):  
+        radarRHOHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
+
+    if exists(dat_dir+file+'PhiDP.vol'):  
+        radarPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'PhiDP.vol') #['differential_phase'] 
+    
+    if exists(dat_dir+file+'KDP.vol'):  
+        radarKDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'KDP.vol')
+
+    
+    for nlev in range(3): #len(radar.sweep_start_ray_index['data'])):   PLOT ONLY FIRST 3
+        
+        # Figure
+        fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
+                        figsize=[14,12])
+        #-- Zh: 
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats = radar.gate_latitude['data'][start_index:end_index]
+        lons = radar.gate_longitude['data'][start_index:end_index]
+        azimuths = radar.azimuth['data'][start_index:end_index]
+        elevation = radar.elevation['data'][start_index]
+        TH = radar.fields['reflectivity']['data'][start_index:end_index]
+        pcm1 = axes[0,0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes[0,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        axes[0,0].grid()
+        axes[0,0].set_xlim(xlims)
+        axes[0,0].set_ylim(ylims)
+        
+        #-- ZDR: 
+        if exists(dat_dir+file+'ZDR.vol'): 
+            [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+            start_index = radarZDR.sweep_start_ray_index['data'][nlev]
+            end_index   = radarZDR.sweep_end_ray_index['data'][nlev]
+            lats = radarZDR.gate_latitude['data'][start_index:end_index]
+            lons = radarZDR.gate_longitude['data'][start_index:end_index]
+            azimuths = radarZDR.azimuth['data'][start_index:end_index]
+            elevation = radarZDR.elevation['data'][start_index]
+            ZDR = radarZDR.fields['differential_reflectivity']['data'][start_index:end_index]
+            pcm1 = axes[0,1].pcolormesh(lons, lats, ZDR, cmap=cmap, vmin=vmin, vmax=vmax)
+            cbar = plt.colorbar(pcm1, ax=axes[0,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+            cbar.cmap.set_under(under)
+            cbar.cmap.set_over(over)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+            axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+            axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+            axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+            axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+            axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            axes[0,1].grid()  
+            axes[0,1].set_xlim(xlims)
+            axes[0,1].set_ylim(ylims)
+        
+         #-- PHIDP: 
+        if exists(dat_dir+file+'uPhiDP.vol'): 
+            [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+            start_index = radaruPHIDP.sweep_start_ray_index['data'][nlev]
+            end_index   = radaruPHIDP.sweep_end_ray_index['data'][nlev]
+            lats = radaruPHIDP.gate_latitude['data'][start_index:end_index]
+            lons = radaruPHIDP.gate_longitude['data'][start_index:end_index]
+            azimuths = radaruPHIDP.azimuth['data'][start_index:end_index]
+            elevation = radaruPHIDP.elevation['data'][start_index]
+            PHIDP = radaruPHIDP.fields['uncorrected_differential_phase']['data'][start_index:end_index]
+            pcm1 = axes[1,0].pcolormesh(lons, lats, PHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
+            cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+            cbar.cmap.set_under(under)
+            cbar.cmap.set_over(over)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+            axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+            axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+            axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+            axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+            axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            axes[1,0].grid()
+            axes[1,0].set_xlabel('Longitude', fontsize=10)
+            axes[1,0].set_ylabel('Latitude', fontsize=10)
+            axes[1,0].grid()   
+            axes[1,0].set_xlim(xlims)
+            axes[1,0].set_ylim(ylims)
+                               
+         #-- KDP:   [RHOHV empty?] 
+        if exists(dat_dir+file+'KDP.vol'): 
+            [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')  #Kdp
+            start_index = radarRHOHV.sweep_start_ray_index['data'][nlev]   # radarKDP
+            end_index   = radarRHOHV.sweep_end_ray_index['data'][nlev]
+            lats = radarRHOHV.gate_latitude['data'][start_index:end_index]
+            lons = radarRHOHV.gate_longitude['data'][start_index:end_index]
+            azimuths = radarRHOHV.azimuth['data'][start_index:end_index]
+            elevation = radarRHOHV.elevation['data'][start_index]
+            RHOHV = radarRHOHV.fields['cross_correlation_ratio']['data'][start_index:end_index]
+            pcm1 = axes[1,1].pcolormesh(lons, lats, RHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
+            cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+            cbar.cmap.set_under(under)
+            cbar.cmap.set_over(over)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+            axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+            axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+            axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+            axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+            axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            axes[1,1].grid()
+            axes[1,1].set_xlabel('Longitude', fontsize=10)
+            axes[1,1].set_ylabel('Latitude', fontsize=10)
+            axes[1,1].set_xlim(xlims)
+            axes[1,1].set_ylim(ylims)
+        
+        #- savefile
+        plt.suptitle(radar_name+' ('+str(elevation)+'): '+str(file[0:12]),fontweight='bold')
+        fig.savefig(fig_dir+'FULL_ZOOM'+str(file)+'sweep_'+str(nlev)+'.png', dpi=300,transparent=False)
+        #plt.close()
 
     return
  
@@ -412,6 +567,35 @@ def plot_pseudo_RHI_paranafile, fig_dir, dat_dir, radar_name):
         #
         
         # Figure
+        
+        #- Simple pcolormesh plot! 
+        fig = plt.figure(figsize=[15,11])
+        fig.add_subplot(221)
+        mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                 Ze_transect,
+                 cmap=cmap_nws_ref, vmin=0, vmax=60)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(Filelist)):
+         # scatter plot para sacar el color de cada pixel 
+         fig = plt.figure(figsize=[30,10])
+         fig.add_subplot(221)
+         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                 s=1,c=Ze_transect[nlev,:],
+                 cmap=cmap_nws_ref, vmin=0, vmax=60)
+         color[nlev,:,:] = sc.to_rgba(Ze_transect[nlev,:])
+         plt.close()
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
         fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
                         figsize=[14,12])
         #-- Zh: 
@@ -486,7 +670,7 @@ def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
         radarTH = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')#['velocity']
 
         
-        for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        for nlev in range(3): # len(radar.sweep_start_ray_index['data'])):
             start_index = radar.sweep_start_ray_index['data'][nlev]
             end_index   = radar.sweep_end_ray_index['data'][nlev]
             lats = radar.gate_latitude['data'][start_index:end_index]
@@ -517,7 +701,7 @@ def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
             #VEL_cor   = radar.fields['corrected_velocity']['data'][start_index:end_index]
             
             # Figure
-            fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])
+            fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[20,12])  # 14,12
             #-- Doppler: 
             [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
             pcm1 = axes.pcolormesh(lons, lats, VEL, cmap=cmap, vmin=vmin, vmax=vmax)
@@ -544,7 +728,7 @@ def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
             #- savefile
             plt.suptitle(radar_name+' ('+str(elevation)+'): '+str(file[0:12]),fontweight='bold')
             fig.savefig(fig_dir+str(file)+'sweep_'+str(nlev)+'_DOPPLER.png', dpi=300,transparent=False)
-            plt.close()
+            #plt.close()
 
             del VEL
     return
@@ -824,43 +1008,83 @@ if __name__ == '__main__':
       ncfile  = '/relampago/datos/salio/RADAR/PAR/'+ yearfolder + '/' + folder + '/vol/' + files_PAR[ifiles]
     #print('cp ' + ncfile + ' '+dat_dir+'.')
     plot_ppi_parana(files_PAR[ifiles], fig_dir, dat_dir, 'PAR') 
-  # Plot all variables:
-  file_PAR_all = '2018032407500500' #('2018032407543300dBZ.vol' tampoco tiene polarimetricos)
-  folder = str(file_PAR_all[0:8]) 
+  #--------------------------------------------------------------------------------------------
+  # Plot all variables in PARANA
+  #--------------------------------------------------------------------------------------------
+  # 20180324_07 no hay polarimetrics 
+  #file_PAR_all = '2018032407500500' #('2018032407543300dBZ.vol' tampoco tiene polarimetricos) 
+  #folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5,-58], [-32,-29.5]) 
-  #
+  #plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5,-58], [-32,-29.5]) 
+  #plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5,-58], [-32,-29.5]) 
+  #--------------------------------------------------------------------------------------------
   file_PAR_all = '2018100907400500'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-29.5]) 
-  #
+  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-30.5]) # figsize=[20,12])
+  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-30.5]) 
+  test_transect [160, 220]
+  #--------------------------------------------------------------------------------------------
   file_PAR_all = '2018121402400200'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR',[-63.3,-58.5], [-34.4,-31.5]) 
-
-  # 
+  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63.3,-58.5], [-34.4,-31.5]) 
+  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63.3,-58.5], [-34.4,-31.5])  
+  test_transect = 320
+  #--------------------------------------------------------------------------------------------
   file_PAR_all = '2019021109400500'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR',[-62,-58], [-34,-30]) 
-  #
+  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-34,-30]) 
+  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-34,-30]) 
+  test_transect = 320
+  #--------------------------------------------------------------------------------------------
   file_PAR_all = '2019022315100200'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
-
-  #
+  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
+  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
+  test_transect = 150
+  #--------------------------------------------------------------------------------------------
   file_PAR_all = '2020121903100500'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR',[-63,-58], [-34,-29.5]) 
+  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63,-58], [-34,-29.5]) 
+  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63,-58], [-34,-29.5]) 
+  test_transect = 180
 
+
+
+
+
+#---------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------
+def check_transec(dat_dir, file_PAR_all, test_transect):       
+  radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file_PAR_all+'dBZ.vol')
+  nlev  = 2  
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[20,12])
+  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+  start_index = radar.sweep_start_ray_index['data'][nlev]
+  end_index   = radar.sweep_end_ray_index['data'][nlev]
+  lats = radar.gate_latitude['data'][start_index:end_index]
+  lons = radar.gate_longitude['data'][start_index:end_index]
+  pcm1 = axes.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+  cbar.cmap.set_under(under)
+  cbar.cmap.set_over(over)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  axes.grid()
+  azimuths = radar.azimuth['data'][start_index:end_index]
+  target_azimuth = azimuths[test_transect]
+  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+  lon_transect     = lons[filas,:]
+  lat_transect     = lats[filas,:]
+  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
     
-    
-    
-    
+  return 
 #--------------------------------------------------------------------------------------------    
    
 
