@@ -12,6 +12,8 @@ import pyart
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import exists
+from shapely.geometry import Polygon
+
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -530,7 +532,7 @@ def plot_ppi_parana_all_zoom(file, fig_dir, dat_dir, radar_name, xlims, ylims):
       
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_pseudo_RHI_paranafile, fig_dir, dat_dir, radar_name):
+def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect):
 
     
     radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')
@@ -548,68 +550,98 @@ def plot_pseudo_RHI_paranafile, fig_dir, dat_dir, radar_name):
     if exists(dat_dir+file+'KDP.vol'):  
         radarKDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'KDP.vol')
        
-    RHI_ZH    = np.zeros( len(radar.sweep_start_ray_index['data']), lats0.shape[0], lats0.shape[1] )
-    RHI_ZDR   = np.zeros( len(radar.sweep_start_ray_index['data']), lats0.shape[0], lats0.shape[1] )
-    RHI_PHIDP = np.zeros( len(radar.sweep_start_ray_index['data']), lats0.shape[0], lats0.shape[1] )   
-    
+    Ze_transect     = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); Ze_transect[:]=np.nan
+    ZDR_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); ZDR_transect[:]=np.nan
+    PHI_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); PHI_transect[:]=np.nan
+    lon_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); lon_transect[:]=np.nan
+    lat_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); lat_transect[:]=np.nan
+    RHO_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); RHO_transect[:]=np.nan
+    approx_altitude = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); approx_altitude[:]=np.nan
+    color           = np.full((  len(radar.sweep_start_ray_index['data']),  lats0.shape[1], 4), np.nan)
+    gate_range      = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); gate_range[:]=np.nan
+
+    azydims = lats0.shape[1]-1
+
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]       
-        RHI_ZH[nlev,:,:]    = radar.fields['reflectivity']['data'][start_index:end_index]
+        ZHZH     = radar.fields['reflectivity']['data'][start_index:end_index]
+        azimuths = radar.azimuth['data'][start_index:end_index]
+        lats     = radar.gate_latitude['data'][start_index:end_index]
+        lons     = radar.gate_longitude['data'][start_index:end_index]
+        gateZ    = radar.gate_z['data'][start_index:end_index]
+        gateX    = radar.gate_x['data'][start_index:end_index]
+        gateY    = radar.gate_y['data'][start_index:end_index]
+        gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
         #
         start_index = radarZDR.sweep_start_ray_index['data'][nlev]
         end_index   = radarZDR.sweep_end_ray_index['data'][nlev]       
-        RHI_ZDR[nlev,:,:]   = radarZDR.fields['differential_reflectivity']['data'][start_index:end_index]
+        ZDRZDR      = radarZDR.fields['differential_reflectivity']['data'][start_index:end_index]
         #
         start_index = radaruPHIDP.sweep_start_ray_index['data'][nlev]
         end_index   = radaruPHIDP.sweep_end_ray_index['data'][nlev]       
-        RHI_PHIDP[nlev,:,:] = radaruPHIDP.fields['uncorrected_differential_phase']['data'][start_index:end_index]        
+        PHIDPPHIDP  = radaruPHIDP.fields['uncorrected_differential_phase']['data'][start_index:end_index]        
         #
-        
-        # Figure
-        
-        #- Simple pcolormesh plot! 
-        fig = plt.figure(figsize=[15,11])
-        fig.add_subplot(221)
-        mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
-                 Ze_transect,
-                 cmap=cmap_nws_ref, vmin=0, vmax=60)
-    plt.close()
+        target_azimuth = azimuths[test_transect]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        #
+        lon_transect[nlev,:]     = lons[filas,:]
+        lat_transect[nlev,:]     = lats[filas,:]
+        Ze_transect[nlev,:]      = ZHZH[filas,:]
+        ZDR_transect[nlev,:]     = ZDRZDR[filas,:]
+        PHI_transect[nlev,:]     = PHIDPPHIDP[filas,:]
+        #RHO_transect[nlev,:]     = rh[nlev,filas,:]
+        # 
+        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(0)[0]);
+        approx_altitude[nlev,:] = zgate/1e3
+        gate_range[nlev,:]      = gates_range[filas,:]/1e3;
 
-    #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(Filelist)):
-         # scatter plot para sacar el color de cada pixel 
+                
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(111)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude, Ze_transect)
+        #         cmap=colormaps('ref'), vmin=0, vmax=60)
+
+    #- De esta manera me guardo el color con el que rellenar los polygons (scatter plot para sacar el color de cada pixel)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
          fig = plt.figure(figsize=[30,10])
          fig.add_subplot(221)
          sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
                  s=1,c=Ze_transect[nlev,:],
-                 cmap=cmap_nws_ref, vmin=0, vmax=60)
+                 cmap=colormaps('ref'), vmin=0, vmax=60)
          color[nlev,:,:] = sc.to_rgba(Ze_transect[nlev,:])
          plt.close()
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        fig, axes = plt.subplots(nrows=2, ncols=2, constrained_layout=True,
-                        figsize=[14,12])
-        #-- Zh: 
-        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats = radar.gate_latitude['data'][start_index:end_index]
-        lons = radar.gate_longitude['data'][start_index:end_index]
-        azimuths = radar.azimuth['data'][start_index:end_index]
-        elevation = radar.elevation['data'][start_index]
-        TH = radar.fields['reflectivity']['data'][start_index:end_index]
-        pcm1 = axes[0,0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
-        
-        
+    #- Try polygons
+    fig2, axes = plt.subplots(nrows=4,ncols=3,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
+    fig1 = plt.figure(figsize=(15,20))
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+         # Create the cone for each elevation IN TERMS OF RANGE. 
+         # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
+         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+         P1 = Polygon([( gate_range[nlev,0],    approx_altitude[nlev,0]-ancho_haz_i0      ),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                   ( gate_range[nlev,0],    approx_altitude[nlev,0]+ancho_haz_i0      )])
+         ancho = 50/1E3
+         # Location of gates? Every 100m?  
+         LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                   (gate_range[nlev,x]+ancho, 0),
+                   (gate_range[nlev,x]+ancho, 50),
+                   (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+         # Plot
+         for i, l in enumerate(LS):
+             # Get the polygon of the intersection between the cone and the space 
+             #reserved for a specific point
+             inter = l.intersection(P1)
+             x,y = inter.exterior.xy
+             # Then plot it, filled by the color we want
+             axes[0,0].fill(x, y, color = color[nlev,i,:], )
+             x, y = P1.exterior.xy
+
+
     return 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -1052,9 +1084,11 @@ if __name__ == '__main__':
   plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63,-58], [-34,-29.5]) 
   plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63,-58], [-34,-29.5]) 
   test_transect = 180
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect)
 
 
 
+ CORREGIR Y TERMINAR RHISs. y ver GMI. ver colorbar de rhis
 
 
 #---------------------------------------------------------------------------------------------
