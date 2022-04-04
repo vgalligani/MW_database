@@ -721,22 +721,21 @@ def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
             print(radar.fields.keys())
             print(radar.instrument_parameters.keys())
             # Correct doppler velo. 
-            #vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='velocity', 
-            #                                                        nyq=np.min(radar.instrument_parameters['nyquist_velocity']['data']))
-            #radar.add_field('velocity_texture', vel_texture, replace_existing=True)
-            #gatefilter  = pyart.filters.GateFilter(radar)
-            #gatefilter.exclude_above('velocity_texture', 5)
-            #nyq = radar.instrument_parameters['nyquist_velocity']['data'][0]
-            #velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='velocity', nyquist_vel=nyq,
-            #                                            centered=True, gatefilter=gatefilter)
-            #radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
-            #VEL_cor   = radar.fields['corrected_velocity']['data'][start_index:end_index]
+            vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='velocity', 
+                                                                    nyq=-39.9)
+            radar.add_field('velocity_texture', vel_texture, replace_existing=True)
+            gatefilter  = pyart.filters.GateFilter(radar)
+            gatefilter.exclude_above('velocity_texture', 5)
+            velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='velocity', nyquist_vel=-39.9,
+                                                        centered=True, gatefilter=gatefilter)
+            radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
+            VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
             
             # Figure
             fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[20,12])  # 14,12
             #-- Doppler: 
             [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
-            pcm1 = axes.pcolormesh(lons, lats, VEL, cmap=cmap, vmin=vmin, vmax=vmax)
+            pcm1 = axes.pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
             cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
             cbar.cmap.set_under(under)
             cbar.cmap.set_over(over)
@@ -759,7 +758,7 @@ def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
             plt.contour(THlons, THlats, TH,  [30], colors=('k'), linewidths=1.5);
             #- savefile
             plt.suptitle(radar_name+' ('+str(elevation)+'): '+str(file[0:12]),fontweight='bold')
-            fig.savefig(fig_dir+str(file)+'sweep_'+str(nlev)+'_DOPPLER.png', dpi=300,transparent=False)
+            fig.savefig(fig_dir+str(file)+'sweep_'+str(nlev)+'_DOPPLER_corrected.png', dpi=300,transparent=False)
             #plt.close()
 
             del VEL
