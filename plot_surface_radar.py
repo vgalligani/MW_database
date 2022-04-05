@@ -100,10 +100,10 @@ def set_plot_settings(var):
     else: #Doppler por ejemplo
         units = r'V$_r$ [m/s]'
         cmap = pyart.graph.cm.BuDRd18
-        vmin = -15
-        vmax = 15
-        max = 15.01
-        intt = 5
+        vmin = -10
+        vmax = 10
+        max = 10.01
+        intt = 2
         under = 'white'
         over = 'white'    
         
@@ -733,10 +733,10 @@ def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
             plt.ylabel('Count')
             plt.close()
             
-            gatefilter  = pyart.filters.GateFilter(radar)
-            gatefilter.exclude_above('velocity_texture', 3)
+            #gatefilter  = pyart.filters.GateFilter(radar)
+            #gatefilter.exclude_above('velocity_texture', 3)
             velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='velocity', nyquist_vel=39.9,
-                                                        centered=True, gatefilter=gatefilter)
+                                                        centered=True) #, gatefilter=gatefilter)
             radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
             VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
             
