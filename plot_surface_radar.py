@@ -1137,6 +1137,31 @@ def check_transec(dat_dir, file_PAR_all, test_transect):
   return 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+def plot_gmi(fname):
+    
+    # read file
+    f = h5py.File( fname, 'r')
+    tbs_s1 = f[u'/S1/Tc'][:,:,:]           
+    lon_s1 = f[u'/S1/Longitude'][:,:] 
+    lat_s1 = f[u'/S1/Latitude'][:,:]
+    tbs_s2 = f[u'/S2/Tc'][:,:,:]           
+    lon_s2 = f[u'/S2/Longitude'][:,:] 
+    lat_s2 = f[u'/S2/Latitude'][:,:]
+    f.close()
+    # keep domain of interest only by keeping those where the center nadir obs is inside domain
+    inside_s1   = np.logical_and(np.logical_and(lon_s1[:,45] >= -70, lon_s1[:,45] <= -50), 
+                              np.logical_and(lat_s1[:,45] >= -50, lat_s1[:,45] <= -20))
+    inside_s2   = np.logical_and(np.logical_and(lon_s2 >= -70, lon_s2 <= -50), 
+                                         np.logical_and(lat_s2 >= -50, lat_s2 <= -20))    
+
+    
+    
+    
+    return 
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+
+
 
 if __name__ == '__main__':
 
