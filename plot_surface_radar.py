@@ -1116,7 +1116,7 @@ def discrete_cmap(N, base_cmap=None):
     
     return base.from_list(cmap_name, color_list, N)
 #------------------------------------------------------------------------------
-#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------ 
 def check_transec(dat_dir, file_PAR_all, test_transect):       
   radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file_PAR_all+'dBZ.vol')
   nlev  = 0  
@@ -1128,6 +1128,34 @@ def check_transec(dat_dir, file_PAR_all, test_transect):
   lats = radar.gate_latitude['data'][start_index:end_index]
   lons = radar.gate_longitude['data'][start_index:end_index]
   pcm1 = axes.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+  cbar.cmap.set_under(under)
+  cbar.cmap.set_over(over)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  axes.grid()
+  azimuths = radar.azimuth['data'][start_index:end_index]
+  target_azimuth = azimuths[test_transect]
+  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+  lon_transect     = lons[filas,:]
+  lat_transect     = lats[filas,:]
+  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+    
+  return 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------ 
+def check_transec_zdr(dat_dir, file_PAR_all, test_transect):       
+  radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file_PAR_all+'ZDR.vol')
+  nlev  = 0  
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[20,12])
+  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+  start_index = radar.sweep_start_ray_index['data'][nlev]
+  end_index   = radar.sweep_end_ray_index['data'][nlev]
+  lats = radar.gate_latitude['data'][start_index:end_index]
+  lons = radar.gate_longitude['data'][start_index:end_index]
+  pcm1 = axes.pcolormesh(lons, lats, radar.fields['differential_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
   cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
   cbar.cmap.set_under(under)
   cbar.cmap.set_over(over)
@@ -1625,8 +1653,11 @@ if __name__ == '__main__':
   #plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect, 0, 150)
   gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20201219-S015114-E032348.038680.V05A.HDF5' 
   plot_gmi(gmi_file, opts, dat_dir, file_PAR_all)
-
-
+  # check ZDR offset ?
+  test_transect = 100
+  check_transec(dat_dir, file_PAR_all, test_transect)  
+  check_transec_zdr(dat_dir, file_PAR_all, test_transect)  
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', 100, 0, 150)
 #---------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------
 
