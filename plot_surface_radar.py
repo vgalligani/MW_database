@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from os.path import exists
 from shapely.geometry import Polygon
+import matplotlib
 
 
 #------------------------------------------------------------------------------
@@ -391,7 +392,7 @@ def plot_ppi_parana_all_zoom(file, fig_dir, dat_dir, radar_name, xlims, ylims):
         radaruPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'uPhiDP.vol')    #['uncorrected_differential_phase']
 
     if exists(dat_dir+file+'RhoHV.vol'):  
-        radarRHOHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
+        radarRHOHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')    #['cross_correlation_ratio']
 
     if exists(dat_dir+file+'PhiDP.vol'):  
         radarPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'PhiDP.vol') #['differential_phase'] 
@@ -532,7 +533,7 @@ def plot_ppi_parana_all_zoom(file, fig_dir, dat_dir, radar_name, xlims, ylims):
       
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect):
+def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect, xlim_range1, xlim_range2):
 
     
     radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')
@@ -546,7 +547,7 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect):
     if exists(dat_dir+file+'uPhiDP.vol'): 
         radaruPHIDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'uPhiDP.vol')    #['uncorrected_differential_phase']
     if exists(dat_dir+file+'RhoHV.vol'):  
-        radarRHOHV = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
+        radarRHO = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'RhoHV.vol')
     if exists(dat_dir+file+'KDP.vol'):  
         radarKDP = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'KDP.vol')
        
@@ -565,10 +566,19 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect):
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]       
-        ZHZH     = radar.fields['reflectivity']['data'][start_index:end_index]
-        azimuths = radar.azimuth['data'][start_index:end_index]
-        lats     = radar.gate_latitude['data'][start_index:end_index]
-        lons     = radar.gate_longitude['data'][start_index:end_index]
+        ZHZH        = radar.fields['reflectivity']['data'][start_index:end_index]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        # En verdad buscar azimuth no transecta ... 
+        azimuths    = radar.azimuth['data'][start_index:end_index]
+        if nlev == 0: 
+            target_azimuth = azimuths[test_transect]  #- target azimuth for nlev=0 test case is 301.5
+            plt.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index])
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect[nlev,:]     = lons[filas,:]
+        lat_transect[nlev,:]     = lats[filas,:]
+        plt.plot(np.ravel(lon_transect[nlev,:]), np.ravel(lat_transect[nlev,:]))
+        #
         gateZ    = radar.gate_z['data'][start_index:end_index]
         gateX    = radar.gate_x['data'][start_index:end_index]
         gateY    = radar.gate_y['data'][start_index:end_index]
@@ -582,28 +592,27 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect):
         end_index   = radaruPHIDP.sweep_end_ray_index['data'][nlev]       
         PHIDPPHIDP  = radaruPHIDP.fields['uncorrected_differential_phase']['data'][start_index:end_index]        
         #
-        target_azimuth = azimuths[test_transect]
-        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        start_index = radarRHO.sweep_start_ray_index['data'][nlev]
+        end_index   = radarRHO.sweep_end_ray_index['data'][nlev]       
+        RHORHO  = radarRHO.fields['cross_correlation_ratio']['data'][start_index:end_index]        
         #
-        lon_transect[nlev,:]     = lons[filas,:]
-        lat_transect[nlev,:]     = lats[filas,:]
         Ze_transect[nlev,:]      = ZHZH[filas,:]
         ZDR_transect[nlev,:]     = ZDRZDR[filas,:]
         PHI_transect[nlev,:]     = PHIDPPHIDP[filas,:]
-        #RHO_transect[nlev,:]     = rh[nlev,filas,:]
+        RHO_transect[nlev,:]     = RHORHO[filas,:]
         # 
-        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(0)[0]);
+        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
         approx_altitude[nlev,:] = zgate/1e3
         gate_range[nlev,:]      = gates_range[filas,:]/1e3;
-
                 
+    #---------------------------------------- REFLECTIVITY
     #- Simple pcolormesh plot! 
     fig = plt.figure(figsize=[15,11])
     fig.add_subplot(111)
-    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude, Ze_transect)
-        #         cmap=colormaps('ref'), vmin=0, vmax=60)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude, Ze_transect, cmap=colormaps('ref'), vmin=0, vmax=60)
 
     #- De esta manera me guardo el color con el que rellenar los polygons (scatter plot para sacar el color de cada pixel)
+    print(len(radar.sweep_start_ray_index['data']))
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
          fig = plt.figure(figsize=[30,10])
          fig.add_subplot(221)
@@ -614,9 +623,9 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect):
          plt.close()
 
     #- Try polygons
-    fig2, axes = plt.subplots(nrows=4,ncols=3,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
+    fig2, axes = plt.subplots(nrows=3,ncols=1,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
     fig1 = plt.figure(figsize=(15,20))
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
          # Create the cone for each elevation IN TERMS OF RANGE. 
          # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
          ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
@@ -636,12 +645,135 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect):
              # Get the polygon of the intersection between the cone and the space 
              #reserved for a specific point
              inter = l.intersection(P1)
-             x,y = inter.exterior.xy
+             x,y = inter.exterior.xy    
              # Then plot it, filled by the color we want
-             axes[0,0].fill(x, y, color = color[nlev,i,:], )
+             axes[0].fill(x, y, color = color[nlev,i,:], )
              x, y = P1.exterior.xy
+         axes[0].set_ylim([0, 20])
+         axes[0].set_ylabel('Altitude (km)')
+         axes[0].grid()
+         axes[0].set_xlim((xlim_range1, xlim_range2))
+         norm = matplotlib.colors.Normalize(vmin=0.,vmax=60.)
+         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('ref'))
+         cax.set_array(Ze_transect)
+         cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
 
+    del mycolorbar, x, y, inter
+    #---------------------------------------- ZDR
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                ZDR_transect,
+                cmap= colormaps('zdr'), vmin=-2, vmax=5.)
+    plt.close()
 
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radarZDR.sweep_start_ray_index['data'])):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=ZDR_transect[nlev,:],
+                cmap= colormaps('zdr'), vmin=-2, vmax=5.)
+        color[nlev,:,:] = sc.to_rgba(ZDR_transect[nlev,:])
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radarZDR.sweep_start_ray_index['data'])-1):
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[1].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[1].set_ylim([0, 20])
+        axes[1].set_ylabel('Altitude (km)')
+        axes[1].grid()
+        axes[1].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=-2.,vmax=5.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('zdr'))
+        cax.set_array(ZDR_transect)
+        cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
+        
+    del mycolorbar, x, y, inter
+    #---------------------------------------- RHOHV
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                RHO_transect,
+                cmap = pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radarRHO.sweep_start_ray_index['data'])):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=RHO_transect[nlev,:],
+                cmap= pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+        color[nlev,:,:] = sc.to_rgba(RHO_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radarRHO.sweep_start_ray_index['data'])-1):
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[2].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[2].set_ylim([0, 20])
+        axes[2].set_ylabel('Altitude (km)')
+        axes[2].grid()
+        axes[2].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0.7,vmax=1.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.RefDiff)
+        cax.set_array(RHO_transect)
+        cbar_rho = fig2.colorbar(cax, ax=axes[2], shrink=1.1, ticks=np.arange(0.7,1.01,0.1), label=r'$\rho_{hv}$')     
+        
+    del mycolorbar, x, y, inter
+    
+    #- savefile
+    plt.suptitle(radar_name + ': '+str(file[0:12]) ,fontweight='bold')
+    fig.savefig(fig_dir+'pseudo_RHI'+str(file)+'.png', dpi=300,transparent=False)
+    plt.close()    
+    
+    
     return 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -977,6 +1109,34 @@ def discrete_cmap(N, base_cmap=None):
     return base.from_list(cmap_name, color_list, N)
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------  
+def check_transec(dat_dir, file_PAR_all, test_transect):       
+  radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file_PAR_all+'dBZ.vol')
+  nlev  = 0  
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[20,12])
+  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+  start_index = radar.sweep_start_ray_index['data'][nlev]
+  end_index   = radar.sweep_end_ray_index['data'][nlev]
+  lats = radar.gate_latitude['data'][start_index:end_index]
+  lons = radar.gate_longitude['data'][start_index:end_index]
+  pcm1 = axes.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+  cbar.cmap.set_under(under)
+  cbar.cmap.set_over(over)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  axes.grid()
+  azimuths = radar.azimuth['data'][start_index:end_index]
+  target_azimuth = azimuths[test_transect]
+  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+  lon_transect     = lons[filas,:]
+  lat_transect     = lats[filas,:]
+  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+    
+  return 
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 
 if __name__ == '__main__':
 
@@ -1006,10 +1166,7 @@ if __name__ == '__main__':
              '2019022315143100dBZ.vol',   '2019022315100200dBZ.vol',
              '2020121903100500dBZ.vol']
     
-  # the ones finally selected are:
-
-
-
+  #------------------------------------------------------------------------------  
   # start w/ RMA1
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA1/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA1/'
@@ -1037,8 +1194,9 @@ if __name__ == '__main__':
     plot_ppi(files_RMA5[ifiles], fig_dir, dat_dir, 'RMA5')
   #--------------------------------------------------------------------------------------------
   # start w/ PARANA
-  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/PAR/'
-  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/PAR/'
+  fig_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/PAR/'
+  dat_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/PAR/'
+  gmi_path = '/home/victoria.galligani/datosmunin2/DATOS_mw/GMI'
   for ifiles in range(len(files_PAR)):
     folder = str(files_PAR[ifiles][0:8])
     if folder[0:4] == '2021':
@@ -1061,72 +1219,61 @@ if __name__ == '__main__':
   file_PAR_all = '2018100907400500'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-30.5]) # figsize=[20,12])
-  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-30.5]) 
-  test_transect [160, 220]
+  #plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-30.5]) # figsize=[20,12])
+  #plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-32,-30.5]) 
+  test_transect = 235
+  check_transec(dat_dir, file_PAR_all, test_transect)     
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect, 0, 150)  
+  test_transect = 312
+  check_transec(dat_dir, file_PAR_all, test_transect)     
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect, 0, 150)   
+  gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20181009-S072527-E085801.026208.V05A.HDF5'
+    
   #--------------------------------------------------------------------------------------------
   file_PAR_all = '2018121402400200'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63.3,-58.5], [-34.4,-31.5]) 
-  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63.3,-58.5], [-34.4,-31.5])  
-  test_transect = 320
+  #plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63.3,-58.5], [-34.4,-31.5]) 
+  #plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63.3,-58.5], [-34.4,-31.5])  
+  test_transect = 45
+  check_transec(dat_dir, file_PAR_all, test_transect)     
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect, 0, 150)  
+  gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5' 
   #--------------------------------------------------------------------------------------------
   file_PAR_all = '2019021109400500'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-34,-30]) 
-  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-34,-30]) 
-  test_transect = 320
+  #plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-34,-30]) 
+  #plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-62,-58], [-34,-30]) 
+  test_transect = 52
+  check_transec(dat_dir, file_PAR_all, test_transect)     
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect, 0, 150)  
+  gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20190211-S095220-E112454.028154.V05A.HDF5'
   #--------------------------------------------------------------------------------------------
   file_PAR_all = '2019022315100200'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
-  plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
-  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
-  test_transect = 150
+  #plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
+  #plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-61.5, -58], [-34,-31]) 
+  test_transect = 240
+  check_transec(dat_dir, file_PAR_all, test_transect)     
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect, 0, 110)
+  gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20190223-S150103-E163336.028344.V05A.HDF5'
   #--------------------------------------------------------------------------------------------
   file_PAR_all = '2020121903100500'
   folder = str(file_PAR_all[0:8]) 
   #plot_ppi_parana_all(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR') 
   plot_ppi_parana_doppler(file_PAR_all,  fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63,-58], [-34,-29.5]) 
-  plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63,-58], [-34,-29.5]) 
-  test_transect = 180
-  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect)
-
-
-
- CORREGIR Y TERMINAR RHISs. y ver GMI. ver colorbar de rhis
+  #plot_ppi_parana_all_zoom(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', [-63,-58], [-34,-29.5]) 
+  test_transect = 250
+  check_transec(dat_dir, file_PAR_all, test_transect)       
+  plot_pseudo_RHI_parana(file_PAR_all, fig_dir+'full_pol/'+folder+'/', dat_dir, 'PAR', test_transect, 0, 150)
+  gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20201219-S015114-E032348.038680.V05A.HDF5' 
 
 
 #---------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------
-def check_transec(dat_dir, file_PAR_all, test_transect):       
-  radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file_PAR_all+'dBZ.vol')
-  nlev  = 2  
-  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                        figsize=[20,12])
-  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-  start_index = radar.sweep_start_ray_index['data'][nlev]
-  end_index   = radar.sweep_end_ray_index['data'][nlev]
-  lats = radar.gate_latitude['data'][start_index:end_index]
-  lons = radar.gate_longitude['data'][start_index:end_index]
-  pcm1 = axes.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
-  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-  cbar.cmap.set_under(under)
-  cbar.cmap.set_over(over)
-  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-  axes.grid()
-  azimuths = radar.azimuth['data'][start_index:end_index]
-  target_azimuth = azimuths[test_transect]
-  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-  lon_transect     = lons[filas,:]
-  lat_transect     = lats[filas,:]
-  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
-  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
-    
-  return 
+
 #--------------------------------------------------------------------------------------------    
    
 
