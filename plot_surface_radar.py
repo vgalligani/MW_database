@@ -722,11 +722,20 @@ def plot_ppi_parana_doppler(file, fig_dir, dat_dir, radar_name, xlims, ylims):
             print(radar.instrument_parameters.keys())
             # Correct doppler velo. 
             vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='velocity', 
-                                                                    nyq=-39.9)
+                                                                    nyq=39.9)
             radar.add_field('velocity_texture', vel_texture, replace_existing=True)
+            VEL_texture = radar.fields['velocity_texture']['data'][start_index:end_index]; 
+            #- Plot texture 
+            hist, bins = np.histogram(VEL_texture[~np.isnan(VEL_texture)], bins=150)
+            bins = (bins[1:]+bins[:-1])/2.0
+            plt.plot(bins, hist)
+            plt.xlabel('Velocity texture')
+            plt.ylabel('Count')
+            plt.close()
+            
             gatefilter  = pyart.filters.GateFilter(radar)
-            gatefilter.exclude_above('velocity_texture', 5)
-            velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='velocity', nyquist_vel=-39.9,
+            gatefilter.exclude_above('velocity_texture', 3)
+            velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='velocity', nyquist_vel=39.9,
                                                         centered=True, gatefilter=gatefilter)
             radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
             VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
