@@ -236,6 +236,242 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
     return 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, test_transect): 
+    
+    radar = pyart.io.read(dat_dir+file) 
+    # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP']) for RMA1
+    # dict_keys(['DBZH', 'KDP', 'RHOHV', 'PHIDP', 'CM']) for RMA5
+    # dict_keys(['DBZV', 'DBZH', 'ZDR', 'KDP', 'RHOHV', 'PHIDP', 'VRAD']) for SOME RMA5
+    print(radar.fields.keys())
+    
+    #- Radar sweep
+    nelev       = 0
+    start_index = radar.sweep_start_ray_index['data'][nelev]
+    end_index   = radar.sweep_end_ray_index['data'][nelev]
+    lats0        = radar.gate_latitude['data'][start_index:end_index]
+    lons0        = radar.gate_longitude['data'][start_index:end_index]
+    azimuths    = radar.azimuth['data'][start_index:end_index]
+            
+    Ze_transect     = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); Ze_transect[:]=np.nan
+    ZDR_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); ZDR_transect[:]=np.nan
+    PHI_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); PHI_transect[:]=np.nan
+    lon_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); lon_transect[:]=np.nan
+    lat_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); lat_transect[:]=np.nan
+    RHO_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); RHO_transect[:]=np.nan
+    approx_altitude = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); approx_altitude[:]=np.nan
+    color           = np.full((  len(radar.sweep_start_ray_index['data']), lats0.shape[1], 4), np.nan)
+    gate_range      = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); gate_range[:]=np.nan
+
+    azydims = lats0.shape[1]-1
+    
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]       
+        if radar_name == 'RMA1':
+            TH       = radar.fields['TH']['data'][start_index:end_index]
+            TV       = radar.fields['TV']['data'][start_index:end_index]
+            ZDR      = TH-TV
+        elif radar_name == 'RMA5':
+            ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
+            if 'DBZV' in radar.fields.keys(): 
+                TV     = radar.fields['DBZV']['data'][start_index:end_index]     
+                ZDRZDR = ZHZH-TV   
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]        
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        # En verdad buscar azimuth no transecta ... 
+        azimuths    = radar.azimuth['data'][start_index:end_index]
+        target_azimuth = azimuths[test_transect]  #- target azimuth for nlev=0 test case is 301.5
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect[nlev,:]     = lons[filas,:]
+        lat_transect[nlev,:]     = lats[filas,:]
+        #
+        gateZ    = radar.gate_z['data'][start_index:end_index]
+        gateX    = radar.gate_x['data'][start_index:end_index]
+        gateY    = radar.gate_y['data'][start_index:end_index]
+        gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+        #
+        Ze_transect[nlev,:]      = ZHZH[filas,:]
+        ZDR_transect[nlev,:]     = ZDRZDR[filas,:]
+        RHO_transect[nlev,:]     = RHORHO[filas,:]
+        # 
+        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
+        approx_altitude[nlev,:] = zgate/1e3
+        gate_range[nlev,:]      = gates_range[filas,:]/1e3;
+                
+    #---------------------------------------- REFLECTIVITY
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(111)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude, Ze_transect, cmap=colormaps('ref'), vmin=0, vmax=60)
+
+    #- De esta manera me guardo el color con el que rellenar los polygons (scatter plot para sacar el color de cada pixel)
+    print(len(radar.sweep_start_ray_index['data']))
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+         fig = plt.figure(figsize=[30,10])
+         fig.add_subplot(221)
+         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                 s=1,c=Ze_transect[nlev,:],
+                 cmap=colormaps('ref'), vmin=0, vmax=60)
+         color[nlev,:,:] = sc.to_rgba(Ze_transect[nlev,:])
+         plt.close()
+
+    #- Try polygons
+    fig2, axes = plt.subplots(nrows=3,ncols=1,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
+    fig1 = plt.figure(figsize=(15,20))
+    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+         # Create the cone for each elevation IN TERMS OF RANGE. 
+         # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
+         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+         P1 = Polygon([( gate_range[nlev,0],    approx_altitude[nlev,0]-ancho_haz_i0      ),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                   ( gate_range[nlev,0],    approx_altitude[nlev,0]+ancho_haz_i0      )])
+         ancho = 50/1E3
+         # Location of gates? Every 100m?  
+         LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                   (gate_range[nlev,x]+ancho, 0),
+                   (gate_range[nlev,x]+ancho, 50),
+                   (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+         # Plot
+         for i, l in enumerate(LS):
+             # Get the polygon of the intersection between the cone and the space 
+             #reserved for a specific point
+             inter = l.intersection(P1)
+             x,y = inter.exterior.xy    
+             # Then plot it, filled by the color we want
+             axes[0].fill(x, y, color = color[nlev,i,:], )
+             x, y = P1.exterior.xy
+         axes[0].set_ylim([0, 20])
+         axes[0].set_ylabel('Altitude (km)')
+         axes[0].grid()
+         axes[0].set_xlim((xlim_range1, xlim_range2))
+         norm = matplotlib.colors.Normalize(vmin=0.,vmax=60.)
+         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('ref'))
+         cax.set_array(Ze_transect)
+         cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
+
+    del mycolorbar, x, y, inter
+    #---------------------------------------- ZDR
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                ZDR_transect,
+                cmap= colormaps('zdr'), vmin=-2, vmax=5.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=ZDR_transect[nlev,:],
+                cmap= colormaps('zdr'), vmin=-2, vmax=5.)
+        color[nlev,:,:] = sc.to_rgba(ZDR_transect[nlev,:])
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[1].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[1].set_ylim([0, 20])
+        axes[1].set_ylabel('Altitude (km)')
+        axes[1].grid()
+        axes[1].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=-2.,vmax=5.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('zdr'))
+        cax.set_array(ZDR_transect)
+        cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
+        
+    del mycolorbar, x, y, inter
+    #---------------------------------------- RHOHV
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                RHO_transect,
+                cmap = pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=RHO_transect[nlev,:],
+                cmap= pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+        color[nlev,:,:] = sc.to_rgba(RHO_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[2].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[2].set_ylim([0, 20])
+        axes[2].set_ylabel('Altitude (km)')
+        axes[2].grid()
+        axes[2].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0.7,vmax=1.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.RefDiff)
+        cax.set_array(RHO_transect)
+        cbar_rho = fig2.colorbar(cax, ax=axes[2], shrink=1.1, ticks=np.arange(0.7,1.01,0.1), label=r'$\rho_{hv}$')     
+        
+    del mycolorbar, x, y, inter
+    
+    #- savefile
+    plt.suptitle(radar_name + ': '+str(file[0:12]) ,fontweight='bold')
+    fig.savefig(fig_dir+'pseudo_RHI'+str(file)+'.png', dpi=300,transparent=False)
+    plt.close()    
+    
+    
+    
+    return 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def plot_ppi_parana_all(file, fig_dir, dat_dir, radar_name):
 
     radar = pyart.aux_io.read_rainbow_wrl(dat_dir+file+'dBZ.vol')
@@ -1171,6 +1407,36 @@ def check_transec_zdr(dat_dir, file_PAR_all, test_transect):
   plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
     
   return 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------ 
+def check_transec_rma(dat_dir, file_PAR_all, test_transect):       
+    
+  radar = pyart.io.read(dat_dir+file_PAR_all) 
+  nlev  = 0  
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[20,12])
+  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+  start_index = radar.sweep_start_ray_index['data'][nlev]
+  end_index   = radar.sweep_end_ray_index['data'][nlev]
+  lats = radar.gate_latitude['data'][start_index:end_index]
+  lons = radar.gate_longitude['data'][start_index:end_index]
+  pcm1 = axes.pcolormesh(lons, lats, radar.fields['DBZH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+  cbar.cmap.set_under(under)
+  cbar.cmap.set_over(over)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  axes.grid()
+  azimuths = radar.azimuth['data'][start_index:end_index]
+  target_azimuth = azimuths[test_transect]
+  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+  lon_transect     = lons[filas,:]
+  lat_transect     = lats[filas,:]
+  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+    
+  return 
+
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
 def GMI_colormap(): 
@@ -1312,9 +1578,12 @@ def GMI_colormap():
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_gmi(fname, options, radardat_dir, radar_file):
+def plot_gmi(fname, options, radardat_dir, radar_file, rma):
     
-    radar = pyart.aux_io.read_rainbow_wrl(radardat_dir+radar_file+'dBZ.vol')
+    if rma == 5:
+        radar = pyart.io.read(radardat_dir+radar_file) 
+    else:
+        radar = pyart.aux_io.read_rainbow_wrl(radardat_dir+radar_file+'dBZ.vol')
       
     fontsize = 12
     user = platform.system()
@@ -1383,7 +1652,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file):
     ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,5), crs=crs_latlon)
     lon_formatter = LongitudeFormatter(zero_direction_label=True)
     lat_formatter = LatitudeFormatter()
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
 
     # BT(89)              
@@ -1408,7 +1677,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file):
     lat_formatter = LatitudeFormatter()
     ax1.xaxis.set_major_formatter(lon_formatter)
     ax1.yaxis.set_major_formatter(lat_formatter)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         
     # BT(166)           
@@ -1436,7 +1705,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file):
     lat_formatter = LatitudeFormatter()
     ax1.xaxis.set_major_formatter(lon_formatter)
     ax1.yaxis.set_major_formatter(lat_formatter)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     
     # PD(37)
@@ -1459,7 +1728,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file):
     ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,5), crs=crs_latlon)
     lon_formatter = LongitudeFormatter(zero_direction_label=True)
     lat_formatter = LatitudeFormatter()
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     
     # PD(89)   
@@ -1482,7 +1751,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file):
     ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,5), crs=crs_latlon)
     lon_formatter = LongitudeFormatter(zero_direction_label=True)
     lat_formatter = LatitudeFormatter()
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     
     # PD(166)       
@@ -1508,7 +1777,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file):
     ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,5), crs=crs_latlon)
     lon_formatter = LongitudeFormatter(zero_direction_label=True)
     lat_formatter = LatitudeFormatter()       
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     
     return 
@@ -1524,8 +1793,21 @@ if __name__ == '__main__':
   plt.rcParams['ytick.labelsize']=12  
     
   files_RMA5 = ['cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
-                'cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
                 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc']
+
+  # check 20181001 at 22UTC to see if ZDR is present before
+  # files_RMA5 = ['cfrad.20181001_220245.0000_to_20181001_220337.0000_RMA5_0200_03.nc',
+  #'cfrad.20181001_220354.0000_to_20181001_220942.0000_RMA5_0200_01.nc',
+  #'cfrad.20181001_220952.0000_to_20181001_221237.0000_RMA5_0200_02.nc', 
+  #'cfrad.20181001_221250.0000_to_20181001_221342.0000_RMA5_0200_03.nc',
+  #'cfrad.20181001_221958.0000_to_20181001_222245.0000_RMA5_0200_02.nc',
+  #'cfrad.20181001_222259.0000_to_20181001_222351.0000_RMA5_0200_03.nc',
+  #'cfrad.20181001_223006.0000_to_20181001_223248.0000_RMA5_0200_02.nc',
+  #'cfrad.20181001_223302.0000_to_20181001_223354.0000_RMA5_0200_03.nc',
+  #'cfrad.20181001_225013.0000_to_20181001_225255.0000_RMA5_0200_02.nc',
+  #'cfrad.20181001_225309.0000_to_20181001_225401.0000_RMA5_0200_03.nc'] 
+
+
 
   files_RMA1 = ['cfrad.20171027_034647.0000_to_20171027_034841.0000_RMA1_0123_02.nc',
               'cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc',
@@ -1560,6 +1842,8 @@ if __name__ == '__main__':
     plot_ppi(files_RMA1[ifiles], fig_dir, dat_dir, 'RMA1')
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
+  opts = {'xlim_min': -60, 'xlim_max': -50, 'ylim_min': -30, 'ylim_max': -20}
+  test_transect =  [10,333]
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA5/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA5/'
   for ifiles in range(len(files_RMA5)):
@@ -1571,6 +1855,14 @@ if __name__ == '__main__':
       ncfile  = '/relampago/datos/salio/RADAR/RMA5/'+ yearfolder + '/' + folder + '/' + files_RMA5[ifiles]
     print('original file in: ' + ncfile + '// reading in:'+dat_dir+files_RMA5[ifiles])
     plot_ppi(files_RMA5[ifiles], fig_dir, dat_dir, 'RMA5')
+    check_transec_rma(dat_dir, files_RMA5[ifiles], test_transect[ifiles])     
+    plot_rhi_RMA(files_RMA5[ifiles], fig_dir, dat_dir, radar_name, 0, 160, test_transect[ifiles])
+  # plot GMIs:  
+  gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20181001-S215813-E233047.026093.V05A.HDF5'
+  plot_gmi(gmi_file, opts, dat_dir, files_RMA5[0], 5)   # 5 ---> RMA5
+  gmi_file = gmi_path+'/1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
+  plot_gmi(gmi_file, opts, dat_dir, files_RMA5[1], 5)   # 5 ---> RMA5
+
   #--------------------------------------------------------------------------------------------
   # start w/ PARANA
   fig_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/PAR/'
