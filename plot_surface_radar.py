@@ -1582,9 +1582,14 @@ def plot_gmi(fname, options, radardat_dir, radar_file, rma):
     
     if rma == 5:
         radar = pyart.io.read(radardat_dir+radar_file) 
+        reflectivity_name = 'DBZH'
+    if rma == 1:
+        radar = pyart.io.read(radardat_dir+radar_file) 
+        reflectivity_name = 'TH'
     else:
         radar = pyart.aux_io.read_rainbow_wrl(radardat_dir+radar_file+'dBZ.vol')
-      
+     
+    
     fontsize = 12
     user = platform.system()
     if   user == 'Linux':
@@ -1841,6 +1846,7 @@ if __name__ == '__main__':
     
   #------------------------------------------------------------------------------  
   # start w/ RMA1
+  opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA1/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA1/'
   for ifiles in range(len(files_RMA1)):
@@ -1851,7 +1857,11 @@ if __name__ == '__main__':
       yearfolder = folder[0:4]
       ncfile  = '/relampago/datos/salio/RADAR/RMA1/'+ yearfolder + '/' + folder + '/' + files_RMA1[ifiles]
     print('original file in: ' + ncfile + '// reading in:'+dat_dir+files_RMA1[ifiles])
-    plot_ppi(files_RMA1[ifiles], fig_dir, dat_dir, 'RMA1')
+    #plot_ppi(files_RMA1[ifiles], fig_dir, dat_dir, 'RMA1')
+    # plot GMIs:  
+    plot_gmi(gmi_path+'/'+files_RMA1_GMI[ifiles], opts, dat_dir, files_RMA1[ifiles], 1)   # 1 ---> RMA1
+ 
+    
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
   opts = {'xlim_min': -60, 'xlim_max': -50, 'ylim_min': -30, 'ylim_max': -20}
