@@ -268,9 +268,10 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]       
         if radar_name == 'RMA1':
-            TH       = radar.fields['TH']['data'][start_index:end_index]
+            ZHZH       = radar.fields['TH']['data'][start_index:end_index]
             TV       = radar.fields['TV']['data'][start_index:end_index]
-            ZDR      = TH-TV
+            ZDRZDR      = ZHZH-TV
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]        
         elif radar_name == 'RMA5':
             ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'DBZV' in radar.fields.keys(): 
@@ -319,7 +320,8 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     #- Try polygons
     fig2, axes = plt.subplots(nrows=3,ncols=1,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
     fig1 = plt.figure(figsize=(15,20))
-    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+         if nlev > 10: continue
          # Create the cone for each elevation IN TERMS OF RANGE. 
          # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
          ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
@@ -363,7 +365,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
         # scatter plot para sacar el color de cada pixel 
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
@@ -375,7 +377,8 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        if nlev > 10: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -417,7 +420,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
         # scatter plot para sacar el color de cada pixel 
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
@@ -429,7 +432,8 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        if nlev > 10: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -869,7 +873,8 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect, xl
     #- Try polygons
     fig2, axes = plt.subplots(nrows=3,ncols=1,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
     fig1 = plt.figure(figsize=(15,20))
-    for nlev in range(len(radar.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+         if nlev > 11: continue
          # Create the cone for each elevation IN TERMS OF RANGE. 
          # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
          ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
@@ -925,7 +930,8 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect, xl
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radarZDR.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radarZDR.sweep_start_ray_index['data'])):
+        if nlev > 11: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -979,7 +985,8 @@ def plot_pseudo_RHI_parana(file, fig_dir, dat_dir, radar_name, test_transect, xl
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radarRHO.sweep_start_ray_index['data'])-1):
+    for nlev in range(len(radarRHO.sweep_start_ray_index['data'])):
+        if nlev > 11: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -1420,7 +1427,10 @@ def check_transec_rma(dat_dir, file_PAR_all, test_transect):
   end_index   = radar.sweep_end_ray_index['data'][nlev]
   lats = radar.gate_latitude['data'][start_index:end_index]
   lons = radar.gate_longitude['data'][start_index:end_index]
-  pcm1 = axes.pcolormesh(lons, lats, radar.fields['DBZH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  if 'DBZH' in radar.fields.keys():
+    pcm1 = axes.pcolormesh(lons, lats, radar.fields['DBZH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  else: 
+    pcm1 = axes.pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
   cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
   cbar.cmap.set_under(under)
   cbar.cmap.set_over(over)
@@ -1819,9 +1829,9 @@ if __name__ == '__main__':
               'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc',
               'cfrad.20180209_063643.0000_to_20180209_063908.0000_RMA1_0201_03.nc',
               'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc', 
-              'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc',
+              'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc',  # cfrad.20181214_025529.0000_to_20181214_030210.0000_RMA1_0301_01.nc
               'cfrad.20190102_204413.0000_to_20190102_204403.0000_RMA1_0301_02.nc',
-              'cfrad.20190224_061413.0000_to_20190224_061537.0000_RMA1_0301_02.nc',
+              'cfrad.20190224_061413.0000_to_20190224_061537.0000_RMA1_0301_02.nc',  # cfrad.20190224_060559.0000_to_20190224_060723.0000_RMA1_0301_02.nc
               'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc']
 
   files_RMA1_GMI = ['1B.GPM.GMI.TB2016.20171027-S021318-E034550.020807.V05A.HDF5',
@@ -1861,7 +1871,24 @@ if __name__ == '__main__':
     # plot GMIs:  
     plot_gmi(gmi_path+'/'+files_RMA1_GMI[ifiles], opts, dat_dir, files_RMA1[ifiles], 1)   # 1 ---> RMA1
  
+    check_transec_rma(dat_dir, files_RMA1[0], 345)     
+    plot_rhi_RMA(files_RMA1[1], fig_dir, dat_dir, 'RMA1', 0, 100, 7)
     
+    test_transect = [345, 7 y 220, 283 y 50, 215 y 110,  ]   el ultimo [8] es 55
+    xlim2_ranges = [220, 60 y 120, 120 y 50, 160 y 100, ]    el ultimo [8] es 200
+    
+    files_RMA1_alternatve = 'cfrad.20181214_025529.0000_to_20181214_030210.0000_RMA1_0301_01.nc'
+    files_RMA1_alternatve = 'cfrad.20181214_024550.0000_to_20181214_024714.0000_RMA1_0301_02.nc'
+    check_transec_rma(dat_dir, 'cfrad.20181214_024550.0000_to_20181214_024714.0000_RMA1_0301_02.nc', 250)     
+    plot_rhi_RMA('cfrad.20181214_024550.0000_to_20181214_024714.0000_RMA1_0301_02.nc', fig_dir, dat_dir, 'RMA1', 0, 160, 183)
+    
+    # GMI -S045410-E062643. y el Phal es 0613. 
+    files_RMA1_alternatve =  'cfrad.20190224_060559.0000_to_20190224_060723.0000_RMA1_0301_02.nc'
+    check_transec_rma(dat_dir, 'cfrad.20190224_060559.0000_to_20190224_060723.0000_RMA1_0301_02.nc', 220)
+    plot_rhi_RMA('cfrad.20190224_060559.0000_to_20190224_060723.0000_RMA1_0301_02.nc', fig_dir, dat_dir, 'RMA1', 0, 200, 220)
+    files_RMA1_alternatve = 'cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc'
+    check_transec_rma(dat_dir, 'cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc', 220)
+    plot_rhi_RMA('cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc', fig_dir, dat_dir, 'RMA1', 0, 200, 220)
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
   opts = {'xlim_min': -60, 'xlim_max': -50, 'ylim_min': -30, 'ylim_max': -20}
