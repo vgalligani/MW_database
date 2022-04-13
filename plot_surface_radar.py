@@ -22,7 +22,7 @@ import platform
 import cartopy.feature as cfeature
 from matplotlib.colors import ListedColormap
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-
+from os.path import isfile, join
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -135,15 +135,28 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
     lats        = radar.gate_latitude['data'][start_index:end_index]
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
-    
-    PHIDP    = radar.fields['PHIDP']['data'][start_index:end_index]
+    if 'PHIDP' in radar.fields.keys():  
+        PHIDP    = radar.fields['PHIDP']['data'][start_index:end_index]
     #CM       = radar.fields['CM']['data'][start_index:end_index]
-    RHOHV    = radar.fields['RHOHV']['data'][start_index:end_index]
-    if radar_name == 'RMA1':
+    if 'RHOHV' in radar.fields.keys():  
+        RHOHV    = radar.fields['RHOHV']['data'][start_index:end_index]
+    if 'TH' in radar.fields.keys():  
         TH       = radar.fields['TH']['data'][start_index:end_index]
+    if 'TV' in radar.fields.keys():  
         TV       = radar.fields['TV']['data'][start_index:end_index]
         ZDR      = TH-TV
-    elif radar_name == 'RMA5':
+    if 'DBZH' in radar.fields.keys():  
+        TH       = radar.fields['DBZH']['data'][start_index:end_index]
+
+    #if radar_name == 'RMA1':
+    #    TH       = radar.fields['TH']['data'][start_index:end_index]
+    #    TV       = radar.fields['TV']['data'][start_index:end_index]
+    #    
+    #if radar_name == 'RMA4':
+    #    TH       = radar.fields['TH']['data'][start_index:end_index]
+    #    TV       = radar.fields['TV']['data'][start_index:end_index]
+    #    ZDR      = TH-TV
+    if radar_name == 'RMA5':
         TH       = radar.fields['DBZH']['data'][start_index:end_index]
         if 'VRAD' in radar.fields.keys(): 
             VRAD       = radar.fields['VRAD']['data'][start_index:end_index]
@@ -191,46 +204,49 @@ def plot_ppi(file, fig_dir, dat_dir, radar_name):
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
         axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
         axes[0,1].grid()         
-    #-- PHIDP: 
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
-    pcm1 = axes[1,0].pcolormesh(lons, lats, PHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
-    cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-    cbar.cmap.set_under(under)
-    cbar.cmap.set_over(over)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
-    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
-    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
-    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    axes[1,0].grid()      
+    #-- PHIDP:
+    if 'PHIDP' in locals():
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+        pcm1 = axes[1,0].pcolormesh(lons, lats, PHIDP, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+        axes[1,0].grid()      
     #-- RHOHV: 
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
-    pcm1 = axes[1,1].pcolormesh(lons, lats, RHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
-    cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-    cbar.cmap.set_under(under)
-    cbar.cmap.set_over(over)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
-    axes[1,1].set_xlabel('Longitude', fontsize=10)
-    axes[1,1].set_ylabel('Latitude', fontsize=10)
-    axes[1,1].grid()     
+    if 'RHOHV' in locals():
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+        pcm1 = axes[1,1].pcolormesh(lons, lats, RHOHV, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],150)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)     
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],250)
+        axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)    
+        axes[1,1].set_xlabel('Longitude', fontsize=10)
+        axes[1,1].set_ylabel('Latitude', fontsize=10)
+        axes[1,1].grid()     
+    
     #- savefile
     plt.suptitle(radar_name+': ncfile '+str(file[6:17]),fontweight='bold')
     fig.savefig(fig_dir+str(file)+'.png', dpi=300,transparent=False)    
-    plt.close() 
+    #plt.close() 
     
     
     return 
@@ -1822,8 +1838,6 @@ if __name__ == '__main__':
   #'cfrad.20181001_225013.0000_to_20181001_225255.0000_RMA5_0200_02.nc',
   #'cfrad.20181001_225309.0000_to_20181001_225401.0000_RMA5_0200_03.nc'] 
 
-
-
   files_RMA1 = ['cfrad.20171027_034647.0000_to_20171027_034841.0000_RMA1_0123_02.nc',
               'cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc',
               'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc',
@@ -1844,7 +1858,27 @@ if __name__ == '__main__':
               '1B.GPM.GMI.TB2016.20190224-S045410-E062643.028353.V05A.HDF5',
               '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5']
 
+  files_RMA4 = ['cfrad.20180124_090045.0000_to_20180124_090316.0000_RMA4_0201_03.nc', #'cfrad.20180124_110519.0000_to_20180124_110751.0000_RMA4_0201_03.nc',
+                'cfrad.20181218_014441.0000_to_20181218_015039.0000_RMA4_0200_01.nc',
+                'cfrad.20180209_200449.0000_to_20180209_201043.0000_RMA4_0200_01.nc',
+                'cfrad.20190209_192724.0000_to_20190209_193317.0000_RMA4_0200_01.nc',
+                'cfrad.20181001_095450.0000_to_20181001_100038.0000_RMA4_0200_01.nc',
+                'cfrad.20200119_045758.0000_to_20200119_050347.0000_RMA4_0200_01.nc',
+                'cfrad.20201213_051236.0000_to_20201213_051830.0000_RMA4_0200_01.nc',
+                'cfrad.20181031_010936.0000_to_20181031_011525.0000_RMA4_0200_01.nc',
+                'cfrad.20181215_021522.0000_to_20181215_022113.0000_RMA4_0200_01.nc']
+    
+    
+  files_RMA3 = ['cfrad.20180925_020737.0000_to_20180925_021025.0000_RMA3_0200_02.nc',
+                'cfrad.20201026_051729.0000_to_20201026_052017.0000_RMA3_0200_02.nc',
+                'cfrad.20181122_190207.0000_to_20181122_190801.0000_RMA3_0200_01.nc', #'cfrad.20181122_191932.0000_to_20181122_192525.0000_RMA3_0200_01.nc',
+                'cfrad.20201216_040814.0000_to_20201216_041408.0000_RMA3_0200_01.nc',
+                'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'] #'cfrad.20190305_125231.0000_to_20190305_125513.0000_RMA3_0200_02.nc']
 
+  files_RMA8 = ['cfrad.20181104_005132.0000_to_20181104_005423.0000_RMA8_0200_02.nc',
+               'cfrad.20190110_050440.0000_to_20190110_050734.0000_RMA8_0200_01.nc',
+               'cfrad.20181111_223602.0000_to_20181111_223850.0000_RMA8_0200_02.nc',
+               'cfrad.20190131_223510.0000_to_20190131_223752.0000_RMA8_0200_02.nc']
 
   # Files below organized: per line. tested for differente minutes. each line is a case study
   files_PAR = ['2018032407543300dBZ.vol', '2018032407500500dBZ.vol',
@@ -1854,6 +1888,7 @@ if __name__ == '__main__':
              '2019022315143100dBZ.vol',   '2019022315100200dBZ.vol',
              '2020121903100500dBZ.vol']
     
+  #------------------------------------------------------------------------------  
   #------------------------------------------------------------------------------  
   # start w/ RMA1
   opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
@@ -1889,6 +1924,41 @@ if __name__ == '__main__':
     files_RMA1_alternatve = 'cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc'
     check_transec_rma(dat_dir, 'cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc', 220)
     plot_rhi_RMA('cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc', fig_dir, dat_dir, 'RMA1', 0, 200, 220)
+  #--------------------------------------------------------------------------------------------
+  #--------------------------------------------------------------------------------------------
+  # start w/ RMA4
+  #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
+  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA4/'
+  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA4/'
+  for ifiles in range(len(files_RMA4)):
+    plot_ppi(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4')
+
+  #--------------------------------------------------------------------------------------------
+  #--------------------------------------------------------------------------------------------
+  # start w/ RMA3
+  #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
+  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA3/'
+  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3/'
+  for ifiles in range(len(files_RMA3)):
+    plot_ppi(files_RMA3[ifiles], fig_dir, dat_dir, 'RMA3')
+
+  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3bis/'
+  onlyfiles = [f for f in listdir(dat_dir) if isfile(join(dat_dir, f))]
+  for ifiles in range(len(onlyfiles)):
+    plot_ppi(onlyfiles[ifiles], fig_dir, dat_dir, 'RMA3')
+    
+    
+  #--------------------------------------------------------------------------------------------
+  # start w/ RMA8
+  #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
+  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA8/'
+  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA8/'
+  for ifiles in range(len(files_RMA8)):
+    plot_ppi(files_RMA8[ifiles], fig_dir, dat_dir, 'RMA8')
+    
+    
+    
+    
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
   opts = {'xlim_min': -60, 'xlim_max': -50, 'ylim_min': -30, 'ylim_max': -20}
