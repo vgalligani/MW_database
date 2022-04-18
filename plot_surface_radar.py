@@ -294,6 +294,18 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
                 TV     = radar.fields['DBZV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]        
+        elif radar_name == 'RMA4':
+            ZHZH       = radar.fields['TH']['data'][start_index:end_index]
+            if 'TV' in radar.fields.keys(): 
+                TV     = radar.fields['TV']['data'][start_index:end_index]     
+                ZDRZDR = ZHZH-TV   
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
+        elif radar_name == 'RMA3':
+            ZHZH       = radar.fields['TH']['data'][start_index:end_index]
+            if 'TV' in radar.fields.keys(): 
+                TV     = radar.fields['TV']['data'][start_index:end_index]     
+                ZDRZDR = ZHZH-TV   
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
         lats        = radar.gate_latitude['data'][start_index:end_index]
         lons        = radar.gate_longitude['data'][start_index:end_index]
         # En verdad buscar azimuth no transecta ... 
@@ -1930,9 +1942,17 @@ if __name__ == '__main__':
   #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA4/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA4/'
+  this_trans1 = [163, 240, 244, 270, 190, 295, 50, 65, 238]
+  this_trans2 = [310, 147, 228, 256, 149, 275, 43, 230, 180]
   for ifiles in range(len(files_RMA4)):
-    plot_ppi(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4')
+    #plot_ppi(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4')
+    #check_transec_rma(dat_dir, files_RMA4[ifiles], this_trans1[ifiles])
+    #check_transec_rma(dat_dir, files_RMA4[ifiles], this_trans2[ifiles] )
+    plot_rhi_RMA(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4', 0, 200, this_trans1[ifiles])
+    plot_rhi_RMA(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4', 0, 200, this_trans2[ifiles])
 
+    
+    
   #--------------------------------------------------------------------------------------------
   #--------------------------------------------------------------------------------------------
   # start w/ RMA3
