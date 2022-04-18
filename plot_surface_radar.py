@@ -306,11 +306,16 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
                 ZDRZDR     = radar.fields['ZDR']['data'][start_index:end_index]     
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
         elif radar_name == 'RMA3':
-            ZHZH       = radar.fields['TH']['data'][start_index:end_index]
+            if 'TH' in radar.fields.keys():
+                ZHZH       = radar.fields['TH']['data'][start_index:end_index]
+            elif 'DBZH' in radar.fields.keys():
+                ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'TV' in radar.fields.keys(): 
                 TV     = radar.fields['TV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
-            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
+            elif  'ZDR' in radar.fields.keys(): 
+                ZDRZDR     = radar.fields['ZDR']['data'][start_index:end_index]     
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]   
         lats        = radar.gate_latitude['data'][start_index:end_index]
         lons        = radar.gate_longitude['data'][start_index:end_index]
         # En verdad buscar azimuth no transecta ... 
@@ -1977,15 +1982,30 @@ if __name__ == '__main__':
   #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA3/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3/'
+  #dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3bis/'
+  #onlyfiles = [f for f in listdir(dat_dir) if isfile(join(dat_dir, f))]
+  #for ifiles in range(len(onlyfiles)):
+  #  plot_ppi(onlyfiles[ifiles], fig_dir, dat_dir, 'RMA3')
+    
   for ifiles in range(len(files_RMA3)):
     plot_ppi(files_RMA3[ifiles], fig_dir, dat_dir, 'RMA3')
-
-  dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3bis/'
-  onlyfiles = [f for f in listdir(dat_dir) if isfile(join(dat_dir, f))]
-  for ifiles in range(len(onlyfiles)):
-    plot_ppi(onlyfiles[ifiles], fig_dir, dat_dir, 'RMA3')
     
+  check_transec_rma(dat_dir, files_RMA3[0], 304])
+  plot_rhi_RMA(files_RMA3[0], fig_dir, dat_dir, 'RMA3', 0, 200, 304)
+  check_transec_rma(dat_dir, files_RMA3[2], 94])
+  check_transec_rma(dat_dir, files_RMA3[2], 109])
+  check_transec_rma(dat_dir, files_RMA3[2], 197])
+  plot_rhi_RMA(files_RMA3[2], fig_dir, dat_dir, 'RMA3', 0, 200, 94)
+  plot_rhi_RMA(files_RMA3[2], fig_dir, dat_dir, 'RMA3', 0, 200, 109)
+  plot_rhi_RMA(files_RMA3[2], fig_dir, dat_dir, 'RMA3', 0, 200, 197)
+  check_transec_rma(dat_dir, files_RMA3[3], 200])
+  plot_rhi_RMA(files_RMA3[3], fig_dir, dat_dir, 'RMA3', 0, 200, 200)
+  check_transec_rma(dat_dir, files_RMA3[4], 176])
+  check_transec_rma(dat_dir, files_RMA3[4], 30])
+  plot_rhi_RMA(files_RMA3[4], fig_dir, dat_dir, 'RMA3', 0, 200, 176)    
+  plot_rhi_RMA(files_RMA3[4], fig_dir, dat_dir, 'RMA3', 0, 200, 30)    
     
+  plot_gmi(gmi_path+'/'+files_RMA3_GMI[ifiles], opts, dat_dir, files_RMA3[ifiles], 3)   # 1 ---> RMA1  
   #--------------------------------------------------------------------------------------------
   # start w/ RMA8
   #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
