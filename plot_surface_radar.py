@@ -1637,7 +1637,10 @@ def plot_gmi(fname, options, radardat_dir, radar_file, rma):
     if rma == 4:
         radar = pyart.io.read(radardat_dir+radar_file) 
         reflectivity_name = 'TH'
-        
+    if rma == 8:
+        radar = pyart.io.read(radardat_dir+radar_file) 
+        reflectivity_name = 'TH'        
+        print('rma=8')
     else:
         radar = pyart.aux_io.read_rainbow_wrl(radardat_dir+radar_file+'dBZ.vol')
      
@@ -1710,7 +1713,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file, rma):
     lon_formatter = LongitudeFormatter(zero_direction_label=True)
     lat_formatter = LatitudeFormatter()
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
-    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    plt.plot(lon_radius, lat_radius, '-k', linewidth=1)
 
     # BT(89)              
     ax1 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
@@ -1909,11 +1912,22 @@ if __name__ == '__main__':
                 'cfrad.20181122_190207.0000_to_20181122_190801.0000_RMA3_0200_01.nc', #'cfrad.20181122_191932.0000_to_20181122_192525.0000_RMA3_0200_01.nc',
                 'cfrad.20201216_040814.0000_to_20201216_041408.0000_RMA3_0200_01.nc',
                 'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'] #'cfrad.20190305_125231.0000_to_20190305_125513.0000_RMA3_0200_02.nc']
+  
+  files_RMA3_GMI = ['1B.GPM.GMI.TB2016.20180925-S005219-E022451.025986.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20201026-S050040-E063312.037842.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20181122-S190544-E203818.026900.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20201216-S025258-E042529.038634.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20190305-S123614-E140847.028498.V05A.HDF5']
 
   files_RMA8 = ['cfrad.20181104_005132.0000_to_20181104_005423.0000_RMA8_0200_02.nc',
                'cfrad.20190110_050440.0000_to_20190110_050734.0000_RMA8_0200_01.nc',
                'cfrad.20181111_223602.0000_to_20181111_223850.0000_RMA8_0200_02.nc',
                'cfrad.20190131_223510.0000_to_20190131_223752.0000_RMA8_0200_02.nc']
+    
+  files_RMA8_GMI = ['1B.GPM.GMI.TB2016.20181104-S003557-E020829.026608.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20190110-S044942-E062214.027653.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20181111-S222006-E235238.026731.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20190131-S222057-E235331.027991.V05A.HDF5']
 
   # Files below organized: per line. tested for differente minutes. each line is a case study
   files_PAR = ['2018032407543300dBZ.vol', '2018032407500500dBZ.vol',
@@ -1962,7 +1976,7 @@ if __name__ == '__main__':
   #--------------------------------------------------------------------------------------------
   #--------------------------------------------------------------------------------------------
   # start w/ RMA4
-  opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
+  opts = {'xlim_min': -65, 'xlim_max': -55, 'ylim_min': -32, 'ylim_max': -24}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA4/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA4/'
   gmi_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
@@ -1979,7 +1993,7 @@ if __name__ == '__main__':
   #--------------------------------------------------------------------------------------------
   #--------------------------------------------------------------------------------------------
   # start w/ RMA3
-  #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
+  opts = {'xlim_min': -65, 'xlim_max': -55, 'ylim_min': -28, 'ylim_max': -22}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA3/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3/'
   #dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3bis/'
@@ -2008,15 +2022,17 @@ if __name__ == '__main__':
   plot_gmi(gmi_path+'/'+files_RMA3_GMI[ifiles], opts, dat_dir, files_RMA3[ifiles], 3)   # 1 ---> RMA1  
   #--------------------------------------------------------------------------------------------
   # start w/ RMA8
-  #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
+  opts = {'xlim_min': -65, 'xlim_max': -55, 'ylim_min': -35, 'ylim_max': -25}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA8/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA8/'
   for ifiles in range(len(files_RMA8)):
     plot_ppi(files_RMA8[ifiles], fig_dir, dat_dir, 'RMA8')
     
+  check_transec_rma(dat_dir, files_RMA8[0], 30)
+  plot_rhi_RMA(files_RMA8[0], fig_dir, dat_dir, 'RMA3', 0, 200, 30)  
     
-    
-    
+  plot_gmi(gmi_path+'/'+files_RMA8_GMI[ifiles], opts, dat_dir, files_RMA8[ifiles], 3)   # 1 ---> RMA1  
+  
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
   opts = {'xlim_min': -60, 'xlim_max': -50, 'ylim_min': -30, 'ylim_max': -20}
