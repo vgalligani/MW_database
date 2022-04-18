@@ -295,10 +295,15 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
                 ZDRZDR = ZHZH-TV   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]        
         elif radar_name == 'RMA4':
-            ZHZH       = radar.fields['TH']['data'][start_index:end_index]
+            if 'TH' in radar.fields.keys():
+                ZHZH       = radar.fields['TH']['data'][start_index:end_index]
+            elif 'DBZH' in radar.fields.keys():
+                ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'TV' in radar.fields.keys(): 
                 TV     = radar.fields['TV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
+            elif  'ZDR' in radar.fields.keys(): 
+                ZDRZDR     = radar.fields['ZDR']['data'][start_index:end_index]     
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
         elif radar_name == 'RMA3':
             ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -349,7 +354,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     fig2, axes = plt.subplots(nrows=3,ncols=1,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
     fig1 = plt.figure(figsize=(15,20))
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
-         if nlev > 10: continue
+         if nlev > 4: continue
          # Create the cone for each elevation IN TERMS OF RANGE. 
          # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
          ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
@@ -406,7 +411,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     #- Try polygons
     #fig1.add_subplot(412)
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
-        if nlev > 10: continue
+        if nlev > 4: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -461,7 +466,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     #- Try polygons
     #fig1.add_subplot(412)
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
-        if nlev > 10: continue
+        if nlev > 4: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -1624,6 +1629,10 @@ def plot_gmi(fname, options, radardat_dir, radar_file, rma):
     if rma == 1:
         radar = pyart.io.read(radardat_dir+radar_file) 
         reflectivity_name = 'TH'
+    if rma == 4:
+        radar = pyart.io.read(radardat_dir+radar_file) 
+        reflectivity_name = 'TH'
+        
     else:
         radar = pyart.aux_io.read_rainbow_wrl(radardat_dir+radar_file+'dBZ.vol')
      
@@ -1879,7 +1888,16 @@ if __name__ == '__main__':
                 'cfrad.20201213_051236.0000_to_20201213_051830.0000_RMA4_0200_01.nc',
                 'cfrad.20181031_010936.0000_to_20181031_011525.0000_RMA4_0200_01.nc',
                 'cfrad.20181215_021522.0000_to_20181215_022113.0000_RMA4_0200_01.nc']
-    
+
+  files_RMA4_GMI = ['1B.GPM.GMI.TB2016.20180124-S105204-E122438.022197.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20181217-S235720-E012953.027292.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20180209-S184820-E202054.022451.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20190209-S191744-E205018.028129.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20181001-S093732-E111006.026085.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20200119-S033832-E051104.033470.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20201213-S035613-E052844.038588.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20181031-S005717-E022950.026546.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20181215-S005848-E023122.027246.V05A.HDF5']
     
   files_RMA3 = ['cfrad.20180925_020737.0000_to_20180925_021025.0000_RMA3_0200_02.nc',
                 'cfrad.20201026_051729.0000_to_20201026_052017.0000_RMA3_0200_02.nc',
@@ -1939,20 +1957,20 @@ if __name__ == '__main__':
   #--------------------------------------------------------------------------------------------
   #--------------------------------------------------------------------------------------------
   # start w/ RMA4
-  #opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
+  opts = {'xlim_min': -70, 'xlim_max': -60, 'ylim_min': -35, 'ylim_max': -25}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA4/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA4/'
+  gmi_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
   this_trans1 = [163, 240, 244, 270, 190, 295, 50, 65, 238]
   this_trans2 = [310, 147, 228, 256, 149, 275, 43, 230, 180]
   for ifiles in range(len(files_RMA4)):
     #plot_ppi(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4')
     #check_transec_rma(dat_dir, files_RMA4[ifiles], this_trans1[ifiles])
     #check_transec_rma(dat_dir, files_RMA4[ifiles], this_trans2[ifiles] )
-    plot_rhi_RMA(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4', 0, 200, this_trans1[ifiles])
-    plot_rhi_RMA(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4', 0, 200, this_trans2[ifiles])
+    #plot_rhi_RMA(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4', 0, 200, this_trans1[ifiles])
+    #plot_rhi_RMA(files_RMA4[ifiles], fig_dir, dat_dir, 'RMA4', 0, 200, this_trans2[ifiles])
+    plot_gmi(gmi_path+'/'+files_RMA4_GMI[ifiles], opts, dat_dir, files_RMA4[ifiles], 4)   # 1 ---> RMA1
 
-    
-    
   #--------------------------------------------------------------------------------------------
   #--------------------------------------------------------------------------------------------
   # start w/ RMA3
