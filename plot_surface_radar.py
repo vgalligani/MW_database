@@ -1487,6 +1487,77 @@ def check_transec_rma(dat_dir, file_PAR_all, test_transect):
 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+def check_transec_rma_campos(dat_dir, file_PAR_all, test_transect, campo):       
+
+  radar = pyart.io.read(dat_dir+file_PAR_all) 
+  nlev  = 0  
+  start_index = radar.sweep_start_ray_index['data'][nlev]
+  end_index   = radar.sweep_end_ray_index['data'][nlev]
+  lats = radar.gate_latitude['data'][start_index:end_index]
+  lons = radar.gate_longitude['data'][start_index:end_index]
+  
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[20,12]) 
+  if 'ZDR' in campo:
+    campotoplot = 'ZDR'
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+    if 'ZDR' in radar.fields.keys(): 
+        campo_field_plot = radar.fields['ZDR']['data'][start_index:end_index]
+    elif 'TH' in radar.fields.keys():
+        ZHZH             = radar.fields['TH']['data'][start_index:end_index]
+        TV               = radar.fields['TV']['data'][start_index:end_index]     
+        campo_field_plot = ZHZH-TV
+    elif 'DBZH' in radar.fields.keys():
+        ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
+        TV         = radar.fields['DBZV']['data'][start_index:end_index]     
+        campo_field_plot = ZHZH-TV
+  if 'RHO' in campo:
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+    campo_field_plot  = radar.fields['RHOHV']['data'][start_index:end_index]  
+    campotoplot = r'$\rho_{HV}$'
+   
+  if 'ZH' in campo:
+    campotoplot = 'Zh'
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    if 'TH' in radar.fields.keys(): 
+        campo_field_plot = radar.fields['TH']['data'][start_index:end_index]
+    elif 'DBZH' in radar.fields.keys():
+        campo_field_plot       = radar.fields['DBZH']['data'][start_index:end_index]      
+        
+  pcm1 = axes.pcolormesh(lons, lats, campo_field_plot, cmap=cmap, vmin=vmin, vmax=vmax)
+  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+  cbar.cmap.set_under(under)
+  cbar.cmap.set_over(over)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  axes.grid()
+  azimuths = radar.azimuth['data'][start_index:end_index]
+  target_azimuth = azimuths[test_transect]
+  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+  lon_transect     = lons[filas,:]
+  lat_transect     = lats[filas,:]
+  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+
+  gateZ    = radar.gate_z['data'][start_index:end_index]
+  gateX    = radar.gate_x['data'][start_index:end_index]
+  gateY    = radar.gate_y['data'][start_index:end_index]
+  gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+        
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[20,12]) 
+  axes.plot(np.ravel(gates_range[filas,:]), np.ravel(campo_field_plot[filas,:]),'-k')
+  plt.title('Lowest sweep transect of interest', fontsize=14)
+  plt.xlabel('Range (km)', fontsize=14)
+  plt.ylabel(str(campotoplot), fontsize=14)
+  plt.grid(True)
+    
+  return
+
+
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 def GMI_colormap(): 
     
     _turbo_colormap_data = [[0.18995,0.07176,0.23217],[0.19483,0.08339,0.26149],
@@ -1886,6 +1957,8 @@ if __name__ == '__main__':
               '1B.GPM.GMI.TB2016.20190102-S192616-E205848.027538.V05A.HDF5',
               '1B.GPM.GMI.TB2016.20190224-S045410-E062643.028353.V05A.HDF5',
               '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5']
+    
+  files_2018_BB_RMA1 = ['cfrad.20180209_005340.0000_to_20180209_005622.0000_RMA1_0201_02.nc']
 
   files_RMA4 = ['cfrad.20180124_090045.0000_to_20180124_090316.0000_RMA4_0201_03.nc', #'cfrad.20180124_110519.0000_to_20180124_110751.0000_RMA4_0201_03.nc',
                 'cfrad.20181218_014441.0000_to_20181218_015039.0000_RMA4_0200_01.nc',
