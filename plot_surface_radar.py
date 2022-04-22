@@ -2433,15 +2433,20 @@ if __name__ == '__main__':
                    '2A.GPM.Ku.V9-20211125.20201216-S025258-E042529.038634.V07A.HDF5',
                    '2A.GPM.Ku.V9-20211125.20190305-S123614-E140847.028498.V07A.HDF5']
 
-  files_RMA8 = ['cfrad.20181104_005132.0000_to_20181104_005423.0000_RMA8_0200_02.nc',
-               'cfrad.20190110_050440.0000_to_20190110_050734.0000_RMA8_0200_01.nc',
-               'cfrad.20181111_223602.0000_to_20181111_223850.0000_RMA8_0200_02.nc',
-               'cfrad.20190131_223510.0000_to_20190131_223752.0000_RMA8_0200_02.nc']
-    
-  files_RMA8_GMI = ['1B.GPM.GMI.TB2016.20181104-S003557-E020829.026608.V05A.HDF5',
-                    '1B.GPM.GMI.TB2016.20190110-S044942-E062214.027653.V05A.HDF5',
-                    '1B.GPM.GMI.TB2016.20181111-S222006-E235238.026731.V05A.HDF5',
-                    '1B.GPM.GMI.TB2016.20190131-S222057-E235331.027991.V05A.HDF5']
+  files_RMA8 = ['cfrad.20181001_094859.0000_to_20181001_095449.0000_RMA8_0200_01.nc',
+                'cfrad.20181113_115911.0000_to_20181113_120155.0000_RMA8_0200_02.nc', #'cfrad.20181113_115023.0000_to_20181113_115317.0000_RMA8_0200_01.nc',
+                'cfrad.20181031_011415.0000_to_20181031_012008.0000_RMA8_0200_01.nc', #'cfrad.20181031_011126.0000_to_20181031_011415.0000_RMA8_0200_02.nc',
+                'cfrad.20181212_031143.0000_to_20181212_031739.0000_RMA8_0200_01.nc',
+                'cfrad.20181112_115631.0000_to_20181112_120225.0000_RMA8_0200_01.nc',
+                'cfrad.20200630_053936.0000_to_20200630_054527.0000_RMA8_0200_01.nc', #'cfrad.20200630_053643.0000_to_20200630_053936.0000_RMA8_0200_02.nc', 
+                'cfrad.20181112_214301.0000_to_20181112_214855.0000_RMA8_0200_01.nc']
+
+  files_RMA8_GMI = ['1B.GPM.GMI.TB2016.20181001-S093732-E111006.026085.V05A.HDF5', 
+                    '1B.GPM.GMI.TB2016.20181113-S112121-E125353.026755.V05A.HDF5',   REVISAR
+                    '1B.GPM.GMI.TB2016.20181031-S005717-E022950.026546.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20181212-S033249-E050523.027201.V05A.HDF5',
+                    '1B.GPM.GMI.TB2016.20200630-S042029-E055302.036006.V05A.HDF5', 
+                    '1B.GPM.GMI.TB2016.20181112-S212823-E230055.026746.V05A.HDF5']
 
   # Files below organized: per line. tested for differente minutes. each line is a case study
   files_PAR = ['2018032407543300dBZ.vol', '2018032407500500dBZ.vol',
@@ -2488,7 +2493,6 @@ if __name__ == '__main__':
     check_transec_rma(dat_dir, 'cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc', 220)
     plot_rhi_RMA('cfrad.20190224_060723.0000_to_20190224_061403.0000_RMA1_0301_01.nc', fig_dir, dat_dir, 'RMA1', 0, 200, 220)
     
-    
     gmi_path = '/home/victoria.galligani/datosmunin2/DATOS_mw/GMI/'
     plot_DPR('/home/victoria.galligani/Work/Studies/Hail_MW/DPR_data/', 
           '2A.GPM.Ku.V9-20211125.20171027-S021318-E034550.020807.V07A.HDF5', 
@@ -2500,7 +2504,7 @@ if __name__ == '__main__':
   opts = {'xlim_min': -65, 'xlim_max': -55, 'ylim_min': -32, 'ylim_max': -24}
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA4/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA4/'
-  gmi_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+  #gmi_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
   this_trans1 = [163, 240, 244, 270, 190, 295, 50, 65, 238]
   this_trans2 = [310, 147, 228, 256, 149, 275, 43, 230, 180]
   for ifiles in range(len(files_RMA4)):
@@ -2547,12 +2551,12 @@ if __name__ == '__main__':
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA8/'
   dat_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA8/'
   for ifiles in range(len(files_RMA8)):
-    plot_ppi(files_RMA8[ifiles], fig_dir, dat_dir, 'RMA8')
+    #plot_ppi(files_RMA8[ifiles], fig_dir, dat_dir, 'RMA8')
+    plot_gmi(gmi_path+'/'+files_RMA8_GMI[ifiles], opts, dat_dir, files_RMA8[ifiles], 8)   # 1 ---> RMA1  
     
   check_transec_rma(dat_dir, files_RMA8[0], 30)
   plot_rhi_RMA(files_RMA8[0], fig_dir, dat_dir, 'RMA3', 0, 200, 30)  
     
-  plot_gmi(gmi_path+'/'+files_RMA8_GMI[ifiles], opts, dat_dir, files_RMA8[ifiles], 3)   # 1 ---> RMA1  
   
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
