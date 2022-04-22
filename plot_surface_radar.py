@@ -2444,11 +2444,19 @@ if __name__ == '__main__':
   files_RMA8_GMI = ['1B.GPM.GMI.TB2016.20181001-S093732-E111006.026085.V05A.HDF5', 
                     '1B.GPM.GMI.TB2016.20181113-S094848-E112120.026754.V05A.HDF5',   
                     '1B.GPM.GMI.TB2016.20181031-S005717-E022950.026546.V05A.HDF5',
-                    '1B.GPM.GMI.TB2016.20181212-S033249-E050523.027201.V05A.HDF5',   
+                    '1B.GPM.GMI.TB2016.20181212-S020015-E033248.027200.V05A.HDF5',   
                     '1B.GPM.GMI.TB2016.20181112-S104031-E121303.026739.V05A.HDF5',
                     '1B.GPM.GMI.TB2016.20200630-S042029-E055302.036006.V05A.HDF5', 
                     '1B.GPM.GMI.TB2016.20181112-S212823-E230055.026746.V05A.HDF5']
-
+ 
+  files_Ku_RMA8 = ['2A.GPM.Ku.V9-20211125.20181001-S093732-E111006.026085.V07A.HDF5', 
+                   '',
+                   '2A.GPM.Ku.V9-20211125.20181031-S005717-E022950.026546.V07A.HDF5',
+                   '2A.GPM.Ku.V9-20211125.20181212-S020015-E033248.027200.V07A.HDF5',
+                   '2A.GPM.Ku.V9-20211125.20181112-S104031-E121303.026739.V07A.HDF5',
+                   '2A.GPM.Ku.V9-20211125.20200630-S042029-E055302.036006.V07A.HDF5',
+                   '2A.GPM.Ku.V9-20211125.20181112-S212823-E230055.026746.V07A.HDF5']
+    
   # Files below organized: per line. tested for differente minutes. each line is a case study
   files_PAR = ['2018032407543300dBZ.vol', '2018032407500500dBZ.vol',
              '2018100907443400dBZ.vol',   '2018100907400500dBZ.vol', '2018100907343300dBZ.vol', '2018100907300500dBZ.vol',
@@ -2558,7 +2566,10 @@ if __name__ == '__main__':
   check_transec_rma(dat_dir, files_RMA8[0], 30)
   plot_rhi_RMA(files_RMA8[0], fig_dir, dat_dir, 'RMA3', 0, 200, 30)  
     
-  
+  plot_DPR('/home/victoria.galligani/Work/Studies/Hail_MW/DPR_data/', 
+          files_Ku_RMA8[ifiles], 
+          gmi_path+files_RMA8_GMI[ifiles],
+          dat_dir+files_RMA8[0], opts)
   #--------------------------------------------------------------------------------------------
   # start w/ RMA5
   opts = {'xlim_min': -60, 'xlim_max': -50, 'ylim_min': -30, 'ylim_max': -20}
