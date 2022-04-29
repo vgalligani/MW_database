@@ -2332,6 +2332,8 @@ if __name__ == '__main__':
   plt.matplotlib.rc('font', family='serif', size = 12)
   plt.rcParams['xtick.labelsize']=12
   plt.rcParams['ytick.labelsize']=12  
+
+  gmi_path = '/home/victoria.galligani/datosmunin2/DATOS_mw/GMI'
     
   files_RMA5 = ['cfrad.20181001_231430.0000_to_20181001_232018.0000_RMA5_0200_01.nc',
                 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc']
@@ -2553,7 +2555,12 @@ if __name__ == '__main__':
   plot_rhi_RMA(files_RMA3[4], fig_dir, dat_dir, 'RMA3', 0, 200, 176)    
   plot_rhi_RMA(files_RMA3[4], fig_dir, dat_dir, 'RMA3', 0, 200, 30)    
     
-  plot_gmi(gmi_path+'/'+files_RMA3_GMI[ifiles], opts, dat_dir, files_RMA3[ifiles], 3)   # 1 ---> RMA1  
+  plot_gmi(gmi_path+'/'+files_RMA3_GMI[ifiles], opts, dat_dir, files_RMA3[ifiles], 3)   # 1 ---> RMA1
+  plot_DPR('/home/victoria.galligani/Work/Studies/Hail_MW/DPR_data/', 
+          files_Ku_RMA3[1], 
+          gmi_path+files_RMA3_GMI[1],
+          dat_dir+files_RMA3[1], opts)
+    
   #--------------------------------------------------------------------------------------------
   # start w/ RMA8
   opts = {'xlim_min': -65, 'xlim_max': -55, 'ylim_min': -35, 'ylim_max': -25}
