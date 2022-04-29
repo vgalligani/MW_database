@@ -2462,7 +2462,166 @@ def plot_DPR_parana(Ku_folder, DPR_file, fname, radar_file, options):
     return
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+def plot_DPR(Ku_folder, DPR_file, fname, radar_file1, radar_file2, radar_file3, radar_file4, 
+             radar_file5, options):
 
+    fontsize = 12
+    user = platform.system()
+    if   user == 'Linux':
+        home_dir = '/home/victoria.galligani/'  
+    elif user == 'Darwin':
+        home_dir = '/Users/victoria.galligani'
+        
+    radar1 = pyart.io.read(radar_file1) 
+    radar2 = pyart.io.read(radar_file2) 
+    radar3 = pyart.io.read(radar_file3) 
+    radar4 = pyart.io.read(radar_file4) 
+    radar5 = pyart.aux_io.read_rainbow_wrl(radar_file5)
+
+    # Shapefiles for cartopy 
+    geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+    geo_reg = shpreader.Reader(geo_reg_shp)
+
+    countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+    states_provinces = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+    rivers = cfeature.NaturalEarthFeature(
+        category='physical',
+        name='rivers_lake_centerlines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+        
+    # list(f['/FS'].keys())
+    #['ScanTime',
+    #'scanStatus', 'navigation', 'PRE', 'VER', 'CSF', 'SRT', 'DSD', 'Experimental',
+    #  'SLV', 'FLG', 'Latitude', 'Longitude', 'sunLocalTime']
+    # The Ku-band SF algorithm consists of the preparation (PRE) module, vertical profile (VER) module, 
+    # CSF module, drop size distribution (DSD) module, surface reference technique (SRT) module, 
+    # and solver (SLV) module (Iguchi et al. 2020). The PRE module provides the measured radar reflectivity factor, 
+    #precipitation/no-precipitation classification, and clutter mitigation (Kubota et al. 2016). 
+    #The VER module computes the path-integrated attenuation (PIA) due to nonprecipitation particles (piaNP) and generates 
+    #a radar reflectivity factor corrected for piaNP (Kubotaet al. 2020). The CSF module classifies precipitation types 
+    # and obtains BB information. The SRT module estimates PIA for precipitation pixels (Meneghini et al. 2015). 
+    # Finally, the SLV module numerically solves the radar equations and obtains DSD parameters and precipitation rates at
+    # each range bin (Seto et al. 2013, 2021; Seto and Iguchi 2015).
+        
+    f = h5py.File( Ku_folder+DPR_file, 'r')   
+    ku_NS_LON  = f[u'/FS/Longitude'][:,:]          
+    ku_NS_LAT  = f[u'/FS/Latitude'][:,:]     
+    flagPrecip = f[u'/FS/PRE/flagPrecip'][:,:]     
+    zFactorMeasured = f[u'/FS/PRE/zFactorMeasured'][:,:,:]  
+    heightStormTop  = f[u'/FS/PRE/heightStormTop'][:,:]  
+    flagBB = f[u'/FS/CSF/flagBB'][:,:]  
+    typePrecip = f[u'/FS/CSF/typePrecip'][:,:]  
+    zFactorFinal = f[u'/FS/SLV/zFactorFinal'][:,:,:]   
+    precipRate= f[u'/FS/SLV/precipRate'][:,:,:]  
+    precipRateNearSurface = f[u'/FS/SLV/precipRateNearSurface'][:,:]  
+    f.close()
+
+    cmaps = GMI_colormap() 
+    
+    # read GMI
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    
+
+    inside_ku  = np.logical_and(np.logical_and(ku_NS_LON >= options['xlim_min'], 
+                                                   ku_NS_LON <= options['xlim_max']), 
+                 np.logical_and(ku_NS_LAT >= options['ylim_min'], 
+                                ku_NS_LAT <= options['ylim_max']))
+
+    fig = plt.figure(figsize=(12,7)) 
+    gs1 = gridspec.GridSpec(2, 2)
+   
+    # BT(89)              
+    ax1 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax1.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax1.add_feature(states_provinces,linewidth=0.4)
+    ax1.add_feature(rivers)
+    ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_gmi[:], lat_gmi[:], 
+           c=tb_s1_gmi[:,:,7], s=10, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 89 GHz', fontsize=fontsize)
+    ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,5), crs=crs_latlon)
+    ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,5), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax1.xaxis.set_major_formatter(lon_formatter)
+    ax1.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar1.latitude['data'][0],radar1.longitude['data'][0],np.max(radar1.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar2.latitude['data'][0],radar2.longitude['data'][0],np.max(radar2.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar3.latitude['data'][0],radar3.longitude['data'][0],np.max(radar3.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar4.latitude['data'][0],radar4.longitude['data'][0],np.max(radar4.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar5.latitude['data'][0],radar5.longitude['data'][0],np.max(radar5.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+
+    plt.plot(ku_NS_LON[:,0], ku_NS_LAT[:,0], '-k', linewidth=1.3)
+    plt.plot(ku_NS_LON[:,-1], ku_NS_LAT[:,-1], '-k', linewidth=1.3)    
+    plt.colorbar(im, ax=ax1, shrink=1, ticks=np.arange(50,300,25), extend='both')
+
+    # max(Zh_DPR)
+    ax1 = plt.subplot(gs1[1,1], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax1.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax1.add_feature(states_provinces,linewidth=0.4)
+    ax1.add_feature(rivers)
+    ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(ku_NS_LON[inside_ku], ku_NS_LAT[inside_ku],
+               c=np.max(zFactorFinal[inside_ku,:],1), vmin=0, vmax=40, s=10)
+    plt.colorbar(im, ax=ax1, shrink=1, ticks=np.arange(0,45,5), extend='both')
+    plt.title('DPR Ku Zcorrected', fontsize=fontsize)
+    ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,5), crs=crs_latlon)
+    ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,5), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax1.xaxis.set_major_formatter(lon_formatter)
+    ax1.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar1.latitude['data'][0],radar1.longitude['data'][0],np.max(radar1.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar2.latitude['data'][0],radar2.longitude['data'][0],np.max(radar2.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar3.latitude['data'][0],radar3.longitude['data'][0],np.max(radar3.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar4.latitude['data'][0],radar4.longitude['data'][0],np.max(radar4.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar5.latitude['data'][0],radar5.longitude['data'][0],np.max(radar5.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+
+    plt.title('DPR_Zcorr')
+    plt.plot( ku_NS_LON[:,0] , ku_NS_LAT[:,0], '--k' )    
+    plt.plot( ku_NS_LON[:,-1] , ku_NS_LAT[:,-1], '--k' )    
+    
+    return
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
 
@@ -2777,9 +2936,7 @@ if __name__ == '__main__':
   plot_gmi(gmi_file, opts, dat_dir, file_PAR_all)
   plot_DPR_parana('/home/victoria.galligani/Work/Studies/Hail_MW/DPR_data/', '2A.GPM.Ku.V9-20211125.20181009-S072527-E085801.026208.V07A.HDF5', 
                   gmi_path+'1B.GPM.GMI.TB2016.20181009-S072527-E085801.026208.V05A.HDF5',
-          dat_dir+file_PAR_all, opts)
-    plot_DPR_parana(Ku_folder, DPR_file, fname, radar_file, options):
-        
+          dat_dir+file_PAR_all, opts)        
   #--------------------------------------------------------------------------------------------
   file_PAR_all = '2018121402400200'
   folder = str(file_PAR_all[0:8]) 
@@ -2832,12 +2989,30 @@ if __name__ == '__main__':
   #---------------------------------------------------------------------------------------------
   #--------------------------------------------------------------------------------------------- 
   # Plot caso del 30-03-2022 que hay una linda pasada de GMI (del 26/27-04-2022 no hay nada)
+  opts = {'xlim_min': -60, 'xlim_max': -50, 'ylim_min': -30, 'ylim_max': -20}
   gmi_file = '1B.GPM.GMI.TB2016.20220330-S092456-E105727.045934.V05A.HDF5'
   # radares ver RMA4 y RMA8
   rma4_file = 'cfrad.20220330_103808.0000_to_20220330_104354.0000_RMA4_0200_01.nc'
   rma8_file = 'cfrad.20220330_104202.0000_to_20220330_104755.0000_RMA8_0200_01.nc'  
+  rma3_file = 'cfrad.20220330_104202.0000_to_20220330_104755.0000_RMA8_0200_01.nc'  
   dpr_file  = '2A.GPM.Ku.V9-20211125.20220330-S092456-E105727.045934.V07A.HDF5' 
-  #--------------------------------------------------------------------------------------------    
+  # plot GMI and Ku
+  dat_dir1 = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3/'
+  dat_dir2 = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA4/'
+  dat_dir3 = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA5/'
+  dat_dir4 = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA8/'
+  dat_dir5 = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/PAR/'
+  plot_gmi(gmi_file, opts, dat_dir, files_RMA4[0], 1)
+  plot_DPR('/home/victoria.galligani/datosmunin2/DATOS_mw/DPR_data/', 
+          dpr_file, gmi_path+gmi_file,
+          dat_dir1+files_RMA3[0], dat_dir2+files_RMA4[0], dat_dir3+files_RMA5[0], dat_dir4+files_RMA8[0], 
+          dat_dir5+files_PAR[0], opts)
+  # plot RMA4 y RMA8
+  plot_ppi(rma4_file, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA4/', dat_dir2, 'RMA4')
+  plot_ppi(rma8_file, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA8/', dat_dir4, 'RMA8')
+  #no hay datos de RMA3 
+
+#--------------------------------------------------------------------------------------------    
    
 
     
