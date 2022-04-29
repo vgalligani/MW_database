@@ -2995,6 +2995,7 @@ if __name__ == '__main__':
   rma4_file = 'cfrad.20220330_103808.0000_to_20220330_104354.0000_RMA4_0200_01.nc'
   rma8_file = 'cfrad.20220330_104202.0000_to_20220330_104755.0000_RMA8_0200_01.nc'  
   rma3_file = 'cfrad.20220330_104202.0000_to_20220330_104755.0000_RMA8_0200_01.nc'  
+  rma5_file = 'cfrad.20220330_103841.0000_to_20220330_104435.0000_RMA5_0200_01.nc'  
   dpr_file  = '2A.GPM.Ku.V9-20211125.20220330-S092456-E105727.045934.V07A.HDF5' 
   # plot GMI and Ku
   dat_dir1 = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/RMA3/'
@@ -3010,7 +3011,8 @@ if __name__ == '__main__':
   # plot RMA4 y RMA8
   plot_ppi(rma4_file, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA4/', dat_dir2, 'RMA4')
   plot_ppi(rma8_file, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA8/', dat_dir4, 'RMA8')
-  #no hay datos de RMA3 
+  #plot_ppi(rma5_file, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures/RMA5/', dat_dir3, 'RMA5')
+  #no hay datos de RMA3, RMA5 unsupported nc files?
 
 #--------------------------------------------------------------------------------------------    
    
