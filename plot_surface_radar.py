@@ -23,7 +23,8 @@ import cartopy.feature as cfeature
 from matplotlib.colors import ListedColormap
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from os.path import isfile, join
-
+import wradlib as wrl
+import pandas as pd
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def set_plot_settings(var): 
@@ -2622,6 +2623,91 @@ def plot_DPR(Ku_folder, DPR_file, fname, radar_file1, radar_file2, radar_file3, 
     return
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
+# Este bloque tiene las funciones (desarrolladas por Cande+Lucho) 
+# necesarias en preparacion para correre HID (phidp unfolding, etc)
+#------------------------------------------------------------------------------------
+
+def despeckle_phidp(phi, rho):
+    '''
+    Elimina pixeles aislados de PhiDP
+
+    '''
+
+    # Unmask data and despeckle
+    dphi = np.copy(phi)
+    
+    # Descartamos pixeles donde RHO es menor que un umbral (e.g., 0.7) o no está definido (e.g., NaN)
+    dphi[np.isnan(rho)] = np.nan
+    rho_thr = 0.7
+    dphi[rho < rho_thr] = np.nan
+    
+    # Calculamos la textura de RHO (rhot) y descartamos todos los pixeles de PHIDP por encima
+    # de un umbral de rhot (e.g., 0.25)
+    rhot = wrl.dp.texture(rho)
+    rhot_thr = 0.5
+    dphi[rhot > rhot_thr] = np.nan
+    
+    # Eliminamos pixeles aislados rodeados de NaNs
+    # https://docs.wradlib.org/en/stable/generated/wradlib.dp.linear_despeckle.html     
+    dphi = wrl.dp.linear_despeckle(dphi, ndespeckle=5, copy=False)
+
+    return dphi
+
+
+def unfold_phidp(phi, rho, diferencia):
+    '''
+    Unfolding
+    '''
+       
+    # Dimensión del PPI (elevaciones, azimuth, bins)
+    nb = phi.shape[1]
+    nr = phi.shape[0]
+
+    phi_cor = np.zeros((nr, nb)) #Asigno cero a la nueva variable phidp corregida
+    
+    v1 = np.zeros(nb)  #Vector v1
+    
+    # diferencia = 200 # Valor que toma la diferencia entre uno y otro pixel dentro de un mismo azimuth
+    
+    for m in range(30, nr):
+    
+        v1 = phi[m,:]
+        v2 = np.zeros(nb)
+    
+        for l in range(0, nb):
+            a = v2[l-1] - v1[l]
+
+            if np.isnan(a):
+                v2[l] = v2[l-1]
+
+            elif a > diferencia:
+                v2[l] = v1[l] + 360
+                if v2[l-1] - v2[l] > 100:  # Esto es por el doble folding cuando es mayor a 700
+                    v2[l] = v1[l] + v2[l-1]
+
+            else:
+                v2[l] = v1[l]
+    
+        phi_cor[m,:] = v2
+    
+    phi_cor[phi_cor <= 0] = np.nan
+    phi_cor[rho < .7] = np.nan
+    
+    return phi_cor
+    
+def subtract_sys_phase(phi, sys_phase):
+
+    nb = phi.shape[1]
+    nr = phi.shape[0]
+    phi_final = np.copy(phi) * 0
+    phi_err=np.ones((nr, nb)) * np.nan
+    
+    try:
+        phi_final = phi-sys_phase
+    except:
+        phi_final = phi_err
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 
 if __name__ == '__main__':
 
@@ -3015,7 +3101,21 @@ if __name__ == '__main__':
   #no hay datos de RMA3, RMA5 unsupported nc files?
 
 #--------------------------------------------------------------------------------------------    
-   
+#--------------------------------------------------------------------------------------------
+# Para preparar phidp etc
+  def correct_phidp(phi, zh, zdr, rho, sys_phase, diferencia):
+    dphi = despeckle_phidp(phi, rho)
+    uphi = unfold_phidp(dphi, rho, diferencia)
+    # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero
+    uphi = np.where(np.isnan(uphi), sys_phase, uphi)
+    phi_cor = subtract_sys_phase(uphi, sys_phase)
+    # phi_cor[rho<0.7] = np.nan
+    return phi_cor
+
+
+
+
+
 
     
 
