@@ -390,20 +390,20 @@ if __name__ == '__main__':
 
   main_radar_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
   # Casos seleccionados
-  radar_RMAXs = ['cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc', 
-                'cfrad.20171027_034647.0000_to_20171027_034841.0000_RMA1_0123_02.nc',
-                'cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc',
-                'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc',
-                'cfrad.20180209_063643.0000_to_20180209_063908.0000_RMA1_0201_03.nc',
-                'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc', 
-                'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc',  
-                'cfrad.20190224_061413.0000_to_20190224_061537.0000_RMA1_0301_02.nc', 
-                'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc']
+  radar_RMAXs = ['cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc', # RMA5:0.7 dBZ
+                'cfrad.20171027_034647.0000_to_20171027_034841.0000_RMA1_0123_02.nc',  # RMA1:0 dBZ
+                'cfrad.20171209_005909.0000_to_20171209_010438.0000_RMA1_0123_01.nc',  # RMA1:4 dBZ
+                'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc',  # RMA1:4 dBZ
+                'cfrad.20180209_063643.0000_to_20180209_063908.0000_RMA1_0201_03.nc',  # RMA1:3 dBZ
+                'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc',  # RMA1:1 dBZ
+                'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc',  # RMA1:1 dBZ
+                'cfrad.20190224_061413.0000_to_20190224_061537.0000_RMA1_0301_02.nc',  # RMA1:0 dBZ
+                'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc']  # RMA1:0.5 dBZ
   radar_dirs  = [main_radar_dir+'RMA5/',main_radar_dir+'RMA1/',main_radar_dir+'RMA1/',
                  main_radar_dir+'RMA1/',main_radar_dir+'RMA1/',main_radar_dir+'RMA1/',
                 main_radar_dir+'RMA1/',main_radar_dir+'RMA1/',main_radar_dir+'RMA1/']
   diferencia_test = [280, 280, 280, 280, 280, 280, 280, 280, 280]
-  ZDR_offset = [_,]
+  ZDR_offset      = [0.7, 0, 4, 4, 3, 1, 1, 0, 0.5]
     
     ojo con i=1, que hace algo raro pq syspahse=0 ? 
       
