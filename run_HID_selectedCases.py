@@ -26,6 +26,11 @@ import wradlib as wrl
 import pandas as pd
 from pyart.correct import phase_proc
 import xarray as xr
+from pyart.core.transforms import antenna_to_cartesian
+from copy import deepcopy
+from csu_radartools import csu_fhc
+import matplotlib.colors as colors
+
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -511,7 +516,22 @@ def plot_test_ppi(radar, phi_corr, lat_pf, lon_pf):
 
     return
 #------------------------------------------------------------------------------  
-def plot_corrections_ppi(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, lat_pf, lon_pf):
+def adjust_fhc_colorbar_for_pyart(cb):
+    
+    cb.set_ticks(np.arange(1.4, 10, 0.9))
+    cb.ax.set_yticklabels(['Drizzle', 'Rain', 'Ice Crystals', 'Aggregates',
+                           'Wet Snow', 'Vertical Ice', 'LD Graupel',
+                           'HD Graupel', 'Hail', 'Big Drops'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
+
+#------------------------------------------------------------------------------  
+def plot_corrections_ppi_wHID(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, lat_pf, lon_pf):
+    
+    hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']    
+    cmaphid = colors.ListedColormap(hid_colors)
     
     start_index = radar.sweep_start_ray_index['data'][0]
     end_index   = radar.sweep_end_ray_index['data'][0]
@@ -522,6 +542,9 @@ def plot_corrections_ppi(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, lat_pf
     dphi  = phi_corr[start_index:end_index]
     Zh_corr      = ZHCORR[start_index:end_index]
     att          = attenuation[start_index:end_index]
+    HID          = radar.fields['HID']['data'][start_index:end_index]
+    ZDR_corr2    = radar.fields['ZDR_correc_ZPHI']['data'][start_index:end_index]
+    Zh_corr2     = radar.fields['dBZ_correc_ZPHI']['data'][start_index:end_index]
     #Zh_corr_zphi = ZHCORR_ZPHI[start_index:end_index]
     #------ 
     # Test plot figure: 
@@ -571,11 +594,84 @@ def plot_corrections_ppi(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, lat_pf
     pcm1 = axes[1,0].pcolormesh(lons, lats, TH - Zh_corr, vmin=-5, vmax=5)
     cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label='ZH-ZHCORR(calc_att)')
     axes[1,0].grid(True)
-    #-- ATT
-    pcm1 = axes[1,1].pcolormesh(lons, lats, att, vmin=0, vmax=3)
-    cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label='attenuation')
+    #-- HID
+    pcm1 = axes[1,1].pcolormesh(lons, lats, HID, cmap=cmaphid, vmin=0, vmax=10)
+    cbar = plt.colorbar(pcm1, ax=axes[1,1], label='CSU HID')
+    cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    
+    return
+
+#------------------------------------------------------------------------------  
+def plot_corrections_ppi(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, lat_pf, lon_pf):
+    
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    phidp = radar.fields['PHIDP']['data'][start_index:end_index]
+    rhv   = radar.fields['RHOHV']['data'][start_index:end_index]
+    dphi  = phi_corr[start_index:end_index]
+    Zh_corr      = ZHCORR[start_index:end_index]
+    att          = attenuation[start_index:end_index]
+    ZDR_corr2    = radar.fields['ZDR_correc_ZPHI']['data'][start_index:end_index]
+    Zh_corr2     = radar.fields['dBZ_correc_ZPHI']['data'][start_index:end_index]
+    #Zh_corr_zphi = ZHCORR_ZPHI[start_index:end_index]
+    #------ 
+    # Test plot figure: 
+    fig, axes = plt.subplots(nrows=2, ncols=4, constrained_layout=True,
+                        figsize=[28,12])
+    #-- Zh: 
+    if 'TH' in radar.fields.keys():  
+        TH = radar.fields['TH']['data'][start_index:end_index]
+    elif 'DBZH' in radar.fields.keys():
+        TH = radar.fields['DBZH']['data'][start_index:end_index]
+    if 'ZDR' in radar.fields.keys():  
+        zdr = radar.fields['ZDR']['data'][start_index:end_index]    
+    else:
+        zdr = radar.fields['TH']['data'][start_index:end_index]-radar.fields['TV']['data'][start_index:end_index]
+    
+    #------ Zh (observed)
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    pcm1 = axes[0,0].pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[0,0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    axes[0,0].grid(True)
+    axes[0,0].plot(lon_pf, lat_pf, marker='o', markersize=60, markerfacecolor="None",
+         markeredgecolor='black', markeredgewidth=2) 
+    #-- RHOHV
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+    pcm1 = axes[0,1].pcolormesh(lons, lats, rhv, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[0,1], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    axes[0,1].grid(True)
+    #-- ZDR
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+    pcm1 = axes[0,2].pcolormesh(lons, lats, zdr-ZDRoffset, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[0,2], shrink=1, label='ZDR (w/ offset)', ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    axes[0,2].grid(True)
+    #-- DPHIDP
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[0,3].pcolormesh(lons, lats, dphi, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes[0,3], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    axes[0,3].grid(True)
+    #-- Zh - Zh_corr
+    pcm1 = axes[1,0].pcolormesh(lons, lats, TH - Zh_corr, vmin=-5, vmax=5)
+    cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label='ZH-ZHCORR(calc_att)')
+    axes[1,0].grid(True)
+    #-- Zh - Zh_corr (ZPHI)
+    pcm1 = axes[1,1].pcolormesh(lons, lats, TH - Zh_corr2)
+    cbar = plt.colorbar(pcm1, ax=axes[1,1], shrink=1, label='ZH-ZHCORR(calc_att_zphi)')
     axes[1,1].grid(True)    
-        
+     #--Z DR - ZDR_corr (ZPHI)
+    pcm1 = axes[1,2].pcolormesh(lons, lats, zdr-ZDR_corr2)
+    cbar = plt.colorbar(pcm1, ax=axes[1,2], shrink=1, label='ZDR-ZDR_CORR(calc_att_zphi)')
+    axes[1,2].grid(True)         
     return
 
 #------------------------------------------------------------------------------
@@ -774,7 +870,8 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('zdr'))
         cax.set_array(ZDR_transect)
         cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
-        
+        axes[1].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
     del mycolorbar, x, y, inter
     #---------------------------------------- RHOHV
     #- Simple pcolormesh plot! 
@@ -829,7 +926,8 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.RefDiff)
         cax.set_array(RHO_transect)
         cbar_rho = fig2.colorbar(cax, ax=axes[2], shrink=1.1, ticks=np.arange(0.7,1.01,0.1), label=r'$\rho_{hv}$')     
-        
+        axes[2].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
     del mycolorbar, x, y, inter
     
     #- savefile
@@ -856,14 +954,101 @@ def interpolate_sounding_to_radar(snd_T, snd_z, radar):
     rad_z1d = radar_z.ravel()
     rad_T1d = np.interp(rad_z1d, snd_z, snd_T)
     return np.reshape(rad_T1d, shape), radar_z
-
-
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+def add_field_to_radar_object(field, radar, field_name='FH', units='unitless', 
+                              long_name='Hydrometeor ID', standard_name='Hydrometeor ID'):
+    """
+    Adds a newly created field to the Py-ART radar object. If reflectivity is a masked array,
+    make the new field masked the same as reflectivity.
+    """
+    if 'TH' in radar.fields.keys():  
+        dz_field='TH'
+    elif 'DBZH' in radar.fields.keys():
+        dz_field='DBZH'   
+    fill_value = -32768
+    masked_field = np.ma.asanyarray(field)
+    masked_field.mask = masked_field == fill_value
+    if hasattr(radar.fields[dz_field]['data'], 'mask'):
+        setattr(masked_field, 'mask', 
+                np.logical_or(masked_field.mask, radar.fields[dz_field]['data'].mask))
+        fill_value = radar.fields[dz_field]['_FillValue']
+    field_dict = {'data': masked_field,
+                  'units': units,
+                  'long_name': long_name,
+                  'standard_name': standard_name,
+                  '_FillValue': fill_value}
+    radar.add_field(field_name, field_dict, replace_existing=True)
+    return radar
 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+def get_z_from_radar(radar):
+    """Input radar object, return z from radar (km, 2D)"""
+    azimuth_1D = radar.azimuth['data']
+    elevation_1D = radar.elevation['data']
+    srange_1D = radar.range['data']
+    sr_2d, az_2d = np.meshgrid(srange_1D, azimuth_1D)
+    el_2d = np.meshgrid(srange_1D, elevation_1D)[1]
+    xx, yy, zz = antenna_to_cartesian(sr_2d/1000.0, az_2d, el_2d) # Cartesian coordinates in meters from the radar.
+
+    return zz + radar.altitude['data'][0]
 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+def correct_attenuation_zdr(radar, gatefilter, zdr_name, phidp_name, alpha):
+    """
+    Correct attenuation on differential reflectivity. KDP_GG has been
+    cleaned of noise, that's why we use it.
+    V. N. Bringi, T. D. Keenan and V. Chandrasekar, "Correcting C-band radar
+    reflectivity and differential reflectivity data for rain attenuation: a
+    self-consistent method with constraints," in IEEE Transactions on Geoscience
+    and Remote Sensing, vol. 39, no. 9, pp. 1906-1915, Sept. 2001.
+    doi: 10.1109/36.951081
+    Parameters:
+    ===========
+    radar:
+        Py-ART radar structure.
+    gatefilter: GateFilter
+        Filter excluding non meteorological echoes.
+    zdr_name: str
+        Differential reflectivity field name.
+    phidp_name: str
+        PHIDP field name.
+    alpha: float == 0.016
+        Z-PHI coefficient.
+    Returns:
+    ========
+    zdr_corr: array
+        Attenuation corrected differential reflectivity.
+    """
+    zdr = radar.fields[zdr_name]["data"].copy()
+    phi = radar.fields[phidp_name]["data"].copy()
+
+    zdr_corr = zdr + alpha * phi
+    zdr_corr[gatefilter.gate_excluded] = np.NaN
+    zdr_corr = np.ma.masked_invalid(zdr_corr)
+    np.ma.set_fill_value(zdr_corr, np.NaN)
+
+    # Z-PHI coefficient from Bringi et al. 2001
+    zdr_meta = pyart.config.get_metadata("differential_reflectivity")
+    zdr_meta["description"] = "Attenuation corrected differential reflectivity using Bringi et al. 2001."
+    zdr_meta["_FillValue"] = np.NaN
+    zdr_meta["_Least_significant_digit"] = 2
+    zdr_meta["data"] = zdr_corr
+
+    return zdr_meta
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 if __name__ == '__main__':
 
@@ -911,6 +1096,10 @@ if __name__ == '__main__':
   # Loop over radar ... pero por ahora: i=0 
   i = 0
 
+    
+    
+    # ----------------------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------
     # Read radar file
     radar = pyart.io.read(radar_dirs[i]+radar_RMAXs[i])     
     #----- correct sysphase 
@@ -927,74 +1116,100 @@ if __name__ == '__main__':
     elif 'DBZH' in radar.fields.keys():
         spec_at, ZHCORR = pyart.correct.calculate_attenuation(radar, z_offset=0, rhv_min=0.6, ncp_min=0.6, a_coef=0.08, beta=0.64884, refl_field='DBZH', 
                                                         ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP_c')
-    plot_corrections_ppi(radar, corr_phidp, ZHCORR['data'], spec_at['data'], ZDR_offset[i], PFs_lat[i], PFs_lon[i])
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
     # ---- PARA USAR calculate_attenuation_zphi me falta algun sondeo ... t_field ... closest to RMA5?
     # Find j,k where meets PF lat/lons
     ERA5_field = xr.load_dataset(era5_dir+ERA5_files[i], engine="cfgrib")
     elemj      = find_nearest(ERA5_field['latitude'], PFs_lat[i])
     elemk      = find_nearest(ERA5_field['longitude'], PFs_lon[i])
-    tfield_ref = ERA5_field['t'][:,elemj,elemk] 
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
     geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
     # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
     Re         = 6371*1e3
     alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
     # Print the freezing level
-    print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 273)]/1e3), ' km')
-    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 273)]/1e3) 
+    print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3), ' km')
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    #- Add height field for 4/3 propagation
+    radar_height = get_z_from_radar(radar)
+    radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+    iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
+    radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+    radar.fields['height_over_iso0']['data'] -= iso0   
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
     plot_rhi_RMA(radar_RMAXs[i], fig_dir, radar_dirs[i], RMA_name[i], 0, range_max[0], toi[i], ZDR_offset[i], freezing_lev)
-    
-
-    
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, snd_z, radar)
-    
-    
-    
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-        #- Add height field for 4/3 propagation
-        radar_height = get_z_from_radar(radar)
-        radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
-        iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0.1)])
-        radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
-        radar.fields['height_over_iso0']['data'] -= iso0
-        
-
-        # determine where the reflectivity is valid, mask out bad locations.
-        gatefilter_vitto = pyart.correct.GateFilter(radar)
-        gatefilter_vitto.exclude_below('RHOHV', 0.85, exclude_masked=True)
-        #gatefilter_vitto.exclude_below('DBZHCC', 25, exclude_masked=True)    
-        #gatefilter_vitto.exclude_below('NCP', 0.6, exclude_masked=True)
-    
-        
-        spec_at, pia_dict, cor_z, spec_diff_at, pida_dict, cor_zdr = pyart.correct.calculate_attenuation_zphi(
-            radar, zdr_field='ZDRC', refl_field = 'DBZHCC', phidp_field = 'PHIDP',   # ojo corrected PHIDP
-            c=4.38, d=1.224, temp_ref='height_over_iso0',                #     c, d : coeff. and exponent of the power law that relates Ah w/ differential attenuation
-            a_coef=0.06, beta=0.8,
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
+    # Apply zphi correction for ZDR attenuation correction?
+    gatefilter_vitto = pyart.correct.GateFilter(radar)
+    gatefilter_vitto.exclude_below('RHOHV', 0.8, exclude_masked=True)
+    if 'TH' in radar.fields.keys(): 
+        refl_field = 'TH'
+    elif 'DBZH' in radar.fields.keys(): 
+        refl_field = 'DBZH'        
+    if 'ZDR' in radar.fields.keys(): 
+        zdr_field = 'ZDR'
+    # Note that pyart defaults for C-band are param_att_dict.update({'C': (a=0.08, b=0.64884, c=0.3, d=1.0804)}), 
+    # where c, d : coeff. and exponent of the power law that relates Ah w/ differential attenuation
+    # while following Snyder et al., (2010)                               (     ,        ,4.38,1.224) ???? 
+    spec_at, pia_dict, cor_z, spec_diff_at, pida_dict, cor_zdr = pyart.correct.calculate_attenuation_zphi(
+        radar, zdr_field=zdr_field, refl_field = refl_field, phidp_field = 'PHIDP_c',   # ojo corrected PHIDP
+            c=0.3, d=1.0804, temp_ref='height_over_iso0', a_coef=0.08, beta=0.64884,
             temp_field='sounding_temperature', gatefilter=gatefilter_vitto)
-          
-        radar.add_field('dBZ_correc_ZPHI', cor_z, replace_existing=True)
+    radar.add_field('dBZ_correc_ZPHI', cor_z, replace_existing=True)
+    radar.add_field('ZDR_correc_ZPHI', cor_zdr, replace_existing=True)
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #plot_corrections_ppi(radar, corr_phidp, ZHCORR['data'], spec_at['data'], ZDR_offset[i], PFs_lat[i], PFs_lon[i])
+    # FOR NOW IGNORE ZDR_CORRECTION? ZPHI NEEDS TUNING!!
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # Finally, check out simple ZDR correction algorithm implemented above with alpha ZPHI coeff=0.016 ??? 
+    #zdr_cor_simple = correct_attenuation_zdr(radar, gatefilter_vitto, 'ZDR', 'PHIDP_c', 0.02)      # ojo corrected PHIDP
+    #radar.add_field('ZDR_correc_ZPHI', zdr_cor_simple, replace_existing=True)
+    #plot_corrections_ppi(radar, corr_phidp, ZHCORR['data'], spec_at['data'], ZDR_offset[i], PFs_lat[i], PFs_lon[i])
+
     
-    # Use defaults in pyart param_att_dict.update({'C': (0.08, 0.64884, 0.3, 1.0804)}) 
-    spec_at, _, ZHCORR_ZPHI, _, _, ZDRcorr = pyart.correct.calculate_attenuation_zphi(radar, a_coef=0.08, beta=0.64884, c=0.3, 
-        d=1.0804, refl_field='DBZH', zdr_field='ZDR',phidp_field='PHIDP_c', temp_field=temp_field)
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----    
+    # hid adicionalmente   
+    scores          = csu_fhc.csu_fhc_summer(dz=radar.fields[refl_field]['data'], zdr=radar.fields[zdr_field]['data'], 
+                                             rho=radar.fields['RHOHV']['data'], kdp=radar.fields['KDP']['data'], 
+                                             use_temp=True, band='C', T=radar_T)
+    
+    FIX! 
+    
+    
+    HID             = np.argmax(scores, axis=0) + 1
+    radar = add_field_to_radar_object(HID, radar, field_name = 'HID')    
+    plot_corrections_ppi_wHID(radar, corr_phidp, ZHCORR['data'], spec_at['data'], ZDR_offset[i], PFs_lat[i], PFs_lon[i])
 
-
-
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
   fig = plt.figure()
-  start_index = radar.sweep_start_ray_index['data'][-1]
-  end_index   = radar.sweep_end_ray_index['data'][-1]
+  start_index = radar.sweep_start_ray_index['data'][0]
+  end_index   = radar.sweep_end_ray_index['data'][0]
   lats  = radar.gate_latitude['data'][start_index:end_index]
   lons  = radar.gate_longitude['data'][start_index:end_index]
   phidp = radar.fields['PHIDP']['data'][start_index:end_index]
   rhohv = radar.fields['RHOHV']['data'][start_index:end_index]
-  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
-  pcm1 = plt.pcolormesh(lons, lats, phidp, cmap=cmap, vmin=vmin, vmax=vmax)
-  dphi = despeckle_phidp(phidp, rhohv)
+  zdr2  = radar.fields['ZDR_correc_ZPHI']['data'][start_index:end_index]
+  zdr  = radar.fields['ZDR']['data'][start_index:end_index]
+  zh  = radar.fields['DBZH']['data'][start_index:end_index]
+  zh2  = radar.fields['dBZ_correc_ZPHI']['data'][start_index:end_index]
+  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
+  pcm1 = plt.pcolormesh(lons, lats, zdr2)
+  plt.colorbar()
 
-    
     
     
 
