@@ -580,7 +580,7 @@ def plot_corrections_ppi(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, lat_pf
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, test_transect, ZDRoffset): 
+def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev): 
     
     radar = pyart.io.read(dat_dir+file) 
     # dict_keys(['PHIDP', 'CM', 'RHOHV', 'TH', 'TV', 'KDP']) for RMA1
@@ -719,7 +719,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
          cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('ref'))
          cax.set_array(Ze_transect)
          cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
-
+         axes[0].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
     del mycolorbar, x, y, inter
     #---------------------------------------- ZDR
     #- Simple pcolormesh plot! 
@@ -840,6 +840,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     return 
 
 #------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -847,7 +848,22 @@ def find_nearest(array, value):
 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+def interpolate_sounding_to_radar(snd_T, snd_z, radar):
+    """Takes sounding data and interpolates it to every radar gate."""
+    radar_z = get_z_from_radar(radar)
+    radar_T = None
+    shape   = np.shape(radar_z)
+    rad_z1d = radar_z.ravel()
+    rad_T1d = np.interp(rad_z1d, snd_z, snd_T)
+    return np.reshape(rad_T1d, shape), radar_z
 
+
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 
 if __name__ == '__main__':
 
@@ -912,17 +928,52 @@ if __name__ == '__main__':
         spec_at, ZHCORR = pyart.correct.calculate_attenuation(radar, z_offset=0, rhv_min=0.6, ncp_min=0.6, a_coef=0.08, beta=0.64884, refl_field='DBZH', 
                                                         ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP_c')
     plot_corrections_ppi(radar, corr_phidp, ZHCORR['data'], spec_at['data'], ZDR_offset[i], PFs_lat[i], PFs_lon[i])
-    plot_rhi_RMA(radar_RMAXs[i], fig_dir, radar_dirs[i], RMA_name[i], 0, range_max[0], toi[i], ZDR_offset[i])
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
     # ---- PARA USAR calculate_attenuation_zphi me falta algun sondeo ... t_field ... closest to RMA5?
-    temp_field = xr.load_dataset(era5_dir+ERA5_files[i], engine="cfgrib")
-    #for j in range(temp_field['t'].shape[1]):
-    #    for k in range(temp_field['t'].shape[2]):
-    #        plt.plot(temp_field['t'][:,j,k], p_field)
     # Find j,k where meets PF lat/lons
-    elemj = find_nearest(temp_field['latitude'], PFs_lat[i])
-    elemk = find_nearest(temp_field['longitude'], PFs_lon[i])
-    plt.plot(temp_field['t'][:,elemj,elemk], p_field)
+    ERA5_field = xr.load_dataset(era5_dir+ERA5_files[i], engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], PFs_lat[i])
+    elemk      = find_nearest(ERA5_field['longitude'], PFs_lon[i])
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] 
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    # Print the freezing level
+    print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 273)]/1e3), ' km')
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 273)]/1e3) 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
+    plot_rhi_RMA(radar_RMAXs[i], fig_dir, radar_dirs[i], RMA_name[i], 0, range_max[0], toi[i], ZDR_offset[i], freezing_lev)
     
+
+    
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, snd_z, radar)
+    
+    
+    
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        #- Add height field for 4/3 propagation
+        radar_height = get_z_from_radar(radar)
+        radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+        iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0.1)])
+        radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+        radar.fields['height_over_iso0']['data'] -= iso0
+        
+
+        # determine where the reflectivity is valid, mask out bad locations.
+        gatefilter_vitto = pyart.correct.GateFilter(radar)
+        gatefilter_vitto.exclude_below('RHOHV', 0.85, exclude_masked=True)
+        #gatefilter_vitto.exclude_below('DBZHCC', 25, exclude_masked=True)    
+        #gatefilter_vitto.exclude_below('NCP', 0.6, exclude_masked=True)
+    
+        
+        spec_at, pia_dict, cor_z, spec_diff_at, pida_dict, cor_zdr = pyart.correct.calculate_attenuation_zphi(
+            radar, zdr_field='ZDRC', refl_field = 'DBZHCC', phidp_field = 'PHIDP',   # ojo corrected PHIDP
+            c=4.38, d=1.224, temp_ref='height_over_iso0',                #     c, d : coeff. and exponent of the power law that relates Ah w/ differential attenuation
+            a_coef=0.06, beta=0.8,
+            temp_field='sounding_temperature', gatefilter=gatefilter_vitto)
+          
+        radar.add_field('dBZ_correc_ZPHI', cor_z, replace_existing=True)
     
     # Use defaults in pyart param_att_dict.update({'C': (0.08, 0.64884, 0.3, 1.0804)}) 
     spec_at, _, ZHCORR_ZPHI, _, _, ZDRcorr = pyart.correct.calculate_attenuation_zphi(radar, a_coef=0.08, beta=0.64884, c=0.3, 
