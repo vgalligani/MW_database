@@ -518,8 +518,22 @@ def plot_test_ppi(radar, phi_corr, lat_pf, lon_pf):
 #------------------------------------------------------------------------------  
 def adjust_fhc_colorbar_for_pyart(cb):
     
-    cb.set_ticks(np.arange(1.4, 10, 0.9))
-    cb.ax.set_yticklabels(['Drizzle', 'Rain', 'Ice Crystals', 'Aggregates',
+    # HID types:           Species #:  
+    # -------------------------------
+    # Drizzle                  1    
+    # Rain                     2    
+    # Ice Crystals             3
+    # Aggregates               4
+    # Wet Snow                 5
+    # Vertical Ice             6
+    # Low-Density Graupel      7
+    # High-Density Graupel     8
+    # Hail                     9
+    # Big Drops                10
+    
+    
+    cb.set_ticks(np.arange(2.4, 10, 0.9))
+    cb.ax.set_yticklabels(['Rain', 'Ice Crystals', 'Aggregates',
                            'Wet Snow', 'Vertical Ice', 'LD Graupel',
                            'HD Graupel', 'Hail', 'Big Drops'])
     cb.ax.set_ylabel('')
@@ -530,7 +544,7 @@ def adjust_fhc_colorbar_for_pyart(cb):
 def plot_corrections_ppi_wHID(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, lat_pf, lon_pf):
     
     hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
-              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']    
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
     cmaphid = colors.ListedColormap(hid_colors)
     
     start_index = radar.sweep_start_ray_index['data'][0]
@@ -595,9 +609,10 @@ def plot_corrections_ppi_wHID(radar, phi_corr, ZHCORR, attenuation, ZDRoffset, l
     cbar = plt.colorbar(pcm1, ax=axes[1,0], shrink=1, label='ZH-ZHCORR(calc_att)')
     axes[1,0].grid(True)
     #-- HID
-    pcm1 = axes[1,1].pcolormesh(lons, lats, HID, cmap=cmaphid, vmin=0, vmax=10)
+    pcm1 = axes[1,1].pcolormesh(lons, lats, HID, cmap=cmaphid, vmin=1.8, vmax=10.4)
     cbar = plt.colorbar(pcm1, ax=axes[1,1], label='CSU HID')
     cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    cbar.cmap.set_under('white')
     
     return
 
@@ -1116,6 +1131,7 @@ if __name__ == '__main__':
     elif 'DBZH' in radar.fields.keys():
         spec_at, ZHCORR = pyart.correct.calculate_attenuation(radar, z_offset=0, rhv_min=0.6, ncp_min=0.6, a_coef=0.08, beta=0.64884, refl_field='DBZH', 
                                                         ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP_c')
+    radar.add_field('ZHCORR', ZHCORR, replace_existing=True)
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
     # ---- PARA USAR calculate_attenuation_zphi me falta algun sondeo ... t_field ... closest to RMA5?
     # Find j,k where meets PF lat/lons
@@ -1171,17 +1187,14 @@ if __name__ == '__main__':
     
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----    
     # hid adicionalmente   
-    scores          = csu_fhc.csu_fhc_summer(dz=radar.fields[refl_field]['data'], zdr=radar.fields[zdr_field]['data'], 
+    scores          = csu_fhc.csu_fhc_summer(dz=radar.fields['ZHCORR']['data'], zdr=radar.fields[zdr_field]['data'], 
                                              rho=radar.fields['RHOHV']['data'], kdp=radar.fields['KDP']['data'], 
                                              use_temp=True, band='C', T=radar_T)
-    
-    FIX! 
-    
-    
     HID             = np.argmax(scores, axis=0) + 1
     radar = add_field_to_radar_object(HID, radar, field_name = 'HID')    
     plot_corrections_ppi_wHID(radar, corr_phidp, ZHCORR['data'], spec_at['data'], ZDR_offset[i], PFs_lat[i], PFs_lon[i])
 
+    FIX! con rhohv lim gatefilter!
     
     
     
