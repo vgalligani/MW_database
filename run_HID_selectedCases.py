@@ -1193,6 +1193,108 @@ def GMI_colormap():
     
     return cmaps
 
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# This custom formatter removes trailing zeros, e.g. "1.0" becomes "1", and
+# then adds a K.
+def fmt(x):
+    s = f"{x:.1f}"
+    if s.endswith("0"):
+        s = f"{x:.0f}"
+    return rf"{s} K" if plt.rcParams["text.usetex"] else f"{s} K"
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def plot_37(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
+    
+    radar = pyart.io.read(radardat_dir+radar_file) 
+    reflectivity_name = 'TH'   
+    
+    fontsize = 12
+    user = platform.system()
+    if   user == 'Linux':
+        home_dir = '/home/victoria.galligani/'  
+    elif user == 'Darwin':
+        home_dir = '/Users/victoria.galligani'
+
+    # Shapefiles for cartopy 
+    geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+    geo_reg = shpreader.Reader(geo_reg_shp)
+
+    countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+    states_provinces = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+    rivers = cfeature.NaturalEarthFeature(
+        category='physical',
+        name='rivers_lake_centerlines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+
+    
+    cmaps = GMI_colormap() 
+    
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    
+    # keep domain of interest only by keeping those where the center nadir obs is inside domain
+    inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
+                              np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
+    inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
+                                         np.logical_and(lat_s2_gmi >= options['ylim_min'], lat_s2_gmi <= options['ylim_max']))    
+
+    
+    tb_s1_gmi[np.where(lon_gmi[:,110] >=  opts['xlim_max']+5),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,110] <=  opts['xlim_min']-5),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,110] >=  opts['ylim_max']+5),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,110] <=  opts['ylim_min']-5),:,:] = np.nan
+    
+    # CALCULATE PCTs
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
+    
+    fig = plt.figure(figsize=(12,7)) 
+    gs1 = gridspec.GridSpec(1, 3)
+    
+    # BT(37)       
+    ax1 = plt.subplot(gs1[0,0], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax1.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax1.add_feature(states_provinces,linewidth=0.4)
+    ax1.add_feature(rivers)
+    ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_gmi[:], lat_gmi[:], 
+           c=tb_s1_gmi[:,:,5], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 37 GHz', fontsize=fontsize)
+    ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, '-k', linewidth=1)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5) 
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    CONTORNO3 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    
+    return fig, CONTORNO3
+  
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
@@ -1239,11 +1341,20 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
     f.close()
     
     # keep domain of interest only by keeping those where the center nadir obs is inside domain
-    #inside_s1   = np.logical_and(np.logical_and(lon_s1[:,45] >= -70, lon_s1[:,45] <= -50), 
-    #                          np.logical_and(lat_s1[:,45] >= -50, lat_s1[:,45] <= -20))
-    #inside_s2   = np.logical_and(np.logical_and(lon_s2 >= -70, lon_s2 <= -50), 
-    #                                     np.logical_and(lat_s2 >= -50, lat_s2 <= -20))    
+    inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
+                              np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
+    inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
+                                         np.logical_and(lat_s2_gmi >= options['ylim_min'], lat_s2_gmi <= options['ylim_max']))    
 
+    
+    tb_s1_gmi[np.where(lon_gmi[:,110] >=  opts['xlim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,110] <=  opts['xlim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,110] >=  opts['ylim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,110] <=  opts['ylim_min']-1),:,:] = np.nan
+    
+    # CALCULATE PCTs
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
+    
     fig = plt.figure(figsize=(12,7)) 
     gs1 = gridspec.GridSpec(1, 3)
     
@@ -1259,7 +1370,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
     ax1.add_feature(rivers)
     ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
                 edgecolor="black", facecolor='none')
-    im = plt.scatter(lon_gmi, lat_gmi, 
+    im = plt.scatter(lon_gmi[:], lat_gmi[:], 
            c=tb_s1_gmi[:,:,5], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
     plt.title('BT 37 GHz', fontsize=fontsize)
     ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
@@ -1272,7 +1383,9 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
     for i in range(len(lon_pfs)):
         plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
             markeredgecolor='magenta', markeredgewidth=1.5) 
-        
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    
     # BT(89)              
     ax2 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
     crs_latlon = ccrs.PlateCarree()
@@ -1285,8 +1398,8 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
     ax2.add_feature(rivers)
     ax2.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
                 edgecolor="black", facecolor='none')
-    im = plt.scatter(lon_gmi[:], lat_gmi[:], 
-           c=tb_s1_gmi[:,:,7], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    im = plt.scatter(lon_gmi[inside_s1], lat_gmi[inside_s1], 
+           c=tb_s1_gmi[inside_s1,7], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
     plt.title('BT 89 GHz', fontsize=fontsize)
     ax2.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
     ax2.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
@@ -1300,6 +1413,9 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
     for i in range(len(lon_pfs)):
         plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
             markeredgecolor='magenta', markeredgewidth=1.5)   
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+     
     # BT(166)           
     ax3 = plt.subplot(gs1[0,2], projection=ccrs.PlateCarree())
     crs_latlon = ccrs.PlateCarree()
@@ -1312,8 +1428,8 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
     ax3.add_feature(rivers)
     ax3.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
                 edgecolor="black", facecolor='none')
-    im = plt.scatter(lon_s2_gmi[:], lat_s2_gmi[:], 
-           c=tb_s2_gmi[:,:,0], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    im = plt.scatter(lon_s2_gmi[inside_s2], lat_s2_gmi[inside_s2], 
+           c=tb_s2_gmi[inside_s2,0], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
     plt.title('BT 166 GHz', fontsize=fontsize)
     ax3.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
     ax3.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
@@ -1327,17 +1443,58 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
     for i in range(len(lon_pfs)):
         plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
             markeredgecolor='magenta', markeredgewidth=1.5) 
-        
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    CONTORNO3 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    #ax3.clabel(CONTORNO, CONTORNO.levels, inline=True, fmt=fmt, fontsize=10)
+    plt.plot(np.nan, np.nan, '-m', label='PCT89 200 K ')
+    plt.legend(loc=1)
+    
     p1 = ax1.get_position().get_points().flatten()
     p2 = ax3.get_position().get_points().flatten()
     ax_cbar = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.05])
     cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.6,ticks=np.arange(50,300,10), extend='both', orientation="horizontal", label='TBV (K)')   
 
-    return fig, ax1, ax2, ax3
+    return fig, CONTORNO3
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+#################################################################
+def calc_PCTs(TB_s1):
+    """
+    -------------------------------------------------------------
+    PCTs(89 GHz) <= 200 K following Cecil et al., 2018
+    PCT(10) = 2.5TBV  - 1.5TBH
+    PCT(19) = 2.4TBV  - 1.4TBH
+    PCT(37) = 2.15TBV - 1.15TBH
+    PCT(89) = 1.7TBV  - 0.7TBH
+    -------------------------------------------------------------
+    OUT    PCT10   
+           PCT19
+           PCT37
+           PCT89
+    IN     TB_s1         
+    -------------------------------------------------------------
+    """
+    PCT10 = 2.5  * TB_s1[:,:,0] - 1.5  * TB_s1[:,:,1] 
+    PCT19 = 2.4  * TB_s1[:,:,2] - 1.4  * TB_s1[:,:,3] 
+    PCT37 = 2.15 * TB_s1[:,:,5] - 1.15 * TB_s1[:,:,6] 
+    PCT89 = 1.7  * TB_s1[:,:,7] - 0.7  * TB_s1[:,:,8] 
+    
+    return PCT10, PCT19, PCT37, PCT89
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_contour_verts(cp):
+    contours=[]
+    for cc in cp.collections:
+        paths=[]
+        for pp in cc.get_paths():
+            xy=[]
+            for vv in pp.iter_segments():
+                xy.append(vv[0])
+            paths.append(np.vstack(xy))
+        contours.append(paths)
+    return contours
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -1474,7 +1631,11 @@ if __name__ == '__main__':
     FIX! con rhohv lim gatefilter!
     
     
-    para el caso de la supercelda en corodba (2018-02-08) hay: 
+
+    
+    
+    
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----    
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----    
     # CASO SUPERCELDA:
     lon_pfs = [-64.80]
@@ -1486,46 +1647,126 @@ if __name__ == '__main__':
     rfile = 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
     gfile = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
     opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
-    fig, ax1, ax2, ax3 = plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+    fig, contorno89 = plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
                                   '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs)
     plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
-    # Inside radar ring, TBs. TB distribution w/ MIN85PCT and MIN37PCT.  
+    # Inside radar PCTs (que en principio son PFs). look at TB distribution w/ MIN85PCT and MIN37PCT.  
+    # i.e., the 200 K lines ... onli 1 collection! PERO OJO PORQUE USE UN LAT/LON MAX/MIN muy laxo. 
+    for item in contorno89.collections:
+        counter=0
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1]
+            # Keep only x,y within ops min/max values of interest 
+            if np.min(x) < opts['xlim_min']:
+                continue
+            elif np.max(x) > opts['xlim_max']:
+                continue            
+            elif np.min(y) < opts['ylim_min']:
+                continue
+            elif np.max(y) > opts['ylim_max']:
+                continue    
+            else:
+                plt.plot(x,y, label=str(counter))
+            counter=counter+1
+    plt.legend()
+    # So, interested in paths: 1, 2, 3
+    # Get vertices of these polygon type shapes
+    X1 = []; Y1 = []; vertices = []
+    for i in range(len(contorno89.collections[0].get_paths()[1].vertices)): 
+        X1.append(contorno89.collections[0].get_paths()[1].vertices[i][0])
+        Y1.append(contorno89.collections[0].get_paths()[1].vertices[i][1])
+        vertices.append([contorno89.collections[0].get_paths()[1].vertices[i][0], 
+                                        contorno89.collections[0].get_paths()[1].vertices[i][1]])
+   # Run ConvexHull
+   # read file
+   f = h5py.File( '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, 'r')
+   tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+   lon_gmi = f[u'/S1/Longitude'][:,:] 
+   lat_gmi = f[u'/S1/Latitude'][:,:]
+   tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+   lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+   lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+   f.close()
     
-    # HIDS (Ver otros radares displobibles)
     
     
-        
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-  fig = plt.figure()
-  start_index = radar.sweep_start_ray_index['data'][0]
-  end_index   = radar.sweep_end_ray_index['data'][0]
-  lats  = radar.gate_latitude['data'][start_index:end_index]
-  lons  = radar.gate_longitude['data'][start_index:end_index]
-  phidp = radar.fields['PHIDP']['data'][start_index:end_index]
-  rhohv = radar.fields['RHOHV']['data'][start_index:end_index]
-  zdr2  = radar.fields['ZDR_correc_ZPHI']['data'][start_index:end_index]
-  zdr  = radar.fields['ZDR']['data'][start_index:end_index]
-  zh  = radar.fields['DBZH']['data'][start_index:end_index]
-  zh2  = radar.fields['dBZ_correc_ZPHI']['data'][start_index:end_index]
-  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zdr')
-  pcm1 = plt.pcolormesh(lons, lats, zdr2)
-  plt.colorbar()
+   from scipy.spatial import ConvexHull, convex_hull_plot_2d
+   from matplotlib.path import Path
 
-    
-    
+   convexhull = ConvexHull(vertices)
+   array_points = np.array(vertices)
 
+   hull_path   = Path( array_points[convexhull.vertices] )
+   inside_s1   = np.logical_and(np.logical_and(lon_gmi >= opts['xlim_min'], lon_gmi <=  opts['xlim_max']), 
+                              np.logical_and(lat_gmi >= opts['ylim_min'], lat_gmi <= opts['ylim_max']))
+   lon_gmi    = lon_gmi[inside_s1] 
+   lat_gmi    = lat_gmi[inside_s1]
+   tb_s1_gmi  = tb_s1_gmi[inside_s1,:]
+   datapts = np.column_stack((lon_gmi,lat_gmi))
+   inds = hull_path.contains_points(datapts)
+   lon_gmi    = lon_gmi[inds] 
+   lat_gmi    = lat_gmi[inds]
+   tb_s1_gmi  = tb_s1_gmi[inds,:]
+   
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+    
+    user = platform.system()
+    if   user == 'Linux':
+        home_dir = '/home/victoria.galligani/'  
+    elif user == 'Darwin':
+        home_dir = '/Users/victoria.galligani'
+
+    # Shapefiles for cartopy 
+    geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+    geo_reg = shpreader.Reader(geo_reg_shp)
+
+    countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+    states_provinces = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+    rivers = cfeature.NaturalEarthFeature(
+        category='physical',
+        name='rivers_lake_centerlines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+
+    cmaps = GMI_colormap() 
+        
+   
+    fig = plt.figure(figsize=(12,7)) 
+    gs1 = gridspec.GridSpec(1, 3)
+    
+    # BT(37)       
+    ax1 = plt.subplot(gs1[0,0], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax1.set_extent([opts['xlim_min'], opts['xlim_max'], 
+                    opts['ylim_min'], opts['ylim_max']], crs=crs_latlon)
+    ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax1.add_feature(states_provinces,linewidth=0.4)
+    ax1.add_feature(rivers)
+    ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_gmi, lat_gmi, 
+           c=tb_s1_gmi[:,5], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 37 GHz', fontsize=14)
+    ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax1.set_yticks(np.arange(opts['ylim_min'], opts['ylim_max']+1,1), crs=crs_latlon)
+    ax1.set_xticks(np.arange(opts['xlim_min'], opts['xlim_max']+1,1), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    for simplex in convexhull.simplices:
+        plt.plot(array_points[simplex, 0], array_points[simplex, 1], 'c')
+        
 
 
 
