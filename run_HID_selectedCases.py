@@ -29,7 +29,7 @@ from pyart.core.transforms import antenna_to_cartesian
 from copy import deepcopy
 from csu_radartools import csu_fhc
 import matplotlib.colors as colors
-#import wradlib as wrl    
+import wradlib as wrl    
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from matplotlib.path import Path
 
@@ -730,8 +730,9 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
         if radar_name == 'RMA1':
             ZHZH       = radar.fields['TH']['data'][start_index:end_index]
             TV       = radar.fields['TV']['data'][start_index:end_index]
-            ZDRZDR      = ZHZH-TV
+            ZDRZDR      = (ZHZH-TV)-ZDRoffset   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]        
+            ZDRZDR[RHORHO<0.6]=np.nan
         elif radar_name == 'RMA5':
             ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'DBZV' in radar.fields.keys(): 
@@ -838,12 +839,14 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
          axes[0].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
     del mycolorbar, x, y, inter
     #---------------------------------------- ZDR
+    N = (5+2)
+    cmap_ZDR = discrete_cmap(int(N), 'jet') 
     #- Simple pcolormesh plot! 
     fig = plt.figure(figsize=[15,11])
     fig.add_subplot(221)
     mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
                 ZDR_transect,
-                cmap= colormaps('zdr'), vmin=-2, vmax=5.)
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
@@ -853,7 +856,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
         fig.add_subplot(221)
         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
                 s=1,c=ZDR_transect[nlev,:],
-                cmap= colormaps('zdr'), vmin=-2, vmax=5.)
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
         color[nlev,:,:] = sc.to_rgba(ZDR_transect[nlev,:])
         plt.close()
 
@@ -887,7 +890,7 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
         axes[1].grid()
         axes[1].set_xlim((xlim_range1, xlim_range2))
         norm = matplotlib.colors.Normalize(vmin=-2.,vmax=5.)
-        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('zdr'))
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap_ZDR)
         cax.set_array(ZDR_transect)
         cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
         axes[1].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
@@ -1357,11 +1360,12 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
     lat_gmi2_inside  =  lat_gmi[inside_s2]
     tb_s1_gmi_inside =  tb_s1_gmi[inside_s1,:]
     tb_s2_gmi_inside =  tb_s2_gmi[inside_s2,:]
-        
-    tb_s1_gmi[np.where(lon_gmi[:,110] >=  options['xlim_max']+1),:,:] = np.nan
-    tb_s1_gmi[np.where(lon_gmi[:,110] <=  options['xlim_min']-1),:,:] = np.nan
-    tb_s1_gmi[np.where(lat_gmi[:,110] >=  options['ylim_max']+1),:,:] = np.nan
-    tb_s1_gmi[np.where(lat_gmi[:,110] <=  options['ylim_min']-1),:,:] = np.nan
+
+    #Esto si el centro no corre por el medio es un problema! Normalmente uso 110
+    tb_s1_gmi[np.where(lon_gmi[:,-1] >=  options['xlim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,-1] <=  options['xlim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,-1] >=  options['ylim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,-1] <=  options['ylim_min']-1),:,:] = np.nan
     
     # CALCULATE PCTs
     PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
@@ -1447,6 +1451,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
             plt.legend(loc=1)
             counter=counter+1
             
+            
     # So, interested in paths: 1, 2, 3
     # Get vertices of these polygon type shapes
     for ii in range(len(coi)):
@@ -1463,6 +1468,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
         hull_path   = Path( array_points[convexhull.vertices] )
         datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
         inds = hull_path.contains_points(datapts)
+        print('========= loop over contours: '+str(ii))
 
         
     # BT(166)           
@@ -1539,7 +1545,8 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
     p2 = ax3.get_position().get_points().flatten()
     ax_cbar = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.05])
     cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.6,ticks=np.arange(50,300,10), extend='both', orientation="horizontal", label='TBV (K)')   
-       
+    
+   
     # contour n1 (OJO ESTOS A MANO!)
     lon_cont_1, lat_cont_1, lon2_cont_1, lat2_cont_1, tb_s1_cont_1, tb_s2_cont_1 = return_gmi_inside_contours(fname, options,
                                   radardat_dir, radar_file, lon_pfs, lat_pfs, icoi=int(1))
@@ -2064,10 +2071,59 @@ if __name__ == '__main__':
     #
     rfile     = 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
     gfile     = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
-    era5_file = ''
+    era5_file = '20180208_21_RMA1.grib'
     #
     opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
     #
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs[0], lon_pfs[0], 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs+' UTC')
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs, coi=[1,2,3])
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    # Inside radar PCTs (que en principio son PFs). look at TB distribution w/ MIN85PCT and MIN37PCT.  
+    [lon_inside, lat_inside, lon_inside2, lat_inside2, tb_s1_cont_2, tb_s2_cont_2] = return_gmi_inside_contours(
+        '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                   '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs, 3)
+    # Test minPCTs: 
+    PCT37 = (2.15 * tb_s1_cont_2[:,5]) - (1.15 * tb_s1_cont_2[:,6]) # == 184.39   NOT 207.40! perhaps use optimal Table 3 Cecil(2018)? 1.2 increases minTB
+    PCT89 = 1.7  * tb_s1_cont_2[:,7] - 0.7  * tb_s1_cont_2[:,8] # == 131.03
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lat_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lon_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    #    
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 60, 356, 4, freezing_lev)
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 120, 220, 4, freezing_lev)
+    
+    
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # ojo jugar con gmi_plot en la parte de 110 nan de gmi middle index
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----    
+    # CASO 2018/11/11 1250 UTC que tiene tambien CSPR2
+    lon_pfs = [-64.53]
+    lat_pfs = [-31.83]
+    time_pfs = '1250'
+    phail   = [0.653]
+    MIN85PCT = [100.5397]
+    MIN37PCT = [190.0287]
+    #
+    rfile     = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
+    era5_file = '201811_13_RMA1'
+    #
+    opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
+    COI ??? es de 1 a ---- > 
+    #-------------------------- DONT CHANGE
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
     corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
@@ -2096,12 +2152,7 @@ if __name__ == '__main__':
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
                  'RMA1', 0, 150, 356, 4, freezing_lev)
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
-                 'RMA1', 0, 150, 220, 4, freezing_lev)
-    #
-    
-    
-    
-    
+                 'RMA1', 0, 150, 220, 4, freezing_lev)   
     
     
     
