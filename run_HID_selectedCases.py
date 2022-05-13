@@ -32,6 +32,7 @@ import matplotlib.colors as colors
 import wradlib as wrl    
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from matplotlib.path import Path
+from cycler import cycler
 
 
 #------------------------------------------------------------------------------
@@ -492,8 +493,9 @@ def plot_test_ppi(radar, phi_corr, lat_pf, lon_pf, general_title):
     cbar.cmap.set_under(under)
     cbar.cmap.set_over(over)
     axes[0,0].grid(True)
-    axes[0,0].plot(lon_pf, lat_pf, marker='*', markersize=20, markerfacecolor="None",
-         markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
+    for iPF in range(len(lat_pf)): 
+        axes[0,0].plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=20, markerfacecolor="None",
+            markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
     axes[0,0].legend()
     #-- RHOHV
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
@@ -731,8 +733,9 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
             ZHZH       = radar.fields['TH']['data'][start_index:end_index]
             TV       = radar.fields['TV']['data'][start_index:end_index]
             ZDRZDR      = (ZHZH-TV)-ZDRoffset   
-            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]        
-            ZDRZDR[RHORHO<0.6]=np.nan
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]       
+            ZDRZDR[RHORHO<0.75]=np.nan
+            RHORHO[RHORHO<0.75]=np.nan
         elif radar_name == 'RMA5':
             ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'DBZV' in radar.fields.keys(): 
@@ -1305,7 +1308,16 @@ def plot_37(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs):
   
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
+def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs,reference_satLOS):
+    
+    # coi       len(contorno89.collections[0].get_paths()) = cantidad de contornos.
+    #           me interesa tomar los vertices del contorno de interes. 
+    #           Entonces abajo hago este loop   
+    #               for ii in range(len(coi)):
+    #                   i = coi[ii]
+    #                   for ik in range(len(contorno89.collections[0].get_paths()[i].vertices)):  
+    # Como saber cual es el de interes? lon_pfs y lat_pfs estan adentro de ese contorn. entonces podria
+    # borrar coi del input y que loopee por todos ... 
     
     radar = pyart.io.read(radardat_dir+radar_file) 
     reflectivity_name = 'TH'   
@@ -1362,10 +1374,10 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
     tb_s2_gmi_inside =  tb_s2_gmi[inside_s2,:]
 
     #Esto si el centro no corre por el medio es un problema! Normalmente uso 110
-    tb_s1_gmi[np.where(lon_gmi[:,-1] >=  options['xlim_max']+1),:,:] = np.nan
-    tb_s1_gmi[np.where(lon_gmi[:,-1] <=  options['xlim_min']-1),:,:] = np.nan
-    tb_s1_gmi[np.where(lat_gmi[:,-1] >=  options['ylim_max']+1),:,:] = np.nan
-    tb_s1_gmi[np.where(lat_gmi[:,-1] <=  options['ylim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] >=  options['xlim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] <=  options['xlim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] >=  options['ylim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] <=  options['ylim_min']-1),:,:] = np.nan
     
     # CALCULATE PCTs
     PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
@@ -1400,6 +1412,9 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
             markeredgecolor='magenta', markeredgewidth=1.5) 
     # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
     plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    plt.plot(np.nan, np.nan, '-m', label='PCT89 200 K ')
+    plt.legend(loc=1)
+    
     
     # BT(89)              
     ax2 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
@@ -1437,25 +1452,26 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
             x = v[:, 0]
             y = v[:, 1]
             # Keep only x,y within ops min/max values of interest 
-            if np.min(x) < options['xlim_min']:
-                continue
-            elif np.max(x) > options['xlim_max']:
-                continue            
-            elif np.min(y) < options['ylim_min']:
-                continue
-            elif np.max(y) > options['ylim_max']:
-                continue    
-            else:
-                plt.plot(x,y, label=str(counter))
-                print(i)
-            plt.legend(loc=1)
+            ##if np.min(x) < options['xlim_min']:
+            ##    continue
+            ##elif np.max(x) > options['xlim_max']:
+            ##    continue            
+            ##elif np.min(y) < options['ylim_min']:
+            ##    continue
+            ##elif np.max(y) > options['ylim_max']:
+            ##    continue    
+            ##else:
+            plt.plot(x,y, label=str(counter))
+            print(i)
+            plt.legend(loc=1)# , ncol=2)
             counter=counter+1
             
             
     # So, interested in paths: 1, 2, 3
     # Get vertices of these polygon type shapes
-    for ii in range(len(coi)):
-        i = coi[ii]
+    for ii in range(len(contorno89.collections[0].get_paths())):                 #range(len(coi)):
+        #i = coi[ii]
+        i = ii
         X1 = []; Y1 = []; vertices = []
         for ik in range(len(contorno89.collections[0].get_paths()[i].vertices)): 
             X1.append(contorno89.collections[0].get_paths()[i].vertices[ik][0])
@@ -1467,9 +1483,11 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
         ##--- Run hull_paths and intersec
         hull_path   = Path( array_points[convexhull.vertices] )
         datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
-        inds = hull_path.contains_points(datapts)
-        print('========= loop over contours: '+str(ii))
-
+        inds = hull_path.contains_points(datapts)           
+        # if lon_pfs y lat_pfs inside, continue 
+        if hull_path.contains_points(np.column_stack((lon_pfs,lat_pfs))): 
+            print('========= contour ii contains lat/lon pfs: '+str(ii))
+            coi = ii 
         
     # BT(166)           
     ax3 = plt.subplot(gs1[0,2], projection=ccrs.PlateCarree())
@@ -1501,9 +1519,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
     # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
     contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
     #ax3.clabel(CONTORNO, CONTORNO.levels, inline=True, fmt=fmt, fontsize=10)
-    plt.plot(np.nan, np.nan, '-m', label='PCT89 200 K ')
-    plt.legend(loc=1)
-    
+   
     for item in contorno89.collections:
         counter=0
         for i in item.get_paths():
@@ -1511,23 +1527,200 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
             x = v[:, 0]
             y = v[:, 1]
             # Keep only x,y within ops min/max values of interest 
-            if np.min(x) < options['xlim_min']:
-                continue
-            elif np.max(x) > options['xlim_max']:
-                continue            
-            elif np.min(y) < options['ylim_min']:
-                continue
-            elif np.max(y) > options['ylim_max']:
-                continue    
-            else:
-                plt.plot(x,y, label=str(counter))
-                print(i)
+            ##if np.min(x) < options['xlim_min']:
+            ##    continue
+            ##elif np.max(x) > options['xlim_max']:
+            ##    continue            
+            ##elif np.min(y) < options['ylim_min']:
+            ##    continue
+            ##elif np.max(y) > options['ylim_max']:
+            ##    continue    
+            ##else:
+            plt.plot(x,y, label=str(counter))
+            print(i)
+            plt.legend(loc=1)# , ncol=2)
             counter=counter+1
             
     # So, interested in paths: 1, 2, 3
     # Get vertices of these polygon type shapes
-    for ii in range(len(coi)):
-        i = coi[ii]
+    # son los mismos contornos pq usamos TB89 200 K sobre lat_s1 y lon_s1 *por eso comento abajo
+    ##for ii in range(len(coi)):
+    ##    i = coi[ii]
+    ##    X1 = []; Y1 = []; vertices = []
+    ##    for ik in range(len(contorno89.collections[0].get_paths()[i].vertices)): 
+    ##        X1.append(contorno89.collections[0].get_paths()[i].vertices[ik][0])
+    ##        Y1.append(contorno89.collections[0].get_paths()[i].vertices[ik][1])
+    ##        vertices.append([contorno89.collections[0].get_paths()[i].vertices[ik][0], 
+    ##                                    contorno89.collections[0].get_paths()[i].vertices[ik][1]])
+    ##    convexhull = ConvexHull(vertices)
+    ##    array_points = np.array(vertices)
+    ##    ##--- Run hull_paths and intersec
+    ##    hull_path   = Path( array_points[convexhull.vertices] )
+    ##    datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+    ##    inds = hull_path.contains_points(datapts)
+        
+    p1 = ax1.get_position().get_points().flatten()
+    p2 = ax3.get_position().get_points().flatten()
+    ax_cbar = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.05])
+    cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.6,ticks=np.arange(50,300,10), extend='both', orientation="horizontal", label='TBV (K)')   
+    
+    # antes hacia esto a mano: 
+    # contour n1 (OJO ESTOS A MANO!) pero ahora no solo me interesa el que tiene el PF sino 
+    # otros posibles para comparar pq no se detectaron como P_hail ... estos podrian ser a mano entonces ... 
+    # tirar en dos partes. primero plot_gmi que me tira la figura con TODOS los contornos y luego la otra con los que
+    # me interesan ... 
+    
+    
+    return
+
+#------------------------------------------------------------------------------
+def plot_gmi_wCOIs(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi, reference_satLOS):
+    
+    # coi       los contornso que me interesan de la figura que genera plot_gmi() 
+    # reference_satLOS is used as a reference for lat/lon of where to put nans. 
+    # i.e,., -1, 110, 0 
+    
+    radar = pyart.io.read(radardat_dir+radar_file) 
+    reflectivity_name = 'TH'   
+    
+    fontsize = 12
+    user = platform.system()
+    if   user == 'Linux':
+        home_dir = '/home/victoria.galligani/'  
+    elif user == 'Darwin':
+        home_dir = '/Users/victoria.galligani'
+
+    # Shapefiles for cartopy 
+    geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+    geo_reg = shpreader.Reader(geo_reg_shp)
+
+    countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+    states_provinces = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+    rivers = cfeature.NaturalEarthFeature(
+        category='physical',
+        name='rivers_lake_centerlines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+
+    
+    cmaps = GMI_colormap() 
+    
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    
+    # keep domain of interest only by keeping those where the center nadir obs is inside domain
+    inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
+                              np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
+    inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
+                                         np.logical_and(lat_s2_gmi >= options['ylim_min'], lat_s2_gmi <= options['ylim_max']))    
+
+    lon_gmi_inside   =  lon_gmi[inside_s1] 
+    lat_gmi_inside   =  lat_gmi[inside_s1] 
+    lon_gmi2_inside  =  lon_gmi[inside_s2]
+    lat_gmi2_inside  =  lat_gmi[inside_s2]
+    tb_s1_gmi_inside =  tb_s1_gmi[inside_s1,:]
+    tb_s2_gmi_inside =  tb_s2_gmi[inside_s2,:]
+
+    #Esto si el centro no corre por el medio es un problema! Normalmente uso 110
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] >=  options['xlim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] <=  options['xlim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] >=  options['ylim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] <=  options['ylim_min']-1),:,:] = np.nan
+    
+    # CALCULATE PCTs
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
+    
+    fig = plt.figure(figsize=(12,7)) 
+    gs1 = gridspec.GridSpec(1, 3)
+    
+    # BT(37)       
+    ax1 = plt.subplot(gs1[0,0], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax1.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax1.add_feature(states_provinces,linewidth=0.4)
+    ax1.add_feature(rivers)
+    ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_gmi[:], lat_gmi[:], 
+           c=tb_s1_gmi[:,:,5], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 37 GHz', fontsize=fontsize)
+    ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
+    ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,1), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, '-k', linewidth=1)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5) 
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    plt.plot(np.nan, np.nan, '-m', label='PCT89 200 K ')
+    plt.legend(loc=1)
+    
+    # BT(89)              
+    ax2 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax2.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax2.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax2.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax2.add_feature(states_provinces,linewidth=0.4)
+    ax2.add_feature(rivers)
+    ax2.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_gmi[inside_s1], lat_gmi[inside_s1], 
+           c=tb_s1_gmi[inside_s1,7], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 89 GHz', fontsize=fontsize)
+    ax2.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax2.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
+    ax2.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,1), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax2.xaxis.set_major_formatter(lon_formatter)
+    ax2.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5)   
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    for item in contorno89.collections:
+        counter=0
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1]
+            plt.plot(x,y, label=str(counter))
+            print(i)
+            plt.legend(loc=1)# , ncol=2)
+            counter=counter+1
+            
+            
+    # So, interested in paths: 1, 2, 3
+    # Get vertices of these polygon type shapes
+    for ii in range(len(contorno89.collections[0].get_paths())):                 #range(len(coi)):
+        i = ii
         X1 = []; Y1 = []; vertices = []
         for ik in range(len(contorno89.collections[0].get_paths()[i].vertices)): 
             X1.append(contorno89.collections[0].get_paths()[i].vertices[ik][0])
@@ -1539,23 +1732,71 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
         ##--- Run hull_paths and intersec
         hull_path   = Path( array_points[convexhull.vertices] )
         datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
-        inds = hull_path.contains_points(datapts)
+        inds = hull_path.contains_points(datapts)           
+        # if lon_pfs y lat_pfs inside, continue 
         
+    # BT(166)           
+    ax3 = plt.subplot(gs1[0,2], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax3.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax3.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax3.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax3.add_feature(states_provinces,linewidth=0.4)
+    ax3.add_feature(rivers)
+    ax3.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_s2_gmi[inside_s2], lat_s2_gmi[inside_s2], 
+           c=tb_s2_gmi[inside_s2,0], s=20, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 166 GHz', fontsize=fontsize)
+    ax3.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax3.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
+    ax3.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+1,1), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax3.xaxis.set_major_formatter(lon_formatter)
+    ax3.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5) 
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+   
+    for item in contorno89.collections:
+        counter=0
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1]
+            plt.plot(x,y, label=str(counter))
+            print(i)
+            plt.legend(loc=1)# , ncol=2)
+            counter=counter+1
+                   
     p1 = ax1.get_position().get_points().flatten()
     p2 = ax3.get_position().get_points().flatten()
     ax_cbar = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.05])
     cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.6,ticks=np.arange(50,300,10), extend='both', orientation="horizontal", label='TBV (K)')   
     
-   
-    # contour n1 (OJO ESTOS A MANO!)
-    lon_cont_1, lat_cont_1, lon2_cont_1, lat2_cont_1, tb_s1_cont_1, tb_s2_cont_1 = return_gmi_inside_contours(fname, options,
-                                  radardat_dir, radar_file, lon_pfs, lat_pfs, icoi=int(1))
-    # contour n2    
-    lon_cont_2, lat_cont_2, lon2_cont_2, lat2_cont_2, tb_s1_cont_2, tb_s2_cont_2 = return_gmi_inside_contours(fname, options,
-                                  radardat_dir, radar_file, lon_pfs, lat_pfs, icoi=int(3))
-    # contour n3
-    lon_cont_3, lat_cont_3, lon2_cont_3, lat2_cont_3, tb_s1_cont_3, tb_s2_cont_3 = return_gmi_inside_contours(fname, options,
-                                  radardat_dir, radar_file, lon_pfs, lat_pfs, icoi=int(4))
+    plt.close() 
+    
+    # antes hacia esto a mano: 
+    #------------------------------------------------------------
+    ## contour n2    
+    ##lon_cont_2, lat_cont_2, lon2_cont_2, lat2_cont_2, tb_s1_cont_2, tb_s2_cont_2 = return_gmi_inside_contours(fname, options,
+    ##                              radardat_dir, radar_file, lon_pfs, lat_pfs, icoi=int(3))
+    ## contour n3
+    ##lon_cont_3, lat_cont_3, lon2_cont_3, lat2_cont_3, tb_s1_cont_3, tb_s2_cont_3 = return_gmi_inside_contours(fname, options,
+    ##                              radardat_dir, radar_file, lon_pfs, lat_pfs, icoi=int(4))
+    #------------------------------------------------------------    
+
+    #make up coplor w/ magenta, pink sienna. use 'RdPu'
+    #colors_coi = discrete_cmap(len(coi), 'RdPu')        
+    colors = [plt.cm.RdPu(i) for i in np.linspace(0, 1, len(coi)+1)]
+
     #------- PLOT EACH CONTOUR! 
     fig = plt.figure(figsize=(12,7)) 
     gs1 = gridspec.GridSpec(1, 2)
@@ -1580,9 +1821,13 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
     lon_formatter = LongitudeFormatter(zero_direction_label=True)
     lat_formatter = LatitudeFormatter()
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
-    ax1.scatter(lon_cont_1, lat_cont_1, s=20, marker='x', color="pink")
-    ax1.scatter(lon_cont_2, lat_cont_2, s=10, marker='o', color="magenta")
-    ax1.scatter(lon_cont_3, lat_cont_3, s=10, marker='v', color="sienna")
+    for icois in range(len(coi)):
+        print(icois)
+        lon_cont_1, lat_cont_1, lon2_cont_1, lat2_cont_1, tb_s1_cont_1, tb_s2_cont_1 = return_gmi_inside_contours(fname, options,
+                                  radardat_dir, radar_file, lon_pfs, lat_pfs, int(coi[icois]),reference_satLOS)
+        ax1.scatter(lon_cont_1, lat_cont_1, s=20, marker='x', color=colors[icois+1])
+        #ax1.scatter(lon_cont_2, lat_cont_2, s=10, marker='o', color="magenta")
+        #ax1.scatter(lon_cont_3, lat_cont_3, s=10, marker='v', color="sienna")
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
@@ -1590,16 +1835,20 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
-    ax1.scatter(np.nan, np.nan, s=20, marker='x', color="pink", label='No. 1') 
-    ax1.scatter(np.nan, np.nan, s=10, marker='o', color="magenta", label='No. 3') 
-    ax1.scatter(np.nan, np.nan, s=10, marker='v', color="sienna", label='No. 4')     
+    for icois in range(len(coi)):
+        ax1.scatter(np.nan, np.nan, s=20, marker='x',  color=colors[icois+1], label='No. '+str(coi[icois])) 
+        #ax1.scatter(np.nan, np.nan, s=10, marker='o', color="magenta", label='No. 3') 
+        #ax1.scatter(np.nan, np.nan, s=10, marker='v', color="sienna", label='No. 4')     
     ax1.plot(np.nan, np.nan, '-k', label='10,50,100 km')     
     plt.legend(loc=2)
     
     ax1 = plt.subplot(gs1[0,1])
-    ax1.scatter(tb_s1_cont_1[:,5], tb_s1_cont_1[:,7], s=20, marker='x', color="pink", label='No. 1') 
-    ax1.scatter(tb_s1_cont_2[:,5], tb_s1_cont_2[:,7], s=20, marker='o', color="magenta", label='No. 3') 
-    ax1.scatter(tb_s1_cont_3[:,5], tb_s1_cont_3[:,7], s=20, marker='v', color="sienna", label='No. 4')
+    for icois in range(len(coi)):
+        lon_cont_1, lat_cont_1, lon2_cont_1, lat2_cont_1, tb_s1_cont_1, tb_s2_cont_1 = return_gmi_inside_contours(fname, options,
+                                  radardat_dir, radar_file, lon_pfs, lat_pfs, coi[icois], reference_satLOS)
+        ax1.scatter(tb_s1_cont_1[:,5], tb_s1_cont_1[:,7], s=20, marker='x', color=colors[icois+1], label='No. '+str(coi[icois])) 
+    #ax1.scatter(tb_s1_cont_2[:,5], tb_s1_cont_2[:,7], s=20, marker='o', color="magenta", label='No. 3') 
+    #ax1.scatter(tb_s1_cont_3[:,5], tb_s1_cont_3[:,7], s=20, marker='v', color="sienna", label='No. 4')
     plt.xlabel('TBV 37 GHz', fontsize=12)
     plt.ylabel('TBV 89 GHz', fontsize=12)
     plt.legend(loc=2)
@@ -1612,7 +1861,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, coi):
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 # Note that "i" in input is coi
-def return_gmi_inside_contours(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, icoi):
+def return_gmi_inside_contours(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs, icoi, reference_satLOS):
     
     radar = pyart.io.read(radardat_dir+radar_file) 
     reflectivity_name = 'TH'   
@@ -1668,10 +1917,10 @@ def return_gmi_inside_contours(fname, options, radardat_dir, radar_file, lon_pfs
     tb_s1_gmi_inside =  tb_s1_gmi[inside_s1,:]
     tb_s2_gmi_inside =  tb_s2_gmi[inside_s2,:]
         
-    tb_s1_gmi[np.where(lon_gmi[:,110] >=  options['xlim_max']+1),:,:] = np.nan
-    tb_s1_gmi[np.where(lon_gmi[:,110] <=  options['xlim_min']-1),:,:] = np.nan
-    tb_s1_gmi[np.where(lat_gmi[:,110] >=  options['ylim_max']+1),:,:] = np.nan
-    tb_s1_gmi[np.where(lat_gmi[:,110] <=  options['ylim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] >=  options['xlim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] <=  options['xlim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] >=  options['ylim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] <=  options['ylim_min']-1),:,:] = np.nan
     
     # CALCULATE PCTs
     PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
@@ -1743,21 +1992,19 @@ def return_gmi_inside_contours(fname, options, radardat_dir, radar_file, lon_pfs
             x = v[:, 0]
             y = v[:, 1]
             # Keep only x,y within ops min/max values of interest 
-            if np.min(x) < options['xlim_min']:
-                continue
-            elif np.max(x) > options['xlim_max']:
-                continue            
-            elif np.min(y) < options['ylim_min']:
-                continue
-            elif np.max(y) > options['ylim_max']:
-                continue    
-            else:
-                plt.plot(x,y, label=str(counter))
-                print(i)
+            ##if np.min(x) < options['xlim_min']:
+            ##     continue
+            ##elif np.max(x) > options['xlim_max']:
+            ##    continue            
+            ##elif np.min(y) < options['ylim_min']:
+            ##    continue
+            ##elif np.max(y) > options['ylim_max']:
+            ##    continue    
+            ##else:
+            plt.plot(x,y, label=str(counter))
             plt.legend(loc=1)
             counter=counter+1
             
-    # So, interested in paths: 1, 2, 3
     # Get vertices of these polygon type shapes
     X1 = []; Y1 = []; vertices = []
     for ik in range(len(contorno89.collections[0].get_paths()[int(icoi)].vertices)): 
@@ -1812,17 +2059,16 @@ def return_gmi_inside_contours(fname, options, radardat_dir, radar_file, lon_pfs
             x = v[:, 0]
             y = v[:, 1]
             # Keep only x,y within ops min/max values of interest 
-            if np.min(x) < options['xlim_min']:
-                continue
-            elif np.max(x) > options['xlim_max']:
-                continue            
-            elif np.min(y) < options['ylim_min']:
-                continue
-            elif np.max(y) > options['ylim_max']:
-                continue    
-            else:
-                plt.plot(x,y, label=str(counter))
-                print(i)
+            ##if np.min(x) < options['xlim_min']:
+            ##    continue
+            ##elif np.max(x) > options['xlim_max']:
+            ##    continue            
+            ##elif np.min(y) < options['ylim_min']:
+            ##    continue
+            ##elif np.max(y) > options['ylim_max']:
+            ##    continue    
+            ##else:
+            plt.plot(x,y, label=str(counter))
             counter=counter+1
             
     # So, interested in paths: 1, 2, 3
@@ -1845,6 +2091,7 @@ def return_gmi_inside_contours(fname, options, radardat_dir, radar_file, lon_pfs
     ax_cbar = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.05])
     cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.6,ticks=np.arange(50,300,10), extend='both', orientation="horizontal", label='TBV (K)')   
     
+    plt.close()
     # Check if elements inside correct contour: 
     fig = plt.figure(figsize=(12,7)) 
     gs1 = gridspec.GridSpec(1, 1)
@@ -1878,7 +2125,8 @@ def return_gmi_inside_contours(fname, options, radardat_dir, radar_file, lon_pfs
     plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
     plt.plot(lon_gmi_inside[inds], lat_gmi_inside[inds], 'x')
     
-    
+    plt.close()
+
     return lon_gmi_inside[inds], lat_gmi_inside[inds], lon_gmi2_inside[inds2], lat_gmi2_inside[inds2], tb_s1_gmi_inside[inds,:], tb_s2_gmi_inside[inds2,:]
 
 #################################################################
@@ -1918,6 +2166,54 @@ def get_contour_verts(cp):
             paths.append(np.vstack(xy))
         contours.append(paths)
     return contours
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def check_transec(radar, test_transect, lon_pf, lat_pf):       
+  nlev  = 0  
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[13,12])
+  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+  start_index = radar.sweep_start_ray_index['data'][nlev]
+  end_index   = radar.sweep_end_ray_index['data'][nlev]
+  lats = radar.gate_latitude['data'][start_index:end_index]
+  lons = radar.gate_longitude['data'][start_index:end_index]
+  pcm1 = axes.pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+  cbar.cmap.set_under(under)
+  cbar.cmap.set_over(over)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  axes.grid()
+  azimuths = radar.azimuth['data'][start_index:end_index]
+  target_azimuth = azimuths[test_transect]
+  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+  lon_transect     = lons[filas,:]
+  lat_transect     = lats[filas,:]
+  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+  for iPF in range(len(lat_pf)):
+    plt.plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=40, markerfacecolor="None",
+            markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
+  [lat_radius, lon_radius] = pyplot_rings(-32.1263, -64.7283,100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  [lat_radius, lon_radius] = pyplot_rings(-32.1263, -64.7283,50)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  [lat_radius, lon_radius] = pyplot_rings(-32.1263, -64.7283,10)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    
+  [lat_radius, lon_radius] = pyplot_rings(-31.63, -64.17, 100)
+  axes.plot(lon_radius, lat_radius, 'r', linewidth=1)
+  [lat_radius, lon_radius] = pyplot_rings(-31.63, -64.17, 50)
+  axes.plot(lon_radius, lat_radius, 'r', linewidth=1)
+  [lat_radius, lon_radius] = pyplot_rings(-31.63, -64.17, 100)
+  axes.plot(lon_radius, lat_radius, 'r', linewidth=1)
+    
+  return 
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -2107,9 +2403,8 @@ if __name__ == '__main__':
     
     
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # ojo jugar con gmi_plot en la parte de 110 nan de gmi middle index
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----    
     # CASO 2018/11/11 1250 UTC que tiene tambien CSPR2
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----  
     lon_pfs = [-64.53]
     lat_pfs = [-31.83]
     time_pfs = '1250'
@@ -2119,29 +2414,33 @@ if __name__ == '__main__':
     #
     rfile     = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
     gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
-    era5_file = '201811_13_RMA1'
+    era5_file = '20181111_13_RMA1.grib'
     #
     opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
-    COI ??? es de 1 a ---- > 
     #-------------------------- DONT CHANGE
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
     corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
     plot_test_ppi(radar , corr_phidp, lat_pfs[0], lon_pfs[0], 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs+' UTC')
     plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
-                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs, coi=[1,2,3])
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs, reference_satLOS=-1)
     plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------
+    # En base a plot_gmi, elijo los contornos que me interan 
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs, coi=[2,3], 
+                  reference_satLOS=-1) 
     # Inside radar PCTs (que en principio son PFs). look at TB distribution w/ MIN85PCT and MIN37PCT.  
     [lon_inside, lat_inside, lon_inside2, lat_inside2, tb_s1_cont_2, tb_s2_cont_2] = return_gmi_inside_contours(
         '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
-                                   '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs, 3)
+                                   '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, lon_pfs, lat_pfs, 3,  reference_satLOS=-1)
     # Test minPCTs: 
-    PCT37 = (2.15 * tb_s1_cont_2[:,5]) - (1.15 * tb_s1_cont_2[:,6]) # == 184.39   NOT 207.40! perhaps use optimal Table 3 Cecil(2018)? 1.2 increases minTB
-    PCT89 = 1.7  * tb_s1_cont_2[:,7] - 0.7  * tb_s1_cont_2[:,8] # == 131.03
+    PCT37 = (2.15 * tb_s1_cont_2[:,5]) - (1.15 * tb_s1_cont_2[:,6]) # == 164.16   NOT 190K perhaps use optimal Table 3 Cecil(2018)? 
+    PCT89 = 1.7  * tb_s1_cont_2[:,7] - 0.7  * tb_s1_cont_2[:,8] # == 100.36 ok 
     # Plot RHIs w/ corrected ZDR, first calculate freezing level:
     ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
-    elemj      = find_nearest(ERA5_field['latitude'], PFs_lat[i])
-    elemk      = find_nearest(ERA5_field['longitude'], PFs_lon[i])
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
     tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
     geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
     # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
@@ -2149,22 +2448,138 @@ if __name__ == '__main__':
     alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
     freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
     #    
+    check_transec(radar, 215, lon_pfs, lat_pfs)     
+    #    
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
-                 'RMA1', 0, 150, 356, 4, freezing_lev)
+                 'RMA1', 0, 160, 215, 1, freezing_lev)
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
-                 'RMA1', 0, 150, 220, 4, freezing_lev)   
+                 'RMA1', 0, 150, 110, 1, freezing_lev)  
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 150, 110, 1, freezing_lev)      
+    
+  
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO 2018/12/14 1250 UTC que tiene tambien CSPR2
+    # 	2018	12	14	03	09	 -31.30	 -65.99		0.839	 89.0871	169.3689
+	#   2018	12	14	03	09	 -31.90	 -63.11		0.967	 71.0844	133.9975
+	#   2018	12	14	03	09	 -32.30	 -61.40		0.998	 45.9117	 80.1157
+	#   2018	12	14	03	10	 -33.90	 -59.65		0.862	 67.8216	151.7338
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    lon_pfs = [-65.99, -63.11]  #-61.40, -59.65]
+    lat_pfs = [-31.30, -31.90]  #-32.30, -33.90]
+    time_pfs = ['0309', '0309'] #'0309', '0310']
+    phail   = [0.839, 0.967]
+    MIN85PCT = [89.0871, 71.0844]
+    MIN37PCT = [169.3689, 133.9975] 
+    #
+    rfile     = 'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
+    era5_file = '20181214_03_RMA1.grib'
+    #
+    opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[1]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, [lon_pfs[0]], [lat_pfs[0]], reference_satLOS=100)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------
+    # En base a plot_gmi, elijo los contornos que me interan 
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, [lon_pfs[0]], [lat_pfs[0]], coi=[15,16], 
+                  reference_satLOS=100) 
+    # Inside radar PCTs (que en principio son PFs). look at TB distribution w/ MIN85PCT and MIN37PCT.  
+    [lon_inside, lat_inside, lon_inside2, lat_inside2, tb_s1_cont_2, tb_s2_cont_2] = return_gmi_inside_contours(
+        '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                   '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, [lon_pfs[0]], [lat_pfs[0]], 15,  reference_satLOS=100)
+    # Test minPCTs: 
+    PCT37 = np.min( (2.15 * tb_s1_cont_2[:,5]) - (1.15 * tb_s1_cont_2[:,6])) # == 143.92   NOT 169K perhaps use optimal Table 3 Cecil(2018)? 
+    PCT89 = np.min( 1.7  * tb_s1_cont_2[:,7] - 0.7  * tb_s1_cont_2[:,8] )    # == 88.97    ok 
+    # Inside radar PCTs (que en principio son PFs). look at TB distribution w/ MIN85PCT and MIN37PCT.  
+    [lon_inside, lat_inside, lon_inside2, lat_inside2, tb_s1_cont_2, tb_s2_cont_2] = return_gmi_inside_contours(
+        '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                   '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, [lon_pfs[1]], [lat_pfs[1]], 16,  reference_satLOS=100)
+    # Test minPCTs: 
+    PCT37 = np.min( (2.15 * tb_s1_cont_2[:,5]) - (1.15 * tb_s1_cont_2[:,6])) # == 113.86  NOT 133K perhaps use optimal Table 3 Cecil(2018)? 
+    PCT89 = np.min( 1.7  * tb_s1_cont_2[:,7] - 0.7  * tb_s1_cont_2[:,8] )    # == 71.01   ok 
+    
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    #    
+    check_transec(radar, 183, lon_pfs, lat_pfs)     
+    #    
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 160, 215, 1, freezing_lev)
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 150, 110, 1, freezing_lev)  
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 150, 110, 1, freezing_lev)      
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO 2019/03/08 02 UTC que tiene tambien CSPR2
+    # 	2019	03	08	02	04	 -30.75	 -63.74		0.895	 62.1525	147.7273
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    lon_pfs = [-63.74] 
+    lat_pfs = [-30.75]  
+    time_pfs = ['0204'] 
+    phail   = [0.895]
+    MIN85PCT = [62.1525]
+    MIN37PCT = [147.7273] 
+    #
+    rfile     = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
+    era5_file = '20190308_02_RMA1.grib'
+    #
+    opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, [lon_pfs[0]], [lat_pfs[0]], reference_satLOS=200)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------
+    # En base a plot_gmi, elijo los contornos que me interan 
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, [lon_pfs[0]], [lat_pfs[0]], coi=[4], 
+                  reference_satLOS=200) 
+    # Inside radar PCTs (que en principio son PFs). look at TB distribution w/ MIN85PCT and MIN37PCT.  
+    [lon_inside, lat_inside, lon_inside2, lat_inside2, tb_s1_cont_2, tb_s2_cont_2] = return_gmi_inside_contours(
+        '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                   '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/', rfile, [lon_pfs[0]], [lat_pfs[0]], 4,  reference_satLOS=200)
+    # Test minPCTs: 
+    PCT37 = np.min( (2.15 * tb_s1_cont_2[:,5]) - (1.15 * tb_s1_cont_2[:,6])) # == 125.57155   NOT 147.7 K perhaps use optimal Table 3 Cecil(2018)? 
+    PCT89 = np.min( 1.7  * tb_s1_cont_2[:,7] - 0.7  * tb_s1_cont_2[:,8] )    # == 61.99839    ok 
+    #- 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    #    
+    check_transec(radar, 55, lon_pfs, lat_pfs)     
+    #    
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 200, 55, 0.5, freezing_lev)
+
     
