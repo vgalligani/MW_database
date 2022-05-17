@@ -2987,9 +2987,9 @@ if __name__ == '__main__':
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO 2018/12/14 1250 UTC que tiene tambien CSPR2
     # 	2018	12	14	03	09	 -31.30	 -65.99		0.839	 89.0871	169.3689
-	#   2018	12	14	03	09	 -31.90	 -63.11		0.967	 71.0844	133.9975
-	#   2018	12	14	03	09	 -32.30	 -61.40		0.998	 45.9117	 80.1157
-	#   2018	12	14	03	10	 -33.90	 -59.65		0.862	 67.8216	151.7338
+    #   2018	12	14	03	09	 -31.90	 -63.11		0.967	 71.0844	133.9975
+    #   2018	12	14	03	09	 -32.30	 -61.40		0.998	 45.9117	 80.1157
+    #   2018	12	14	03	10	 -33.90	 -59.65		0.862	 67.8216	151.7338
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     lon_pfs = [-65.99, -63.11]  #-61.40, -59.65]
     lat_pfs = [-31.30, -31.90]  #-32.30, -33.90]
@@ -2998,7 +2998,8 @@ if __name__ == '__main__':
     MIN85PCT = [89.0871, 71.0844]
     MIN37PCT = [169.3689, 133.9975] 
     #
-    rfile     = 'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc'
+    # 0304 is raining on top ... 'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc'
+    rfile     =  'cfrad.20181214_024550.0000_to_20181214_024714.0000_RMA1_0301_02.nc' # 'cfrad.20181214_025529.0000_to_20181214_030210.0000_RMA1_0301_01.nc' 
     gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
     era5_file = '20181214_03_RMA1.grib'
     cspr2_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/CSPR2_data/'
@@ -3063,11 +3064,60 @@ if __name__ == '__main__':
     radar_chivo = pyart.io.read(chivo_dir+chivo_name)
     plot_test_ppi_chivo(radar_chivo, lat_pfs, lon_pfs, 'radar at '+chivo_name[18:22]+' UTC and PF at '+time_pfs[0]+' UTC')
 
-
-
-
-
+    # Choose the time for RMA1: 
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
+    test_transect = 125
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[13,12])
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+    lats = radar.gate_latitude['data'][start_index:end_index]
+    lons = radar.gate_longitude['data'][start_index:end_index]
+    pcm1 = axes.pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes.grid()
+    for iPF in range(len(lat_pfs)):
+      plt.plot(lon_pfs[iPF], lat_pfs[iPF], marker='*', markersize=40, markerfacecolor="None",
+            markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
+    # read file
+    f = h5py.File( '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
+    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2.5);
+    plt.xlim([-66, -62])
+    plt.ylim([-33, -30.5])
+    # Add transect: 
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    target_azimuth = azimuths[test_transect]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+    lon_transect     = lons[filas,:]
+    lat_transect     = lats[filas,:]
+    plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+    plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+    # Pseudo RHI
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 150, 125, 1, freezing_lev)      
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 150, 186, 1, freezing_lev)  
 	
+	ver alguna hora anterior? 
+
+
 	
 	
     
