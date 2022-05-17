@@ -2635,7 +2635,9 @@ def check_transec(radar, test_transect, lon_pf, lat_pf):
   if 'TH' in radar.fields.keys():
   	pcm1 = axes.pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
   elif 'reflectivity' in radar.fields.keys():
-  	pcm1 = axes.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)	
+  	pcm1 = axes.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  elif 'DBZHCC' in radar.fields.keys():
+  	pcm1 = axes.pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)	
   cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
   cbar.cmap.set_under(under)
   cbar.cmap.set_over(over)
@@ -3111,19 +3113,65 @@ if __name__ == '__main__':
     plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
     # Pseudo RHI
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
-                 'RMA1', 0, 150, 125, 1, freezing_lev)      
+                 'RMA1', 0, 150, 125, 0, freezing_lev)      
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
-                 'RMA1', 0, 150, 186, 1, freezing_lev)  
-	
-	ver alguna hora anterior? 
+                 'RMA1', 0, 150, 186, 0, freezing_lev)   
+    plot_rhi_RMA('cfrad.20181214_022013.0000_to_20181214_022133.0000_RMA1_0301_02.nc', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+                 'RMA1', 0, 150, 206, 0, freezing_lev) 
+    # CHECK DOW7:
+    dow7_file = 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc'
+    radarDOW7 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+dow7_file) 
+    check_transec(radarDOW7, 430, lon_pfs, lat_pfs)     
+     
+    listdir('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/cfrad.20181214_*low_v176_*.nc') 
+ 
 
+    #--- PLOT LOWEST LEV:
+    test_transect = 430
+    counter = 0	    
+    radar0       = pyart.io.read_cfradial('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/' + 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc')
+    start_index = radar0.sweep_start_ray_index['data'][0]
+    end_index   = radar0.sweep_end_ray_index['data'][0]
+    Ze          = radar0.fields['DBZHCC']['data'][start_index:end_index]
+    lon_transect     = np.zeros([21, Ze.shape[1]]); lon_transect[:]     = np.nan
+    lat_transect     = np.zeros([21, Ze.shape[1]]); lat_transect[:]     = np.nan
+    Ze_transect      = np.zeros([21, Ze.shape[1]]); Ze_transect[:]      = np.nan
+    ZDR_transect      = np.zeros([21, Ze.shape[1]]); Ze_transect[:]      = np.nan
+    RHO_transect      = np.zeros([21, Ze.shape[1]]); Ze_transect[:]      = np.nan	
+    approx_altitude  = np.zeros([21, Ze.shape[1]]); approx_altitude[:]  = np.nan
+    gate_x           = np.zeros([21, Ze.shape[1]]); gate_x[:]  = np.nan
+    gate_y           = np.zeros([21, Ze.shape[1]]); gate_y[:]  = np.nan
+    gate_range       = np.zeros([21, Ze.shape[1]]); gate_range[:]  = np.nan
+    color            = np.full((21,Ze.shape[1],4), np.nan)
 
+    for file in os.listdir("/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7"):
+      if 'low_v176' in file:
+        print(file)
+        radarDOW7 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
+        start_index = radarDOW7.sweep_start_ray_index['data'][0]
+        end_index   = radarDOW7.sweep_end_ray_index['data'][0]
+        gateZ       = radarDOW7.gate_z['data'][start_index:end_index]
+        gateX       = radarDOW7.gate_x['data'][start_index:end_index]
+        gateY       = radarDOW7.gate_y['data'][start_index:end_index]
+        gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+        azimuths    = radarDOW7.azimuth['data'][start_index:end_index]
+        lats = radarDOW7.gate_latitude['data'][start_index:end_index]
+        lons = radarDOW7.gate_longitude['data'][start_index:end_index]
+        ZHZH = radarDOW7.fields['DBZHCC']['data'][start_index:end_index]
+        ZDRZDR = radarDOW7.fields['ZDRC']['data'][start_index:end_index]
+        RHORHO = radarDOW7.fields['RHOHV']['data'][start_index:end_index]
+        target_azimuth = azimuths[test_transect]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect[counter,:]     = lons[filas,:]
+        lat_transect[counter,:]     = lats[filas,:]
+        ZH_trasect[counter,:]       = ZHZH[filas,:]
+        ZDR_trasect[counter,:]      = ZDRZDR[filas,:]
+        RHO_trasect[counter,:]      = RHORHO[filas,:]
+        counter = counter + 1
 	
-	
-    
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO 2019/03/08 02 UTC que tiene tambien CSPR2
-    # 	2019	03	08	02	04	 -30.75	 -63.74		0.895	 62.1525	147.7273
+    # 2019	03	08	02	04	 -30.75	 -63.74		0.895	 62.1525	147.7273
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     lon_pfs = [-63.74] 
     lat_pfs = [-30.75]  
