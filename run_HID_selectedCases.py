@@ -3132,19 +3132,42 @@ if __name__ == '__main__':
     radar0       = pyart.io.read_cfradial('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/' + 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc')
     start_index = radar0.sweep_start_ray_index['data'][0]
     end_index   = radar0.sweep_end_ray_index['data'][0]
+    lats0       = radar0.gate_latitude['data'][start_index:end_index]
+    azydims     = lats0.shape[1]-1
     Ze          = radar0.fields['DBZHCC']['data'][start_index:end_index]
-    lon_transect     = np.zeros([21, Ze.shape[1]]); lon_transect[:]     = np.nan
-    lat_transect     = np.zeros([21, Ze.shape[1]]); lat_transect[:]     = np.nan
-    Ze_transect      = np.zeros([21, Ze.shape[1]]); Ze_transect[:]      = np.nan
-    ZDR_transect      = np.zeros([21, Ze.shape[1]]); Ze_transect[:]      = np.nan
-    RHO_transect      = np.zeros([21, Ze.shape[1]]); Ze_transect[:]      = np.nan	
-    approx_altitude  = np.zeros([21, Ze.shape[1]]); approx_altitude[:]  = np.nan
-    gate_x           = np.zeros([21, Ze.shape[1]]); gate_x[:]  = np.nan
-    gate_y           = np.zeros([21, Ze.shape[1]]); gate_y[:]  = np.nan
-    gate_range       = np.zeros([21, Ze.shape[1]]); gate_range[:]  = np.nan
-    color            = np.full((21,Ze.shape[1],4), np.nan)
-
-    for file in os.listdir("/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7"):
+    lon_transect     = np.zeros([22, Ze.shape[1]]); lon_transect[:]     = np.nan
+    lat_transect     = np.zeros([22, Ze.shape[1]]); lat_transect[:]     = np.nan
+    Ze_transect      = np.zeros([22, Ze.shape[1]]); Ze_transect[:]      = np.nan
+    ZDR_transect      = np.zeros([22, Ze.shape[1]]); Ze_transect[:]      = np.nan
+    RHO_transect      = np.zeros([22, Ze.shape[1]]); Ze_transect[:]      = np.nan	
+    approx_altitude  = np.zeros([22, Ze.shape[1]]); approx_altitude[:]  = np.nan
+    gate_x           = np.zeros([22, Ze.shape[1]]); gate_x[:]  = np.nan
+    gate_y           = np.zeros([22, Ze.shape[1]]); gate_y[:]  = np.nan
+    gate_range       = np.zeros([22, Ze.shape[1]]); gate_range[:]  = np.nan
+    color            = np.full((22,Ze.shape[1],4), np.nan)
+    files_list = ['cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc',
+'cfrad.20181214_022019_DOW7low_v176_s02_el1.98_SUR.nc',
+'cfrad.20181214_022031_DOW7low_v176_s03_el3.97_SUR.nc',
+'cfrad.20181214_022043_DOW7low_v176_s04_el5.98_SUR.nc',
+'cfrad.20181214_022055_DOW7low_v176_s05_el7.98_SUR.nc',
+'cfrad.20181214_022106_DOW7low_v176_s06_el9.98_SUR.nc',
+'cfrad.20181214_022118_DOW7low_v176_s07_el11.98_SUR.nc',
+'cfrad.20181214_022130_DOW7low_v176_s08_el13.99_SUR.nc',
+'cfrad.20181214_022142_DOW7low_v176_s09_el15.97_SUR.nc',
+'cfrad.20181214_022154_DOW7low_v176_s10_el17.97_SUR.nc',
+'cfrad.20181214_022206_DOW7low_v176_s11_el19.98_SUR.nc',	  
+'cfrad.20181214_022218_DOW7low_v176_s12_el21.98_SUR.nc',
+'cfrad.20181214_022230_DOW7low_v176_s13_el23.99_SUR.nc',
+'cfrad.20181214_022241_DOW7low_v176_s14_el25.98_SUR.nc',	  
+'cfrad.20181214_022253_DOW7low_v176_s15_el27.98_SUR.nc',
+'cfrad.20181214_022305_DOW7low_v176_s16_el29.98_SUR.nc',
+'cfrad.20181214_022317_DOW7low_v176_s17_el31.98_SUR.nc',
+'cfrad.20181214_022329_DOW7low_v176_s18_el33.98_SUR.nc',	    
+'cfrad.20181214_022341_DOW7low_v176_s19_el36.98_SUR.nc',
+'cfrad.20181214_022353_DOW7low_v176_s20_el40.97_SUR.nc',
+'cfrad.20181214_022405_DOW7low_v176_s21_el44.98_SUR.nc',
+'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']
+    for file in files_list:
       if 'low_v176' in file:
         print(file)
         radarDOW7 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
@@ -3153,7 +3176,7 @@ if __name__ == '__main__':
         gateZ       = radarDOW7.gate_z['data'][start_index:end_index]
         gateX       = radarDOW7.gate_x['data'][start_index:end_index]
         gateY       = radarDOW7.gate_y['data'][start_index:end_index]
-        gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+        gates_range = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
         azimuths    = radarDOW7.azimuth['data'][start_index:end_index]
         lats = radarDOW7.gate_latitude['data'][start_index:end_index]
         lons = radarDOW7.gate_longitude['data'][start_index:end_index]
@@ -3162,12 +3185,201 @@ if __name__ == '__main__':
         RHORHO = radarDOW7.fields['RHOHV']['data'][start_index:end_index]
         target_azimuth = azimuths[test_transect]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-        lon_transect[counter,:]     = lons[filas,:]
-        lat_transect[counter,:]     = lats[filas,:]
-        ZH_trasect[counter,:]       = ZHZH[filas,:]
-        ZDR_trasect[counter,:]      = ZDRZDR[filas,:]
-        RHO_trasect[counter,:]      = RHORHO[filas,:]
-        counter = counter + 1
+        lon_transect[counter,:]     = lons[filas[0][0],:].data
+        lat_transect[counter,:]     = lats[filas[0][0],:].data
+        Ze_transect[counter,:]       = ZHZH[filas[0][0],:].data
+        ZDR_transect[counter,:]      = ZDRZDR[filas[0][0],:].data
+        RHO_transect[counter,:]      = RHORHO[filas[0][0],:].data
+        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas[0][0],:]/1e3, azimuths[filas[0][0]], radarDOW7.get_elevation(0)[0]);
+        approx_altitude[counter,:] = zgate/1e3
+        gate_range[counter,:]      = gates_range[filas[0][0],:]/1e3;
+        counter = counter + 1	
+
+	
+    #--------------------------------------------------------------------------
+    # AND FINALLY PLOT pseudo RHI ... 
+    xlim_range1 = 0
+    xlim_range2 = 160
+    #---------------------------------------- REFLECTIVITY
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(111)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude, Ze_transect, cmap=colormaps('ref'), vmin=0, vmax=60)
+
+    #- De esta manera me guardo el color con el que rellenar los polygons (scatter plot para sacar el color de cada pixel)
+    for nlev in range(21):
+         fig = plt.figure(figsize=[30,10])
+         fig.add_subplot(221)
+         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                 s=1,c=Ze_transect[nlev,:],
+                 cmap=colormaps('ref'), vmin=0, vmax=60)
+         color[nlev,:,:] = sc.to_rgba(Ze_transect[nlev,:])
+         plt.close()
+
+    #- Try polygons
+    fig2, axes = plt.subplots(nrows=3,ncols=1,constrained_layout=True,figsize=[8,6])  # 8,4 muy chiquito
+    fig1 = plt.figure(figsize=(15,20))
+    for nlev in range(21):
+         if nlev > 15: continue
+         # Create the cone for each elevation IN TERMS OF RANGE. 
+         # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
+         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+         P1 = Polygon([( gate_range[nlev,0],    approx_altitude[nlev,0]-ancho_haz_i0      ),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                   ( gate_range[nlev,0],    approx_altitude[nlev,0]+ancho_haz_i0      )])
+         ancho = 50/1E3
+         # Location of gates? Every 100m?  
+         LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                   (gate_range[nlev,x]+ancho, 0),
+                   (gate_range[nlev,x]+ancho, 50),
+                   (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+         # Plot
+         for i, l in enumerate(LS):
+             # Get the polygon of the intersection between the cone and the space 
+             #reserved for a specific point
+             inter = l.intersection(P1)
+             x,y = inter.exterior.xy    
+             # Then plot it, filled by the color we want
+             axes[0].fill(x, y, color = color[nlev,i,:], )
+             x, y = P1.exterior.xy
+         axes[0].set_ylim([0, 20])
+         axes[0].set_ylabel('Altitude (km)')
+         axes[0].grid()
+         axes[0].set_xlim((xlim_range1, xlim_range2))
+         norm = matplotlib.colors.Normalize(vmin=0.,vmax=60.)
+         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('ref'))
+         cax.set_array(Ze_transect)
+         cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
+         axes[0].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+    del mycolorbar, x, y, inter
+    #---------------------------------------- ZDR
+    N = (5+2)
+    cmap_ZDR = discrete_cmap(int(N), 'jet') 
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                ZDR_transect,
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(22):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=ZDR_transect[nlev,:],
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
+        color[nlev,:,:] = sc.to_rgba(ZDR_transect[nlev,:])
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(22):
+        if nlev > 21: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[1].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[1].set_ylim([0, 20])
+        axes[1].set_ylabel('Altitude (km)')
+        axes[1].grid()
+        axes[1].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=-2.,vmax=5.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap_ZDR)
+        cax.set_array(ZDR_transect)
+        cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
+        axes[1].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, inter
+    #---------------------------------------- RHOHV
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                RHO_transect,
+                cmap = pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(22):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=RHO_transect[nlev,:],
+                cmap= pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+        color[nlev,:,:] = sc.to_rgba(RHO_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(22):
+        if nlev > 17: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[2].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[2].set_ylim([0, 20])
+        axes[2].set_ylabel('Altitude (km)')
+        axes[2].grid()
+        axes[2].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0.7,vmax=1.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.RefDiff)
+        cax.set_array(RHO_transect)
+        cbar_rho = fig2.colorbar(cax, ax=axes[2], shrink=1.1, ticks=np.arange(0.7,1.01,0.1), label=r'$\rho_{hv}$')     
+        axes[2].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, inter
+    
+    #- savefile
+    plt.suptitle(radar_name + ': '+str(file[0:12]) ,fontweight='bold')
+    #fig.savefig(fig_dir+'pseudo_RHI'+str(file)+'.png', dpi=300,transparent=False)
+    plt.close()    
+	
+	
+	
+	
+	
+	
+	
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO 2019/03/08 02 UTC que tiene tambien CSPR2
