@@ -504,7 +504,7 @@ def plot_test_ppi(radar, phi_corr, lat_pf, lon_pf, general_title):
     for iPF in range(len(lat_pf)): 
         axes[0,0].plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=20, markerfacecolor="None",
             markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
-    axes[0,0].legend()
+    axes[0,0].legend(loc='upper left')
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
     axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
@@ -1866,7 +1866,7 @@ def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs,referenc
     # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
     plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
     plt.plot(np.nan, np.nan, '-m', label='PCT89 200 K ')
-    plt.legend(loc=1)
+    plt.legend(loc='upper left')
     
     
     # BT(89)              
@@ -2619,6 +2619,47 @@ def get_contour_verts(cp):
             paths.append(np.vstack(xy))
         contours.append(paths)
     return contours
+#------------------------------------------------------------------------------
+
+def check_transec_notRMA1_nlev(radar, test_transect, lon_pf, lat_pf, nlev):       
+
+  fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[13,12])
+  [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+  start_index = radar.sweep_start_ray_index['data'][nlev]
+  end_index   = radar.sweep_end_ray_index['data'][nlev]
+  lats = radar.gate_latitude['data'][start_index:end_index]
+  lons = radar.gate_longitude['data'][start_index:end_index]
+  if 'TH' in radar.fields.keys():
+  	pcm1 = axes.pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  elif 'reflectivity' in radar.fields.keys():
+  	pcm1 = axes.pcolormesh(lons, lats, radar.fields['reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+  elif 'DBZHCC' in radar.fields.keys():
+  	pcm1 = axes.pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)	
+  elif 'DBZH' in radar.fields.keys():
+  	pcm1 = axes.pcolormesh(lons, lats, radar.fields['DBZH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)	
+  cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+  cbar.cmap.set_under(under)
+  cbar.cmap.set_over(over)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+  axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+  axes.grid()
+  azimuths = radar.azimuth['data'][start_index:end_index]
+  target_azimuth = azimuths[test_transect]
+  filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+  lon_transect     = lons[filas,:]
+  lat_transect     = lats[filas,:]
+  plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k')
+  plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+  for iPF in range(len(lat_pf)):
+    plt.plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=40, markerfacecolor="None",
+            markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
+
+  return 
 
 #------------------------------------------------------------------------------
 def check_transec_notRMA1(radar, test_transect, lon_pf, lat_pf):       
@@ -3595,7 +3636,7 @@ if __name__ == '__main__':
 	
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # RMA5 - POSADAS
+    # RMA4 - RESISTENCIA
     #   2018	12	18	01	15	 -27.98	 -60.31		0.964	 56.7125	134.2751 
     #	2018	12	18	01	15	 -28.40	 -59.63		0.596	 84.2171	182.9947
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
@@ -3642,18 +3683,424 @@ if __name__ == '__main__':
     check_transec_notRMA1(radar, 205, lon_pfs, lat_pfs)     
     check_transec_notRMA1(radar, 235, lon_pfs, lat_pfs)     
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
-                 'RMA5', 0, 200, 205, 0, np.nan)
+                 'RMA4', 0, 200, 205, 0, np.nan)
     plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
-                 'RMA5', 0, 200, 235, 0, np.nan)	
+                 'RMA4', 0, 200, 235, 0, np.nan)	
 	
 	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA4 - RESISTENCIA
+    #	2018	02	09	20	05	 -27.92	 -60.18		0.762	 71.3825	165.5130
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
+    lon_pfs = [-60.18] 
+    lat_pfs = [-27.92]  
+    time_pfs = ['0209'] 
+    phail   = [0.762]
+    MIN85PCT = [-71.3825]
+    MIN37PCT = [-165.5130] 
+    #
+    rfile     = 'cfrad.20180209_200449.0000_to_20180209_201043.0000_RMA4_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20180209-S184820-E202054.022451.V05A.HDF5'
+    era5_file = '20180209_.grib'
+    #
+    opts = {'xlim_min': -62, 'xlim_max': -56, 'ylim_min': -30, 'ylim_max': -25}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], [lat_pfs[0]], reference_satLOS=150)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	
+    # En base a plot_gmi, elijo los contornos que me interan 
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], [lat_pfs[0]], coi=[18], 
+                  reference_satLOS=150) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 245, lon_pfs, lat_pfs)     
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 200, 245, 0, np.nan)	
 	
 	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA4 - RESISTENCIA
+    # 2019	02	09	19	31	 -27.46	 -60.28		0.989	 60.9207	115.9271
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
+    lon_pfs = [-60.28] 
+    lat_pfs = [-27.46]  
+    time_pfs = ['1931'] 
+    phail   = [0.989]
+    MIN85PCT = [-60.9207]
+    MIN37PCT = [-115.9271] 
+    #
+    rfile     = 'cfrad.20190209_192724.0000_to_20190209_193317.0000_RMA4_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190209-S191744-E205018.028129.V05A.HDF5'
+    era5_file = '20190209_.grib'
+    #
+    opts = {'xlim_min': -62, 'xlim_max': -56, 'ylim_min': -30, 'ylim_max': -25}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], [lat_pfs[0]], reference_satLOS=150)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	
+    # En base a plot_gmi, elijo los contornos que me interan 
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], [lat_pfs[0]], coi=[18], 
+                  reference_satLOS=150) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 268, lon_pfs, lat_pfs)     
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 200, 268, 0, np.nan)	
+		
+		
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA4 - RESISTENCIA
+    # 2018	10	01	09	53	 -28.83	 -58.32		0.965	 70.5881	140.9047
+    # 2018	10	01	09	53	 -29.61	 -57.16		0.522	 99.2545	192.0817
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
+    lon_pfs = [-58.32, -57.16] 
+    lat_pfs = [-28.83, -29.61]  
+    time_pfs = ['0953'] 
+    phail   = [0.965, 0.522]
+    MIN85PCT = [70.5881, 99.2545]
+    MIN37PCT = [140.9047, 192.0817] 
+    #
+    rfile     = 'cfrad.20181001_095450.0000_to_20181001_100038.0000_RMA4_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181001-S093732-E111006.026085.V05A.HDF5'
+    era5_file = '20181001_10.grib'
+    #
+    opts = {'xlim_min': -62, 'xlim_max': -56, 'ylim_min': -30, 'ylim_max': -25}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], [lat_pfs[0]], reference_satLOS=1)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	
+    # En base a plot_gmi, elijo los contornos que me interan 
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, 
+		   [lon_pfs[0]], [lat_pfs[0]], coi=[36], 
+                   reference_satLOS=1) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 149, lon_pfs, lat_pfs)     
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 200, 149, 0, np.nan)	
 	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA4 - RESISTENCIA
+    # 2018	10	31	01	10	 -29.74	 -58.71		0.957	 87.6426	148.5390
+    # 2018	10	31	01	10	 -29.33	 -58.10		0.984	 53.2161	122.9261
+    # 2018	10	31	01	10	 -29.21	 -57.16		0.897	 63.9960	150.4845
+    # 2018	10	31	01	10	 -28.71	 -58.37		0.931	 67.1172	151.6656
+    # 2018	10	31	01	10	 -28.70	 -60.70		0.737	 99.4944	174.1353
+    # 2018	10	31	01	11	 -26.52	 -57.33		0.993	 56.3188	111.7183
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----
+    # Inside radar : keep only de -29 para arriba. 
+    lat_pfs = [-28.71, -28.70, -26.52 ] 
+    lon_pfs = [-58.37, -60.70, -57.33 ]  
+    time_pfs = ['0110', '0110', '0111' ] 
+    phail   = [0.931, 0.737, 0.993]
+    MIN85PCT = []
+    MIN37PCT = [] 
+    #
+    rfile     = 'cfrad.20181031_010936.0000_to_20181031_011525.0000_RMA4_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181031-S005717-E022950.026546.V05A.HDF5'
+    era5_file = '20181031_01.grib'
+    #
+    opts = {'xlim_min': -62, 'xlim_max': -56, 'ylim_min': -30, 'ylim_max': -25}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], 
+	     [lat_pfs[0]], reference_satLOS=200)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	
+    # En base a plot_gmi, elijo los contornos que me interan coi=2, 20, 58 
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, 
+		   [lon_pfs[0]], [lat_pfs[0]], coi=[2], 
+                   reference_satLOS=200) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 155, lon_pfs, lat_pfs)     
+    check_transec_notRMA1(radar, 198, lon_pfs, lat_pfs)     
+    check_transec_notRMA1(radar, 230, lon_pfs, lat_pfs)     
+    check_transec_notRMA1(radar, 65, lon_pfs, lat_pfs)     
+
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 200, 155, 0, np.nan)
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 200, 198, 0, np.nan)
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 230, 230, 0, np.nan)
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 230, 65, 0, np.nan)
 	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA4 - RESISTENCIA
+    #   2018	12	15	02	17	 -28.38	 -60.79		0.930	 66.0418	152.0373
+    #   2018	12	15	02	17	 -28.38	 -59.01		0.747	 64.0453	172.3779
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    lat_pfs = [-28.38, -28.38] 
+    lon_pfs = [-60.79, -59.01]
+    time_pfs = ['0217', '0217'] 
+    phail   = [0.930, 0.747]
+    MIN85PCT = []
+    MIN37PCT = [] 
+    #
+    rfile     = 'cfrad.20181215_021522.0000_to_20181215_022113.0000_RMA4_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181215-S005848-E023122.027246.V05A.HDF5'
+    era5_file = '20181215_02.grib'
+    #
+    opts = {'xlim_min': -62, 'xlim_max': -56, 'ylim_min': -30, 'ylim_max': -25}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], 
+	     [lat_pfs[0]], reference_satLOS=50)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	
+    # En base a plot_gmi, elijo los contornos que me interan coi=4,7 *el 6 no detectado
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, 
+		   [lon_pfs], [lat_pfs], coi=[4], 
+                   reference_satLOS=50) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 177, lon_pfs, lat_pfs)     
+    check_transec_notRMA1(radar, 239, lon_pfs, lat_pfs)     
+    check_transec_notRMA1(radar, 225, lon_pfs, lat_pfs)     
+
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 200, 177, 0, np.nan)
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 230, 239, 0, np.nan)
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 230, 225, 0, np.nan)
+
+	
+
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA3 - LAS LOMITAS
+    #  	2019	03	05	12	52	 -25.94	 -60.57		0.737	 75.0826	164.4755
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    lat_pfs  = [-25.95] 
+    lon_pfs  = [-60.57]
+    time_pfs = ['1252'] 
+    phail    = [0.737]
+    MIN85PCT = [75.0826]
+    MIN37PCT = [164.4755] 
+    #
+    rfile     = 'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190305-S123614-E140847.028498.V05A.HDF5'
+    era5_file = '20190305_13.grib'
+    #
+    opts = {'xlim_min': -65, 'xlim_max': -58, 'ylim_min': -28, 'ylim_max': -20}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, [lon_pfs[0]], 
+	     [lat_pfs[0]], reference_satLOS=100)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	6 y 7 que no es detecatdo con Phail > 0.5
+    # En base a plot_gmi, elijo los contornos que me interan coi=4,7 *el 6 no detectado
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/', rfile, 
+		   [lon_pfs], [lat_pfs], coi=[6], 
+                   reference_satLOS=100) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 177, lon_pfs, lat_pfs)    
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA4/',
+                 'RMA4', 0, 200, 177, 0, np.nan)
+
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA8 - MERCEDES
+    # 2018	11	12	11	57	 -30.21	 -59.01		0.740	 93.6525	181.3028
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    lat_pfs  = [-30.21] 
+    lon_pfs  = [-59.01]
+    time_pfs = ['1157'] 
+    phail    = [0.740]
+    MIN85PCT = [93.6525]
+    MIN37PCT = [181.3028] 
+    #
+    rfile     = 'cfrad.20181112_115631.0000_to_20181112_120225.0000_RMA8_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181112-S104031-E121303.026739.V05A.HDF5'
+    era5_file = '20181112_12.grib'
+    #
+    opts = {'xlim_min': -61, 'xlim_max': -56, 'ylim_min': -32, 'ylim_max': -27}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/', rfile, [lon_pfs[0]], 
+	     [lat_pfs[0]], reference_satLOS=100)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	6 y 7 que no es detecatdo con Phail > 0.5
+    # En base a plot_gmi, elijo los contornos que me interan coi=4,7 *el 6 no detectado
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/', rfile, 
+		   [lon_pfs], [lat_pfs], coi=[5], 
+                   reference_satLOS=100) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 177, lon_pfs, lat_pfs)    
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/',
+                 'RMA4', 0, 200, 220, 0, np.nan)
 	
 	
 
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # RMA8 - MERCEDES
+    # 2018	11	12	21	41	 -30.18	 -61.31		0.560	102.9540	187.5067
+    # 2018	11	12	21	42	 -29.34	 -59.25		0.758	 64.3514	165.5906
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # me quedo con arriba de -60 
+    lat_pfs  = [-29.34] 
+    lon_pfs  = [-59.25]
+    time_pfs = ['1221'] 
+    phail    = [0.758]
+    MIN85PCT = []
+    MIN37PCT = [] 
+    #
+    rfile     = 'cfrad.20181112_214301.0000_to_20181112_214855.0000_RMA8_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181112-S212823-E230055.026746.V05A.HDF5'
+    era5_file = '20181112_21.grib'
+    #
+    opts = {'xlim_min': -61, 'xlim_max': -56, 'ylim_min': -32, 'ylim_max': -27}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/'+rfile)
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
+    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+    # Plot for only one PF as it's to select the contours of interest 
+    plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/', rfile, [lon_pfs[0]], 
+	     [lat_pfs[0]], reference_satLOS=100)
+    plt.title('GMI'+gfile[18:26]+' Phail='+str(phail[0])+' MIN85PCT: '+str(MIN85PCT[0])+' MIN37PCT:'+str(MIN37PCT[0]))
+    #--------------------------	6 y 7 que no es detecatdo con Phail > 0.5
+    # En base a plot_gmi, elijo los contornos que me interan coi=4,7 *el 6 no detectado
+    plot_gmi_wCOIs('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/', rfile, 
+		   [lon_pfs], [lat_pfs], coi=[5], 
+                   reference_satLOS=100) 
+    # Plot RHIs w/ corrected ZDR, first calculate freezing level:
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lon_pfs)
+    elemk      = find_nearest(ERA5_field['longitude'], lat_pfs)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    # PSEUDO RHIs
+    check_transec_notRMA1(radar, 260, lon_pfs, lat_pfs)    
+    plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA8/',
+                 'RMA4', 0, 200, 260, 0, np.nan)
+	
+	
+
+	
+	
+	
+	
 	
 	
 	
