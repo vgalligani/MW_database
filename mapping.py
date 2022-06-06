@@ -1,5 +1,7 @@
+from matplotlib import cm;
+
 #------------------------------------------------------------------------------  
-def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, options):
+def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     
     # read file
     f = h5py.File( fname, 'r')
@@ -19,8 +21,8 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, options)
     
     PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
     
-    start_index = radar.sweep_start_ray_index['data'][0]
-    end_index   = radar.sweep_end_ray_index['data'][0]
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     #------ 
@@ -59,6 +61,142 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, options)
 
     return
 
+#------------------------------------------------------------------------------  
+def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
+    
+    nws_ref_colors_transparent =([ [ 1.0/255.0, 159.0/255.0, 244.0/255.0, 0.3],
+                    [  3.0/255.0,   0.0/255.0, 244.0/255.0, 0.3],
+                    [  2.0/255.0, 253.0/255.0,   2.0/255.0, 0.3],
+                    [  1.0/255.0, 197.0/255.0,   1.0/255.0, 0.3],
+                    [  0.0/255.0, 142.0/255.0,   0.0/255.0, 0.3],
+                    [253.0/255.0, 248.0/255.0,   2.0/255.0, 0.3],
+                    [229.0/255.0, 188.0/255.0,   0.0/255.0, 1],
+                    [253.0/255.0, 149.0/255.0,   0.0/255.0, 1],
+                    [253.0/255.0,   0.0/255.0,   0.0/255.0, 1],
+                    #[212.0/255.0,   0.0/255.0,   0.0/255.0, 0.4],
+                    [188.0/255.0,   0.0/255.0,   0.0/255.0, 1],
+                    [248.0/255.0,   0.0/255.0, 253.0/255.0, 1],
+                    [152.0/255.0,  84.0/255.0, 198.0/255.0, 1]
+                    ])
+        
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+        
+    TH_map = np.zeros((lons.shape[0], lons.shape[1], len(radar.fixed_angle['data'])))
+    LAT_map = np.zeros((lons.shape[0], lons.shape[1], len(radar.fixed_angle['data'])))
+    LON_map = np.zeros((lons.shape[0], lons.shape[1], len(radar.fixed_angle['data'])))
+        
+    del start_index, end_index, lats, lons
+    
+    
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    
+    ALTITUDE = [0,0,0,1000,0,2000]
+    loops = [0, 3, 5]
+    #for nlev in range(len(radar.fixed_angle['data'])):
+    for nlev in loops:
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats  = radar.gate_latitude['data'][start_index:end_index]
+        lons  = radar.gate_longitude['data'][start_index:end_index]
+    
+        #-- Zh: 
+        if 'TH' in radar.fields.keys():  
+            TH = radar.fields['TH']['data'][start_index:end_index]
+        elif 'DBZH' in radar.fields.keys():
+            TH = radar.fields['DBZH']['data'][start_index:end_index]
+        elif 'reflectivity' in radar.fields.keys(): 
+            TH = radar.fields['reflectivity']['data'][start_index:end_index]
+            
+        # Create flat surface.
+        Z = np.zeros((lons.shape[0], lons.shape[1]))
+        TH_nan = TH.copy()
+        TH_nan[np.where(TH_nan<0)] = np.nan
+        TH[np.where(TH<0)]     = 0
+    
+        # Normalize in [0, 1] the DataFrame V that defines the color of the surface.
+        # TH_normalized = (TH_map[:,:,nlev] - TH_map[:,:,nlev].min().min())
+        # TH_normalized = TH_normalized / TH_normalized.max().max()
+        TH_normalized = TH_nan / np.nanmax( TH_nan )
+    
+        # Plot (me falta remplazar cm.jet! por cmap)  !!!! <<<< -----------------------------
+        ax.plot_surface(lons[:,:], lats[:,:], Z+ALTITUDE[nlev], facecolors=plt.cm.jet(TH_normalized))
+        
+    m = cm.ScalarMappable(cmap=cm.jet)
+    m.set_array(TH_map[:,:,nlev])
+    plt.colorbar(m, ax=ax, shrink=1, ticks=np.arange(vmin,max, intt))
+    
+    
+    me falta ponerle el cmap custom
+    arreglar altitude labels
+    
+    
+    
+
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+im = ax.plot_surface(LON_map[:,:,0], LAT_map[:,:,0], Z, cstride=1, facecolors=cm.coolwarm(TH_map[:,:,0]), 
+                     cmap=matplotlib.colors.ListedColormap(nws_ref_colors_transparent)); plt.colorbar(im)
+
+
+
+
+
+
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.contourf(lons,lats,TH_map[:,:,nlev],levels=0)
+
+    
+    yplane=0.8
+ind = Y[:,0] < yplane
+ax.contourf(X[ind,:], Y[ind,:], Z[ind,:], zdir='z', offset=0.3)
+ax.contourf(X, Z, Y, zdir='y', offset=yplane)
+    
+    for nlev in range(len(radar.fixed_angle['data'])):
+        im = ax.pcolor(lons,lats,TH_map[:,:,nlev]),alpha=0.1)
+        ax.add_collection3d(im,zs=xslices[i],zdir='y')
+
+plt.show()
+
+
+    pcm1 = ax.pcolor(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    axes.grid(True)
+    for iPF in range(len(lat_pf)): 
+        axes.plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=20, markerfacecolor="None",
+            markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
+    axes.legend(loc='upper left')
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=1.5);
+    
+    plt.xlim([options['xlim_min'], options['xlim_max']])
+    plt.ylim([options['ylim_min'], options['ylim_max']])
+
+    plt.suptitle(general_title, fontsize=14)
+
+    return
+
+
+
+
+
+
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+
 
 
 
@@ -79,15 +217,17 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, options)
     MIN85PCT = [131.1081]
     MIN37PCT = [207.4052]
     #
-    rfile     = 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
+    rfile     = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc'; 
+              # 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
     gfile     = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
     #
     opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
     #-------------------------- DONT CHANGE
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
-    plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', gmi_dir+gfile, opts)
+    plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
+                           gmi_dir+gfile, nlev, opts)
 
-
+    # corregir  
     
     
     
