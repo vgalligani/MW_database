@@ -36,6 +36,8 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
         TH = radar.fields['DBZH']['data'][start_index:end_index]
     elif 'reflectivity' in radar.fields.keys(): 
         TH = radar.fields['reflectivity']['data'][start_index:end_index]
+    elif 'attenuation_corrected_reflectivity_h' in radar.fields.keys(): 
+        TH = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes.pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
@@ -52,13 +54,61 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=1.5);
-    
+    plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    #plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+
     plt.xlim([options['xlim_min'], options['xlim_max']])
     plt.ylim([options['ylim_min'], options['ylim_max']])
 
     plt.suptitle(general_title, fontsize=14)
 
+    
+    # data converted to spherical coordinates to the Cartesian gridding using an azimuthal-equidistant projection with 1-km 
+    # vertical and horizontal resolution. The gridding is performed using a Barnes weighting function with a radius of influence 
+    # that increases with range from the radar. The minimum value for the radius of influence is 500 m. [ i.e., the maximum 
+    # distance that a data point can have to a grid point to have an impact on it. In the vertical the radius of influence 
+    # depends on the range, as the beamwidth increases with the range, due to the beam broadening of about 1degree.
+    # This is an established radius of influence for interpolation of radar data, for example, used within various analyses
+    # with the French operational radar network (see, e.g., Bousquet and Tabary 2014; Beck et al. 2014).]
+    grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
+                                       grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
+                                                    (-np.max(radar.range['data']), np.max(radar.range['data']))),
+                                       roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
+    
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,
+                        figsize=[14,6])
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+    axes[0].set_title('original radar resolution')
+    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+    axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], 
+                  grided.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[1].set_title('1 km gridded BARNES2')
+    axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
+    
+    
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    fig, axes = plt.subplots(nrows=3, ncols=3, constrained_layout=True, figsize=[14,12])
+    counter = 0
+    for i in range(3):
+        for j in range(3):
+            axes[i,j].pcolormesh(grided.point_longitude['data'][counter,:,:], grided.point_latitude['data'][counter,:,:], 
+                  grided.fields['TH']['data'][counter,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
+            counter=counter+1;
+            axes[i,j].set_title('horizontal slice at altitude: '+str(grided.z['data'][counter]/1e3))
+            axes[i,j].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+            axes[i,j].set_xlim([options['xlim_min'], options['xlim_max']])
+            axes[i,j].set_ylim([options['ylim_min'], options['ylim_max']])
+    
+    
     return
 
 #------------------------------------------------------------------------------  
@@ -105,7 +155,7 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
     
-        #-- Zh: 
+        #-- Zh 
         if 'TH' in radar.fields.keys():  
             TH = radar.fields['TH']['data'][start_index:end_index]
         elif 'DBZH' in radar.fields.keys():
@@ -126,77 +176,85 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     
         # Plot (me falta remplazar cm.jet! por cmap)  !!!! <<<< -----------------------------
         ax.plot_surface(lons[:,:], lats[:,:], Z+ALTITUDE[nlev], facecolors=plt.cm.jet(TH_normalized))
-        
+           
     m = cm.ScalarMappable(cmap=cm.jet)
     m.set_array(TH_map[:,:,nlev])
     plt.colorbar(m, ax=ax, shrink=1, ticks=np.arange(vmin,max, intt))
     
+    # OJO me falta ponerle el cmap custom      
     
-    me falta ponerle el cmap custom
-    arreglar altitude labels
+    # ------- NSWEEP 0 TEST W/ HEIGHT:
     
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+        
+    ranges  = radar.range['data']
+    azimuth = radar.azimuth['data']
+    elev    = radar.elevation['data']
     
+    gate_range   = np.zeros([np.int(len(azimuth)/len(radar.fixed_angle['data']))-1, len(ranges)])
+    gate_azimuth = np.zeros([np.int(len(azimuth)/len(radar.fixed_angle['data']))-1, len(ranges)])
+    elev_angle   = np.zeros([np.int(len(azimuth)/len(radar.fixed_angle['data']))-1, len(ranges)])
     
+    for irange in range(len(ranges)):
+        azimuth_counter = 0
+        AZILEN       = np.int( len(azimuth) / len(radar.fixed_angle['data']) )-1
+        gate_range[:,irange]   = ranges[irange]
+        gate_azimuth[:,irange] = azimuth[azimuth_counter:azimuth_counter+AZILEN]
+        elev_angle[:,irange]   = elev[azimuth_counter]
+    
+    [x,y,z] = pyart.core.transforms.antenna_to_cartesian(gate_range/1e3,
+                gate_azimuth, elev_angle)
+    [lonlon,latlat] = pyart.core.transforms.cartesian_to_geographic_aeqd(x, y,
+                radar.longitude['data'], radar.latitude['data'], R=6370997.);
 
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-im = ax.plot_surface(LON_map[:,:,0], LAT_map[:,:,0], Z, cstride=1, facecolors=cm.coolwarm(TH_map[:,:,0]), 
-                     cmap=matplotlib.colors.ListedColormap(nws_ref_colors_transparent)); plt.colorbar(im)
-
-
-
-
-
-
+    #= PLOT FIGURE
+    if 'TH' in radar.fields.keys():  
+        TH = radar.fields['TH']['data'][start_index:end_index]
+    elif 'DBZH' in radar.fields.keys():
+        TH = radar.fields['DBZH']['data'][start_index:end_index]
+    elif 'reflectivity' in radar.fields.keys(): 
+        TH = radar.fields['reflectivity']['data'][start_index:end_index]
+    
+    fig=plt.pcolormesh(x/1e3, y/1e3, TH, 
+            cmap=plt.cm.jet, vmin=vmin, vmax=vmax); plt.colorbar()
+        
+    # Create flat surface.
+    TH_nan = TH.copy()
+    TH_nan[np.where(TH_nan<0)] = np.nan
+    TH[np.where(TH<0)]     = 0
+    
+    # Normalize in [0, 1] the DataFrame V that defines the color of the surface.
+    # TH_normalized = (TH_map[:,:,nlev] - TH_map[:,:,nlev].min().min())
+    # TH_normalized = TH_normalized / TH_normalized.max().max()
+    TH_normalized = TH_nan / np.nanmax( TH_nan )
+    
+    # Plot x/y (me falta remplazar cm.jet! por cmap)  !!!! <<<< -----------------------------
     fig = plt.figure()
     ax = plt.axes(projection='3d')
-    ax.contourf(lons,lats,TH_map[:,:,nlev],levels=0)
-
+    ax.plot_surface(x[:,:]/1e3, y[:,:]/1e3, z[:,:]/1E3, facecolors=plt.cm.jet(TH_normalized))
     
-    yplane=0.8
-ind = Y[:,0] < yplane
-ax.contourf(X[ind,:], Y[ind,:], Z[ind,:], zdir='z', offset=0.3)
-ax.contourf(X, Z, Y, zdir='y', offset=yplane)
+    # Plot lat/lon
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.plot_surface(lons, lats, z[:,:]/1E3, facecolors=plt.cm.jet(TH_normalized))
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax.set_zlabel('Altitude (km)')
+    plt.title('nsweep 0')
+    ax.view_init(15, 230)
     
-    for nlev in range(len(radar.fixed_angle['data'])):
-        im = ax.pcolor(lons,lats,TH_map[:,:,nlev]),alpha=0.1)
-        ax.add_collection3d(im,zs=xslices[i],zdir='y')
-
-plt.show()
-
-
-    pcm1 = ax.pcolor(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
-    cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-    cbar.cmap.set_under(under)
-    cbar.cmap.set_over(over)
-    axes.grid(True)
-    for iPF in range(len(lat_pf)): 
-        axes.plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=20, markerfacecolor="None",
-            markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
-    axes.legend(loc='upper left')
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=1.5);
-    
-    plt.xlim([options['xlim_min'], options['xlim_max']])
-    plt.ylim([options['ylim_min'], options['ylim_max']])
-
-    plt.suptitle(general_title, fontsize=14)
+    #plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', 
+    #             '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/',
+    #             'RMA1', 0, 300, 220, 0, np.nan)	
 
     return
 
 
-
-
-
-
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 
 
 
@@ -225,24 +283,91 @@ ax = plt.axes(projection='3d')
     #-------------------------- DONT CHANGE
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
     plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
-                           gmi_dir+gfile, nlev, opts)
-
-    # corregir  
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
-    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, 280)
-    plot_test_ppi(radar , corr_phidp, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC')
+                           gmi_dir+gfile, 0, opts)
 
 
+    # en el gridded se pueden hacer vertical slices? 
+    grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
+                                       grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
+                                                    (-np.max(radar.range['data']), np.max(radar.range['data']))),
+                                       roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
+    
+
+    
+    
+    
+    
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    axes[0].set_title('original radar resolution')
+    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+    
+    
+    
+    
+    diff_x = np.zeros(( grided.nx-1 )); diff_x[:] = np.nan
+    diff_y = np.zeros(( grided.ny-1 )); diff_y[:] = np.nan
+    for i in range(len(grided.x['data'])-1):
+        diff_x[i] = (grided.x['data'][i+1] - grided.x['data'][i]) /1E3
+    for i in range(len(grided.y['data'])-1):
+        diff_y[i] = (grided.y['data'][i+1] - grided.y['data'][i]) /1E3
+        
+    
+    
+    
+    
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO 2018/11/11 1250 UTC que tiene tambien CSPR2
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ----  
+    lon_pfs = [-64.53]
+    lat_pfs = [-31.83]
+    time_pfs = '1250'
+    phail   = [0.653]
+    MIN85PCT = [100.5397]
+    MIN37PCT = [190.0287]
+    #
+    cspr2_RHI_file = 'corcsapr2cfrhsrhiqcM1.b1.20181214.125600.nc'
+    rfile     = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
+    cspr2_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/CSPR2_data/'
+    cspr2_file = 'corcsapr2cfrppiM1.a1.20181111.130003.nc' #'corcsapr2cfrppiM1.a1.20181111.124503.nc'
+    #
+    opts = {'xlim_min': -66, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -31}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read(cspr2_dir+cspr2_file)
+    plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+cspr2_file[30:34]+' UTC and PF at '+time_pfs+' UTC', 
+                           gmi_dir+gfile, 0, opts)
+    
+    
+   
+
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO 2019/03/08 02 UTC que tiene tambien CSPR2
+    # 2019	03	08	02	04	 -30.75	 -63.74		0.895	 62.1525	147.7273
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    lon_pfs = [-63.74] 
+    lat_pfs = [-30.75]  
+    time_pfs = '0204'
+    phail   = [0.895]
+    MIN85PCT = [62.1525]
+    MIN37PCT = [147.7273] 
+    #
+    rfile     = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
+    era5_file = '20190308_02_RMA1.grib'
+    #
+    opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
+    #-------------------------- DONT CHANGE
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
+    plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs+' UTC', 
+                           gmi_dir+gfile, 0, opts)
+    
 
 
 
