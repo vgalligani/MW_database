@@ -1,8 +1,26 @@
 from matplotlib import cm;
 
+
+
 #------------------------------------------------------------------------------  
-def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+#------------------------------------------------------------------------------  
+def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, options, era5_file, icoi):
     
+    ERA5_field = xr.load_dataset(era5_file, engine="cfgrib")
+    elemj      = find_nearest(ERA5_field['latitude'], lat_pf)
+    elemk      = find_nearest(ERA5_field['longitude'], lon_pf)
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+	
     # read file
     f = h5py.File( fname, 'r')
     tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
@@ -18,7 +36,11 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
       #tb_s1_gmi[np.where(lon_gmi[:,j] <=  options['xlim_min']-10),:] = np.nan
       tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
       tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
-    
+      lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+      lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
+      lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+      lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
+	
     PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
     
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -54,15 +76,33 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    contorno89 = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     #plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    for item in contorno89.collections:
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1]            
+    # Get vertices of these polygon type shapes
+    X1 = []; Y1 = []; vertices = []
+    for ik in range(len(contorno89.collections[0].get_paths()[int(icoi)].vertices)): 
+        X1.append(contorno89.collections[0].get_paths()[icoi].vertices[ik][0])
+        Y1.append(contorno89.collections[0].get_paths()[icoi].vertices[ik][1])
+        vertices.append([contorno89.collections[0].get_paths()[icoi].vertices[ik][0], 
+                                        contorno89.collections[0].get_paths()[icoi].vertices[ik][1]])
+    convexhull = ConvexHull(vertices)
+    array_points = np.array(vertices)
+    ##--- Run hull_paths and intersec
+    hull_path   = Path( array_points[convexhull.vertices] )
+    datapts = np.column_stack((lon_gmi[1:,:],lat_gmi[1:,:]))
+    inds = hull_path.contains_points(datapts)
+    plt.plot(lon_gmi[inds], lat_gmi[inds], 'x')
 
     plt.xlim([options['xlim_min'], options['xlim_max']])
     plt.ylim([options['ylim_min'], options['ylim_max']])
 
     plt.suptitle(general_title, fontsize=14)
 
-    
     # data converted to spherical coordinates to the Cartesian gridding using an azimuthal-equidistant projection with 1-km 
     # vertical and horizontal resolution. The gridding is performed using a Barnes weighting function with a radius of influence 
     # that increases with range from the radar. The minimum value for the radius of influence is 500 m. [ i.e., the maximum 
@@ -107,6 +147,26 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             axes[i,j].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
             axes[i,j].set_xlim([options['xlim_min'], options['xlim_max']])
             axes[i,j].set_ylim([options['ylim_min'], options['ylim_max']])
+		
+    # Same as above but plt lowest level y closest to freezing level! 
+    print('ERA5 freezing level at: (km)'+str(freezing_lev))
+    frezlev = find_nearest(grided.z['data']/1e3, freezing_lev) 
+    print('Freezing level at level:'+str(frezlev)+'i.e., at'+str(grided.z['data'][frezlev]/1e3))
+
+    fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,
+                        figsize=[14,6])
+    axes[0].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], 
+                  grided.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[0].set_title('Ground Level')
+    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+    axes[1].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], 
+                  grided.fields['TH']['data'][frezlev,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[1].set_title('Freezing level ('+str(grided.z['data'][frezlev]/1e3)+' km)')
+    axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
     
     
     return
@@ -262,8 +322,8 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
 
 
 
-    gmi_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO SUPERCELDA: 
@@ -275,26 +335,37 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     MIN85PCT = [131.1081]
     MIN37PCT = [207.4052]
     #
-    rfile     = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc'; 
-              # 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
+    rfile     = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' 
+    rfile_1   = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' 
+    rfile_2   = 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
     gfile     = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
     #
-    opts = {'xlim_min': -66, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30}
+    opts = {'xlim_min': -65.5, 'xlim_max': -62.5, 'ylim_min': -33, 'ylim_max': -30.5}
+    era5_file = '20180208_21_RMA1.grib'	
     #-------------------------- DONT CHANGE
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
+    radar_1 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_1)
+    radar_2 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_2)
     plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
-                           gmi_dir+gfile, 0, opts)
-
-
+                           gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=3)
+    #-------------------------- 
     # en el gridded se pueden hacer vertical slices? 
     grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
                                        grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
                                                     (-np.max(radar.range['data']), np.max(radar.range['data']))),
                                        roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
-    
+    # otra opcion es mirar en superficie, y en freezing level !
+    # adentro de los contornos? 
+	
+ARREGLAR EL TEMA DE LOS INDS EN LA FUNCION! 
 
-    
-    
+    # que pasa si promedio entre dos tiempos de radar? ver perfiles dentro de contornos especificos? 
+    for i in range(470):
+	for j in range(470):
+		plt.plot(grided.fields['TH']['data'][:,i,j], grided.point_z['data'][:,i,j]/1E3, '-k')	
+
+		
+
     
     
     start_index = radar.sweep_start_ray_index['data'][0]
