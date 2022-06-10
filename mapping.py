@@ -320,7 +320,7 @@ def find_nearest(array, value):
     return idx
 
 #------------------------------------------------------------------------------  
-def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, options, era5_file, icoi):
+def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, options, era5_file, icoi, use_freezingLev):
     
     ERA5_field = xr.load_dataset(era5_file, engine="cfgrib")
     elemj      = find_nearest(ERA5_field['latitude'], lat_pf)
@@ -357,9 +357,12 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
                               np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
     inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
                                          np.logical_and(lat_s2_gmi >= options['ylim_min'], lat_s2_gmi <= options['ylim_max']))    
-    lon_gmi_inside   =  lon_gmi[inside_s1] 
-    lat_gmi_inside   =  lat_gmi[inside_s1] 	
-	
+    lon_gmi_inside   = lon_gmi[inside_s1] 
+    lat_gmi_inside   = lat_gmi[inside_s1] 	
+    lon_gmi2_inside  = lon_s2_gmi[inside_s2] 	
+    lat_gmi2_inside  = lat_s2_gmi[inside_s2] 	
+    tb_s1_gmi_inside = tb_s1_gmi[inside_s1, :]
+    
     PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
     
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -367,6 +370,22 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     #------ 
+    # data converted to spherical coordinates to the Cartesian gridding using an azimuthal-equidistant projection with 1-km 
+    # vertical and horizontal resolution. The gridding is performed using a Barnes weighting function with a radius of influence 
+    # that increases with range from the radar. The minimum value for the radius of influence is 500 m. [ i.e., the maximum 
+    # distance that a data point can have to a grid point to have an impact on it. In the vertical the radius of influence 
+    # depends on the range, as the beamwidth increases with the range, due to the beam broadening of about 1degree.
+    # This is an established radius of influence for interpolation of radar data, for example, used within various analyses
+    # with the French operational radar network (see, e.g., Bousquet and Tabary 2014; Beck et al. 2014).]
+    grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
+                                       grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
+                                                    (-np.max(radar.range['data']), np.max(radar.range['data']))),
+                                       roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')    
+    #------ 
+    print('ERA5 freezing level at: (km)'+str(freezing_lev))
+    frezlev = find_nearest(grided.z['data']/1e3, freezing_lev) 
+    print('Freezing level at level:'+str(frezlev)+'i.e., at'+str(grided.z['data'][frezlev]/1e3))
+    #------ 	
     # Test plot figure: 
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
                         figsize=[14,12])
@@ -416,30 +435,37 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     	hull_path   = Path( array_points[convexhull.vertices] )
         datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
 	#datapts = np.column_stack((np.ravel(lon_gmi[1:,:]),np.ravel(lat_gmi[1:,:])))
+	# Ahora como agarro los Zh, ZDR, etc inside the contour ... 
+        datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
+	# Ahora agarro los Zh, ZDR, etc inside countour pero con el GRIDED BARNES2 at FREEZELEVL O GROUND LEVEL? 
+	if use_freezingLev == 1: 
+		datapts_RADAR_BARNES = np.column_stack((np.ravel(grided.point_longitude['data'][frezlev,:,:]),
+							np.ravel(grided.point_latitude['data'][frezlev,:,:])))
+	else: 
+		datapts_RADAR_BARNES = np.column_stack((np.ravel(grided.point_longitude['data'][0,:,:]),
+							np.ravel(grided.point_latitude['data'][0,:,:])))
+			
+
 	if ii==0:
 		inds_1 = hull_path.contains_points(datapts)
+		inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
+		inds_RB1 = hull_path.contains_points(datapts_RADAR_BARNES)
 	if ii==1:
 		inds_2 = hull_path.contains_points(datapts)
-	if ii==2
+		inds_RN2 = hull_path.contains_points(datapts_RADAR_NATIVE)
+		inds_RB2 = hull_path.contains_points(datapts_RADAR_BARNES)
+	if ii==2:
 		inds_3 = hull_path.contains_points(datapts)
+		inds_RN3 = hull_path.contains_points(datapts_RADAR_NATIVE)
+		inds_RB3 = hull_path.contains_points(datapts_RADAR_BARNES)
 
+					       
     plt.xlim([options['xlim_min'], options['xlim_max']])
     plt.ylim([options['ylim_min'], options['ylim_max']])
 
     plt.suptitle(general_title, fontsize=14)
-
-    # data converted to spherical coordinates to the Cartesian gridding using an azimuthal-equidistant projection with 1-km 
-    # vertical and horizontal resolution. The gridding is performed using a Barnes weighting function with a radius of influence 
-    # that increases with range from the radar. The minimum value for the radius of influence is 500 m. [ i.e., the maximum 
-    # distance that a data point can have to a grid point to have an impact on it. In the vertical the radius of influence 
-    # depends on the range, as the beamwidth increases with the range, due to the beam broadening of about 1degree.
-    # This is an established radius of influence for interpolation of radar data, for example, used within various analyses
-    # with the French operational radar network (see, e.g., Bousquet and Tabary 2014; Beck et al. 2014).]
-    grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
-                                       grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
-                                                    (-np.max(radar.range['data']), np.max(radar.range['data']))),
-                                       roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
-    
+ 
+    #---- NEW FIGURE 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,
                         figsize=[14,6])
@@ -472,8 +498,8 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     for i in range(len(labels)):
 	CS.collections[i].set_label(labels[i])
     axes[1].legend(loc='upper left', fontsize=12)
-
-
+ 
+    # NEW FIGURE 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     fig, axes = plt.subplots(nrows=3, ncols=3, constrained_layout=True, figsize=[14,12])
     counter = 0
@@ -488,10 +514,6 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             axes[i,j].set_ylim([options['ylim_min'], options['ylim_max']])
 		
     # Same as above but plt lowest level y closest to freezing level! 
-    print('ERA5 freezing level at: (km)'+str(freezing_lev))
-    frezlev = find_nearest(grided.z['data']/1e3, freezing_lev) 
-    print('Freezing level at level:'+str(frezlev)+'i.e., at'+str(grided.z['data'][frezlev]/1e3))
-
     fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,
                         figsize=[14,6])
     axes[0].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], 
@@ -503,7 +525,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], 
                   grided.fields['TH']['data'][frezlev,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
     axes[1].set_title('Freezing level ('+str(grided.z['data'][frezlev]/1e3)+' km)')
-    axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    CS1 = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -516,20 +538,22 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     # Add labeled contours of cois of interest! 
-    axes[0].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=20, markerfacecolor='black')
-    axes[1].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=20, markerfacecolor='black')
-    if ii == 1
-	axes[0].plot(lon_gmi_inside[inds_2], at_gmi_inside[inds_2], 'o', markersize=20, markerfacecolor='darkblue')
-	axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=200, markerfacecolor='darkblue')
-    if ii == 2
-	axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=20, markerfacecolor='darkblue')
-	axes[0].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=20, markerfacecolor='darkred')
-	axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=20, markerfacecolor='darkblue')
-	axes[1].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=20, markerfacecolor='darkred')
+    axes[0].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=10, markerfacecolor='black')
+    axes[1].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=10, markerfacecolor='black')
+    # axes[0].plot(np.ravel(lons)[inds_RN1], np.ravel(lats)[inds_RN1], 'x', markersize=10, markerfacecolor='black')
+    axes[0].plot(np.ravel(grided.point_longitude['data'][0,:,:])[inds_RB1], np.ravel(grided.point_latitude['data'][0,:,:])[inds_RB1], 'x', markersize=10, markerfacecolor='black')
+    if ii == 1:
+	axes[0].plot(lon_gmi_inside[inds_2], at_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+	axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+    if ii == 2:
+	axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+	axes[0].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=10, markerfacecolor='darkred')
+	axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+	axes[1].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=10, markerfacecolor='darkred')
 
-    axes[0].hold(True)
+    # Addlabels to icois! 
     dummy = axes[0].plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='black', label='icoi:'+str(icoi[0]))
-    axes[0].legend(dummy, +str(icoi[0]))
+    axes[0].legend(dummy, str(icoi[0]))
     if ii == 1:
 	dummy = [axes[0].plot([], [], 'o', markersize=20, markerfacecolor=cc)[0] for cc in ['black','darkblue']]
 	axes[0].legend(dummy, ['icoi:'+str(icoi[0]), 'icoi:'+str(icoi[1])])
@@ -537,7 +561,20 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
 	dummy = [axes[0].plot([], [], 'o', markersize=20, markerfacecolor=cc)[0] for cc in ['black','darkblue','darkred']]
 	axes[0].legend(dummy, ['icoi:'+str(icoi[0]), 'icoi:'+str(icoi[1]), 'icoi:'+str(icoi[2])])	
 		 
-    return
+    # Add labels:
+    labels = ["200 K","240 K"] 
+    for i in range(len(labels)):
+	CS1.collections[i].set_label(labels[i])
+    axes[1].legend(loc='upper left', fontsize=12)
+
+    # faltaria agregar radar inside countours! 	
+	
+    if ii == 0:
+    	return lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1
+    if ii == 1:
+    	return lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1, lon_gmi_inside[inds_2], lat_gmi_inside[inds_2],tb_s1_gmi_inside[inds_2,:], inds_RN2, inds_RB2
+    if ii == 2:
+	return lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1, lon_gmi_inside[inds_2], lat_gmi_inside[inds_2],tb_s1_gmi_inside[inds_2,:], inds_RN2, inds_RB2, lon_gmi_inside[inds_3], lat_gmi_inside[inds_3],tb_s1_gmi_inside[inds_3,:], inds_RN3, inds_RB3
 
 #------------------------------------------------------------------------------  
 def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
@@ -714,8 +751,28 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
     radar_1 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_1)
     radar_2 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_2)
-    plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
-                           gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[3,4])
+    #- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
+    # OJO for use_freezingLev == 0 es decir ground level! 
+    [GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_Inds_COI1, 
+     GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_Inds_COI12,
+     GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_Inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
+                           gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[1,3,4], use_freezingLev=0)
+
+     # scatter plots the tbs y de Zh a ver si esta ok 
+     fig = plt.figure(figsize=(12,7)) 
+     gs1 = gridspec.GridSpec(1, 2)
+     ax1 = plt.subplot(gs1[0,1])
+     plt.scatter(GMI_tbs1_COI1[:,5], GMI_tbs1_COI1[:,7], s=20, marker='x', color='k', label='icoi=1')
+     plt.scatter(GMI_tbs1_COI2[:,5], GMI_tbs1_COI2[:,7], s=20, marker='x', color='darkblue', label='icoi=3')
+     plt.scatter(GMI_tbs1_COI3[:,5], GMI_tbs1_COI3[:,7], s=20, marker='x', color='darkred', label='icoi=4')
+     plt.grid(True)
+     plt.legend()
+     plt.xlim([180,260])
+     plt.ylim([130,240])
+
+
+RESOLVER EL TEMA DE GMI_LON/LAT [1:,:] Y EL CONTORNOS Y LOS SCATTER PLOTS! PARA LA FUNCION! 
+
     #-------------------------- 
     # en el gridded se pueden hacer vertical slices? 
     grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
