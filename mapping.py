@@ -84,19 +84,24 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             x = v[:, 0]
             y = v[:, 1]            
     # Get vertices of these polygon type shapes
-    X1 = []; Y1 = []; vertices = []
-    for ik in range(len(contorno89.collections[0].get_paths()[int(icoi)].vertices)): 
-        X1.append(contorno89.collections[0].get_paths()[icoi].vertices[ik][0])
-        Y1.append(contorno89.collections[0].get_paths()[icoi].vertices[ik][1])
-        vertices.append([contorno89.collections[0].get_paths()[icoi].vertices[ik][0], 
-                                        contorno89.collections[0].get_paths()[icoi].vertices[ik][1]])
-    convexhull = ConvexHull(vertices)
-    array_points = np.array(vertices)
-    ##--- Run hull_paths and intersec
-    hull_path   = Path( array_points[convexhull.vertices] )
-    datapts = np.column_stack((np.ravel(lon_gmi[1:,:]),np.ravel(lat_gmi[1:,:])))
-    inds = hull_path.contains_points(datapts)
-    plt.plot(np.ravel(lon_gmi[1:,:])[inds], np.ravel(lat_gmi[1:,:])[inds], 'kx')
+    for ii in range(len(icoi)): 
+	X1 = []; Y1 = []; vertices = []
+    	for ik in range(len(contorno89.collections[0].get_paths()[int(icoi[ii])].vertices)): 
+		X1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0])
+        	Y1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1])
+        	vertices.append([contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0], 
+                                        contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1]])
+    	convexhull = ConvexHull(vertices)
+    	array_points = np.array(vertices)
+    	##--- Run hull_paths and intersec
+    	hull_path   = Path( array_points[convexhull.vertices] )
+    	datapts = np.column_stack((np.ravel(lon_gmi[1:,:]),np.ravel(lat_gmi[1:,:])))
+	if ii==0:
+		inds1 = hull_path.contains_points(datapts)
+	if ii==1:
+		inds2 = hull_path.contains_points(datapts)
+	if ii==3:
+		inds3 = hull_path.contains_points(datapts)
 
     plt.xlim([options['xlim_min'], options['xlim_max']])
     plt.ylim([options['ylim_min'], options['ylim_max']])
@@ -191,9 +196,16 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     # Add labeled contours of cois of interest! 
-    axes[0].plot(np.ravel(lon_gmi[1:,:])[inds[0]], np.ravel(lat_gmi[1:,:])[inds[0]], '*', markersize=40)
-    axes[1].plot(np.ravel(lon_gmi[1:,:])[inds[0]], np.ravel(lat_gmi[1:,:])[inds[0]], '*', markersize=40)
-
+    axes[0].plot(np.ravel(lon_gmi[1:,:])[inds_1[0]], np.ravel(lat_gmi[1:,:])[inds_1[0]], '*', markersize=40)
+    axes[1].plot(np.ravel(lon_gmi[1:,:])[inds_1[0]], np.ravel(lat_gmi[1:,:])[inds_1[0]], '*', markersize=40)
+    if ii == 2:
+	axes[0].plot(np.ravel(lon_gmi[1:,:])[inds_2[0]], np.ravel(lat_gmi[1:,:])[inds_2[0]], 'k*', markersize=40)
+	axes[1].plot(np.ravel(lon_gmi[1:,:])[inds_2[0]], np.ravel(lat_gmi[1:,:])[inds_2[0]], 'k*', markersize=40)
+    if ii == 3:
+	axes[0].plot(np.ravel(lon_gmi[1:,:])[inds_2[0]], np.ravel(lat_gmi[1:,:])[inds_2[0]], '*', color='darkblue', markersize=40)
+	axes[0].plot(np.ravel(lon_gmi[1:,:])[inds_3[0]], np.ravel(lat_gmi[1:,:])[inds_3[0]], '*', markersize=40)
+	axes[1].plot(np.ravel(lon_gmi[1:,:])[inds_2[0]], np.ravel(lat_gmi[1:,:])[inds_2[0]], '*', markersize=40)
+	axes[1].plot(np.ravel(lon_gmi[1:,:])[inds_3[0]], np.ravel(lat_gmi[1:,:])[inds_3[0]], '*', markersize=40)
 	
     #axes[0].plot(np.nan, np.nan, '*', markersize=40)
 
