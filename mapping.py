@@ -94,9 +94,9 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     array_points = np.array(vertices)
     ##--- Run hull_paths and intersec
     hull_path   = Path( array_points[convexhull.vertices] )
-    datapts = np.column_stack((lon_gmi[1:,:],lat_gmi[1:,:]))
+    datapts = np.column_stack((np.ravel(lon_gmi[1:,:]),np.ravel(lat_gmi[1:,:])))
     inds = hull_path.contains_points(datapts)
-    plt.plot(lon_gmi[inds], lat_gmi[inds], 'x')
+    plt.plot(np.ravel(lon_gmi[1:,:])[inds], np.ravel(lat_gmi[1:,:])[inds], 'kx')
 
     plt.xlim([options['xlim_min'], options['xlim_max']])
     plt.ylim([options['ylim_min'], options['ylim_max']])
@@ -130,11 +130,25 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], 
                   grided.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
     axes[1].set_title('1 km gridded BARNES2')
-    axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    CS = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
-    
-    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    # Add labels:
+    labels = ["200 K","240 K"] 
+    for i in range(len(labels)):
+	CS.collections[i].set_label(labels[i])
+    axes[1].legend(loc='upper left', fontsize=12)
+
+
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     fig, axes = plt.subplots(nrows=3, ncols=3, constrained_layout=True, figsize=[14,12])
     counter = 0
@@ -167,8 +181,22 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
-    
-    
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    # Add labeled contours of cois of interest! 
+    axes[0].plot(np.ravel(lon_gmi[1:,:])[inds[0]], np.ravel(lat_gmi[1:,:])[inds[0]], '*', markersize=40)
+    axes[1].plot(np.ravel(lon_gmi[1:,:])[inds[0]], np.ravel(lat_gmi[1:,:])[inds[0]], '*', markersize=40)
+
+	
+    #axes[0].plot(np.nan, np.nan, '*', markersize=40)
+
     return
 
 #------------------------------------------------------------------------------  
@@ -340,7 +368,7 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     rfile_2   = 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
     gfile     = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
     #
-    opts = {'xlim_min': -65.5, 'xlim_max': -62.5, 'ylim_min': -33, 'ylim_max': -30.5}
+    opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5}
     era5_file = '20180208_21_RMA1.grib'	
     #-------------------------- DONT CHANGE
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
