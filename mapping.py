@@ -628,7 +628,67 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].legend(loc='upper left', fontsize=12)
 
     # faltaria agregar radar inside countours! 	
+		
+		
+		
+		
+		#---- HID FIGURES! (ojo sin corregir ZH!!!!) 
+    scores          = csu_fhc.csu_fhc_summer(dz=radar.fields['TH']['data'], 
+																						 zdr=(radar.fields['TH']['data']-radar.fields['TV']['data']) - opts['ZDRoffset'],
+                                             rho=radar.fields['RHOHV']['data'], kdp=radar.fields['KDP']['data'], 
+                                             use_temp=True, band='C', T=radar_T)
+    HID             = np.argmax(scores, axis=0) + 1
+    #--- need to add tempertaure to grided data ... 
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
 
+    radar_z = grided.point_z['data']
+    shape   = np.shape(radar_z)
+    rad_T1d = np.interp(radar_z.ravel(), alt_ref, tfield_ref)   # interpolate_sounding_to_radar(snd_T, snd_z, radar)
+		radargrid_TT = np.reshape(rad_T1d, shape)
+    grided = add_field_to_radar_object(np.reshape(rad_T1d, shape), grided, field_name='sounding_temperature')      
+		#- Add height field for 4/3 propagation
+    grided = add_field_to_radar_object( grided.point_z['data'], grided, field_name = 'height')    
+    iso0 = np.ma.mean(grided.fields['height']['data'][np.where(np.abs(grided.fields['sounding_temperature']['data']) < 0)])
+    grided.fields['height_over_iso0'] = deepcopy(grided.fields['height'])
+    grided.fields['height_over_iso0']['data'] -= iso0 
+		
+		scores          = csu_fhc.csu_fhc_summer(dz=grided.fields['TH']['data'], 
+																						 zdr=(grided.fields['TH']['data']-grided.fields['TV']['data']) - opts['ZDRoffset'],
+                                             rho=grided.fields['RHOHV']['data'], kdp=grided.fields['KDP']['data'], 
+                                             use_temp=True, band='C', T=radar_T)
+		
+		GRIDDED_HID = np.argmax(scores, axis=0) + 1 
+		print(GRIDDED_HID.shape)
+		print(grided.point_latitude['data'].shape)
+		
+    #---- plot hid ppi  
+		hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+		
+    fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,
+                        figsize=[14,6])
+    pcm1 = axes[0].pcolormesh(lons, lats, HID[start_index:end_index], cmap=cmaphid, vmin=1.8, vmax=10.4)
+    axes[0].set_title('HID radar nlev 0 PPI')
+    cbar = plt.colorbar(pcm1, ax=axes[0], label='CSU HID')
+    cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    cbar.cmap.set_under('white')
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+		axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+		
+    pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], GRIDDED_HID[0,:,:], cmap=cmaphid, vmin=1.8, vmax=10.4)
+    axes[1].set_title('HID GRIDDED 0 km')
+    cbar = plt.colorbar(pcm1, ax=axes[1], label='CSU HID')
+    cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    cbar.cmap.set_under('white')
+    axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
+		axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);		
+		
+		
+		
+		
     if ii == 0:
         return grided, frezlev, lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1
     if ii == 1:
@@ -780,15 +840,259 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     return
 
 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    def return_altitude(ele, az, rng):
+		
+    	theta_e = ele * np.pi / 180.0  # elevation angle in radians.
+    	theta_a = az * np.pi / 180.0  # azimuth angle in radians.
+    	R = 6371.0 * 1000.0 * 4.0 / 3.0  # effective radius of earth in meters.
+    	r = rng * 1000.0  # distances to gates in meters.
+    	z = (r ** 2 + R ** 2 + 2.0 * r * R * np.sin(theta_e)) ** 0.5 - R
+    	s = R * np.arcsin(r * np.cos(theta_e) / (R + z))  # arc length in m.
+    	x = s * np.sin(theta_a)
+    	y = s * np.cos(theta_a)
+
+	
+	return  z
+
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi titlecois, xlims_xlims): 
+
+    nlev = 0 
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats        = radar.gate_latitude['data'][start_index:end_index]
+    lons        = radar.gate_longitude['data'][start_index:end_index]
+    azimuths    = radar.azimuth['data'][start_index:end_index]
+
+    fig, axes = plt.subplots(nrows=3, ncols=3, constrained_layout=True, figsize=[13,12])
+
+    for iz in range(len(azi_oi)):
+        target_azimuth = azimuths[azi_oi[iz]]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()	
+        grid_lon   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]  = np.nan
+        grid_lat   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]  = np.nan
+        grid_THTH  = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:] = np.nan
+        grid_TVTV  = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:] = np.nan
+        grid_alt   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:] = np.nan
+        grid_range = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
+        grid_RHO   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:] = np.nan
+
+        # need to find x/y pair for each gate at the surface 
+        for i in range(lons[filas,:].shape[2]):	
+            # First, find the index of the grid point nearest a specific lat/lon.   
+            abslat = np.abs(gridded_radar.point_latitude['data'][0,:,:]  - lats[filas,i])
+            abslon = np.abs(gridded_radar.point_longitude['data'][0,:,:] - lons[filas,i])
+            c = np.maximum(abslon, abslat)
+            ([xloc], [yloc]) = np.where(c == np.min(c))	
+            grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
+            grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
+            grid_TVTV[:,i]  = gridded_radar.fields['TV']['data'][:,xloc,yloc]
+            grid_THTH[:,i]  = gridded_radar.fields['TH']['data'][:,xloc,yloc]
+            grid_RHO[:,i]   = gridded_radar.fields['RHOHV']['data'][:,xloc,yloc]
+            grid_alt[:,i]   = gridded_radar.z['data'][:]
+            x               = gridded_radar.point_x['data'][:,xloc,yloc]
+            y               = gridded_radar.point_y['data'][:,xloc,yloc]
+            z               = gridded_radar.point_z['data'][:,xloc,yloc]
+            grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
+
+				# Filters
+				grid_TVTV[np.where(grid_RHO<0.7)] = np.nan	
+				grid_THTH[np.where(grid_RHO<0.7)] = np.nan	
+				grid_RHO[np.where(grid_RHO<0.7)] = np.nan	
+				
+				# Figure
+				[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
+        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+        im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
+        axes[0,iz].set_title('coi='+titlecois[iz])
+				if iz == 1:
+					axes[0,iz].set_xlim([0,xlims_xlims[1]])
+        	axes[1,iz].set_xlim([0,xlims_xlims[1]])
+        	axes[2,iz].set_xlim([0,xlims_xlims[1]])
+				if iz == 2
+					axes[0,iz].set_xlim([0,xlims_xlims[2]])
+        	axes[1,iz].set_xlim([0,xlims_xlims[2]])
+        	axes[2,iz].set_xlim([0,xlims_xlims[2]])
+					
+				if iz == 0:
+					axes[0,0].set_ylabel('Altitude (km)')
+					axes[1,0].set_ylabel('Altitude (km)')
+					axes[2,0].set_ylabel('Altitude (km)')
+					axes[0,iz].set_xlim([0,xlims_xlims[0]])
+        	axes[1,iz].set_xlim([0,xlims_xlims[0]])
+        	axes[2,iz].set_xlim([0,xlims_xlims[0]])
+					
+
+					axes[2,0].set_xlabel('Range (km)')
+				if iz == len(azi_oi)-1: 
+					# Add colorbars #ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height])
+					pm1    = axes[0,iz-1].get_position().get_points().flatten()
+	        p_last = axes[0,iz].get_position().get_points().flatten(); 
+					
+					ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.7, 0.02, 0.27])  
+					cbar    = fig.colorbar(im_TH,  cax=ax_cbar, shrink=0.9, label='ZH')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+					
+					pm2    = axes[1,iz-1].get_position().get_points().flatten()
+					ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.36, 0.02, 0.27])  
+					cbar    = fig.colorbar(im_ZDR, cax=ax_cbar, shrink=0.9, label='ZDR')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+					
+					pm3   = axes[2,iz-1].get_position().get_points().flatten()
+					ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.03, 0.02, 0.27])  
+					cbar    = fig.colorbar(im_RHO, cax=ax_cbar, shrink=0.9, label='RHO')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+
+					
+    return
+
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+def figure_transect_gridded(lons, radarTH, filas, gridded):
+	
+    # gridLev to check 0 km and Freezing Level
+		#-------- what about gridded
+    gridLev = 0
+    grid_lon = []
+    grid_lat = []
+    grid_TH  = []	
+    grid_TV  = []	
+    # need to find x/y pair for each gate? 
+    for i in range(lons[filas,:].shape[2]):	
+    	# First, find the index of the grid point nearest a specific lat/lon.   
+    	abslat = np.abs(gridded.point_latitude['data'][gridLev,:,:]  - lats[filas,i])
+    	abslon = np.abs(gridded.point_longitude['data'][gridLev,:,:] - lons[filas,i])
+    	c = np.maximum(abslon, abslat)
+			([xloc], [yloc]) = np.where(c == np.min(c))	
+			grid_lon.append(gridded.point_longitude['data'][gridLev,xloc,yloc])
+			grid_lat.append(gridded.point_latitude['data'][gridLev,xloc,yloc])
+			grid_TH.append(gridded.fields['TH']['data'][gridLev,xloc,yloc])
+			grid_TV.append(gridded.fields['TV']['data'][gridLev,xloc,yloc])
+	
+    gridLev = frezlev
+    grid_lon_frezlev = []
+    grid_lat_frezlev = []
+    grid_TH_frezlev  = []	
+    grid_TV_frezlev  = []	
+    # need to find x/y pair for each gate? 
+    for i in range(lons[filas,:].shape[2]):	
+    	# First, find the index of the grid point nearest a specific lat/lon.   
+    	abslat = np.abs(gridded.point_latitude['data'][gridLev,:,:]  - lats[filas,i])
+    	abslon = np.abs(gridded.point_longitude['data'][gridLev,:,:] - lons[filas,i])
+    	c = np.maximum(abslon, abslat)
+			([xloc], [yloc]) = np.where(c == np.min(c))	
+			grid_lon_frezlev.append(gridded.point_longitude['data'][gridLev,xloc,yloc])
+			grid_lat_frezlev.append(gridded.point_latitude['data'][gridLev,xloc,yloc])
+			grid_TH_frezlev.append(gridded.fields['TH']['data'][gridLev,xloc,yloc])
+			grid_TV_frezlev.append(gridded.fields['TV']['data'][gridLev,xloc,yloc])
+	
+    # Figure ploting the azimuth
+    fig,ax = plt.subplots()
+    plt.plot(np.ravel(lons[filas,:]), np.ravel(radarTH[filas, :]),'-k', label='radar nlev=0' )
+    plt.plot(grid_lon,  grid_TH,'-r', label='gridded 0 km' )
+    plt.plot(grid_lon_frezlev,  grid_TH_frezlev,'-',color='darkred', label='gridded frezlev '+str(np.ndarray.round(np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3),2))+' km' )
+    plt.xlim([-65.2, -64.2])
+    plt.ylabel('ZH')
+    plt.xlabel('Longitude')		     
+    plt.legend()
+    plt.grid(True) 
+    ax2=ax.twinx()
+    ax2.plot(np.ravel(grid_lon), np.ravel(radar_gateZ)/1e3, '--', color="black") 
+    ax2.plot([grid_lon[0],grid_lon[-1]], [0, 0], '--', color="red")
+    ax2.plot([grid_lon[0],grid_lon[-1]], [np.ndarray.round(np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3),2),np.ndarray.round(np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3),2)], '--', color="darkred")
+    ax2.set_ylabel("Altitude",color="gray")
+	
+	  return 
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+def interpolate_sounding_to_radar(snd_T, snd_z, radar):
+    """Takes sounding data and interpolates it to every radar gate."""
+    radar_z = get_z_from_radar(radar)
+    radar_T = None
+    shape   = np.shape(radar_z)
+    rad_z1d = radar_z.ravel()
+    rad_T1d = np.interp(rad_z1d, snd_z, snd_T)
+    return np.reshape(rad_T1d, shape), radar_z
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+def add_field_to_radar_object(field, radar, field_name='FH', units='unitless', 
+                              long_name='Hydrometeor ID', standard_name='Hydrometeor ID'):
+    """
+    Adds a newly created field to the Py-ART radar object. If reflectivity is a masked array,
+    make the new field masked the same as reflectivity.
+    """
+    if 'TH' in radar.fields.keys():  
+        dz_field='TH'
+    elif 'DBZH' in radar.fields.keys():
+        dz_field='DBZH'   
+    fill_value = -32768
+    masked_field = np.ma.asanyarray(field)
+    masked_field.mask = masked_field == fill_value
+    if hasattr(radar.fields[dz_field]['data'], 'mask'):
+        setattr(masked_field, 'mask', 
+                np.logical_or(masked_field.mask, radar.fields[dz_field]['data'].mask))
+        fill_value = radar.fields[dz_field]['_FillValue']
+    field_dict = {'data': masked_field,
+                  'units': units,
+                  'long_name': long_name,
+                  'standard_name': standard_name,
+                  '_FillValue': fill_value}
+    radar.add_field(field_name, field_dict, replace_existing=True)
+    return radar
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+def get_z_from_radar(radar):
+    """Input radar object, return z from radar (km, 2D)"""
+    azimuth_1D = radar.azimuth['data']
+    elevation_1D = radar.elevation['data']
+    srange_1D = radar.range['data']
+    sr_2d, az_2d = np.meshgrid(srange_1D, azimuth_1D)
+    el_2d = np.meshgrid(srange_1D, elevation_1D)[1]
+    xx, yy, zz = antenna_to_cartesian(sr_2d/1000.0, az_2d, el_2d) # Cartesian coordinates in meters from the radar.
+
+    return zz + radar.altitude['data'][0]	
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+
+def adjust_fhc_colorbar_for_pyart(cb):
+    
+    # HID types:           Species #:  
+    # -------------------------------
+    # Drizzle                  1    
+    # Rain                     2    
+    # Ice Crystals             3
+    # Aggregates               4
+    # Wet Snow                 5
+    # Vertical Ice             6
+    # Low-Density Graupel      7
+    # High-Density Graupel     8
+    # Hail                     9
+    # Big Drops                10
+    
+    
+    cb.set_ticks(np.arange(2.4, 10, 0.9))
+    cb.ax.set_yticklabels(['Rain', 'Ice Crystals', 'Aggregates',
+                           'Wet Snow', 'Vertical Ice', 'LD Graupel',
+                           'HD Graupel', 'Hail', 'Big Drops'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    
+		return cb
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 
 
 
 
 
-
-
+	
+	
+	
+	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
@@ -809,19 +1113,45 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     #
     opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
 	    'ZDRoffset': 4}
-    era5_file = '20180208_21_RMA1.grib'	
-    #-------------------------- DONT CHANGE
+    era5_file = '20180208_21_RMA1.grib'
+    # Frezing level:     
+    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")	
+    elemj      = find_nearest(ERA5_field['latitude'], lat_pfs[0])
+    elemk      = find_nearest(ERA5_field['longitude'], lon_pfs[0])
+    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+    Re         = 6371*1e3
+    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref) 
+		#-------------------------- DONT CHANGE
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
     radar_1 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_1)
     radar_2 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_2)
-    #- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
+    #------
+		# ADD temperature info: 
+    print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3), ' km')
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    #- Add height field for 4/3 propagation
+    radar_height = get_z_from_radar(radar)
+    radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+    iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
+    radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+    radar.fields['height_over_iso0']['data'] -= iso0 
+		#----
+		#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
     # OJO for use_freezingLev == 0 es decir ground level! 
     [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
      GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
      GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
                            gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[1,3,4], use_freezingLev=0)
+		#-------------------------- 
 
-     # FIGURE 
+		
+		
+		
+		 # FIGURE scatter plot check
      # scatter plots the tbs y de Zh a ver si esta ok 
      fig = plt.figure(figsize=(12,7)) 
      gs1 = gridspec.GridSpec(1, 2)
@@ -844,13 +1174,13 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
      lats     = radar.gate_latitude['data'][start_index:end_index]
      lons     = radar.gate_longitude['data'][start_index:end_index]
      radarTH  = radar.fields['TH']['data'][start_index:end_index]
-     radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])
+     radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-opts['ZDRoffset']
      plt.scatter(np.ravel(radarTH)[RN_inds_COI1], np.ravel(radarZDR)[RN_inds_COI1]-opts['ZDRoffset'], s=20, marker='x', color='k', label='icoi=1')
      plt.scatter(np.ravel(radarTH)[RN_inds_COI2], np.ravel(radarZDR)[RN_inds_COI2]-opts['ZDRoffset'], s=20, marker='x', color='darkblue', label='icoi=3')
      plt.scatter(np.ravel(radarTH)[RN_inds_COI3], np.ravel(radarZDR)[RN_inds_COI3]-opts['ZDRoffset'], s=20, marker='x', color='darkred', label='icoi=4')
      plt.xlabel('ZH')
      plt.ylabel('ZDR')	
-
+		 #-------------------------- 
      # FIGURE DENSITY PLOTS
      make_densityPlot(radarTH, radarZDR, RN_inds_COI1, RN_inds_COI2, RN_inds_COI3)
      gridedTH  = gridded.fields['TH']['data'][0,:,:]
@@ -863,107 +1193,46 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
                            gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[1,3,4], use_freezingLev=1)
      gridedTH  = gridded.fields['TH']['data'][frezlev,:,:]
      gridedZDR = (gridded.fields['TH']['data'][frezlev,:,:]-gridded.fields['TV']['data'][frezlev,:,:]) - opts['ZDRoffset']
-     make_densityPlot(gridedTH, gridedZDR, RB_inds_COI1, RB_inds_COI2, RB_inds_COI3)
- 
-	
+     make_densityPlot(gridedTH, gridedZDR, RB_inds_COI1, RB_inds_COI2, RB_inds_COI3)  
+		#-------------------------- 
     #DIFRFERENCE BETWEEN GROUND LEVEL NATIVE GRID AND GRIDDED LEVEL 0 ? 
     azimuth_ray = 220 
     #-------- what about nlev 0 
     azimuths = radar.azimuth['data'][start_index:end_index]
     target_azimuth = azimuths[azimuth_ray]
     filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-    plt.plot(np.ravel(lons[filas,:]), np.ravel(radarTH[filas, :]) ,'-k', label='radar nlev=0' )
-    #-------- what about gridded
-    gridLev = 0
-    # need to find x/y pair for each gate? 
-    grid_lon = []
-    grid_TH  = []
+    radar_gateZ = []
+    for i in range(np.array(radar.range['data']).shape[0]):
+    	radar_gateZ.append(return_altitude(radar.elevation['data'][start_index:end_index][nlev], target_azimuth, 
+					   np.array(radar.range['data'])[i]/1e3))
+    
+		#- Figure transect as a function of range: 
+		figure_transect_gridded(lons, radarTH, filas, gridded)
 
-	calculate distance between each lat/lon and [lons[filas,:], lats[filas,:]] and keep minimum!! 
-	[gridded.point_longitude['data'][gridLev,:,:], gridded.point_latitude['data'][gridLev,:,:] ]
-	
-    from pydist2.distance import Euclidean
+    # FIGURE pseudo-RHIs 
+    make_pseudoRHISfromGrid(gridded, radar, [356,220,192],['1','3[Phail = 0.534]','4'], [60, 100, 140])
 
-    Euclidean.compute([])
-
-pdist1(X,matrix=True)
-	
-    for i in range(len(lons[filas,:].shape[2])):
-	idx1 = (lat_gmi>=options['ylim_min']) & (lat_gmi<=options['ylim_max']) & (lon_gmi>=options['xlim_min']) & (lon_gmi<=options['xlim_max'])
-
-    diff_array = np.zeros((gridded.point_latitude['data'][gridLev,:,:].shape[0], 
-			       gridded.point_latitude['data'][gridLev,:,:].shape[1], 2)); diff_array[:]=np.nan
-    diff_array[:,:,0] = np.abs(gridded.point_latitude['data'][gridLev,:,:]  - lats[filas,:][0,0,i])
-    diff_array[:,:,1] = np.abs(gridded.point_longitude['data'][gridLev,:,:]  - lons[filas,:][0,0,i])
+    #-------------------------- HID ON GRIDDED ON NATIVE? 
 		
-     np.where( 
-	     	
-	elemi      = find_nearest(gridded.point_longitude['data'][gridLev,:,:], lons[filas,:][0,0,i] )
-	elemj      = find_nearest(gridded.point_latitude['data'][gridLev,:,:], lats[filas,:][0,0,i] )
-        grid_lon   = gridded.point_longitude['data'][]
-			
-
-
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
 	
+		
 	
-	
-
-	
-	
-	
-	
-	
-	
-	
-    #-------------------------- 
+		
+		
+		
+		
     Nr pixels, mean values ? std. barplot, hid 
     #-------------------------- 
 	
 	
-	#-------------------------- 
-    # en el gridded se pueden hacer vertical slices? 
-    grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
-                                       grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
-                                                    (-np.max(radar.range['data']), np.max(radar.range['data']))),
-                                       roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
-    # otra opcion es mirar en superficie, y en freezing level !
-    # adentro de los contornos? 
+
 	
-ARREGLAR EL TEMA DE LOS INDS EN LA FUNCION! 
 
-    # que pasa si promedio entre dos tiempos de radar? ver perfiles dentro de contornos especificos? 
-    for i in range(470):
-	for j in range(470):
-		plt.plot(grided.fields['TH']['data'][:,i,j], grided.point_z['data'][:,i,j]/1E3, '-k')	
-
-		
-
-    
-    
-    start_index = radar.sweep_start_ray_index['data'][0]
-    end_index   = radar.sweep_end_ray_index['data'][0]
-    lats  = radar.gate_latitude['data'][start_index:end_index]
-    lons  = radar.gate_longitude['data'][start_index:end_index]
-    axes[0].set_title('original radar resolution')
-    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
-    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
-    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
-    
-    
-    
-    
-    diff_x = np.zeros(( grided.nx-1 )); diff_x[:] = np.nan
-    diff_y = np.zeros(( grided.ny-1 )); diff_y[:] = np.nan
-    for i in range(len(grided.x['data'])-1):
-        diff_x[i] = (grided.x['data'][i+1] - grided.x['data'][i]) /1E3
-    for i in range(len(grided.y['data'])-1):
-        diff_y[i] = (grided.y['data'][i+1] - grided.y['data'][i]) /1E3
-        
-    
+	
+	
+	
+	
+	
     
     
     
