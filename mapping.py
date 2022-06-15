@@ -500,21 +500,21 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
         # Ahora como agarro los Zh, ZDR, etc inside the contour ... 
         datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
     	# Ahora agarro los Zh, ZDR, etc inside countour pero con el GRIDED BARNES2 at FREEZELEVL O GROUND LEVEL? 
-    	if use_freezingLev == 1: 
-        	datapts_RADAR_BARNES = np.column_stack((np.ravel(grided.point_longitude['data'][frezlev,:,:]),
+		if use_freezingLev == 1: 
+			datapts_RADAR_BARNES = np.column_stack((np.ravel(grided.point_longitude['data'][frezlev,:,:]),
 							np.ravel(grided.point_latitude['data'][frezlev,:,:])))
-    	else: 
-        	datapts_RADAR_BARNES = np.column_stack((np.ravel(grided.point_longitude['data'][0,:,:]),
+		else: 
+			datapts_RADAR_BARNES = np.column_stack((np.ravel(grided.point_longitude['data'][0,:,:]),
 							np.ravel(grided.point_latitude['data'][0,:,:])))
-    	if ii==0:
+		if ii==0:
         	inds_1 = hull_path.contains_points(datapts)
         	inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
         	inds_RB1 = hull_path.contains_points(datapts_RADAR_BARNES)
-    	if ii==1:
+		if ii==1:
         	inds_2 = hull_path.contains_points(datapts)
         	inds_RN2 = hull_path.contains_points(datapts_RADAR_NATIVE)
         	inds_RB2 = hull_path.contains_points(datapts_RADAR_BARNES)
-    	if ii==2:
+		if ii==2:
         	inds_3 = hull_path.contains_points(datapts)
         	inds_RN3 = hull_path.contains_points(datapts_RADAR_NATIVE)
         	inds_RB3 = hull_path.contains_points(datapts_RADAR_BARNES)
@@ -629,10 +629,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
 
     # faltaria agregar radar inside countours! 	
 		
-		
-		
-		
-		#---- HID FIGURES! (ojo sin corregir ZH!!!!) 
+	#---- HID FIGURES! (ojo sin corregir ZH!!!!) 
     scores          = csu_fhc.csu_fhc_summer(dz=radar.fields['TH']['data'], 
 																						 zdr=(radar.fields['TH']['data']-radar.fields['TV']['data']) - opts['ZDRoffset'],
                                              rho=radar.fields['RHOHV']['data'], kdp=radar.fields['KDP']['data'], 
@@ -644,25 +641,25 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     radar_z = grided.point_z['data']
     shape   = np.shape(radar_z)
     rad_T1d = np.interp(radar_z.ravel(), alt_ref, tfield_ref)   # interpolate_sounding_to_radar(snd_T, snd_z, radar)
-		radargrid_TT = np.reshape(rad_T1d, shape)
+	radargrid_TT = np.reshape(rad_T1d, shape)
     grided = add_field_to_radar_object(np.reshape(rad_T1d, shape), grided, field_name='sounding_temperature')      
-		#- Add height field for 4/3 propagation
+	#- Add height field for 4/3 propagation
     grided = add_field_to_radar_object( grided.point_z['data'], grided, field_name = 'height')    
     iso0 = np.ma.mean(grided.fields['height']['data'][np.where(np.abs(grided.fields['sounding_temperature']['data']) < 0)])
     grided.fields['height_over_iso0'] = deepcopy(grided.fields['height'])
     grided.fields['height_over_iso0']['data'] -= iso0 
 		
-		scores          = csu_fhc.csu_fhc_summer(dz=grided.fields['TH']['data'], 
+	scores          = csu_fhc.csu_fhc_summer(dz=grided.fields['TH']['data'], 
 																						 zdr=(grided.fields['TH']['data']-grided.fields['TV']['data']) - opts['ZDRoffset'],
                                              rho=grided.fields['RHOHV']['data'], kdp=grided.fields['KDP']['data'], 
                                              use_temp=True, band='C', T=radar_T)
 		
-		GRIDDED_HID = np.argmax(scores, axis=0) + 1 
-		print(GRIDDED_HID.shape)
-		print(grided.point_latitude['data'].shape)
+	GRIDDED_HID = np.argmax(scores, axis=0) + 1 
+	print(GRIDDED_HID.shape)
+	print(grided.point_latitude['data'].shape)
 		
     #---- plot hid ppi  
-		hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+	hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
               'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
     cmaphid = colors.ListedColormap(hid_colors)
 		
@@ -675,7 +672,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     cbar.cmap.set_under('white')
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
-		axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+	axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
 		
     pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], GRIDDED_HID[0,:,:], cmap=cmaphid, vmin=1.8, vmax=10.4)
     axes[1].set_title('HID GRIDDED 0 km')
@@ -684,7 +681,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     cbar.cmap.set_under('white')
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
-		axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);		
+	axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);		
 		
 		
 		
