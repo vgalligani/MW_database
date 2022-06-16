@@ -628,16 +628,30 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].legend(loc='upper left', fontsize=12)
 
     # faltaria agregar radar inside countours! 	
-		
+    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 		
 	#---- HID FIGURES! (ojo sin corregir ZH!!!!) 
-    scores          = csu_fhc.csu_fhc_summer(dz=radar.fields['TH']['data'], 
-																						 zdr=(radar.fields['TH']['data']-radar.fields['TV']['data']) - opts['ZDRoffset'],
-                                             rho=radar.fields['RHOHV']['data'], kdp=radar.fields['KDP']['data'], 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    #- Add height field for 4/3 propagation
+    radar_height = get_z_from_radar(radar)
+    radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+    iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
+    radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+    radar.fields['height_over_iso0']['data'] -= iso0   
+	dzh_  = radar.fields['TH']['data']
+	dzv_  = radar.fields['TV']['data']
+	drho_ = radar.fields['RHO']['data']
+	dkdp_ = radar.fields['KDP']['data']
+	# Filters
+	dzh_[np.where(drho_<0.7)] = np.nan	
+	dzv_[np.where(drho_<0.7)] = np.nan	
+	drho_[np.where(drho_<0.7)] = np.nan	
+	dkdp_[np.where(drho_<0.7)] = np.nan	
+    scores          = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=(dzh_-dzv_) - opts['ZDRoffset'], rho=drho_, kdp=dkdp_, 
                                              use_temp=True, band='C', T=radar_T)
     HID             = np.argmax(scores, axis=0) + 1
+	
     #--- need to add tempertaure to grided data ... 
-    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
-
     radar_z = grided.point_z['data']
     shape   = np.shape(radar_z)
     rad_T1d = np.interp(radar_z.ravel(), alt_ref, tfield_ref)   # interpolate_sounding_to_radar(snd_T, snd_z, radar)
@@ -647,13 +661,18 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     grided = add_field_to_radar_object( grided.point_z['data'], grided, field_name = 'height')    
     iso0 = np.ma.mean(grided.fields['height']['data'][np.where(np.abs(grided.fields['sounding_temperature']['data']) < 0)])
     grided.fields['height_over_iso0'] = deepcopy(grided.fields['height'])
-    grided.fields['height_over_iso0']['data'] -= iso0 
-		
-	scores          = csu_fhc.csu_fhc_summer(dz=grided.fields['TH']['data'], 
-																						 zdr=(grided.fields['TH']['data']-grided.fields['TV']['data']) - opts['ZDRoffset'],
-                                             rho=grided.fields['RHOHV']['data'], kdp=grided.fields['KDP']['data'], 
-                                             use_temp=True, band='C', T=radar_T)
-		
+	grided.fields['height_over_iso0']['data'] -= iso0 
+	# Filters
+	dzh_grid  = grided.fields['TH']['data']
+	dzv_grid  = grided.fields['TV']['data']
+	drho_grid = grided.fields['RHOHV']['data']
+	dkdp_grid = grided.fields['KDP']['data']
+	dzh_grid[np.where(drho_grid<0.7)] = np.nan	
+	dzv_grid[np.where(drho_grid<0.7)] = np.nan	
+	drho_grid[np.where(drho_grid<0.7)] = np.nan	
+	dkdp_grid[np.where(drho_grid<0.7)] = np.nan	
+	scores          = csu_fhc.csu_fhc_summer(dz=dzh_grid, zdr=(dzh_grid-dzv_grid) - opts['ZDRoffset'], rho=drho_grid, kdp=dkdp_grid, 
+                                            use_temp=True, band='C', T=radargrid_TT)
 	GRIDDED_HID = np.argmax(scores, axis=0) + 1 
 	print(GRIDDED_HID.shape)
 	print(grided.point_latitude['data'].shape)
@@ -663,29 +682,94 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
               'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
     cmaphid = colors.ListedColormap(hid_colors)
 		
-    fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,
-                        figsize=[14,6])
+    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
+                        figsize=[14,4])
     pcm1 = axes[0].pcolormesh(lons, lats, HID[start_index:end_index], cmap=cmaphid, vmin=1.8, vmax=10.4)
     axes[0].set_title('HID radar nlev 0 PPI')
-    cbar = plt.colorbar(pcm1, ax=axes[0], label='CSU HID')
-    cbar = adjust_fhc_colorbar_for_pyart(cbar)
-    cbar.cmap.set_under('white')
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
 	axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
-		
-    pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], GRIDDED_HID[0,:,:], cmap=cmaphid, vmin=1.8, vmax=10.4)
+	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+
+	pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], GRIDDED_HID[0,:,:], cmap=cmaphid, vmin=1.8, vmax=10.4)
     axes[1].set_title('HID GRIDDED 0 km')
-    cbar = plt.colorbar(pcm1, ax=axes[1], label='CSU HID')
-    cbar = adjust_fhc_colorbar_for_pyart(cbar)
-    cbar.cmap.set_under('white')
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
 	axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);		
+	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
 		
-		
-		
-		
+    pcm1 = axes[2].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], GRIDDED_HID[frezlev,:,:], cmap=cmaphid, vmin=1.8, vmax=10.4)
+    axes[2].set_title('HID GRIDDED (Freezing level) '+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
+    axes[2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[2].set_ylim([options['ylim_min'], options['ylim_max']])
+	axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);			
+	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+	
+    p1 = axes[0].get_position().get_points().flatten()
+    p2 = axes[1].get_position().get_points().flatten();
+    p3 = axes[2].get_position().get_points().flatten(); 
+    ax_cbar = fig.add_axes([p3[0]+(p3[0]-p2[0])+0.04, 0.1, 0.02, 0.8])   #ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height])
+    cbar = fig.colorbar(pcm1, cax=ax_cbar, shrink=0.9, label='CSU HID')
+    cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    cbar.cmap.set_under('white')
+	
+			
+    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
+                        figsize=[14,4])
+    pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['RHOHV']['data'][start_index:end_index])
+    axes[0].set_title('RHOHV radar nlev 0 PPI')
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+	axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+	plt.colorbar(pcm1, ax=axes[0])
+	
+	pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], grided.fields['RHOHV']['data'][0,:,:])
+    axes[1].set_title('RHOHV GRIDDED 0 km')
+    axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
+	axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);		
+	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+	plt.colorbar(pcm1, ax=axes[1])
+
+    pcm1 = axes[2].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], grided.fields['RHOHV']['data'][0,:,:])
+    axes[2].set_title('RHOHV GRIDDED (Freezing level) '+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
+    axes[2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[2].set_ylim([options['ylim_min'], options['ylim_max']])
+	axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);			
+	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+	plt.colorbar(pcm1, ax=axes[2])
+
     if ii == 0:
         return grided, frezlev, lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1
     if ii == 1:
@@ -1076,8 +1160,7 @@ def adjust_fhc_colorbar_for_pyart(cb):
                            'HD Graupel', 'Hail', 'Big Drops'])
     cb.ax.set_ylabel('')
     cb.ax.tick_params(length=0)
-    
-		return cb
+    return cb
 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
@@ -1143,12 +1226,8 @@ def adjust_fhc_colorbar_for_pyart(cb):
      GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
      GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
                            gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[1,3,4], use_freezingLev=0)
-		#-------------------------- 
-
-		
-		
-		
-		 # FIGURE scatter plot check
+	 #-------------------------- 
+	 # FIGURE scatter plot check
      # scatter plots the tbs y de Zh a ver si esta ok 
      fig = plt.figure(figsize=(12,7)) 
      gs1 = gridspec.GridSpec(1, 2)
@@ -1210,11 +1289,47 @@ def adjust_fhc_colorbar_for_pyart(cb):
     make_pseudoRHISfromGrid(gridded, radar, [356,220,192],['1','3[Phail = 0.534]','4'], [60, 100, 140])
 
     #-------------------------- HID ON GRIDDED ON NATIVE? 
+		hacer contorno de rhohv e el ZDR con zom sobre celdas sur? \
+    
 		
+	#-------------------------- ZH y contornos y RHO
+	fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True, figsize=[14,6])
+		
+	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+	pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+	plt.colorbar(pcm1, ax=axes[0])
+	axes[0].set_xlim([-65, -64])	
+	axes[0].set_ylim([-33, -31.5])
+	axes[0].set_title('ZH (w/ 45dBZ contour)')
+	axes[0].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
 	
-		
+	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+	pcm1 = axes[1].pcolormesh(lons, lats, radar.fields['RHOHV']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+	plt.colorbar(pcm1, ax=axes[1])
+	axes[1].set_xlim([-65, -64])	
+	axes[1].set_ylim([-33, -31.5])	
+	axes[1].set_title('RHOHV (w/ 45dBZ contour)')
+	axes[1].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
+	#-------------------------- DOPPLER FOR OVERVIEW - SC
+	VEL = radar.fields['VRAD']['data'][start_index:end_index]
+	vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='VRAD', nyq=39.9)
+	radar.add_field('velocity_texture', vel_texture, replace_existing=True)
+	velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='VRAD', nyquist_vel=39.9,centered=True)
+	radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
+	VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
 	
-		
+	fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True, figsize=[14,6])
+	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
+	pcm1 = axes[0].pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
+	cbar = plt.colorbar(pcm1, ax=axes[0], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+	cbar.cmap.set_under(under)
+	cbar.cmap.set_over(over)
+	axes[0].set_xlim([-65, -64])	
+	axes[0].set_ylim([-33, -31.5])	
+	axes[0].set_title('Vr corrected (w/ 45dBZ contour)')
+	axes[0].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
+
+
 		
 		
 		
