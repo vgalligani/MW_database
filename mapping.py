@@ -28,6 +28,9 @@ from matplotlib.path import Path
 from cycler import cycler
 import seaborn as sns
 
+import alphashape
+from descartes import PolygonPatch
+
 #------------------------------------------------------------------------------
 def set_plot_settings(var): 
     """
@@ -375,6 +378,11 @@ def find_nearest(array, value):
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
 def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, options, era5_file, icoi, use_freezingLev):
+    fontize = 20
+
+    plt.matplotlib.rc('font', family='serif', size = 20)
+    plt.rcParams['font.sans-serif'] = ['Helvetica']
+    plt.rcParams['font.serif'] = ['Helvetica']
 
     ERA5_field = xr.load_dataset(era5_file, engine="cfgrib")
     elemj      = find_nearest(ERA5_field['latitude'], lat_pf)
@@ -435,7 +443,15 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
                                        grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
                                                     (-np.max(radar.range['data']), np.max(radar.range['data']))),
                                        roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')    
-    #------ 
+    grided2 = pyart.map.grid_from_radars(radar, grid_shape=(20, 94, 94), 
+                                   grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
+                                                (-np.max(radar.range['data']), np.max(radar.range['data']))),
+                                   roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
+    grided3 = pyart.map.grid_from_radars(radar, grid_shape=(20, 48, 48), 
+                               grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
+                                            (-np.max(radar.range['data']), np.max(radar.range['data']))),
+                               roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
+#------ 
     print('ERA5 freezing level at: (km)'+str(freezing_lev))
     frezlev = find_nearest(grided.z['data']/1e3, freezing_lev) 
     print('Freezing level at level:'+str(frezlev)+'i.e., at'+str(grided.z['data'][frezlev]/1e3))
@@ -483,8 +499,11 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             Y1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1])
             vertices.append([contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0], 
                                         contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1]])
+        alpha = 0.95 * alphashape.optimizealpha(vertices)
+        hull = alphashape.alphashape(vertices, alpha)
         convexhull = ConvexHull(vertices)
         array_points = np.array(vertices)
+        hull_pts_CONCAVE = hull.exterior.coords.xy
         ##--- Run hull_paths and intersec
         hull_path   = Path( array_points[convexhull.vertices] )
         datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
@@ -503,7 +522,8 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
             inds_RB1 = hull_path.contains_points(datapts_RADAR_BARNES)
         if ii==1:
-            inds_2 = hull_path.contains_points(datapts)
+            inds_2  = hull_pts_CONCAVE.contains_points(datapts)
+            #inds_2 = hull_path.contains_points(datapts)
             inds_RN2 = hull_path.contains_points(datapts_RADAR_NATIVE)
             inds_RB2 = hull_path.contains_points(datapts_RADAR_BARNES)
         if ii==2:
@@ -515,41 +535,89 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     plt.xlim([options['xlim_min'], options['xlim_max']])
     plt.ylim([options['ylim_min'], options['ylim_max']])
 
-    plt.suptitle(general_title, fontsize=14)
+    plt.suptitle(general_title, fontsize=fontize)
 
     #---- NEW FIGURE 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,
-                        figsize=[14,6])
+    fig, axes = plt.subplots(nrows=1, ncols=4, constrained_layout=True,
+                        figsize=[25,6])
     start_index = radar.sweep_start_ray_index['data'][0]
     end_index   = radar.sweep_end_ray_index['data'][0]
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
     axes[0].set_title('original radar resolution')
-    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
     axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], 
                   grided.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
     axes[1].set_title('1 km gridded BARNES2')
-    CS = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    CS = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
+    #
+    axes[2].pcolormesh(grided2.point_longitude['data'][0,:,:], grided2.point_latitude['data'][0,:,:], 
+              grided2.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[2].set_title('5 km gridded BARNES2')
+    CS = axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    axes[2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[2].set_ylim([options['ylim_min'], options['ylim_max']])
+    #
+    axes[3].pcolormesh(grided3.point_longitude['data'][0,:,:], grided3.point_latitude['data'][0,:,:], 
+          grided3.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[3].set_title('10 km gridded BARNES2')
+    CS = axes[3].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    axes[3].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[3].set_ylim([options['ylim_min'], options['ylim_max']])
+    #
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[3].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[3].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[3].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     # Add labels:
-    labels = ["200 K","240 K"] 
+    labels = ["200 K"] 
     for i in range(len(labels)):
         CS.collections[i].set_label(labels[i])
-    axes[1].legend(loc='upper left', fontsize=12)
+    axes[3].legend(loc='upper left', fontsize=fontize)
+
+    # New figure for resolutions
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                    figsize=[14,12])
+    axes.pcolormesh(grided3.point_longitude['data'][0,:,:], grided3.point_latitude['data'][0,:,:], 
+      grided3.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
+    axes.set_title('10 km grided radar')
+    axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max_zoom']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    # Add labels:
+    labels = ["200 K"] 
+    for i in range(len(labels)):
+        CS.collections[i].set_label(labels[i])
+    axes.legend(loc='upper left', fontsize=fontize)
+    # Add resolutions? 
+    #axes.plot(lon_gmi_inside[100:110], lat_gmi_inside[inds_1][100:110],'ok', markersize=20, markerfacecolor='none')
+    plt.scatter(lon_gmi_inside[1030:1040], lat_gmi_inside[1030:1040], marker='o', color='k', s=100)
+    print('length of lon_gmi_inside is'+str(lon_gmi_inside.shape))
+    
 
     # NEW FIGURE 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
@@ -571,13 +639,13 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[0].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], 
                   grided.fields['TH']['data'][0,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
     axes[0].set_title('Ground Level')
-    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
     axes[1].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], 
                   grided.fields['TH']['data'][frezlev,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
     axes[1].set_title('Freezing level ('+str(grided.z['data'][frezlev]/1e3)+' km)')
-    CS1 = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
+    CS1 = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -590,18 +658,16 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     # Add labeled contours of cois of interest! 
-    axes[0].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=10, markerfacecolor='black')
-    axes[1].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=10, markerfacecolor='black')
-    # axes[0].plot(np.ravel(lons)[inds_RN1], np.ravel(lats)[inds_RN1], 'x', markersize=10, markerfacecolor='black')
-    #axes[0].plot(np.ravel(grided.point_longitude['data'][0,:,:])[inds_RB1], np.ravel(grided.point_latitude['data'][0,:,:])[inds_RB1], 'x', markersize=10, markerfacecolor='black')
+    axes[0].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=5, markerfacecolor='black')
+    axes[1].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=5, markerfacecolor='black')
     if ii == 1:
-        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
-        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
+        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
     if ii == 2:
-        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
-        axes[0].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=10, markerfacecolor='darkred')
-        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
-        axes[1].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=10, markerfacecolor='darkred')
+        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
+        axes[0].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=5, markerfacecolor='darkred')
+        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
+        axes[1].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=5, markerfacecolor='darkred')
 
     # Addlabels to icois! 
     dummy = axes[0].plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='black', label='icoi:'+str(icoi[0]))
@@ -614,10 +680,10 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
         axes[0].legend(dummy, ['icoi:'+str(icoi[0]), 'icoi:'+str(icoi[1]), 'icoi:'+str(icoi[2])])	
 
     # Add labels:
-    labels = ["200 K","240 K"] 
+    labels = ["200 K"] 
     for i in range(len(labels)):
         CS1.collections[i].set_label(labels[i])
-    axes[1].legend(loc='upper left', fontsize=12)
+    axes[1].legend(loc='upper left', fontsize=fontize)
 
     # faltaria agregar radar inside countours! 	
     freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 		
@@ -764,7 +830,6 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
         return grided, frezlev, lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1, lon_gmi_inside[inds_2], lat_gmi_inside[inds_2],tb_s1_gmi_inside[inds_2,:], inds_RN2, inds_RB2
     if ii == 2:
         return grided, frezlev, lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1, lon_gmi_inside[inds_2], lat_gmi_inside[inds_2],tb_s1_gmi_inside[inds_2,:], inds_RN2, inds_RB2, lon_gmi_inside[inds_3], lat_gmi_inside[inds_3],tb_s1_gmi_inside[inds_3,:], inds_RN3, inds_RB3
-	
 #------------------------------------------------------------------------------  
 def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     
@@ -921,6 +986,67 @@ def plot_3D_Zhppi(radar, lat_pf, lon_pf, general_title, fname, nlev, options):
     	y = s * np.cos(theta_a)
 
     return  z
+
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+# --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+def plot_sweep0(radar, opts, fname):  
+
+	# read file
+	f = h5py.File( fname, 'r')
+	tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+	lon_gmi = f[u'/S1/Longitude'][:,:] 
+	lat_gmi = f[u'/S1/Latitude'][:,:]
+	tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+	lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+	lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+	f.close()
+	# PCT
+	PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
+	#
+	nlev = 0 
+	start_index = radar.sweep_start_ray_index['data'][nlev]
+	end_index   = radar.sweep_end_ray_index['data'][nlev]
+	lats     = radar.gate_latitude['data'][start_index:end_index]
+	lons     = radar.gate_longitude['data'][start_index:end_index]
+	radarTH  = radar.fields['TH']['data'][start_index:end_index]
+	#-------------------------- ZH y contornos y RHO
+	fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[21,6])
+	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+	pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+	plt.colorbar(pcm1, ax=axes[0])
+	axes[0].set_xlim([opts['xlim_min'], opts['xlim_max']])	
+	axes[0].set_ylim(opts['ylim_min'], opts['ylim_max'])
+	axes[0].set_title('ZH (w/ 45dBZ contour)')
+	axes[0].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
+	#-------------------------- RHOHV
+	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+	pcm1 = axes[1].pcolormesh(lons, lats, radar.fields['RHOHV']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+	plt.colorbar(pcm1, ax=axes[1])
+	axes[1].set_xlim([opts['xlim_min'], opts['xlim_max']])	
+	axes[1].set_ylim(opts['ylim_min'], opts['ylim_max'])
+	axes[1].set_title('RHOHV (w/ 45dBZ contour)')
+	axes[1].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
+	axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['m']), linewidths=1.5);
+	axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+	#-------------------------- DOPPLER FOR OVERVIEW - SC
+	VEL = radar.fields['VRAD']['data'][start_index:end_index]
+	vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='VRAD', nyq=39.9)
+	radar.add_field('velocity_texture', vel_texture, replace_existing=True)
+	velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='VRAD', nyquist_vel=39.9,centered=True)
+	radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
+	VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
+	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
+	pcm1 = axes[2].pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
+	cbar = plt.colorbar(pcm1, ax=axes[2], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+	cbar.cmap.set_under(under)
+	cbar.cmap.set_over(over)
+	axes[2].set_xlim([opts['xlim_min'], opts['xlim_max']])	
+	axes[2].set_ylim(opts['ylim_min'], opts['ylim_max'])
+	axes[2].set_title('Vr corrected (w/ 45dBZ contour)')
+	axes[2].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
+	axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+
+	return
 
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
@@ -1195,8 +1321,232 @@ def adjust_fhc_colorbar_for_pyart(cb):
 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+def plot_gmi(fname, options, radardat_dir, radar_file, lon_pfs, lat_pfs,reference_satLOS):
+
+    # coi       len(contorno89.collections[0].get_paths()) = cantidad de contornos.
+    #           me interesa tomar los vertices del contorno de interes. 
+    #           Entonces abajo hago este loop   
+    #               for ii in range(len(coi)):
+    #                   i = coi[ii]
+    #                   for ik in range(len(contorno89.collections[0].get_paths()[i].vertices)):  
+    # Como saber cual es el de interes? lon_pfs y lat_pfs estan adentro de ese contorn. entonces podria
+    # borrar coi del input y que loopee por todos ... 
+    plt.matplotlib.rc('font', family='serif', size = 20)
+    plt.rcParams['font.sans-serif'] = ['Helvetica']
+    plt.rcParams['font.serif'] = ['Helvetica']
+
+    radar = pyart.io.read(radardat_dir+radar_file) 
+    reflectivity_name = 'TH'   
+
+    user = platform.system()
+    if   user == 'Linux':
+        home_dir = '/home/victoria.galligani/'  
+    elif user == 'Darwin':
+        home_dir = '/Users/victoria.galligani'
+
+    # Shapefiles for cartopy 
+    geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+    geo_reg = shpreader.Reader(geo_reg_shp)
+
+    countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+    states_provinces = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+    rivers = cfeature.NaturalEarthFeature(
+        category='physical',
+        name='rivers_lake_centerlines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
 
 
+    cmaps = GMI_colormap() 
+
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+
+    # keep domain of interest only by keeping those where the center nadir obs is inside domain
+    inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
+                              np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
+    inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
+                                         np.logical_and(lat_s2_gmi >= options['ylim_min'], lat_s2_gmi <= options['ylim_max']))    
+
+    lon_gmi_inside   =  lon_gmi[inside_s1] 
+    lat_gmi_inside   =  lat_gmi[inside_s1] 
+    lon_gmi2_inside  =  lon_gmi[inside_s2]
+    lat_gmi2_inside  =  lat_gmi[inside_s2]
+    tb_s1_gmi_inside =  tb_s1_gmi[inside_s1,:]
+    tb_s2_gmi_inside =  tb_s2_gmi[inside_s2,:]
+
+    #Esto si el centro no corre por el medio es un problema! Normalmente uso 110
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] >=  options['xlim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lon_gmi[:,reference_satLOS] <=  options['xlim_min']-1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] >=  options['ylim_max']+1),:,:] = np.nan
+    tb_s1_gmi[np.where(lat_gmi[:,reference_satLOS] <=  options['ylim_min']-1),:,:] = np.nan
+
+    # CALCULATE PCTs
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi) 
+
+    fig = plt.figure(figsize=(24,12)) 
+    gs1 = gridspec.GridSpec(1, 3)
+
+    # BT(37)       
+    ax1 = plt.subplot(gs1[0,0], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax1.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax1.add_feature(states_provinces,linewidth=0.4)
+    ax1.add_feature(rivers)
+    ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_gmi[:], lat_gmi[:], 
+           c=tb_s1_gmi[:,:,5], s=40, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 37 GHz')
+    ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
+    ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, '-k', linewidth=1)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5) 
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    plt.plot(np.nan, np.nan, '-m', label='PCT89 200 K ')
+    plt.legend(loc='upper left')
+
+
+    # BT(89)              
+    ax2 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax2.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax2.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax2.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax2.add_feature(states_provinces,linewidth=0.4)
+    ax2.add_feature(rivers)
+    ax2.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_gmi[inside_s1], lat_gmi[inside_s1], 
+           c=tb_s1_gmi[inside_s1,7], s=40, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 89 GHz')
+    ax2.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax2.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
+    ax2.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax2.xaxis.set_major_formatter(lon_formatter)
+    ax2.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5)   
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);            
+
+    # So, interested in paths: 1, 2, 3
+    # Get vertices of these polygon type shapes
+    for ii in range(len(contorno89.collections[0].get_paths())):                 #range(len(coi)):
+        #i = coi[ii]
+        i = ii
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno89.collections[0].get_paths()[i].vertices)): 
+            X1.append(contorno89.collections[0].get_paths()[i].vertices[ik][0])
+            Y1.append(contorno89.collections[0].get_paths()[i].vertices[ik][1])
+            vertices.append([contorno89.collections[0].get_paths()[i].vertices[ik][0], 
+                                        contorno89.collections[0].get_paths()[i].vertices[ik][1]])
+        convexhull = ConvexHull(vertices)
+        array_points = np.array(vertices)
+        ##--- Run hull_paths and intersec
+        hull_path   = Path( array_points[convexhull.vertices] )
+        datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+        inds = hull_path.contains_points(datapts)           
+        # if lon_pfs y lat_pfs inside, continue 
+        if hull_path.contains_points(np.column_stack((lon_pfs,lat_pfs))): 
+            print('========= contour ii contains lat/lon pfs: '+str(ii))
+            coi = ii 
+
+    # BT(166)           
+    ax3 = plt.subplot(gs1[0,2], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax3.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax3.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax3.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax3.add_feature(states_provinces,linewidth=0.4)
+    ax3.add_feature(rivers)
+    ax3.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(lon_s2_gmi[inside_s2], lat_s2_gmi[inside_s2], 
+           c=tb_s2_gmi[inside_s2,0], s=40, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 166 GHz')
+    ax3.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax3.set_yticks(np.arange(options['ylim_min'], options['ylim_max']+1,1), crs=crs_latlon)
+    ax3.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax3.xaxis.set_major_formatter(lon_formatter)
+    ax3.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5) 
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200], colors=('m'), linewidths=1.5);
+    #ax3.clabel(CONTORNO, CONTORNO.levels, inline=True, fmt=fmt, fontsize=10)
+
+    # So, interested in paths: 1, 2, 3
+    # Get vertices of these polygon type shapes
+    # son los mismos contornos pq usamos TB89 200 K sobre lat_s1 y lon_s1 *por eso comento abajo
+    ##for ii in range(len(coi)):
+    ##    i = coi[ii]
+    ##    X1 = []; Y1 = []; vertices = []
+    ##    for ik in range(len(contorno89.collections[0].get_paths()[i].vertices)): 
+    ##        X1.append(contorno89.collections[0].get_paths()[i].vertices[ik][0])
+    ##        Y1.append(contorno89.collections[0].get_paths()[i].vertices[ik][1])
+    ##        vertices.append([contorno89.collections[0].get_paths()[i].vertices[ik][0], 
+    ##                                    contorno89.collections[0].get_paths()[i].vertices[ik][1]])
+    ##    convexhull = ConvexHull(vertices)
+    ##    array_points = np.array(vertices)
+    ##    ##--- Run hull_paths and intersec
+    ##    hull_path   = Path( array_points[convexhull.vertices] )
+    ##    datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+    ##    inds = hull_path.contains_points(datapts)
+
+    p1 = ax1.get_position().get_points().flatten()
+    p2 = ax3.get_position().get_points().flatten()
+    ax_cbar = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.05])
+    cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.8,ticks=np.arange(50,300,50), extend='both', orientation="horizontal", label='TBV (K)')   
+
+    # antes hacia esto a mano: 
+    # contour n1 (OJO ESTOS A MANO!) pero ahora no solo me interesa el que tiene el PF sino 
+    # otros posibles para comparar pq no se detectaron como P_hail ... estos podrian ser a mano entonces ... 
+    # tirar en dos partes. primero plot_gmi que me tira la figura con TODOS los contornos y luego la otra con los que
+    # me interesan ... 
+
+
+    return
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 
 
 
@@ -1398,36 +1748,38 @@ def adjust_fhc_colorbar_for_pyart(cb):
 	phail    = [0.737]
 	MIN85PCT = [75.0826]
 	MIN37PCT = [164.4755] 
-    #
+    	#
 	rfile     = 'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'
 	gfile     = '1B.GPM.GMI.TB2016.20190305-S123614-E140847.028498.V05A.HDF5'
 	era5_file = '20190305_13.grib'
 	#
-	opts = {'xlim_min': -65, 'xlim_max': -58, 'ylim_min': -28, 'ylim_max': -20}
+	opts = {'xlim_min': -63, 'xlim_max': -58, 'ylim_min': -27, 'ylim_max': -23, 'ylim_max_zoom': -24.5}
 	#-------------------------- DONT CHANGE
 	radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile)
-
-
+	#
 	# ADD temperature info: 
-    print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3), ' km')
-    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    #- Add height field for 4/3 propagation
-    radar_height = get_z_from_radar(radar)
-    radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
-    iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
-    radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
-    radar.fields['height_over_iso0']['data'] -= iso0 
-		#----
-		#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
-    # OJO for use_freezingLev == 0 es decir ground level! 
-    [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
-     GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
-     GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
+    	print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3), ' km')
+    	freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
+    	radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    	radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    	#- Add height field for 4/3 propagation
+    	radar_height = get_z_from_radar(radar)
+    	radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+    	iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
+    	radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+    	radar.fields['height_over_iso0']['data'] -= iso0 
+	#----
+	#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
+   	# OJO for use_freezingLev == 0 es decir ground level! 
+    	[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
+     	GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
+     	GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
                            gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[6,7], use_freezingLev=0)
-
-
+	# SWEEP 0
+	plot_sweep0(radar, opts, '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile)
+	plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
+                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', rfile, [lon_pfs[0]], [lat_pfs[0]], 
+			 	reference_satLOS=100)
 
 
 
