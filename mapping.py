@@ -2629,8 +2629,11 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
 	make_pseudoRHISfromGrid(grided_10KM, radar, [176,210,30],['6[Phail = 0.534]','7',''], [100, 100, 100])
 	#- run with radar grid
 	plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', 
-		     '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/',
-                 'RMA3', 0, 150, 176, 3, 5E3)
+		     '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', 'RMA3', 0, 150, 176, 3, 5)
+	plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', 
+		     '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', 'RMA3', 0, 200, 210, 3, 5)
+	plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', 
+		     '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', 'RMA3', 0, 150, 30, 3, 5)		
 		
 
 		
