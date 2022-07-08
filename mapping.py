@@ -504,15 +504,14 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
         convexhull = ConvexHull(vertices)
         array_points = np.array(vertices)
 	
-	#------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
-    	alpha = 0.95 * alphashape.optimizealpha(array_points)
-   	hull_pts_CONCAVE = alphashape.alphashape(array_points, alpha)
-    	#axes.add_patch(PolygonPatch(hull_pts_CONCAVE, fill=False, color='m'))
-    	hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
-    	check_points = np.vstack((hull_coors_CONCAVE)).T
-    	concave_path = Path(check_points)
-	#-------
-	
+        #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
+        alpha = 0.95 * alphashape.optimizealpha(array_points)
+        hull_pts_CONCAVE = alphashape.alphashape(array_points, alpha)
+        #axes.add_patch(PolygonPatch(hull_pts_CONCAVE, fill=False, color='m'))
+        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
+        check_points = np.vstack((hull_coors_CONCAVE)).T
+        concave_path = Path(check_points)
+        #-------
         ##--- Run hull_paths and intersec
         hull_path   = Path( array_points[convexhull.vertices] )
         datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
@@ -528,7 +527,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
 							np.ravel(grided.point_latitude['data'][0,:,:])))
         if ii==0:
             inds_1  = concave_path.contains_points(datapts)
-	    #inds_1 = hull_path.contains_points(datapts)
+       	   #inds_1 = hull_path.contains_points(datapts)
             inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
             inds_RB1 = hull_path.contains_points(datapts_RADAR_BARNES)
         if ii==1:
@@ -1061,13 +1060,7 @@ def plot_sweep0(radar, opts, fname):
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 
-
-
-
-
-
-
-
+def queesesto(): 
 
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -1207,7 +1200,7 @@ def plot_sweep0(radar, opts, fname):
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 def figure_transect_gridded(lons, radarTH, filas, gridded):
-    # gridLev to check 0 km and Freezing Level
+	# gridLev to check 0 km and Freezing Level
 	#-------- what about gridded
     gridLev = 0
     grid_lon = []
@@ -1850,8 +1843,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
                 'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
         cmaphid = colors.ListedColormap(hid_colors)
         cmaphid.set_bad('white')
-	cmaphid.set_under('white')
-
+        cmaphid.set_under('white')
         # Figure
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
@@ -2327,27 +2319,42 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
 
     return
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def calc_freezinglevel(era5_dir, era5_file, lat_pf, lon_pf):
+	
+	ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")	
+	elemj      = find_nearest(ERA5_field['latitude'], lat_pf[0])
+	elemk      = find_nearest(ERA5_field['longitude'], lon_pf[0])
+	tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
+	geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
+	# Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
+	Re         = 6371*1e3
+	alt_ref    = (Re*geoph_ref)/(Re-geoph_ref) 
+	freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
 
+	return alt_ref, tfield_ref, freezing_lev
 
+def add_43prop_field(radar):
+	
+	radar_height = get_z_from_radar(radar)
+	radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+	iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
+	radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+	radar.fields['height_over_iso0']['data'] -= iso0 
+	
+	return radar 
+	
+#------------------------------------------------------------------------------
+# ACA EMPIEZA EL MAIL! 
+#------------------------------------------------------------------------------	
 
+def main(): 
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+
+   ----> automatizar estas figuras para hacerlas para todos los casos !!! ver tambien twitter como decia nesbitt. y exteneder casos luego! 
 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO SUPERCELDA: 
@@ -2360,40 +2367,21 @@ def plot_rhi_RMA(file, fig_dir, dat_dir, radar_name, xlim_range1, xlim_range2, t
     MIN37PCT = [207.4052]
     #
     rfile     = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' 
-    rfile_1   = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' 
-    rfile_2   = 'cfrad.20180208_205455.0000_to_20180208_205739.0000_RMA1_0201_02.nc'
     gfile     = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
     #
     opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
 	    'ZDRoffset': 4, 'ylim_max_zoom':-30.5}
     era5_file = '20180208_21_RMA1.grib'
-    # Frezing level:     
-    ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")	
-    elemj      = find_nearest(ERA5_field['latitude'], lat_pfs[0])
-    elemk      = find_nearest(ERA5_field['longitude'], lon_pfs[0])
-    tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
-    geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
-    # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
-    Re         = 6371*1e3
-    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref) 
-	#-------------------------- DONT CHANGE
+    # read radar file:  
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
-    radar_1 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_1)
-    radar_2 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile_2)
-    #------
-	# ADD temperature info: 
+    # Frezing level:     
+    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    #-------------------------- DONT CHANGE
     print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3), ' km')
-    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    #- Add height field for 4/3 propagation
-    radar_height = get_z_from_radar(radar)
-    radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
-    iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
-    radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
-    radar.fields['height_over_iso0']['data'] -= iso0 
-		#----
-		#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
+    radar = add_43prop_field(radar) 
+    #- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
     # OJO for use_freezingLev == 0 es decir ground level! 
     [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
      GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
