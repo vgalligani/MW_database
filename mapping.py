@@ -4,34 +4,36 @@ import pyart
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import exists
-from shapely.geometry import Polygon
 import matplotlib
-import h5py
 import matplotlib.gridspec as gridspec
-import cartopy.crs as ccrs
-import cartopy.io.shapereader as shpreader
 import platform
-import cartopy.feature as cfeature
 from matplotlib.colors import ListedColormap
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from os.path import isfile, join
 import pandas as pd
 from pyart.correct import phase_proc
 import xarray as xr
 from pyart.core.transforms import antenna_to_cartesian
 from copy import deepcopy
-from csu_radartools import csu_fhc
 import matplotlib.colors as colors
 import wradlib as wrl    
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from matplotlib.path import Path
 from cycler import cycler
-import seaborn as sns
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
+#import seaborn as sns
+
+import copy
+import cartopy.crs as ccrs
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
 import alphashape
 from descartes import PolygonPatch
+import cartopy.feature as cfeature
+
+from shapely.geometry import Polygon
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+import h5py
+from csu_radartools import csu_fhc
 
 #------------------------------------------------------------------------------
 def set_plot_settings(var): 
@@ -76,11 +78,11 @@ def set_plot_settings(var):
     elif var == 'Kdp':
         units = 'KDP [deg/km]'
         vmin = -0.1
-        vmax = 0.7
-        max = 0.71
+        vmax = 4
+        max = 4.1
         intt = 0.1
         N = (vmax-vmin)/intt
-        cmap = discrete_cmap(10, 'jet')
+        cmap = pyart.graph.cm.Theodore16 #discrete_cmap(10, 'jet')
         under = 'white'
         over = 'black'
     elif var == 'Ah':
@@ -101,7 +103,7 @@ def set_plot_settings(var):
         intt = 10
         N = (vmax-vmin)/intt
         print(N)
-        cmap = discrete_cmap(int(N), 'jet')
+        cmap = pyart.graph.cm.Wild25  #discrete_cmap(int(N), 'jet')
         under = 'white'
         over = 'white'
     elif var == 'rhohv':
@@ -626,7 +628,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     #axes.plot(lon_gmi_inside[100:110], lat_gmi_inside[inds_1][100:110],'ok', markersize=20, markerfacecolor='none')
     plt.scatter(lon_gmi_inside[1030:1040], lat_gmi_inside[1030:1040], marker='o', color='k', s=100)
     print('length of lon_gmi_inside is'+str(lon_gmi_inside.shape))
-    
+    plt.close()
 
     # NEW FIGURE 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
@@ -637,7 +639,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             axes[i,j].pcolormesh(grided.point_longitude['data'][counter,:,:], grided.point_latitude['data'][counter,:,:], 
                   grided.fields['TH']['data'][counter,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
             counter=counter+1;
-            axes[i,j].set_title('horizontal slice at altitude: '+str(grided.z['data'][counter]/1e3))
+            axes[i,j].set_title('horiz. cut at '+str(grided.z['data'][counter]/1e3))
             axes[i,j].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
             axes[i,j].set_xlim([options['xlim_min'], options['xlim_max']])
             axes[i,j].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -696,7 +698,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
 
     # faltaria agregar radar inside countours! 	
     freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 		
-	#---- HID FIGURES! (ojo sin corregir ZH!!!!) 
+    #---- HID FIGURES! (ojo sin corregir ZH!!!!) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     #- Add height field for 4/3 propagation
@@ -724,7 +726,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     rad_T1d = np.interp(radar_z.ravel(), alt_ref, tfield_ref)   # interpolate_sounding_to_radar(snd_T, snd_z, radar)
     radargrid_TT = np.reshape(rad_T1d, shape)
     grided = add_field_to_radar_object(np.reshape(rad_T1d, shape), grided, field_name='sounding_temperature')      
-	#- Add height field for 4/3 propagation
+    #- Add height field for 4/3 propagation
     grided = add_field_to_radar_object( grided.point_z['data'], grided, field_name = 'height')    
     iso0 = np.ma.mean(grided.fields['height']['data'][np.where(np.abs(grided.fields['sounding_temperature']['data']) < 0)])
     grided.fields['height_over_iso0'] = deepcopy(grided.fields['height'])
@@ -774,7 +776,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     pcm1 = axes[2].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], GRIDDED_HID[frezlev,:,:], cmap=cmaphid, vmin=1.8, vmax=10.4)
-    axes[2].set_title('HID GRIDDED (Freezing level) '+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
+    axes[2].set_title(r'HID GRIDDED 0$^o$'+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
     axes[2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[2].set_ylim([options['ylim_min'], options['ylim_max']])
     axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);			
@@ -792,46 +794,6 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     cbar = fig.colorbar(pcm1, cax=ax_cbar, shrink=0.9, label='CSU HID')
     cbar = adjust_fhc_colorbar_for_pyart(cbar)
     cbar.cmap.set_under('white')
-
-
-    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
-                        figsize=[14,4])
-    pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['RHOHV']['data'][start_index:end_index])
-    axes[0].set_title('RHOHV radar nlev 0 PPI')
-    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
-    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
-    axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
-    plt.colorbar(pcm1, ax=axes[0])
-    pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], grided.fields['RHOHV']['data'][0,:,:])
-    axes[1].set_title('RHOHV GRIDDED 0 km')
-    axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
-    axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
-    axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);		
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
-    plt.colorbar(pcm1, ax=axes[1])
-    pcm1 = axes[2].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], grided.fields['RHOHV']['data'][0,:,:])
-    axes[2].set_title('RHOHV GRIDDED (Freezing level) '+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
-    axes[2].set_xlim([options['xlim_min'], options['xlim_max']])
-    axes[2].set_ylim([options['ylim_min'], options['ylim_max']])
-    axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);			
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    plt.colorbar(pcm1, ax=axes[2])
 
     if ii == 0:
         return grided, frezlev, lon_gmi_inside[inds_1], lat_gmi_inside[inds_1],tb_s1_gmi_inside[inds_1,:], inds_RN1, inds_RB1
@@ -2344,7 +2306,296 @@ def add_43prop_field(radar):
 	radar.fields['height_over_iso0']['data'] -= iso0 
 	
 	return radar 
+
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
+def despeckle_phidp(phi, rho):
+    '''
+    Elimina pixeles aislados de PhiDP
+    '''
+
+    # Unmask data and despeckle
+    dphi = np.copy(phi)
+    
+    # Descartamos pixeles donde RHO es menor que un umbral (e.g., 0.7) o no está definido (e.g., NaN)
+    dphi[np.isnan(rho)] = np.nan
+    rho_thr = 0.7
+    dphi[rho < rho_thr] = np.nan
+    
+    # Calculamos la textura de RHO (rhot) y descartamos todos los pixeles de PHIDP por encima
+    # de un umbral de rhot (e.g., 0.25)
+    rhot = wrl.dp.texture(rho)
+    rhot_thr = 0.5
+    dphi[rhot > rhot_thr] = np.nan
+    
+    # Eliminamos pixeles aislados rodeados de NaNs
+    # https://docs.wradlib.org/en/stable/generated/wradlib.dp.linear_despeckle.html     
+    dphi = wrl.dp.linear_despeckle(dphi, ndespeckle=5, copy=False)
+
+    return dphi
+		
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------ 
+def unfold_phidp(phi, rho, diferencia):
+    '''
+    Unfolding
+    '''
+       
+    # Dimensión del PPI (elevaciones, azimuth, bins)
+    nb = phi.shape[1]
+    nr = phi.shape[0]
+
+    phi_cor = np.zeros((nr, nb)) #Asigno cero a la nueva variable phidp corregida
+    
+    v1 = np.zeros(nb)  #Vector v1
+    
+    # diferencia = 200 # Valor que toma la diferencia entre uno y otro pixel dentro de un mismo azimuth
+    
+    for m in range(0, nr):
+    
+        v1 = phi[m,:]
+        v2 = np.zeros(nb)
+    
+        for l in range(0, nb):
+            a = v2[l-1] - v1[l]
+
+            if np.isnan(a):
+                v2[l] = v2[l-1]
+
+            elif a > diferencia:
+                v2[l] = v1[l] + 360
+                if v2[l-1] - v2[l] > 100:  # Esto es por el doble folding cuando es mayor a 700
+                    v2[l] = v1[l] + v2[l-1]
+
+            else:
+                v2[l] = v1[l]
+    
+        phi_cor[m,:] = v2
+    
+    phi_cor[phi_cor <= 0] = np.nan
+    phi_cor[rho < .7] = np.nan
+    
+    return phi_cor
+
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------    
+def subtract_sys_phase(phi, sys_phase):
+
+    nb = phi.shape[1] #GATE
+    nr = phi.shape[0] #AZYMUTH
+    phi_final = np.copy(phi) * 0
+    phi_err=np.ones((nr, nb)) * np.nan
+    
+    try:
+        phi_final = phi-sys_phase
+    except:
+        phi_final = phi_err
+    
+    return phi_final
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def correct_phidp(phi, rho, sys_phase, diferencia):
+    
+    dphi = despeckle_phidp(phi, rho)
+    uphi = unfold_phidp(dphi, rho, diferencia)
+    
+    # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero
+    uphi = np.where(np.isnan(uphi), sys_phase, uphi)
+    phi_cor = subtract_sys_phase(uphi, sys_phase)
+    # phi_cor[rho<0.7] = np.nan
+    
+    return phi_cor 
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def calc_KDP(radar):
+
+    dbz     = radar.fields['TH']['data']
+    maskphi = radar.fields['corrPHIDP']['data']
+
+    nb = radar.ngates
+    nr = radar.nrays
+    
+    kdp = np.zeros((nr,nb))
+
+    for j in range(0,nr):
+        phi_kdp = maskphi[j,:]
+    
+        for i in range(0,nb): 
+            s1=max(0,i-2)
+            s2=min(i+2,nb-1)
+            r=[x*1. for x in range(s2-s1+1)]
+            x=2.*0.5*np.array(r)
+            y=phi_kdp[s1:s2+1]
+            a=len(y[np.where(y>0)])
+            b=np.std(y)
+  
+            if a==5:# and b<20:
+                ajuste=np.polyfit(x,y,1)
+                kdp[j,i]=ajuste[0]
+            else:
+                kdp[j,i]=np.nan
+
+    #Enmascarar los datos invalidos con umbrales y con la mascara
+    # kdp[kdp>15]=np.nan
+    # kdp[kdp<-10]=np.nan
+    kdp_ok = np.ma.masked_invalid(kdp) 
+    mask_kdp=np.ma.masked_where(np.isnan(radar.fields['corrPHIDP']['data']),kdp_ok)
+    aa=np.ma.filled(mask_kdp,fill_value=np.nan)
+    bb = np.ma.masked_invalid(aa)
+
+    radar.add_field_like('TH','NEW_kdp',bb, replace_existing=True)
 	
+    return radar 
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
+
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
+    PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
+    KDP   = radar.fields['KDP']['data'][start_index:end_index]
+
+    rhoHV_MASKED=rhoHV.copy()
+    for i in range(rhoHV.shape[0]):
+        rho_h = rhoHV[i,:]
+        for j in range(rhoHV.shape[1]):
+            if (rho_h[j]<0.93):
+                rhoHV_MASKED[i,j]=np.nan
+		
+		
+    #PHIDP[np.where(rhoHV<0.7)] = np.nan	
+    #KDP[np.where(rhoHV<0.7)]   = np.nan	
+    #rhoHV[np.where(rhoHV<0.7)] = np.nan	
+    
+    # Esto es para todas las elevaciones
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, 
+							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, diff_value)
+    #corr_phidp[np.where(rhoHV<0.7)]   = np.nan	
+    radar.add_field_like('PHIDP','corrPHIDP', corr_phidp, replace_existing=True)
+
+    # Y CALCULAR KDP! 
+    radar = calc_KDP(radar)
+    calculated_KDP  = radar.fields['NEW_kdp']['data'][start_index:end_index]
+	
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    target_azimuth = azimuths[azimuth_ray]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+	
+    fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
+                        figsize=[14,7])
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+    pcm1 = axes[0,0].pcolormesh(lons, lats, rhoHV, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,0].set_title('RHOHV radar nlev 0 PPI')
+    axes[0,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,0])
+    axes[0,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[0,1].pcolormesh(lons, lats, PHIDP, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,1].set_title('Phidp radar nlev 0 PPI')
+    axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,1].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,1])
+    axes[0,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+	
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
+    pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,2].set_title('KDP radar nlev 0 PPI')
+    axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,2])
+    axes[0,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[1,0].set_title('ZH nlev 0 PPI')
+    axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,0])
+    axes[1,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[1,1].pcolormesh(lons, lats, radar.fields['corrPHIDP']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[1,1].set_title('CORR Phidp radar nlev 0 PPI')
+    axes[1,1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,1].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,1])
+    axes[1,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
+    pcm1 = axes[1,2].pcolormesh(lons, lats, calculated_KDP[start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[1,2].set_title('Calc. KDP nlev 0 PPI')
+    axes[1,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,2])
+    axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+	
+	
+	
+    # EJEMPLO de azimuth
+    fig = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,7])
+    plt.plot(np.ravel(lons[filas,:]), np.ravel(PHIDP[filas,:]), '-r', label='observed PHIDP')
+    plt.plot(np.ravel(lons[filas,:]), np.ravel(corr_phidp[filas,:]), '-b', label='corrected PHIDP')
+
+
+	
+    return
+
+
+
+
 #------------------------------------------------------------------------------
 # ACA EMPIEZA EL MAIL! 
 #------------------------------------------------------------------------------	
@@ -2354,7 +2605,13 @@ def main():
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
-   ----> automatizar estas figuras para hacerlas para todos los casos !!! ver tambien twitter como decia nesbitt. y exteneder casos luego! 
+   ----> automatizarestas figuras para hacerlas para todos los casos !!! ver tambien twitter como decia nesbitt. y exteneder casos luego! 
+
+ncp = np.zeros_like(radar.fields['TH']['data'])+1
+radar.add_field('normalized_coherent_power', {'data':ncp})
+phidp, kdp = pyart.correct.phase_proc_lp(radar, 0.0, debug=True, refl_field='TH', phidp_field='PHIDP', 
+					 rhv_field='RHOHV', ncp_field='normalized_coherent_power', LP_solver='cylp')
+
 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO SUPERCELDA: 
