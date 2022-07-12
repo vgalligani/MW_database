@@ -2319,7 +2319,7 @@ def despeckle_phidp(phi, rho):
     
     # Descartamos pixeles donde RHO es menor que un umbral (e.g., 0.7) o no está definido (e.g., NaN)
     dphi[np.isnan(rho)] = np.nan
-    rho_thr = 0.7
+    rho_thr = 0.93
     dphi[rho < rho_thr] = np.nan
     
     # Calculamos la textura de RHO (rhot) y descartamos todos los pixeles de PHIDP por encima
@@ -2398,14 +2398,15 @@ def subtract_sys_phase(phi, sys_phase):
 def correct_phidp(phi, rho, sys_phase, diferencia):
     
     dphi = despeckle_phidp(phi, rho)
-    uphi = unfold_phidp(dphi, rho, diferencia)
+    uphi_i = unfold_phidp(dphi, rho, diferencia)
     
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero
+    uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
     # phi_cor[rho<0.7] = np.nan
     
-    return phi_cor 
+    return dphi, uphi_i, phi_cor, uphi
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -2469,17 +2470,18 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
             if (rho_h[j]<0.93):
                 rhoHV_MASKED[i,j]=np.nan
 		
-		
     #PHIDP[np.where(rhoHV<0.7)] = np.nan	
     #KDP[np.where(rhoHV<0.7)]   = np.nan	
     #rhoHV[np.where(rhoHV<0.7)] = np.nan	
     
+	
     # Esto es para todas las elevaciones
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.8, 
 							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
-    corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], 0, diff_value)
+    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], sys_phase, diff_value)
     #corr_phidp[np.where(rhoHV<0.7)]   = np.nan	
     radar.add_field_like('PHIDP','corrPHIDP', corr_phidp, replace_existing=True)
+
 
     # Y CALCULAR KDP! 
     radar = calc_KDP(radar)
@@ -2582,13 +2584,18 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
     plt.colorbar(pcm1, ax=axes[1,2])
     axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 	
-	
-	
+    fig = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,7])
+    plt.plot(radar.range['data']/1e3, np.ravel(uphi[filas,:]), color='darkgreen', label='unfolded phidp');
+
     # EJEMPLO de azimuth
     fig = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,7])
-    plt.plot(np.ravel(lons[filas,:]), np.ravel(PHIDP[filas,:]), '-r', label='observed PHIDP')
-    plt.plot(np.ravel(lons[filas,:]), np.ravel(corr_phidp[filas,:]), '-b', label='corrected PHIDP')
-
+    plt.plot(radar.range['data']/1e3, np.ravel(rhoHV_MASKED[start_index:end_index][filas,:])*100, '-k', label='RHOHV')
+    plt.plot(radar.range['data']/1e3, np.ravel(PHIDP[filas,:]), '-r', label='obs. phidp')
+    plt.plot(radar.range['data']/1e3, np.ravel(dphi[filas,:]), '*b', label='despeckle phidp'); 
+    plt.plot(radar.range['data']/1e3, np.ravel(uphi[filas,:]), color='darkgreen', label='unfolded phidp');
+    plt.plot(radar.range['data']/1e3, np.ravel(corr_phidp[filas,:]), color='magenta', label='phidp corrected');
+    plt.xlim([0,150])
+    plt.legend()
 
 	
     return
