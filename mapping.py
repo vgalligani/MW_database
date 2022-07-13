@@ -2309,7 +2309,7 @@ def add_43prop_field(radar):
 
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
-def despeckle_phidp(phi, rho):
+def despeckle_phidp(phi, rho, zh):
     '''
     Elimina pixeles aislados de PhiDP
     '''
@@ -2331,7 +2331,17 @@ def despeckle_phidp(phi, rho):
     # Eliminamos pixeles aislados rodeados de NaNs
     # https://docs.wradlib.org/en/stable/generated/wradlib.dp.linear_despeckle.html     
     dphi = wrl.dp.linear_despeckle(dphi, ndespeckle=5, copy=False)
+	
+    ni = phi.shape[0]
+    nj = phi.shape[1]
 
+    for i in range(ni):
+        rho_h = rho[i,:]
+        zh_h = zh[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<40):
+                dphi[i,j]  = np.nan		
+	
     return dphi
 		
 #------------------------------------------------------------------------------------
@@ -2372,7 +2382,7 @@ def unfold_phidp(phi, rho, diferencia):
     
         phi_cor[m,:] = v2
     
-    #phi_cor[phi_cor <= 0] = np.nan
+    phi_cor[phi_cor <= 0] = np.nan
     #phi_cor[rho < .7] = np.nan
     
     return phi_cor
@@ -2397,19 +2407,19 @@ def subtract_sys_phase(phi, sys_phase):
 #------------------------------------------------------------------------------
 def correct_phidp(phi, rho, zh, sys_phase, diferencia):
     
+    phiphi = phi.copy()
     ni = phi.shape[0]
     nj = phi.shape[1]
 
-    dphi = phi.copy() 
     for i in range(ni):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if ((rho_h[j]<0.7) & (zh_h[j]<40)):
-                phi[i,j]  = np.nan
+            if (rho_h[j]<0.7) or (zh_h[j]<40):
+                phiphi[i,j]  = np.nan
                 #rho[i,j]  = np.nan
 		
-    dphi = despeckle_phidp(phi, rho)
+    dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia)
     
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero
@@ -2418,7 +2428,7 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
     phi_cor = subtract_sys_phase(uphi, sys_phase)
     # phi_cor[rho<0.7] = np.nan
     
-    return dphi, uphi_i, phi_cor, uphi
+    return dphi, uphi_i, phi_cor
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -2465,14 +2475,26 @@ def calc_KDP(radar):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
+def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value, moving_gate_KDP):
 
+	
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+	
     # Esto es para todas las elevaciones
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
 							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
-    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, diff_value)
-    
-	
+    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
+					   sys_phase, diff_value)
+    radar.add_field_like('PHIDP','corrPHIDP', corr_phidp, replace_existing=True)
+  
+    # Y CALCULAR KDP! 
+    #radar = calc_KDP(radar)
+    #calculated_KDP  = radar.fields['NEW_kdp']['data'][start_index:end_index]
+    calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=moving_gate_KDP, dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
+					   method='lanczos_conv', skipna=True)	
+    radar.add_field_like('KDP','corrKDP', calculated_KDP, replace_existing=True)
+
     #-EJEMPLO de azimuth
     azimuths = radar.azimuth['data'][start_index:end_index]
     target_azimuth = azimuths[azimuth_ray]
@@ -2486,25 +2508,17 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
     axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
     axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
+    axes[1].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
     #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
     plt.legend()
 
-
-    radar.add_field_like('PHIDP','corrPHIDP', corr_phidp, replace_existing=True)
-
-    start_index = radar.sweep_start_ray_index['data'][nlev]
-    end_index   = radar.sweep_end_ray_index['data'][nlev]
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
     KDP   = radar.fields['KDP']['data'][start_index:end_index]
-    ZH   = radar.fields['ZH']['data'][start_index:end_index]
+    ZH   = radar.fields['TH']['data'][start_index:end_index]
 
-    # Y CALCULAR KDP! 
-    radar = calc_KDP(radar)
-    calculated_KDP  = radar.fields['NEW_kdp']['data'][start_index:end_index]
-	
 
     fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
                         figsize=[14,7])
@@ -2524,7 +2538,7 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
     axes[0,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
-    pcm1 = axes[0,1].pcolormesh(lons, lats, PHIDP, cmap=cmap, 
+    pcm1 = axes[0,1].pcolormesh(lons, lats, radar.fields['PHIDP']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
     axes[0,1].set_title('Phidp radar nlev 0 PPI')
     axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
@@ -2598,38 +2612,13 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
     axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     plt.colorbar(pcm1, ax=axes[1,2])
     axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
-	
-    fig = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,7])
-    plt.plot(radar.range['data']/1e3, np.ravel(uphi[filas,:]), color='darkgreen', label='unfolded phidp');
+    axes[1,2].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [45], colors='k') 
 
 
-
-	
     return
 
-
-
-
 #------------------------------------------------------------------------------
-# ACA EMPIEZA EL MAIL! 
-#------------------------------------------------------------------------------	
-
-def main(): 
-
-    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
-
-   ----> automatizarestas figuras para hacerlas para todos los casos !!! ver tambien twitter como decia nesbitt. y exteneder casos luego! 
-
-ncp = np.zeros_like(radar.fields['TH']['data'])+1
-radar.add_field('normalized_coherent_power', {'data':ncp})
-phidp, kdp = pyart.correct.phase_proc_lp(radar, 0.0, debug=True, refl_field='TH', phidp_field='PHIDP', 
-					 rhv_field='RHOHV', ncp_field='normalized_coherent_power', LP_solver='cylp')
-
-
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO SUPERCELDA: 
-
+#------------------------------------------------------------------------------
 def check_this(azimuth_ray): 
 	
     options = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
@@ -2638,7 +2627,7 @@ def check_this(azimuth_ray):
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
 							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
-    dphi, uphi, corr_phidp, uphi2 = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
+    dphi, uphi, corr_phidp, uphi2, phi_masked = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
     
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -2655,6 +2644,7 @@ def check_this(azimuth_ray):
     axes[0].legend()
     axes[0].set_xlim([0,120])
     axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
+    axes[1].plot(radar.range['data']/1e3, np.ravel(phi_masked[start_index:end_index][filas,:]), 'or', label='obs. phidp masked')
     axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
     axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
@@ -2707,31 +2697,19 @@ def check_this(azimuth_ray):
 
 
 
+#------------------------------------------------------------------------------
+# ACA EMPIEZA EL MAIL! 
+#------------------------------------------------------------------------------	
 
+def main(): 
 
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
+   ----> automatizarestas figuras para hacerlas para todos los casos !!! ver tambien twitter como decia nesbitt. y exteneder casos luego! 
 
-    
-	
-    #-EJEMPLO de azimuth
-    azimuths = radar.azimuth['data'][start_index:end_index]
-    target_azimuth = azimuths[azimuth_ray]
-    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-    #-figure
-    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[14,7])
-    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['RHOHV']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
-    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['TH']['data'][start_index:end_index][filas,:]), '-r', label='ZH')
-    axes[0].legend()
-    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
-    axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
-    axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
-    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
-    #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
-    plt.legend()
-
-
-
-
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO SUPERCELDA: 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     lon_pfs = [-64.80]
     lat_pfs = [-31.83]
@@ -2748,6 +2726,8 @@ def check_this(azimuth_ray):
     era5_file = '20180208_21_RMA1.grib'
     # read radar file:  
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
+    window_calc_KDP = 9 
+    check_correct_RHOHV_KDP(radar, opts, 0, 210, 280, window_calc_KDP)
     # Frezing level:     
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     #-------------------------- DONT CHANGE
