@@ -2339,7 +2339,7 @@ def despeckle_phidp(phi, rho, zh):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<40):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
                 dphi[i,j]  = np.nan		
 	
     return dphi
@@ -2410,24 +2410,30 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
     phiphi = phi.copy()
     ni = phi.shape[0]
     nj = phi.shape[1]
-
     for i in range(ni):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<40):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan
                 #rho[i,j]  = np.nan
-		
+	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia)
-    
+
+    # antes de seguir, asegurarse que no hay d(phi)/dr negativas ? 
+	
+
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
     # phi_cor[rho<0.7] = np.nan
-    
+
+    # Smoothing final:
+    for i in range(ni):
+        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=40,
+                                            window='flat')
     return dphi, uphi_i, phi_cor
 
 #------------------------------------------------------------------------------
@@ -2475,8 +2481,9 @@ def calc_KDP(radar):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value, moving_gate_KDP):
+def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
 
+    # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
 	
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -2491,7 +2498,7 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value, movin
     # Y CALCULAR KDP! 
     #radar = calc_KDP(radar)
     #calculated_KDP  = radar.fields['NEW_kdp']['data'][start_index:end_index]
-    calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=moving_gate_KDP, dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
+    calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
 					   method='lanczos_conv', skipna=True)	
     radar.add_field_like('KDP','corrKDP', calculated_KDP, replace_existing=True)
 
@@ -2500,17 +2507,27 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value, movin
     target_azimuth = azimuths[azimuth_ray]
     filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
     #-figure
-    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[14,7])
+    fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,figsize=[14,10])
     axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['RHOHV']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
     axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['TH']['data'][start_index:end_index][filas,:]), '-r', label='ZH')
     axes[0].legend()
     axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
     axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
     axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
-    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
-    axes[1].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
+    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]+sys_phase), color='magenta', label='phidp corrected');
+    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected-sysphase');
+    axes[1].legend()
+    axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
+    axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Calc. KDP');
+    axes[2].legend()
+    axes[0].set_xlim([50, 120])
+    axes[1].set_xlim([50, 120])
+    axes[2].set_xlim([50, 120])
+    axes[2].set_ylim([-1, 5])
+    axes[2].grid(True) 
+    axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
+	
     #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
-    plt.legend()
 
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
@@ -2612,8 +2629,9 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value, movin
     axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     plt.colorbar(pcm1, ax=axes[1,2])
     axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
-    axes[1,2].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [45], colors='k') 
-
+    #axes[1,2].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [45], colors='k') 
+    #axes[0,0].set_ylim([-32.5, -31.2])
+    #axes[0,0].set_xlim([-65.3, -64.5])
 
     return
 
@@ -2627,6 +2645,7 @@ def check_this(azimuth_ray):
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
 							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
     dphi, uphi, corr_phidp, uphi2, phi_masked = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
     
     nlev = 0 
@@ -2649,7 +2668,6 @@ def check_this(azimuth_ray):
     axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
     #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
-    axes[1].set_xlim([0,120])
     plt.legend()
 
 
@@ -2722,12 +2740,17 @@ def main():
     gfile     = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
     #
     opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
-	    'ZDRoffset': 4, 'ylim_max_zoom':-30.5}
+	    'ZDRoffset': 4, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 9}
     era5_file = '20180208_21_RMA1.grib'
+
     # read radar file:  
-    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+rfile)
-    window_calc_KDP = 9 
-    check_correct_RHOHV_KDP(radar, opts, 0, 210, 280, window_calc_KDP)
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+opts['rfile'])
+    check_correct_RHOHV_KDP(radar, opts, nlev=0, azimuth_ray=210, diff_value=280)
+	
+
+		
+		
     # Frezing level:     
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     #-------------------------- DONT CHANGE
