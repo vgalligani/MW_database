@@ -394,8 +394,8 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
     geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
     # Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
-    Re         = 6371*1e3
-    alt_ref    = (Re*geoph_ref)/(Re-geoph_ref)
+    Re           = 6371*1e3
+    alt_ref      = (Re*geoph_ref)/(Re-geoph_ref)
     freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
 
     # read file
@@ -443,7 +443,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     # depends on the range, as the beamwidth increases with the range, due to the beam broadening of about 1degree.
     # This is an established radius of influence for interpolation of radar data, for example, used within various analyses
     # with the French operational radar network (see, e.g., Bousquet and Tabary 2014; Beck et al. 2014).]
-    grided = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
+    grided  = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
                                        grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
                                                     (-np.max(radar.range['data']), np.max(radar.range['data']))),
                                        roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')    
@@ -455,11 +455,11 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
                                grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
                                             (-np.max(radar.range['data']), np.max(radar.range['data']))),
                                roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
-#------ 
-    print('ERA5 freezing level at: (km)'+str(freezing_lev))
-    frezlev = find_nearest(grided.z['data']/1e3, freezing_lev) 
-    print('Freezing level at level:'+str(frezlev)+'i.e., at'+str(grided.z['data'][frezlev]/1e3))
+    
     #------ 	
+    frezlev      = find_nearest(grided.z['data']/1e3, freezing_lev) 
+    #------
+	
     # Test plot figure: 
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
                         figsize=[14,12])
@@ -541,7 +541,6 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             inds_3 = hull_path.contains_points(datapts)
             inds_RN3 = hull_path.contains_points(datapts_RADAR_NATIVE)
             inds_RB3 = hull_path.contains_points(datapts_RADAR_BARNES)
-
 
     plt.xlim([options['xlim_min'], options['xlim_max']])
     plt.ylim([options['ylim_min'], options['ylim_max']])
@@ -639,7 +638,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
             axes[i,j].pcolormesh(grided.point_longitude['data'][counter,:,:], grided.point_latitude['data'][counter,:,:], 
                   grided.fields['TH']['data'][counter,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
             counter=counter+1;
-            axes[i,j].set_title('horiz. cut at '+str(grided.z['data'][counter]/1e3))
+            axes[i,j].set_title('horiz. cut at '+str( round(grided.z['data'][counter]/1e3,2)))
             axes[i,j].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);
             axes[i,j].set_xlim([options['xlim_min'], options['xlim_max']])
             axes[i,j].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -655,7 +654,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
     axes[1].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], 
                   grided.fields['TH']['data'][frezlev,:,:], cmap=cmap, vmax=vmax, vmin=vmin)
-    axes[1].set_title('Freezing level ('+str(grided.z['data'][frezlev]/1e3)+' km)')
+    axes[1].set_title('Freezing level ('+str( round(grided.z['data'][frezlev]/1e3,2) )+' km)')
     CS1 = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -669,16 +668,16 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     # Add labeled contours of cois of interest! 
-    axes[0].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=5, markerfacecolor='black')
-    axes[1].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=5, markerfacecolor='black')
+    axes[0].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=10, markerfacecolor='black')
+    axes[1].plot(lon_gmi_inside[inds_1], lat_gmi_inside[inds_1], 'o', markersize=10, markerfacecolor='black')
     if ii == 1:
-        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
-        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
+        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
     if ii == 2:
-        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
-        axes[0].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=5, markerfacecolor='darkred')
-        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=5, markerfacecolor='darkblue')
-        axes[1].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=5, markerfacecolor='darkred')
+        axes[0].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+        axes[0].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=10, markerfacecolor='darkred')
+        axes[1].plot(lon_gmi_inside[inds_2], lat_gmi_inside[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+        axes[1].plot(lon_gmi_inside[inds_3], lat_gmi_inside[inds_3], 'o', markersize=10, markerfacecolor='darkred')
 
     # Addlabels to icois! 
     dummy = axes[0].plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='black', label='icoi:'+str(icoi[0]))
@@ -696,26 +695,33 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
         CS1.collections[i].set_label(labels[i])
     axes[1].legend(loc='upper left', fontsize=fontize)
 
-    # faltaria agregar radar inside countours! 	
-    freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 		
     #---- HID FIGURES! (ojo sin corregir ZH!!!!) 
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+   
+    #radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    #radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     #- Add height field for 4/3 propagation
-    radar_height = get_z_from_radar(radar)
-    radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
-    iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
-    radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
-    radar.fields['height_over_iso0']['data'] -= iso0   
+    #radar_height = get_z_from_radar(radar)
+    #radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+    #iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
+    #radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+    #radar.fields['height_over_iso0']['data'] -= iso0   
     dzh_  = radar.fields['TH']['data']
     dzv_  = radar.fields['TV']['data']
     drho_ = radar.fields['RHOHV']['data']
-    dkdp_ = radar.fields['KDP']['data']
+    dkdp_ = radar.fields['corrKDP']['data']
     # Filters
-    dzh_[np.where(drho_<0.7)] = np.nan	
-    dzv_[np.where(drho_<0.7)] = np.nan	
-    drho_[np.where(drho_<0.7)] = np.nan	
-    dkdp_[np.where(drho_<0.7)] = np.nan	
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+        rho_h = drho_[i,:]
+        zh_h = dzh_[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                dzh_[i,j]  = np.nan
+                dzv_[i,j]  = np.nan
+                drho_[i,j]  = np.nan
+                dkdp_[i,j]  = np.nan
+
     scores          = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=(dzh_-dzv_) - opts['ZDRoffset'], rho=drho_, kdp=dkdp_, 
                                              use_temp=True, band='C', T=radar_T)
     HID             = np.argmax(scores, axis=0) + 1
@@ -735,11 +741,24 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     dzh_grid  = grided.fields['TH']['data']
     dzv_grid  = grided.fields['TV']['data']
     drho_grid = grided.fields['RHOHV']['data']
-    dkdp_grid = grided.fields['KDP']['data']
-    dzh_grid[np.where(drho_grid<0.7)] = np.nan	
-    dzv_grid[np.where(drho_grid<0.7)] = np.nan	
-    drho_grid[np.where(drho_grid<0.7)] = np.nan	
-    dkdp_grid[np.where(drho_grid<0.7)] = np.nan	
+    dkdp_grid = grided.fields['corrKDP']['data']
+    
+    #breakpoint()
+    # Filters
+    ni = dzh_grid.shape[0]
+    nj = dzh_grid.shape[1]
+    nk = dzh_grid.shape[2]
+    for i in range(ni):
+        rho_hh = drho_grid[i,:,:]
+        zh_hh = dzh_grid[i,:,:]
+        for j in range(nj):
+            for k in range(nk):
+                if (rho_hh[j,k]<0.7) or (zh_hh[j,k]<30):
+                		dzh_grid[i,j,k]  = np.nan
+                		dzv_grid[i,j,k]  = np.nan
+                		drho_grid[i,j,k]  = np.nan
+                		dkdp_grid[i,j,k]  = np.nan
+		
     scores          = csu_fhc.csu_fhc_summer(dz=dzh_grid, zdr=(dzh_grid-dzv_grid) - opts['ZDRoffset'], rho=drho_grid, kdp=dkdp_grid, 
                                             use_temp=True, band='C', T=radargrid_TT)
     GRIDDED_HID = np.argmax(scores, axis=0) + 1 
@@ -776,7 +795,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     pcm1 = axes[2].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], GRIDDED_HID[frezlev,:,:], cmap=cmaphid, vmin=1.8, vmax=10.4)
-    axes[2].set_title(r'HID GRIDDED 0$^o$'+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
+    axes[2].set_title(r'HID GRIDDED at '+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
     axes[2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[2].set_ylim([options['ylim_min'], options['ylim_max']])
     axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 240], colors=(['k','k']), linewidths=1.5);			
@@ -787,6 +806,10 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
 
+    axes[0].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [30], colors=(['r']), linewidths=1.5);	
+    axes[1].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [30], colors=(['r']), linewidths=1.5);	
+    axes[2].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [30], colors=(['r']), linewidths=1.5);	
+	
     p1 = axes[0].get_position().get_points().flatten()
     p2 = axes[1].get_position().get_points().flatten();
     p3 = axes[2].get_position().get_points().flatten(); 
@@ -2403,6 +2426,13 @@ def subtract_sys_phase(phi, sys_phase):
     
     return phi_final
 
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------    
+def check_increasing(A):
+  
+    return (all(A[i] <= A[i + 1] for i in range(len(A) - 1)) or
+            all(A[i] >= A[i + 1] for i in range(len(A) - 1)))
+
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def correct_phidp(phi, rho, zh, sys_phase, diferencia):
@@ -2419,11 +2449,14 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
                 #rho[i,j]  = np.nan
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
-    uphi_i = unfold_phidp(dphi, rho, diferencia)
-
-    # antes de seguir, asegurarse que no hay d(phi)/dr negativas ? 
-	
-
+    uphi_i = unfold_phidp(dphi, rho, diferencia) 
+    uphi_accum = [] 	
+    for i in range(ni):
+        phi_h = uphi_i[i,:]
+        for j in range(1,nj-1,1):
+            if phi_h[j] <= np.nanmax(np.fmax.accumulate(phi_h[0:j])): 
+              	uphi_i[i,j] = uphi_i[i,j-1] 
+			
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
@@ -2432,7 +2465,7 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
 
     # Smoothing final:
     for i in range(ni):
-        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=40,
+        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
                                             window='flat')
     return dphi, uphi_i, phi_cor
 
@@ -2481,7 +2514,7 @@ def calc_KDP(radar):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
+def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value):
 
     # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
 	
@@ -2517,7 +2550,7 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]+sys_phase), color='magenta', label='phidp corrected');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected-sysphase');
     axes[1].legend()
-    axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
+    axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Obs. KDP');
     axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Calc. KDP');
     axes[2].legend()
     axes[0].set_xlim([50, 120])
@@ -2633,7 +2666,7 @@ def check_correct_RHOHV_KDP(radar, options, nlev, azimuth_ray, diff_value):
     #axes[0,0].set_ylim([-32.5, -31.2])
     #axes[0,0].set_xlim([-65.3, -64.5])
 
-    return
+    return radar
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -2724,37 +2757,61 @@ def main():
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
-   ----> automatizarestas figuras para hacerlas para todos los casos !!! ver tambien twitter como decia nesbitt. y exteneder casos luego! 
+    # automatizarestas figuras para hacerlas para todos los casos !!!
+    # ver tambien twitter como decia nesbitt. y exteneder casos luego! 
 
+	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO SUPERCELDA: 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    lon_pfs = [-64.80]
-    lat_pfs = [-31.83]
+    lon_pfs  = [-64.80]
+    lat_pfs  = [-31.83]
     time_pfs = ['2058']
-    phail   = [0.534]
+    phail    = [0.534]
     MIN85PCT = [131.1081]
     MIN37PCT = [207.4052]
-    #
-    rfile     = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' 
-    gfile     = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
+    rfile    = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
+    era5_file = '20180208_21_RMA1.grib'
     #
     opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
 	    'ZDRoffset': 4, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 9}
-    era5_file = '20180208_21_RMA1.grib'
+	    'window_calc_KDP': 7, 'azimuth_ray': 210}
+    icois_input = [1,3,4] 
+    #---------------------------------------------------------------------------------------------
+    # COMMON: 
+     
+    def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois)
 
-    # read radar file:  
-    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+opts['rfile'])
-    check_correct_RHOHV_KDP(radar, opts, nlev=0, azimuth_ray=210, diff_value=280)
+    	gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    	era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
 	
+	radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+options['rfile'])
+    	radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280)
+    	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    	radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    	radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    	radar = add_43prop_field(radar) 
+    	
+	#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
+    	# OJO for use_freezingLev == 0 es decir ground level! 
+    	[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
+     	GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
+     	GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+options['rfile'][15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
+                           gmi_dir+options['gfile'], 0, options, era5_dir+era5_file, icoi=icois, use_freezingLev=0)
 
-		
-		
-    # Frezing level:     
+	
+	
+	
+	
+	
+	
+	
+	
+	
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+opts['rfile'])
+    radar = correct_PHIDP_KDP(radar, opts, nlev=0, azimuth_ray=210, diff_value=280)
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
-    #-------------------------- DONT CHANGE
-    print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3), ' km')
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar) 
@@ -2764,7 +2821,18 @@ def main():
      GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
      GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
                            gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[1,3,4], use_freezingLev=0)
-     #-------------------------- 
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	#-------------------------- 
      # FIGURE scatter plot check
      # scatter plots the tbs y de Zh a ver si esta ok 
      fig = plt.figure(figsize=(12,7)) 
