@@ -1718,7 +1718,11 @@ def check_transec(radar, test_transect, lon_pf, lat_pf):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims): 
+def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims, alt_ref, tfield_ref): 
+
+    plt.matplotlib.rc('font', family='serif', size = 20)
+    plt.rcParams['font.sans-serif'] = ['Helvetica']
+    plt.rcParams['font.serif'] = ['Helvetica']
 
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -1767,7 +1771,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         grid_THTH[np.where(grid_RHO<0.6)] = np.nan	
         grid_RHO[np.where(grid_RHO<0.6)] = np.nan	
         grid_KDP[np.where(grid_RHO<0.6)] = np.nan	
-    
+
         #--- need to add tempertaure to grided data ... 
         radar_z = gridded_radar.point_z['data']
         shape   = np.shape(radar_z)
@@ -1800,7 +1804,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
         im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=1.8, vmax=10.4)
-        
+
         axes[0,iz].set_title('coi='+titlecois[iz])
         if iz == 1:
             axes[0,iz].set_xlim([0,xlims_xlims[1]])
@@ -1817,7 +1821,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             axes[1,iz].set_xlim([0,xlims_xlims[2]])
             axes[2,iz].set_xlim([0,xlims_xlims[2]])
             axes[3,iz].set_xlim([0,xlims_xlims[2]])
-    
+
         if iz == 0:
             axes[0,0].set_ylabel('Altitude (km)')
             axes[1,0].set_ylabel('Altitude (km)')
@@ -1832,16 +1836,16 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             # Add colorbars #ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height])
             pm1    = axes[0,iz-1].get_position().get_points().flatten()
             p_last = axes[0,iz].get_position().get_points().flatten(); 
-    
+
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
             cbar    = fig.colorbar(im_TH,  cax=ax_cbar, shrink=0.9, label='ZH')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
             pm2    = axes[1,iz-1].get_position().get_points().flatten()
-            
+
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.55, 0.02, 0.2])  
             cbar    = fig.colorbar(im_ZDR, cax=ax_cbar, shrink=0.9, label='ZDR')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
-            
+
             pm3   = axes[2,iz-1].get_position().get_points().flatten()
-            
+
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.28, 0.02, 0.2])  
             cbar    = fig.colorbar(im_RHO, cax=ax_cbar, shrink=0.9, label='RHO')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
 
@@ -2914,8 +2918,7 @@ def ignore_plots():
             radar_gateZ.append(return_altitude(radar.elevation['data'][start_index:end_index][nlev], target_azimuth, np.array(radar.range['data'])[i]/1e3))
         figure_transect_gridded(lons, radarTH, filas, gridded)
 	
-	return
-
+        return
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 def summary_radar_obs(radar, fname, options):  
@@ -2938,8 +2941,8 @@ def summary_radar_obs(radar, fname, options):
             lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
             lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
         PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
-	nlev = 0 
-        start_index = radar.sweep_start_ray_index['data'][0]
+        nlev = 0 
+	start_index = radar.sweep_start_ray_index['data'][0]
         end_index   = radar.sweep_end_ray_index['data'][0]
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
@@ -3005,50 +3008,28 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     radar = add_43prop_field(radar) 
     for ic in range(len(xlims_xlims_input)): 
         check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs)
-	
-    [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
-            GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
-            GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+options['rfile'][15:19]+' UTC and PF at '+time_pfs[0]+' UTC', gmi_dir+options['gfile'], 0, options, era5_dir+era5_file, icoi=icois, use_freezingLev=0)
-
-    return
-#----------------------------------------------------------------------------------------------
-def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azimuths_oi, labels_PHAIL, xlims_xlims_input):
-
-    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
-    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
-    radar = pyart.io.read(r_dir+options['rfile'])
-    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280)
-    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    radar = add_43prop_field(radar) 
-    for ic in range(len(xlims_xlims_input)): 
-        plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)
+        plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)	
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), grid_limits=((0.,20000,), 
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
             roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')  
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
-
-    #- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
-    # OJO for use_freezingLev == 0 es decir ground level! 
     if len(icois) == 3: 
         [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
-            GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
+	 GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
             GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+options['rfile'][15:19]+' UTC and PF at '+time_pfs[0]+' UTC', gmi_dir+options['gfile'], 0, options, era5_dir+era5_file, icoi=icois, use_freezingLev=0)
         GMI_tbs1_37 = [GMI_tbs1_COI1[:,5], GMI_tbs1_COI2[:,5], GMI_tbs1_COI3[:,5]]
         GMI_tbs1_85 = [GMI_tbs1_COI1[:,7], GMI_tbs1_COI2[:,7], GMI_tbs1_COI3[:,7]]
         RN_inds     = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
         # ---- plot scatter plots: 
         plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois)
-	    #----------------------------------------------------------------------------------------------
-	    #----- plot density figures 
-	    #make_densityPlot(radarTH, radarZDR, RN_inds_COI1, RN_inds_COI2, RN_inds_COI3)
-	    #gridedTH  = gridded.fields['TH']['data'][0,:,:]
-     	    #gridedZDR = (gridded.fields['TH']['data'][0,:,:]-gridded.fields['TV']['data'][0,:,:]) - opts['ZDRoffset']
-     	    #make_densityPlot(gridedTH, gridedZDR, RB_inds_COI1, RB_inds_COI2, RB_inds_COI3)
-	    #----------------------------------------------------------------------------------------------
+	#----------------------------------------------------------------------------------------------
+	#----- plot density figures 
+	#make_densityPlot(radarTH, radarZDR, RN_inds_COI1, RN_inds_COI2, RN_inds_COI3)
+	#gridedTH  = gridded.fields['TH']['data'][0,:,:]
+     	#gridedZDR = (gridded.fields['TH']['data'][0,:,:]-gridded.fields['TV']['data'][0,:,:]) - opts['ZDRoffset']
+     	#make_densityPlot(gridedTH, gridedZDR, RB_inds_COI1, RB_inds_COI2, RB_inds_COI3)
+	#----------------------------------------------------------------------------------------------
 
     return
 #----------------------------------------------------------------------------------------------
