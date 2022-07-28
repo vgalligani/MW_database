@@ -1866,16 +1866,16 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             p_last = axes[0,iz].get_position().get_points().flatten(); 
 
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
-            cbar    = fig.colorbar(im_TH,  cax=ax_cbar, shrink=0.9, label='ZH')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+            cbar    = fig.colorbar(im_TH,  cax=ax_cbar, shrink=0.9,  ticks=np.arange(0,60.01,10), label='ZH')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
             pm2    = axes[1,iz-1].get_position().get_points().flatten()
 
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.55, 0.02, 0.2])  
-            cbar    = fig.colorbar(im_ZDR, cax=ax_cbar, shrink=0.9, label='ZDR')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+            cbar    = fig.colorbar(im_ZDR, cax=ax_cbar, shrink=0.9,  ticks=np.arange(-2.,5.01,1.), label='ZDR')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
 
             pm3   = axes[2,iz-1].get_position().get_points().flatten()
 
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.28, 0.02, 0.2])  
-            cbar    = fig.colorbar(im_RHO, cax=ax_cbar, shrink=0.9, label='RHO')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+            cbar    = fig.colorbar(im_RHO, cax=ax_cbar, shrink=0.9, ticks=np.arange(0.7,1.01,0.1), label='RHO')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
 
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.03, 0.02, 0.2])  
             cbar    = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
