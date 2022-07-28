@@ -1776,47 +1776,49 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             y               = gridded_radar.point_y['data'][:,xloc,yloc]
             z               = gridded_radar.point_z['data'][:,xloc,yloc]
             grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
-            grid_KDP[:,i]   = gridded_radar.fields['KDP']['data'][:,xloc,yloc]
+            grid_KDP[:,i]   = gridded_radar.fields['corrKDP']['data'][:,xloc,yloc]
+            grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
+	
 
 
         #Filters
-        grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
-        grid_THTH[np.where(grid_RHO<0.6)] = np.nan	
-        grid_RHO[np.where(grid_RHO<0.6)] = np.nan	
-        grid_KDP[np.where(grid_RHO<0.6)] = np.nan	
+        #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
+        #grid_THTH[np.where(grid_RHO<0.6)] = np.nan	
+        #grid_RHO[np.where(grid_RHO<0.6)] = np.nan	
+        #grid_KDP[np.where(grid_RHO<0.6)] = np.nan	
 
         #--- need to add tempertaure to grided data ... 
-        radar_z = gridded_radar.point_z['data']
-        shape   = np.shape(radar_z)
-        rad_T1d = np.interp(radar_z.ravel(), alt_ref, tfield_ref)   # interpolate_sounding_to_radar(snd_T, snd_z, radar)
-        radargrid_TT = np.reshape(rad_T1d, shape)
-        gridded_radar = add_field_to_radar_object(np.reshape(rad_T1d, shape), gridded_radar, field_name='sounding_temperature')      
+        #radar_z = gridded_radar.point_z['data']
+        #shape   = np.shape(radar_z)
+        #rad_T1d = np.interp(radar_z.ravel(), alt_ref, tfield_ref)   # interpolate_sounding_to_radar(snd_T, snd_z, radar)
+        #radargrid_TT = np.reshape(rad_T1d, shape)
+        #gridded_radar = add_field_to_radar_object(np.reshape(rad_T1d, shape), gridded_radar, field_name='sounding_temperature')      
         #- Add height field for 4/3 propagation
-        gridded_radar = add_field_to_radar_object( gridded_radar.point_z['data'], gridded_radar, field_name = 'height')    	
-        iso0 = np.ma.mean(gridded_radar.fields['height']['data'][np.where(np.abs(gridded_radar.fields['sounding_temperature']['data']) < 0)])
-        gridded_radar.fields['height_over_iso0'] = deepcopy(gridded_radar.fields['height'])
-        gridded_radar.fields['height_over_iso0']['data'] -= iso0 
+        #gridded_radar = add_field_to_radar_object( gridded_radar.point_z['data'], gridded_radar, field_name = 'height')    	
+        #iso0 = np.ma.mean(gridded_radar.fields['height']['data'][np.where(np.abs(gridded_radar.fields['sounding_temperature']['data']) < 0)])
+        #gridded_radar.fields['height_over_iso0'] = deepcopy(gridded_radar.fields['height'])
+        #gridded_radar.fields['height_over_iso0']['data'] -= iso0 
         #
-        for i in range(lons[filas,:].shape[2]):	
-            scores          = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=(grid_TVTV[:,i]-grid_THTH[:,i]) - opts['ZDRoffset'], 
-							 rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
-                                            use_temp=True, band='C', T=radargrid_TT)
-            grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
+        #for i in range(lons[filas,:].shape[2]):	
+        #    scores          = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=(grid_TVTV[:,i]-grid_THTH[:,i]) - opts['ZDRoffset'], 
+	#						 rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+        #                                    use_temp=True, band='C', T=radargrid_TT)
+        #    grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
 
-        grid_HID[np.where(grid_RHO<0.7)] = np.nan
+        #grid_HID[np.where(grid_RHO<0.7)] = np.nan
 
         #---- plot hid ppi  
-        hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+        hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
                 'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
         cmaphid = colors.ListedColormap(hid_colors)
-        cmaphid.set_bad('white')
-        cmaphid.set_under('white')
+        #cmaphid.set_bad('white')
+        #cmaphid.set_under('white')
         # Figure
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
         im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
-        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=1.8, vmax=10.4)
+        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.4, vmax=10.4)
 
         axes[0,iz].set_title('coi='+titlecois[iz])
         if iz == 1:
@@ -3089,15 +3091,14 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     for ic in range(len(xlims_xlims_input)): 
         check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs)
         plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)	
-	
-	
-	
-	
+
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), grid_limits=((0.,20000,), 
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
             roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')  
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
+
+
     if len(icois) == 3: 
         [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
 	 GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
