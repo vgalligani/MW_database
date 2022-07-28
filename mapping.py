@@ -1282,10 +1282,23 @@ def adjust_fhc_colorbar_for_pyart(cb):
     # Big Drops                10
     
     
-    cb.set_ticks(np.arange(2.4, 10, 0.9))
-    cb.ax.set_yticklabels(['Rain', 'Ice Crystals', 'Aggregates',
+    cb.set_ticks(np.arange(0.4, 10, 0.9))
+    cb.ax.set_yticklabels(['','Drizzle','Rain', 'Ice Crystals', 'Aggregates',
                            'Wet Snow', 'Vertical Ice', 'LD Graupel',
                            'HD Graupel', 'Hail', 'Big Drops'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+def adjust_meth_colorbar_for_pyart(cb, tropical=False):
+    if not tropical:
+        cb.set_ticks(np.arange(1.25, 5, 0.833))
+        cb.ax.set_yticklabels(['R(Kdp, Zdr)', 'R(Kdp)', 'R(Z, Zdr)', 'R(Z)', 'R(Zrain)'])
+    else:
+        cb.set_ticks(np.arange(1.3, 6, 0.85))
+        cb.ax.set_yticklabels(['R(Kdp, Zdr)', 'R(Kdp)', 'R(Z, Zdr)', 'R(Z_all)', 'R(Z_c)', 'R(Z_s)'])
     cb.ax.set_ylabel('')
     cb.ax.tick_params(length=0)
     return cb
@@ -2636,9 +2649,14 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     ZH    = radar.fields['TH']['data'][start_index:end_index]
     RHIs_nlev = radar.fields['HID']['data'][start_index:end_index]
 
-    #
+
+    #---- plot hid ppi  
+    hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid       = colors.ListedColormap(hid_colors)
+
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
-    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=1.8, vmax=10.4)
+    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.4, vmax=10)
     axes.set_title('HID nlev '+str(nlev)+' PPI')
     axes.set_xlim([options['xlim_min'], options['xlim_max']])
     axes.set_ylim([options['ylim_min'], options['ylim_max']])
