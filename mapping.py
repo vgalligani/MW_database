@@ -1757,7 +1757,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         grid_range = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
         grid_RHO   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
         grid_HID   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
-        grid_KDP   = np.zeros((gridded_radar.fields['KDP']['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]   = np.nan
+        grid_KDP   = np.zeros((gridded_radar.fields['KDP']['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
 
         # need to find x/y pair for each gate at the surface 
         for i in range(lons[filas,:].shape[2]):	
@@ -1779,8 +1779,18 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             grid_KDP[:,i]   = gridded_radar.fields['corrKDP']['data'][:,xloc,yloc]
             grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
 	
-
-
+        ni = grid_HID.shape[0]
+        nj = grid_HID.shape[1]
+        for i in range(ni):
+            rho_h = grid_RHO[i,:]
+            zh_h = grid_THTH[i,:]
+            for j in range(nj):
+                if (rho_h[j]<0.7) or (zh_h[j]<30):
+                    grid_THTH[i,j]  = np.nan
+                    grid_TVTV[i,j]  = np.nan
+                    grid_RHO[i,j]  = np.nan			
+				
+				
         #Filters
         #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
         #grid_THTH[np.where(grid_RHO<0.6)] = np.nan	
@@ -1816,13 +1826,10 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         # Figure
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
-        im_TH.set_under('white')
 
         im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
-        im_ZDR.set_under('white')
 
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
-        im_RHO.set_under('white')
 
         im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.4, vmax=10.4)
 
