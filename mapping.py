@@ -2633,7 +2633,7 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
     KDP   = radar.fields['KDP']['data'][start_index:end_index]
-    ZH   = radar.fields['TH']['data'][start_index:end_index]
+    ZH    = radar.fields['TH']['data'][start_index:end_index]
 
     #----------------------------------------------------------------------
     #- Figure of RHIs (at first six elevations
@@ -2645,7 +2645,7 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     cmaphid.set_under('white')
     #
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    #radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     dzh_  = radar.fields['TH']['data']
     dzv_  = radar.fields['TV']['data']
     drho_ = radar.fields['RHOHV']['data']
@@ -2703,6 +2703,33 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
 					   method='lanczos_conv', skipna=True)	
     radar.add_field_like('KDP','corrKDP', calculated_KDP, replace_existing=True)
+	
+    # AGREGAR HID?
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    dzh_  = radar.fields['TH']['data']
+    dzv_  = radar.fields['TV']['data']
+    drho_ = radar.fields['RHOHV']['data']
+    dkdp_ = radar.fields['corrKDP']['data']
+    # Filters
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+        rho_h = drho_[i,:]
+        zh_h = dzh_[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                dzh_[i,j]  = np.nan
+                dzv_[i,j]  = np.nan
+                drho_[i,j]  = np.nan
+                dkdp_[i,j]  = np.nan
+
+    scores = csu_fhc.csu_fhc_summer(dz=dzh_[start_index:end_index], zdr=(dzh_-dzv_)[start_index:end_index] - opts['ZDRoffset'], 
+					     rho=drho_[start_index:end_index], kdp=dkdp_[start_index:end_index], 
+                                             use_temp=True, band='C', T=radar_T)
+    RHIs_nlev = np.argmax(scores, axis=0) + 1 
+    radar.add_field_like('KDP','HID', RHIs_nlev, replace_existing=True)
+	
 	
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -3062,11 +3089,11 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
     radar = pyart.io.read(r_dir+options['rfile'])
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     plot_HID_PPI(radar, options, 0, azimuth_ray, diff_value, tfield_ref, alt_ref)
     plot_HID_PPI(radar, options, 1, azimuth_ray, diff_value, tfield_ref, alt_ref)
     plot_HID_PPI(radar, options, 2, azimuth_ray, diff_value, tfield_ref, alt_ref)
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar) 
