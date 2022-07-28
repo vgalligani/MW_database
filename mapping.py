@@ -2623,7 +2623,7 @@ def calc_KDP(radar):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value):
+def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
     # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
 
@@ -2756,6 +2756,62 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value):
     #axes[0,0].set_ylim([-32.5, -31.2])
     #axes[0,0].set_xlim([-65.3, -64.5])
 
+    #----------------------------------------------------------------------
+    #- Figure of RHIs (at first six elevations
+    #---------------------------------------- HID
+    hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+    cmaphid.set_bad('white')
+    cmaphid.set_under('white')
+    #
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    #- Add height field for 4/3 propagation
+    #radar_height = get_z_from_radar(radar)
+    #radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
+    #iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
+    #radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
+    #radar.fields['height_over_iso0']['data'] -= iso0   
+    dzh_  = radar.fields['TH']['data']
+    dzv_  = radar.fields['TV']['data']
+    drho_ = radar.fields['RHOHV']['data']
+    dkdp_ = radar.fields['corrKDP']['data']
+    # Filters
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+        rho_h = drho_[i,:]
+        zh_h = dzh_[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                dzh_[i,j]  = np.nan
+                dzv_[i,j]  = np.nan
+                drho_[i,j]  = np.nan
+                dkdp_[i,j]  = np.nan
+
+    scores          = csu_fhc.csu_fhc_summer(dz=dzh_[start_index:end_index], zdr=(dzh_-dzv_)[start_index:end_index] - opts['ZDRoffset'], 
+					     rho=drho_[start_index:end_index], kdp=dkdp_[start_index:end_index], 
+                                             use_temp=True, band='C', T=radar_T)
+    RHIs_nlev = np.argmax(scores, axis=0) + 1 
+    #
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,7])
+    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=1.8, vmax=10.4)
+    axes.set_title('RHI nlev '+str(nlev)+' PPI')
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    axes.plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+
+
+    #----------------------------------------------------------------------
     #-figure
     fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,figsize=[14,10])
     axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['RHOHV']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
@@ -3001,8 +3057,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
     radar = pyart.io.read(r_dir+options['rfile'])
-    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280)
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar) 
