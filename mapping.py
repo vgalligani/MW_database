@@ -1990,20 +1990,15 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]       
             PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
-            #for i in range(PHIPHI.shape[0]):
-            #    rho_h = RHORHO[i,:]
-            #    zh_h  = ZHZH[i,:]
-            #    for j in range(PHIPHI.shape[1]):
-            #        if (rho_h[j]<0.7) or (zh_h[j]<30):
-            #           ZDRZDR[i,j]=np.nan
-            #            RHORHO[i,j]=np.nan
-            #            KDPKDP[i,j]=np.nan
+            HIDHID  =  radar.fields['HID']['data'][start_index:end_index]       
+	
         elif radar_name == 'RMA5':
             ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'DBZV' in radar.fields.keys(): 
                 TV     = radar.fields['DBZV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
-            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]        
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]    
+	
         elif radar_name == 'RMA4':
             if 'TH' in radar.fields.keys():
                 ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -2015,6 +2010,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
             elif  'ZDR' in radar.fields.keys(): 
                 ZDRZDR     = (radar.fields['ZDR']['data'][start_index:end_index])-ZDRoffset 
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
+	
         elif radar_name == 'RMA3':
             if 'TH' in radar.fields.keys():
                 ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -2026,12 +2022,14 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
             elif  'ZDR' in radar.fields.keys(): 
                 ZDRZDR     = radar.fields['ZDR']['data'][start_index:end_index]     
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]   
+	
         elif radar_name == 'CSPR2':
             ZHZH       = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
             ZDRZDR     = radar.fields['attenuation_corrected_differential_reflectivity']['data'][start_index:end_index]
             RHORHO     = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]       
             ZDRZDR[RHORHO<0.75]=np.nan
             RHORHO[RHORHO<0.75]=np.nan
+	
         lats        = radar.gate_latitude['data'][start_index:end_index]
         lons        = radar.gate_longitude['data'][start_index:end_index]
         # En verdad buscar azimuth no transecta ... 
@@ -2051,15 +2049,16 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         RHO_transect[nlev,:]     = RHORHO[filas,:]
         KDP_transect[nlev,:]     = KDPKDP[filas,:]	
         PHIDP_transect[nlev,:]   = PHIPHI[filas,:]	
+        HID_transect[nlev,:]     = HIDHID[filas,:]
 	# 
         [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
         approx_altitude[nlev,:] = zgate/1e3
         gate_range[nlev,:]      = gates_range[filas,:]/1e3;
         #
-        scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
-                                             rho=RHO_transect[nlev,:], kdp=KDP_transect[nlev,:], 
-                                             use_temp=True, band='C', T=radar_T)
-        HID_transect[nlev,:]  = np.argmax(scores, axis=0) + 1 
+        #scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
+        #                                     rho=RHO_transect[nlev,:], kdp=KDP_transect[nlev,:], 
+        #                                     use_temp=True, band='C', T=radar_T)
+        #HID_transect[nlev,:]  = np.argmax(scores, axis=0) + 1 
     #---------------------------------------- REFLECTIVITY
     #- Simple pcolormesh plot! 
     fig = plt.figure(figsize=[15,11])
@@ -2359,18 +2358,18 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
 
 
     #---------------------------------------- HID
-    hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+    hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
               'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
     cmaphid = colors.ListedColormap(hid_colors)
-    cmaphid.set_bad('white')
-    cmaphid.set_under('white')
+    #cmaphid.set_bad('white')
+    #cmaphid.set_under('white')
 
     #- Simple pcolormesh plot! 
     fig = plt.figure(figsize=[15,11])
     fig.add_subplot(221)
     mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
                 HID_transect,
-                cmap = cmaphid, vmin=1.8, vmax=10.4)
+                cmap = cmaphid, vmin=0.4, vmax=10.4)
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
@@ -2380,7 +2379,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         fig.add_subplot(221)
         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
                 s=1,c=HID_transect[nlev,:],
-                cmap = cmaphid, vmin=1.8, vmax=10.4)
+                cmap = cmaphid, vmin=0.4, vmax=10.4)
         color[nlev,:,:] = sc.to_rgba(HID_transect[nlev,:])   # pyart.graph.cm.RefDiff
         plt.close()
 
@@ -2413,7 +2412,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         axes[5].set_ylabel('Altitude (km)')
         axes[5].grid()
         axes[5].set_xlim((xlim_range1, xlim_range2))
-        norm = matplotlib.colors.Normalize(vmin=1.8,vmax=10.4)
+        norm = matplotlib.colors.Normalize(vmin=0.4,vmax=10.4)
         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmaphid)
         cax.set_array(HID_transect)
         cbar_HID = fig2.colorbar(cax, ax=axes[5], shrink=1.1, label=r'HID')    
@@ -2737,7 +2736,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
     pcm1 = axes[0,0].pcolormesh(lons, lats, rhoHV, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    axes[0,0].set_title('RHOHV radar nlev 0 PPI')
+    axes[0,0].set_title('RHOHV radar nlev '+str(nlev)+' PPI')
     axes[0,0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,0].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -2752,7 +2751,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
     pcm1 = axes[0,1].pcolormesh(lons, lats, radar.fields['PHIDP']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    axes[0,1].set_title('Phidp radar nlev 0 PPI')
+    axes[0,1].set_title('Phidp radar nlev '+str(nlev)+' PPI')
     axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,1].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -2768,7 +2767,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
     pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    axes[0,2].set_title('KDP radar nlev 0 PPI')
+    axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
     axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -2783,7 +2782,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    axes[1,0].set_title('ZH nlev 0 PPI')
+    axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
     axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -2798,7 +2797,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
     pcm1 = axes[1,1].pcolormesh(lons, lats, radar.fields['corrPHIDP']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    axes[1,1].set_title('CORR Phidp radar nlev 0 PPI')
+    axes[1,1].set_title('CORR Phidp radar nlev '+str(nlev)+'  PPI')
     axes[1,1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,1].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -2813,7 +2812,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
     pcm1 = axes[1,2].pcolormesh(lons, lats, calculated_KDP[start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    axes[1,2].set_title('Calc. KDP nlev 0 PPI')
+    axes[1,2].set_title('Calc. KDP nlev '+str(nlev)+' PPI')
     axes[1,2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,2].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -2840,8 +2839,8 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]+sys_phase), color='magenta', label='phidp corrected');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected-sysphase');
     axes[1].legend()
-    axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Obs. KDP');
-    axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Calc. KDP');
+    axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
+    axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Obs. KDP');
     axes[2].legend()
     axes[0].set_xlim([50, 120])
     axes[1].set_xlim([50, 120])
@@ -3074,18 +3073,26 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
     radar = pyart.io.read(r_dir+options['rfile'])
+	
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    radar = add_43prop_field(radar)     
+
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     plot_HID_PPI(radar, options, 0, azimuth_ray, diff_value, tfield_ref, alt_ref)
     plot_HID_PPI(radar, options, 1, azimuth_ray, diff_value, tfield_ref, alt_ref)
     plot_HID_PPI(radar, options, 2, azimuth_ray, diff_value, tfield_ref, alt_ref)
     radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    radar = add_43prop_field(radar) 
+
+
     for ic in range(len(xlims_xlims_input)): 
         check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs)
         plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)	
+	
+	
+	
+	
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), grid_limits=((0.,20000,), 
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
@@ -3152,7 +3159,12 @@ def main():
 
 
 
-	
+
+
+
+
+
+
     #---------------------------------------------------------------------------------------------
     # COMMON: 
      
@@ -3162,14 +3174,18 @@ def main():
     	era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
 	r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
    	radar = pyart.io.read(r_dir+options['rfile'])
-	plot_HID_PPI(radar, options, 0, azimuth_ray, diff_value, tfield_ref, alt_ref)
-	plot_HID_PPI(radar, options, 1, azimuth_ray, diff_value, tfield_ref, alt_ref)
-	plot_HID_PPI(radar, options, 2, azimuth_ray, diff_value, tfield_ref, alt_ref)
-	radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280)
-    	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+
+	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     	radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     	radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     	radar = add_43prop_field(radar) 
+	
+	radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280)
+	plot_HID_PPI(radar, options, 0, azimuth_ray, diff_value, tfield_ref, alt_ref)
+	plot_HID_PPI(radar, options, 1, azimuth_ray, diff_value, tfield_ref, alt_ref)
+	plot_HID_PPI(radar, options, 2, azimuth_ray, diff_value, tfield_ref, alt_ref)
+	radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280)
+
 	for ic in range(len(xlims_xlims_input)): 
 		plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev)
 	summary_radar_obs(radar, gmi_dir+options['gfile'], options)
