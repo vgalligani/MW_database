@@ -2070,7 +2070,8 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         alt_43aproox[nlev,:]     = radar.fields['height']['data'][start_index:end_index][filas,:]
 	# 
         [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
-        alt_43aproox[nlev,:]     = radar.fields['height']['data'][start_index:end_index][filas,:]
+        alt_43aproox[nlev,:]    = radar.fields['height']['data'][start_index:end_index][filas,:]
+	approx_altitude         = alt_43aproox[nlev,:]/1e3; #zgate/1e3;
         gate_range[nlev,:]      = gates_range[filas,:]/1e3;
         #
         #scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
