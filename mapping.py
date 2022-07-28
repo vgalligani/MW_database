@@ -1993,6 +1993,8 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
     gate_range      = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); gate_range[:]=np.nan
     HID_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); HID_transect[:]=np.nan
     KDP_transect      = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); KDP_transect[:]=np.nan
+    alt_43aproox      = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); alt_43aproox[:]=np.nan
+	
     azydims = lats0.shape[1]-1
 
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
@@ -2065,11 +2067,11 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         KDP_transect[nlev,:]     = KDPKDP[filas,:]	
         PHIDP_transect[nlev,:]   = PHIPHI[filas,:]	
         HID_transect[nlev,:]     = HIDHID[filas,:]
-	alt_43aproox[nlev,:]     = radar.fields['height']['data'][start_index:end_index][filas,:]
+        alt_43aproox[nlev,:]     = radar.fields['height']['data'][start_index:end_index][filas,:]
 	# 
         [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
         alt_43aproox[nlev,:]     = radar.fields['height']['data'][start_index:end_index][filas,:]
-	gate_range[nlev,:]      = gates_range[filas,:]/1e3;
+        gate_range[nlev,:]      = gates_range[filas,:]/1e3;
         #
         #scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
         #                                     rho=RHO_transect[nlev,:], kdp=KDP_transect[nlev,:], 
