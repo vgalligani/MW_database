@@ -1816,8 +1816,14 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         # Figure
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
+        im_TH.set_under('white')
+
         im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+        im_ZDR.set_under('white')
+
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
+        im_RHO.set_under('white')
+
         im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.4, vmax=10.4)
 
         axes[0,iz].set_title('coi='+titlecois[iz])
@@ -1867,7 +1873,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.03, 0.02, 0.2])  
             cbar    = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
             cbar = adjust_fhc_colorbar_for_pyart(cbar)
-            cbar.cmap.set_under('white')
+            #cbar.cmap.set_under('white')
 
             pm2    = axes[3,iz-1].get_position().get_points().flatten()
 
@@ -3093,7 +3099,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)	
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
-    grided  = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), grid_limits=((0.,20000,), 
+    # 2500m grid! 
+    grided  = pyart.map.grid_from_radars(radar, grid_shape=(80, 1891, 1891), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
             roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')  
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
