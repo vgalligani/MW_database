@@ -2623,12 +2623,74 @@ def calc_KDP(radar):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
-
-    # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
+def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
+
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
+    PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
+    KDP   = radar.fields['KDP']['data'][start_index:end_index]
+    ZH   = radar.fields['TH']['data'][start_index:end_index]
+
+    #----------------------------------------------------------------------
+    #- Figure of RHIs (at first six elevations
+    #---------------------------------------- HID
+    hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+    cmaphid.set_bad('white')
+    cmaphid.set_under('white')
+    #
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    dzh_  = radar.fields['TH']['data']
+    dzv_  = radar.fields['TV']['data']
+    drho_ = radar.fields['RHOHV']['data']
+    dkdp_ = radar.fields['corrKDP']['data']
+    # Filters
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+        rho_h = drho_[i,:]
+        zh_h = dzh_[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                dzh_[i,j]  = np.nan
+                dzv_[i,j]  = np.nan
+                drho_[i,j]  = np.nan
+                dkdp_[i,j]  = np.nan
+
+    scores          = csu_fhc.csu_fhc_summer(dz=dzh_[start_index:end_index], zdr=(dzh_-dzv_)[start_index:end_index] - opts['ZDRoffset'], 
+					     rho=drho_[start_index:end_index], kdp=dkdp_[start_index:end_index], 
+                                             use_temp=True, band='C', T=radar_T)
+    RHIs_nlev = np.argmax(scores, axis=0) + 1 
+    #
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=1.8, vmax=10.4)
+    axes.set_title('HID nlev '+str(nlev)+' PPI')
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+
+
+    return 
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
+
+    # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
 
     # Esto es para todas las elevaciones
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
@@ -2638,27 +2700,24 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     radar.add_field_like('PHIDP','corrPHIDP', corr_phidp, replace_existing=True)
 
     # Y CALCULAR KDP! 
-    #radar = calc_KDP(radar)
-    #calculated_KDP  = radar.fields['NEW_kdp']['data'][start_index:end_index]
     calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
 					   method='lanczos_conv', skipna=True)	
     radar.add_field_like('KDP','corrKDP', calculated_KDP, replace_existing=True)
-
+	
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+	
     #-EJEMPLO de azimuth
     azimuths = radar.azimuth['data'][start_index:end_index]
     target_azimuth = azimuths[azimuth_ray]
     filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-
-
-    #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
 
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
     KDP   = radar.fields['KDP']['data'][start_index:end_index]
-    ZH   = radar.fields['TH']['data'][start_index:end_index]
-
+    ZH    = radar.fields['TH']['data'][start_index:end_index]
 
     fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
                         figsize=[14,7])
@@ -2755,61 +2814,6 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #axes[1,2].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [45], colors='k') 
     #axes[0,0].set_ylim([-32.5, -31.2])
     #axes[0,0].set_xlim([-65.3, -64.5])
-
-    #----------------------------------------------------------------------
-    #- Figure of RHIs (at first six elevations
-    #---------------------------------------- HID
-    hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
-              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
-    cmaphid = colors.ListedColormap(hid_colors)
-    cmaphid.set_bad('white')
-    cmaphid.set_under('white')
-    #
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    #- Add height field for 4/3 propagation
-    #radar_height = get_z_from_radar(radar)
-    #radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
-    #iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
-    #radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
-    #radar.fields['height_over_iso0']['data'] -= iso0   
-    dzh_  = radar.fields['TH']['data']
-    dzv_  = radar.fields['TV']['data']
-    drho_ = radar.fields['RHOHV']['data']
-    dkdp_ = radar.fields['corrKDP']['data']
-    # Filters
-    ni = dzh_.shape[0]
-    nj = dzh_.shape[1]
-    for i in range(ni):
-        rho_h = drho_[i,:]
-        zh_h = dzh_[i,:]
-        for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
-                dzh_[i,j]  = np.nan
-                dzv_[i,j]  = np.nan
-                drho_[i,j]  = np.nan
-                dkdp_[i,j]  = np.nan
-
-    scores          = csu_fhc.csu_fhc_summer(dz=dzh_[start_index:end_index], zdr=(dzh_-dzv_)[start_index:end_index] - opts['ZDRoffset'], 
-					     rho=drho_[start_index:end_index], kdp=dkdp_[start_index:end_index], 
-                                             use_temp=True, band='C', T=radar_T)
-    RHIs_nlev = np.argmax(scores, axis=0) + 1 
-    #
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,7])
-    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=1.8, vmax=10.4)
-    axes.set_title('RHI nlev '+str(nlev)+' PPI')
-    axes.set_xlim([options['xlim_min'], options['xlim_max']])
-    axes.set_ylim([options['ylim_min'], options['ylim_max']])
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
-    axes.plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
-    cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
-    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
-
 
     #----------------------------------------------------------------------
     #-figure
@@ -3059,7 +3063,11 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     radar = pyart.io.read(r_dir+options['rfile'])
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    plot_HID_PPI(radar, options, 0, azimuth_ray, diff_value, tfield_ref, alt_ref)
+    plot_HID_PPI(radar, options, 1, azimuth_ray, diff_value, tfield_ref, alt_ref)
+    plot_HID_PPI(radar, options, 2, azimuth_ray, diff_value, tfield_ref, alt_ref)
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar) 
     for ic in range(len(xlims_xlims_input)): 
@@ -3141,6 +3149,9 @@ def main():
     	era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
 	r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
    	radar = pyart.io.read(r_dir+options['rfile'])
+	plot_HID_PPI(radar, options, 0, azimuth_ray, diff_value, tfield_ref, alt_ref)
+	plot_HID_PPI(radar, options, 1, azimuth_ray, diff_value, tfield_ref, alt_ref)
+	plot_HID_PPI(radar, options, 2, azimuth_ray, diff_value, tfield_ref, alt_ref)
 	radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280)
     	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     	radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
