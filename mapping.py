@@ -1785,7 +1785,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             rho_h = grid_RHO[i,:]
             zh_h = grid_THTH[i,:]
             for j in range(nj):
-                if (rho_h[j]<0.7) or (zh_h[j]<30):
+                if (rho_h[j]<0.7) or (zh_h[j]<0):
                     grid_THTH[i,j]  = np.nan
                     grid_TVTV[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan			
