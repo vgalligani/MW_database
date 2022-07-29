@@ -3053,13 +3053,13 @@ def plot_scatter(options, radar, icois, fname):
             x = v[:, 0]
             y = v[:, 1]            
     # Get vertices of these polygon type shapes
-    for ii in range(len(icoi)): 
+    for ii in range(len(icois)): 
         X1 = []; Y1 = []; vertices = []
-        for ik in range(len(contorno89.collections[0].get_paths()[int(icoi[ii])].vertices)): 
-            X1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0])
-            Y1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1])
-            vertices.append([contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0], 
-                                        contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1]])
+        for ik in range(len(contorno89.collections[0].get_paths()[int(icois[ii])].vertices)): 
+            X1.append(contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][0])
+            Y1.append(contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][1])
+            vertices.append([contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
+                                        contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
         convexhull = ConvexHull(vertices)
         array_points = np.array(vertices)
 
