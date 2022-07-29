@@ -24,6 +24,7 @@ import cartopy.io.shapereader as shpreader
 import copy
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+import gc
 
 import alphashape
 from descartes import PolygonPatch
@@ -1689,7 +1690,7 @@ def calc_PCTs(TB_s1):
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
-def check_transec(radar, test_transect, lon_pf, lat_pf):       
+def check_transec(radar, test_transect, lon_pf, lat_pf, options):
   nlev  = 0  
   fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
                         figsize=[13,12])
@@ -1726,6 +1727,9 @@ def check_transec(radar, test_transect, lon_pf, lat_pf):
   for iPF in range(len(lat_pf)):
     plt.plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=40, markerfacecolor="None",
             markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
+
+  fig.savefig(options['fig_dir']+'PPI_transect_'+'azi'+str(test_transect)+'.png', dpi=300,transparent=False)   
+  plt.close()
 
   return 
 
@@ -1833,7 +1837,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
 
         im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.4, vmax=10.4)
 
-        axes[0,iz].set_title('coi='+titlecois[iz])
+        axes[0,iz].set_title('coi='+titlecois[iz]) 
         if iz == 1:
             axes[0,iz].set_xlim([0,xlims_xlims[1]])
             axes[1,iz].set_xlim([0,xlims_xlims[1]])
@@ -1884,6 +1888,11 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
 
             pm2    = axes[3,iz-1].get_position().get_points().flatten()
 
+	#- savefile
+        fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
+        plt.close()
+        del grid_THTH, grid_RHO, grid_TVTV, grid_HID
+	
     return
 	
 #------------------------------------------------------------------------------
@@ -1964,8 +1973,7 @@ def check_transec_rma_campos(dat_dir, file_PAR_all, test_transect, campo, nlev):
 	
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
-#plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)	
-def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T): 
+def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options):
 
     print(radar.fields.keys())
 
@@ -2133,7 +2141,8 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
          cax.set_array(Ze_transect)
          cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
          axes[0].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
-    del mycolorbar, x, y, inter
+    
+    del mycolorbar, x, y, P1, inter, LS, Ze_transect
     axes[0].set_title('Transect Nr. '+str(test_transect))
     #---------------------------------------- ZDR
     N = (5+2)
@@ -2192,7 +2201,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
         axes[1].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
 
-    del mycolorbar, x, y, inter
+    del mycolorbar, x, y, P1, inter, LS, ZDR_transect
     #---------------------------------------- RHOHV
     #- Simple pcolormesh plot! 
     fig = plt.figure(figsize=[15,11])
@@ -2248,9 +2257,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         cbar_rho = fig2.colorbar(cax, ax=axes[2], shrink=1.1, ticks=np.arange(0.7,1.01,0.1), label=r'$\rho_{hv}$')     
         axes[2].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
 
-    del mycolorbar, x, y, inter
-
-
+    del mycolorbar, x, y, P1, inter, LS, RHO_transect
 
     #---------------------------------------- PHIDP
     #- Simple pcolormesh plot! 
@@ -2307,7 +2314,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         cbar_Phidp = fig2.colorbar(cax, ax=axes[3], shrink=1.1, label=r'PHIDP')     
         axes[3].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
 
-    del mycolorbar, x, y, inter
+    del mycolorbar, x, y, P1, inter, LS, PHIDP_transect
 
 
 
@@ -2326,7 +2333,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
-                s=1,c=PHIDP_transect[nlev,:],
+                s=1,c=KDP_transect[nlev,:],
                 cmap= pyart.graph.cm.Theodore16, vmin=0, vmax=5.)
         color[nlev,:,:] = sc.to_rgba(KDP_transect[nlev,:])   # pyart.graph.cm.RefDiff
         plt.close()
@@ -2366,7 +2373,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         cbar_Phidp = fig2.colorbar(cax, ax=axes[4], shrink=1.1, label=r'KDP')     
         axes[4].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
 
-    del mycolorbar, x, y, inter
+    del mycolorbar, x, y, P1, inter, LS, KDP_transect
 
 
 
@@ -2436,11 +2443,13 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         cbar_HID = fig2.colorbar(cax, ax=axes[5], shrink=1.1, label=r'HID')    
         cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
         axes[5].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
-    del mycolorbar, x, y, inter
+    del mycolorbar, x, y, P1, inter, LS, HID_transect
 
     #- savefile
-    #plt.suptitle(radar_name + ': '+str(file[0:12]) ,fontweight='bold')
-
+    fig2.savefig(options['fig_dir']+'PseudoRHI_'+'Transect_'+str(test_transect)+'.png', dpi=300,transparent=False)   
+    plt.close()
+	
+	
     return
 
 #------------------------------------------------------------------------------
@@ -2457,6 +2466,9 @@ def calc_freezinglevel(era5_dir, era5_file, lat_pf, lon_pf):
 	alt_ref    = (Re*geoph_ref)/(Re-geoph_ref) 
 	freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
 
+	
+	
+	
 	return alt_ref, tfield_ref, freezing_lev
 
 def add_43prop_field(radar):
@@ -2686,6 +2698,8 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
     cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
 
+    fig.savefig(options['fig_dir']+'PPIs_HID'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
+    plt.close()
 
     return 
 
@@ -2844,6 +2858,8 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #axes[1,2].contour(lons, lats, radar.fields['TH']['data'][start_index:end_index], [45], colors='k') 
     #axes[0,0].set_ylim([-32.5, -31.2])
     #axes[0,0].set_xlim([-65.3, -64.5])
+    fig.savefig(options['fig_dir']+'PPIs_KDPcorr'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
+    plt.close()
 
     #----------------------------------------------------------------------
     #-figure
@@ -2866,6 +2882,8 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[2].set_ylim([-1, 5])
     axes[2].grid(True) 
     axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
+    fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
+    plt.close()
 
     return radar
 
@@ -3012,6 +3030,7 @@ def ignore_plots():
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 def summary_radar_obs(radar, fname, options):  
+	
         # read 
         f = h5py.File( fname, 'r')
         tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
@@ -3032,7 +3051,7 @@ def summary_radar_obs(radar, fname, options):
             lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
         PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
         nlev = 0 
-        start_index = radar.sweep_start_ray_index['data'][0]
+        end_index   = radar.sweep_end_ray_index['data'][0]
 	end_index   = radar.sweep_end_ray_index['data'][0]
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
@@ -3079,7 +3098,8 @@ def summary_radar_obs(radar, fname, options):
         axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['gray']), linewidths=1.5);
         axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['gray']), linewidths=1.5);
 
-
+        fig.savefig(options['fig_dir']+'PPIs_Summary'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
+        plt.close()
 
         return
 
@@ -3099,14 +3119,15 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
 
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-
+    #plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    #plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    #radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    gc.collect()
 
     for ic in range(len(xlims_xlims_input)): 
-        check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs)
-        plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)	
+        check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
+        plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
+    gc.collect()
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
     # 2500m grid! 
@@ -3114,7 +3135,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
             roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')  
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
-
+    gc.collect()
+    del grided 
 
     if len(icois) == 3: 
         [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
@@ -3168,7 +3190,7 @@ def main():
     opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
 	    'ZDRoffset': 4, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
 	    'window_calc_KDP': 7, 'azimuth_ray': 210, 'x_supermin':-65, 'x_supermax':-64,
-	    'y_supermin':-33, 'y_supermax':-31.5}
+	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/'}
     icois_input  = [1,3,4] 
     azimuths_oi  = [356,220,192]
     labels_PHAIL = ['1','3[Phail = 0.534]','4'] 
@@ -3212,7 +3234,7 @@ def main():
                 roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')  
 	make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input)
 	plot_gmi(gmi_dir+options['gfile'], options, r_dir,options['rfile'], [lon_pfs[0]], [lat_pfs[0]])
-	
+	gc.collect()
 	#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
     	# OJO for use_freezingLev == 0 es decir ground level! 
 	if len(icois) == 3: 
