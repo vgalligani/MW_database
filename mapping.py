@@ -3086,7 +3086,7 @@ def plot_scatter(options, radar, icois, fname):
             GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5], tb_s1_gmi_inside[inds_2,5], tb_s1_gmi_inside[inds_3,5]]
             GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7], tb_s1_gmi_inside[inds_2,7], tb_s1_gmi_inside[inds_3,7]]
 	
-    if len(icois)==3:
+    if len(GMI_tbs1_85)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
 
