@@ -3067,6 +3067,14 @@ def plot_scatter(options, radar, icois, fname):
         datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
         datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
 
+	#------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
+        alpha = 0.95 * alphashape.optimizealpha(array_points)
+        hull_pts_CONCAVE = alphashape.alphashape(array_points, alpha)
+        #axes.add_patch(PolygonPatch(hull_pts_CONCAVE, fill=False, color='m'))
+        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
+        check_points = np.vstack((hull_coors_CONCAVE)).T
+        concave_path = Path(check_points)
+	
         if ii==0:
             inds_1   = concave_path.contains_points(datapts)
             inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
