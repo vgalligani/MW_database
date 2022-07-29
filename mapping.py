@@ -2974,28 +2974,130 @@ def check_this(azimuth_ray):
     return 
 
 #------------------------------------------------------------------------------
-def plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois): 
+#def plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois): 
+def plot_scatter(options, radar, icois, fname): 
+	
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
 
+    for j in range(lon_gmi.shape[1]):
+      tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+      tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
+      lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+      lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
+      lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+      lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
+
+    # keep domain of interest only by keeping those where the center nadir obs is inside domain
+    inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
+                              np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
+    inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
+                                         np.logical_and(lat_s2_gmi >= options['ylim_min'], lat_s2_gmi <= options['ylim_max']))    
+    lon_gmi_inside   = lon_gmi[inside_s1] 
+    lat_gmi_inside   = lat_gmi[inside_s1] 	
+    lon_gmi2_inside  = lon_s2_gmi[inside_s2] 	
+    lat_gmi2_inside  = lat_s2_gmi[inside_s2] 	
+    tb_s1_gmi_inside = tb_s1_gmi[inside_s1, :]
+
+    PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
+
+    # check contour (BUT NO PARALLAX FIX THIS TIME!)
+    nlev=0
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+
+    #----------------------------------------------------------------------------------------
+    # Test plot figure: General figure with Zh and the countours identified 
+    #----------------------------------------------------------------------------------------
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[14,12])
+    #-- Zh: 
+    if 'TH' in radar.fields.keys():  
+        radarTH = radar.fields['TH']['data'][start_index:end_index]
+        radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-opts['ZDRoffset']
+    elif 'DBZH' in radar.fields.keys():
+        radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+    elif 'reflectivity' in radar.fields.keys(): 
+        radarTH = radar.fields['reflectivity']['data'][start_index:end_index]
+    elif 'attenuation_corrected_reflectivity_h' in radar.fields.keys(): 
+        radarTH = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    axes.grid(True)
+    axes.legend(loc='upper left')
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+    
+    # GET CONTOURNOS DE BT (ORIGINALES SIN CORREXION PARALAJE)
+    for item in contorno89.collections:
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1]            
+    # Get vertices of these polygon type shapes
+    for ii in range(len(icoi)): 
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno89.collections[0].get_paths()[int(icoi[ii])].vertices)): 
+            X1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0])
+            Y1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1])
+            vertices.append([contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0], 
+                                        contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1]])
+        convexhull = ConvexHull(vertices)
+        array_points = np.array(vertices)
+
+        hull_path   = Path( array_points[convexhull.vertices] )
+        datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+        datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
+
+        if ii==0:
+            inds_1   = concave_path.contains_points(datapts)
+            inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
+            RN_inds      = [RN_inds_COI1]
+            GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5]]
+            GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7]]
+        if ii==1:
+            inds_2   = concave_path.contains_points(datapts)
+            inds_RN2 = hull_path.contains_points(datapts_RADAR_NATIVE)
+            RN_inds      = [RN_inds_COI1, RN_inds_COI2]
+            GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5], tb_s1_gmi_inside[inds_2,5]]
+            GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7], tb_s1_gmi_inside[inds_2,7]]
+        if ii==2:
+            inds_3   = hull_path.contains_points(datapts)
+            inds_RN3 = hull_path.contains_points(datapts_RADAR_NATIVE)
+            RN_inds      = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
+            GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5], tb_s1_gmi_inside[inds_2,5], tb_s1_gmi_inside[inds_3,5]]
+            GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7], tb_s1_gmi_inside[inds_2,7], tb_s1_gmi_inside[inds_3,7]]
+	
     if len(icois)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
-    #------------------------------------------------------
-    nlev        = 0
-    start_index = radar.sweep_start_ray_index['data'][nlev]
-    end_index   = radar.sweep_end_ray_index['data'][nlev]
-    lats     = radar.gate_latitude['data'][start_index:end_index]
-    lons     = radar.gate_longitude['data'][start_index:end_index]
-    radarTH  = radar.fields['TH']['data'][start_index:end_index]
-    radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-opts['ZDRoffset']
 
-   	#------------------------------------------------------
- 	# FIGURE scatter plot check
- 	# scatter plots the tbs y de Zh a ver si esta ok 
+    #------------------------------------------------------
+    # FIGURE scatter plot check
+    # scatter plots the tbs y de Zh a ver si esta ok 
     fig = plt.figure(figsize=(20,7)) 
     gs1 = gridspec.GridSpec(1, 2)
-   	#------------------------------------------------------
+    #------------------------------------------------------
     ax1 = plt.subplot(gs1[0,0])
-    for ic in range(len(icois)):
+    for ic in range(len(GMI_tbs1_37)):
         plt.scatter(GMI_tbs1_37[ic], GMI_tbs1_85[ic], s=40, marker='*', color=colors_plot[ic], label=labels_plot[ic])
     plt.grid(True)
     plt.legend()
@@ -3004,12 +3106,16 @@ def plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois):
     plt.xlabel('TBV(37)')
     plt.ylabel('TBV(85)')
 
-   	#------------------------------------------------------
+    #------------------------------------------------------
     ax1 = plt.subplot(gs1[0,1])
-    for ic in range(len(icois)):
+    for ic in range(len(RN_inds)):
         plt.scatter(np.ravel(radarTH)[RN_inds[ic]], np.ravel(radarZDR)[RN_inds[ic]]-opts['ZDRoffset'], s=20, marker='x', color=colors_plot[ic], label=labels_plot[ic])
     plt.xlabel('ZH')
     plt.ylabel('ZDR')	
+
+	
+    fig.savefig(options['fig_dir']+'variable_scatter_plots_noparallaxfix.png', dpi=300,transparent=False)   
+    plt.close()
 
     return
 
@@ -3146,14 +3252,14 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     #del grided 
 
     if len(icois) == 3: 
-        [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
-	 GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
-            GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+options['rfile'][15:19]+' UTC and PF at '+time_pfs[0]+' UTC', gmi_dir+options['gfile'], 0, options, era5_dir+era5_file, icoi=icois, use_freezingLev=0)
-        GMI_tbs1_37 = [GMI_tbs1_COI1[:,5], GMI_tbs1_COI2[:,5], GMI_tbs1_COI3[:,5]]
-        GMI_tbs1_85 = [GMI_tbs1_COI1[:,7], GMI_tbs1_COI2[:,7], GMI_tbs1_COI3[:,7]]
-        RN_inds     = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
+        #[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
+	# GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
+        #    GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+options['rfile'][15:19]+' UTC and PF at '+time_pfs[0]+' UTC', gmi_dir+options['gfile'], 0, options, era5_dir+era5_file, icoi=icois, use_freezingLev=0)
+        #GMI_tbs1_37 = [GMI_tbs1_COI1[:,5], GMI_tbs1_COI2[:,5], GMI_tbs1_COI3[:,5]]
+        #RN_inds     = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
         # ---- plot scatter plots: 
-        plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois)
+	plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
+        #plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois)
 	#----------------------------------------------------------------------------------------------
 	#----- plot density figures 
 	#make_densityPlot(radarTH, radarZDR, RN_inds_COI1, RN_inds_COI2, RN_inds_COI3)
@@ -3177,9 +3283,7 @@ def main():
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
-    # automatizarestas figuras para hacerlas para todos los casos !!!
     # ver tambien twitter como decia nesbitt. y exteneder casos luego! 
-
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO SUPERCELDA: 
@@ -3212,57 +3316,6 @@ def main():
 
 
 
-    #---------------------------------------------------------------------------------------------
-    # COMMON: 
-     
-    def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azimuths_oi, labels_PHAIL, xlims_xlims_input)
-
-    	gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-    	era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
-	r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
-   	radar = pyart.io.read(r_dir+options['rfile'])
-
-	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
-    	radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    	radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    	radar = add_43prop_field(radar) 
-	
-	radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280)
-	plot_HID_PPI(radar, options, 0, azimuth_ray, diff_value, tfield_ref, alt_ref)
-	plot_HID_PPI(radar, options, 1, azimuth_ray, diff_value, tfield_ref, alt_ref)
-	plot_HID_PPI(radar, options, 2, azimuth_ray, diff_value, tfield_ref, alt_ref)
-	radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280)
-
-	for ic in range(len(xlims_xlims_input)): 
-		plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev)
-	summary_radar_obs(radar, gmi_dir+options['gfile'], options)
-	grided  = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), grid_limits=((0.,20000,), 
-		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
-                roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')  
-	make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input)
-	plot_gmi(gmi_dir+options['gfile'], options, r_dir,options['rfile'], [lon_pfs[0]], [lat_pfs[0]])
-	gc.collect()
-	#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
-    	# OJO for use_freezingLev == 0 es decir ground level! 
-	if len(icois) == 3: 
-            [gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
-            GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
-            GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+options['rfile'][15:19]+' UTC and PF at '+time_pfs[0]+' UTC', gmi_dir+options['gfile'], 0, options, era5_dir+era5_file, icoi=icois, use_freezingLev=0)
-            GMI_tbs1_37 = [GMI_tbs1_COI1[:,5], GMI_tbs1_COI2[:,5], GMI_tbs1_COI3[:,5]]
-            GMI_tbs1_85 = [GMI_tbs1_COI1[:,7], GMI_tbs1_COI2[:,7], GMI_tbs1_COI3[:,7]]
-            RN_inds     = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
-            # ---- plot scatter plots: 
-            plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois)
-	    #----------------------------------------------------------------------------------------------
-	    #----- plot density figures 
-	    #make_densityPlot(radarTH, radarZDR, RN_inds_COI1, RN_inds_COI2, RN_inds_COI3)
-	    #gridedTH  = gridded.fields['TH']['data'][0,:,:]
-     	    #gridedZDR = (gridded.fields['TH']['data'][0,:,:]-gridded.fields['TV']['data'][0,:,:]) - opts['ZDRoffset']
-     	    #make_densityPlot(gridedTH, gridedZDR, RB_inds_COI1, RB_inds_COI2, RB_inds_COI3)
-	    #----------------------------------------------------------------------------------------------
-  
-		
-		
 		Nr pixels, mean values ? std. barplot, hid most probale! 
  
 	
