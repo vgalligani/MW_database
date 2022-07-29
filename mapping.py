@@ -1964,7 +1964,7 @@ def check_transec_rma_campos(dat_dir, file_PAR_all, test_transect, campo, nlev):
 	
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
-
+#plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T)	
 def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T): 
 
     print(radar.fields.keys())
@@ -2068,12 +2068,11 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         PHIDP_transect[nlev,:]   = PHIPHI[filas,:]	
         HID_transect[nlev,:]     = HIDHID[filas,:]
         alt_43aproox[nlev,:]     = radar.fields['height']['data'][start_index:end_index][filas,:]
-	# 
         [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
-        alt_43aproox[nlev,:]    = radar.fields['height']['data'][start_index:end_index][filas,:]
-        approx_altitude[nlev,:]       = alt_43aproox[nlev,:]/1e3; #zgate/1e3;
-	gate_range[nlev,:]      = gates_range[filas,:]/1e3;
-        #
+        alt_43aproox[nlev,:]    = np.ravel(radar.fields['height']['data'][start_index:end_index][filas,:])
+        approx_altitude[nlev,:] = zgate/1e3;
+        gate_range[nlev,:]      = gates_range[filas,:]/1e3;
+	#
         #scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
         #                                     rho=RHO_transect[nlev,:], kdp=KDP_transect[nlev,:], 
         #                                     use_temp=True, band='C', T=radar_T)
