@@ -3074,23 +3074,23 @@ def plot_scatter(options, radar, icois, fname):
         hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
         check_points = np.vstack((hull_coors_CONCAVE)).T
         concave_path = Path(check_points)
-	
+			
         if ii==0:
             inds_1   = concave_path.contains_points(datapts)
             inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [RN_inds_COI1]
+            RN_inds      = [inds_RN1]
             GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5]]
             GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7]]
         if ii==1:
             inds_2   = concave_path.contains_points(datapts)
             inds_RN2 = hull_path.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [RN_inds_COI1, RN_inds_COI2]
+            RN_inds      = [inds_RN1, inds_RN2]
             GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5], tb_s1_gmi_inside[inds_2,5]]
             GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7], tb_s1_gmi_inside[inds_2,7]]
         if ii==2:
             inds_3   = hull_path.contains_points(datapts)
             inds_RN3 = hull_path.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
+            RN_inds      = [inds_RN1, inds_RN2, inds_RN3 ]
             GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5], tb_s1_gmi_inside[inds_2,5], tb_s1_gmi_inside[inds_3,5]]
             GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7], tb_s1_gmi_inside[inds_2,7], tb_s1_gmi_inside[inds_3,7]]
 	
@@ -3123,7 +3123,7 @@ def plot_scatter(options, radar, icois, fname):
 
 	
     fig.savefig(options['fig_dir']+'variable_scatter_plots_noparallaxfix.png', dpi=300,transparent=False)   
-    plt.close()
+    #plt.close()
 
     return
 
