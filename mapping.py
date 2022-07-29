@@ -3032,8 +3032,8 @@ def summary_radar_obs(radar, fname, options):
             lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
         PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
         nlev = 0 
-	start_index = radar.sweep_start_ray_index['data'][0]
-        end_index   = radar.sweep_end_ray_index['data'][0]
+        start_index = radar.sweep_start_ray_index['data'][0]
+	end_index   = radar.sweep_end_ray_index['data'][0]
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
         TH    = radar.gate_longitude['data'][start_index:end_index]
