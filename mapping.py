@@ -3009,8 +3009,8 @@ def get_contour_info(contorno, icois, datapts_in):
        	if ii == 1:
             inds_2   = concave_path.contains_points(datapts_in)
             TB_inds      = [inds_1, inds_2]
-        if ii ==3:
-            inds_3   = hull_path.contains_points(datapts_in)
+        if ii == 2:
+            inds_3   = concave_path.contains_points(datapts_in)
             TB_inds      = [inds_1, inds_2, inds_3]
     
 
@@ -3097,14 +3097,24 @@ def plot_scatter(options, radar, icois, fname):
  
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
-    for ii in range(len(RN_inds)): 	
+    for ii in range(len(TB_inds)): 	
     	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
     	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
 	
     if len(icois)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
-
+ 
+    # Filters
+    ni = radarTH.shape[0]
+    nj = radarTH.shape[1]
+    for i in range(ni):
+        rho_h = radar.fields['RHOHV']['data'][start_index:end_index][i,:]
+        zh_h  = radarTH[i,:].copy()
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                radarZDR[i,j]  = np.nan
+                radarTH[i,j]  = np.nan
     #------------------------------------------------------
     # FIGURE scatter plot check
     # scatter plots the tbs y de Zh a ver si esta ok 
@@ -3121,16 +3131,20 @@ def plot_scatter(options, radar, icois, fname):
     plt.xlabel('TBV(37)')
     plt.ylabel('TBV(85)')
 
-    #------------------------------------------------------
+    #------------------------------------------------------	
     ax1 = plt.subplot(gs1[0,1])
     for ic in range(len(RN_inds_parallax)):
         plt.scatter(np.ravel(radarTH)[RN_inds_parallax[ic]], np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset'], s=20, marker='x', color=colors_plot[ic], label=labels_plot[ic])
     plt.xlabel('ZH')
     plt.ylabel('ZDR')	
+    plt.ylim([-15, 10])
+    plt.xlim([30, 65])
 
 	
     fig.savefig(options['fig_dir']+'variable_scatter_plots_noparallaxfix.png', dpi=300,transparent=False)   
     #plt.close()
+	
+    del radar 
 
     return
 
@@ -3274,7 +3288,6 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         #RN_inds     = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
         # ---- plot scatter plots: 
 	plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
-        #plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois)
 	#----------------------------------------------------------------------------------------------
 	#----- plot density figures 
 	#make_densityPlot(radarTH, radarZDR, RN_inds_COI1, RN_inds_COI2, RN_inds_COI3)
