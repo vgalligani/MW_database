@@ -3141,7 +3141,7 @@ def plot_scatter(options, radar, icois, fname):
     plt.xlim([30, 65])
 
 	
-    fig.savefig(options['fig_dir']+'variable_scatter_plots_noparallaxfix.png', dpi=300,transparent=False)   
+    fig.savefig(options['fig_dir']+'variable_scatter_plots.png', dpi=300,transparent=False)   
     #plt.close()
 	
     del radar 
