@@ -3097,7 +3097,7 @@ def plot_scatter(options, radar, icois, fname):
  
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
-    for ii in length(RN_inds): 	
+    for ii in range(len(RN_inds)): 	
     	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
     	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
 	
