@@ -2974,6 +2974,56 @@ def check_this(azimuth_ray):
     return 
 
 #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_contour_info(contorno, icois): 
+
+    # Get verticies: 
+    for item in contorno.collections:
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1] 
+
+    # Get vertices of these polygon type shapes
+    for ii in range(len(icois)): 
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno.collections[0].get_paths()[int(icois[ii])].vertices)): 
+            X1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0])
+            Y1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1])
+            vertices.append([contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
+                                        contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
+        convexhull = ConvexHull(vertices)
+        array_points = np.array(vertices)
+
+        hull_path   = Path( array_points[convexhull.vertices] )
+        #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
+        alpha = 0.95 * alphashape.optimizealpha(array_points)
+        hull_pts_CONCAVE   = alphashape.alphashape(array_points, alpha)
+        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
+        check_points = np.vstack((hull_coors_CONCAVE)).T
+        concave_path = Path(check_points)
+        
+        if ii == 0:
+            inds_1   = concave_path.contains_points(datapts)
+            inds_RN1 = hull_path_PARALLAX.contains_points(datapts_RADAR_NATIVE)
+            RN_inds      = [inds_RN1]
+            TB_inds      = [inds_1]
+       	if ii == 1:
+            inds_2   = concave_path.contains_points(datapts)
+            inds_RN2 = hull_path_PARALLAX.contains_points(datapts_RADAR_NATIVE)
+            RN_inds      = [inds_RN1, inds_RN2]
+            TB_inds      = [inds_1, inds_2]
+        if ii ==3:
+            inds_3   = hull_path.contains_points(datapts)
+            inds_RN3 = hull_path_PARALLAX.contains_points(datapts_RADAR_NATIVE)
+            RN_inds      = [inds_RN1, inds_RN2, inds_RN3]
+            TB_inds      = [inds_1, inds_2, inds_3]
+    
+
+    return RN_inds, TB_inds
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #def plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois): 
 def plot_scatter(options, radar, icois, fname): 
 	
@@ -3008,7 +3058,6 @@ def plot_scatter(options, radar, icois, fname):
 
     PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
 
-    # check contour (BUT NO PARALLAX FIX THIS TIME!)
     nlev=0
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -3046,55 +3095,19 @@ def plot_scatter(options, radar, icois, fname):
     contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
     
-    # GET CONTOURNOS DE BT (ORIGINALES SIN CORREXION PARALAJE)
-    for item in contorno89.collections:
-        for i in item.get_paths():
-            v = i.vertices
-            x = v[:, 0]
-            y = v[:, 1]            
-    # Get vertices of these polygon type shapes
-    for ii in range(len(icois)): 
-        X1 = []; Y1 = []; vertices = []
-        for ik in range(len(contorno89.collections[0].get_paths()[int(icois[ii])].vertices)): 
-            X1.append(contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][0])
-            Y1.append(contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][1])
-            vertices.append([contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
-                                        contorno89.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
-        convexhull = ConvexHull(vertices)
-        array_points = np.array(vertices)
+    datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+    datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
 
-        hull_path   = Path( array_points[convexhull.vertices] )
-        datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
-        datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
-
-	#------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
-        alpha = 0.95 * alphashape.optimizealpha(array_points)
-        hull_pts_CONCAVE = alphashape.alphashape(array_points, alpha)
-        #axes.add_patch(PolygonPatch(hull_pts_CONCAVE, fill=False, color='m'))
-        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
-        check_points = np.vstack((hull_coors_CONCAVE)).T
-        concave_path = Path(check_points)
-			
-        if ii==0:
-            inds_1   = concave_path.contains_points(datapts)
-            inds_RN1 = hull_path.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [inds_RN1]
-            GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5]]
-            GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7]]
-        if ii==1:
-            inds_2   = concave_path.contains_points(datapts)
-            inds_RN2 = hull_path.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [inds_RN1, inds_RN2]
-            GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5], tb_s1_gmi_inside[inds_2,5]]
-            GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7], tb_s1_gmi_inside[inds_2,7]]
-        if ii==2:
-            inds_3   = hull_path.contains_points(datapts)
-            inds_RN3 = hull_path.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [inds_RN1, inds_RN2, inds_RN3 ]
-            GMI_tbs1_37  = [tb_s1_gmi_inside[inds_1,5], tb_s1_gmi_inside[inds_2,5], tb_s1_gmi_inside[inds_3,5]]
-            GMI_tbs1_85  = [tb_s1_gmi_inside[inds_1,7], tb_s1_gmi_inside[inds_2,7], tb_s1_gmi_inside[inds_3,7]]
+    RN_inds_PARALLAX, TB_inds_PARALLAX =  get_contour_info(contorno89, icois)
+    RN_inds, TB_inds =  get_contour_info(contorno89_FIX, icois)
+ 
+    GMI_tbs1_37 = []
+    GMI_tbs1_85 = [] 	
+    for ii in length(RN_inds): 	
+    	GMI_tbs1_37.append( tb_s1_gmi_inside[RN_inds[ii],5] ) 
+    	GMI_tbs1_85.append( tb_s1_gmi_inside[RN_inds[ii],7] ) 
 	
-    if len(GMI_tbs1_85)==3:
+    if len(icois)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
 
