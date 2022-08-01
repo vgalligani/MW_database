@@ -2975,7 +2975,7 @@ def check_this(azimuth_ray):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def get_contour_info(contorno, icois): 
+def get_contour_info(contorno, icois, datapts_in): 
 
     # Get verticies: 
     for item in contorno.collections:
@@ -3004,23 +3004,17 @@ def get_contour_info(contorno, icois):
         concave_path = Path(check_points)
         
         if ii == 0:
-            inds_1   = concave_path.contains_points(datapts)
-            inds_RN1 = hull_path_PARALLAX.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [inds_RN1]
+            inds_1   = concave_path.contains_points(datapts_in)
             TB_inds      = [inds_1]
        	if ii == 1:
-            inds_2   = concave_path.contains_points(datapts)
-            inds_RN2 = hull_path_PARALLAX.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [inds_RN1, inds_RN2]
+            inds_2   = concave_path.contains_points(datapts_in)
             TB_inds      = [inds_1, inds_2]
         if ii ==3:
-            inds_3   = hull_path.contains_points(datapts)
-            inds_RN3 = hull_path_PARALLAX.contains_points(datapts_RADAR_NATIVE)
-            RN_inds      = [inds_RN1, inds_RN2, inds_RN3]
+            inds_3   = hull_path.contains_points(datapts_in)
             TB_inds      = [inds_1, inds_2, inds_3]
     
 
-    return RN_inds, TB_inds
+    return TB_inds
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -3092,20 +3086,20 @@ def plot_scatter(options, radar, icois, fname):
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     
     datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
     datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
 
-    RN_inds_PARALLAX, TB_inds_PARALLAX =  get_contour_info(contorno89, icois)
-    RN_inds, TB_inds =  get_contour_info(contorno89_FIX, icois)
+    TB_inds =  get_contour_info(contorno89, icois, datapts)
+    RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
  
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
     for ii in length(RN_inds): 	
-    	GMI_tbs1_37.append( tb_s1_gmi_inside[RN_inds[ii],5] ) 
-    	GMI_tbs1_85.append( tb_s1_gmi_inside[RN_inds[ii],7] ) 
+    	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
+    	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
 	
     if len(icois)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
@@ -3129,8 +3123,8 @@ def plot_scatter(options, radar, icois, fname):
 
     #------------------------------------------------------
     ax1 = plt.subplot(gs1[0,1])
-    for ic in range(len(RN_inds)):
-        plt.scatter(np.ravel(radarTH)[RN_inds[ic]], np.ravel(radarZDR)[RN_inds[ic]]-opts['ZDRoffset'], s=20, marker='x', color=colors_plot[ic], label=labels_plot[ic])
+    for ic in range(len(RN_inds_parallax)):
+        plt.scatter(np.ravel(radarTH)[RN_inds_parallax[ic]], np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset'], s=20, marker='x', color=colors_plot[ic], label=labels_plot[ic])
     plt.xlabel('ZH')
     plt.ylabel('ZDR')	
 
