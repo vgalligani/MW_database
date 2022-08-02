@@ -3378,7 +3378,8 @@ def main():
     azimuths_oi  = [356,220,192]
     labels_PHAIL = ['1','3[Phail = 0.534]','4'] 
     xlims_xlims_input  = [60, 100, 150] 
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input)
+    xlims_mins_input  = [10, 40, 60]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
 
 
