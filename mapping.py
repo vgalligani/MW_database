@@ -1742,7 +1742,7 @@ def check_transec(radar, test_transect, lon_pf, lat_pf, options):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims, alt_ref, tfield_ref, options): 
+def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims_mins, xlims_xlims, alt_ref, tfield_ref, options): 
 
     plt.matplotlib.rc('font', family='serif', size = 20)
     plt.rcParams['font.sans-serif'] = ['Helvetica']
@@ -1846,30 +1846,30 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
 
         axes[0,iz].set_title('coi='+titlecois[iz]) 
         if iz == 1:
-            axes[0,iz].set_xlim([0,xlims_xlims[1]])
-            axes[1,iz].set_xlim([0,xlims_xlims[1]])
-            axes[2,iz].set_xlim([0,xlims_xlims[1]])
-            axes[3,iz].set_xlim([0,xlims_xlims[1]])
+            axes[0,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
        	    axes[0,iz].set_ylim([0,15])
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
             axes[3,iz].set_ylim([0,15])
 	
         if iz == 2:
-            axes[0,iz].set_xlim([0,xlims_xlims[2]])
-            axes[1,iz].set_xlim([0,xlims_xlims[2]])
-            axes[2,iz].set_xlim([0,xlims_xlims[2]])
-            axes[3,iz].set_xlim([0,xlims_xlims[2]])
+            axes[0,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
        	    axes[0,iz].set_ylim([0,15])
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
             axes[3,iz].set_ylim([0,15])
 	
         if iz == 3:
-            axes[0,iz].set_xlim([0,xlims_xlims[2]])
-            axes[1,iz].set_xlim([0,xlims_xlims[2]])
-            axes[2,iz].set_xlim([0,xlims_xlims[2]])
-            axes[3,iz].set_xlim([0,xlims_xlims[2]])
+            axes[0,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
        	    axes[0,iz].set_ylim([0,15])
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
@@ -1880,10 +1880,10 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             axes[1,0].set_ylabel('Altitude (km)')
             axes[2,0].set_ylabel('Altitude (km)')
             axes[3,0].set_ylabel('Altitude (km)')
-            axes[0,iz].set_xlim([0,xlims_xlims[0]])
-            axes[1,iz].set_xlim([0,xlims_xlims[0]])
-            axes[2,iz].set_xlim([0,xlims_xlims[0]])
-            axes[3,iz].set_xlim([0,xlims_xlims[0]])
+            axes[0,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
             axes[3,0].set_xlabel('Range (km)')
        	    axes[0,iz].set_ylim([0,15])
        	    axes[1,iz].set_ylim([0,15])
@@ -3315,7 +3315,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
 		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
     gc.collect()
-    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref, options)
+    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
     gc.collect()
 
     breakpoint()
