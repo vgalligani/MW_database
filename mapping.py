@@ -1920,6 +1920,25 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     #plt.close()
     del grid_THTH, grid_RHO, grid_TVTV, grid_HID
 	
+    #-------------------------------
+    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[20,6])
+    for i in range(4):
+        im_HID = axes[i].pcolormesh(gridded_radar.point_longitude['data'][i,:,:], 
+        gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+        axes[i].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[i].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[i].plot(lon_radius, lat_radius, 'k', linewidth=0.8)   
+        axes[i].set_xlabel('Longitude')
+        axes[i].set_ylabel('Latitude')
+        cbar = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')
+        cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    #- savefile
+    fig.savefig(options['fig_dir']+'RHIS_GRIDDED_firstlevels'+'.png', dpi=300,transparent=False)   
+    #plt.close()
+
     return
 	
 #------------------------------------------------------------------------------
