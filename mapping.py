@@ -3194,8 +3194,8 @@ def summary_radar_obs(radar, fname, options):
         PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
         nlev = 0 
         start_index   = radar.sweep_start_ray_index['data'][0]
-	end_index   = radar.sweep_end_ray_index['data'][0]
-        lats  = radar.gate_latitude['data'][start_index:end_index]
+        end_index   = radar.sweep_end_ray_index['data'][0]
+	lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
         TH    = radar.gate_longitude['data'][start_index:end_index]
         #-------------------------- ZH y contornos y RHO
@@ -3272,19 +3272,13 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     gc.collect()
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
-    gc.collect()
-	
     # 500m grid! 
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
 		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
-    gc.collect()
-    
-
-    breakpoint()
-
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
-    
+    gc.collect()
+    breakpoint()
     
     #del grided 
 
@@ -3318,8 +3312,6 @@ def main():
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
-
-    # ver tambien twitter como decia nesbitt. y exteneder casos luego! 
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO SUPERCELDA: 
@@ -3346,13 +3338,8 @@ def main():
 
 
 
-
-
-
-
-
-
-		Nr pixels, mean values ? std. barplot, hid most probale! 
+    # ver tambien twitter como decia nesbitt. y exteneder casos luego! 
+    # Nr pixels, mean values ? std. barplot, hid most probale! 
  
 	
 		
