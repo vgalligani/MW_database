@@ -1742,7 +1742,7 @@ def check_transec(radar, test_transect, lon_pf, lat_pf, options):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims, alt_ref, tfield_ref): 
+def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims, alt_ref, tfield_ref, options): 
 
     plt.matplotlib.rc('font', family='serif', size = 20)
     plt.rcParams['font.sans-serif'] = ['Helvetica']
@@ -3147,7 +3147,7 @@ def plot_scatter(options, radar, icois, fname):
     del radar 
 
     return
-
+ 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 
@@ -3272,12 +3272,14 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     gc.collect()
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
-    # 2500m grid! 
-    #grided  = pyart.map.grid_from_radars(radar, grid_shape=(80, 1891, 1891), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-    #  		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
-    #        roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')  
-    #make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
-    #gc.collect()
+    # 500m grid! 
+    grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
+		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
+    gc.collect()
+    breakpoint()
+    
     #del grided 
 
     if len(icois) == 3: 
