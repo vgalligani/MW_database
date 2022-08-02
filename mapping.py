@@ -1850,17 +1850,31 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             axes[1,iz].set_xlim([0,xlims_xlims[1]])
             axes[2,iz].set_xlim([0,xlims_xlims[1]])
             axes[3,iz].set_xlim([0,xlims_xlims[1]])
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+	
         if iz == 2:
             axes[0,iz].set_xlim([0,xlims_xlims[2]])
             axes[1,iz].set_xlim([0,xlims_xlims[2]])
             axes[2,iz].set_xlim([0,xlims_xlims[2]])
             axes[3,iz].set_xlim([0,xlims_xlims[2]])
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+	
         if iz == 3:
             axes[0,iz].set_xlim([0,xlims_xlims[2]])
             axes[1,iz].set_xlim([0,xlims_xlims[2]])
             axes[2,iz].set_xlim([0,xlims_xlims[2]])
             axes[3,iz].set_xlim([0,xlims_xlims[2]])
-
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+		
         if iz == 0:
             axes[0,0].set_ylabel('Altitude (km)')
             axes[1,0].set_ylabel('Altitude (km)')
@@ -1871,8 +1885,13 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             axes[2,iz].set_xlim([0,xlims_xlims[0]])
             axes[3,iz].set_xlim([0,xlims_xlims[0]])
             axes[3,0].set_xlabel('Range (km)')
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+	
         if iz == len(azi_oi)-1: 
-            # Add colorbars #ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height])
+	    # Add colorbars #ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height])
             pm1    = axes[0,iz-1].get_position().get_points().flatten()
             p_last = axes[0,iz].get_position().get_points().flatten(); 
 
@@ -1894,11 +1913,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             #cbar.cmap.set_under('white')
 
             pm2    = axes[3,iz-1].get_position().get_points().flatten()
-           
-        axes[0,iz].set_ylim([0,15])
-	axes[1,iz].set_ylim([0,15])
-        axes[2,iz].set_ylim([0,15])
-        axes[3,iz].set_ylim([0,15])
+
 		
     #- savefile
     fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
