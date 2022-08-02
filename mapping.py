@@ -1894,11 +1894,16 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             #cbar.cmap.set_under('white')
 
             pm2    = axes[3,iz-1].get_position().get_points().flatten()
-
-	#- savefile
-        fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
-        plt.close()
-        del grid_THTH, grid_RHO, grid_TVTV, grid_HID
+           
+        axes[0,iz].set_ylim([0,15])
+	axes[1,iz].set_ylim([0,15])
+        axes[2,iz].set_ylim([0,15])
+        axes[3,iz].set_ylim([0,15])
+		
+    #- savefile
+    fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
+    #plt.close()
+    del grid_THTH, grid_RHO, grid_TVTV, grid_HID
 	
     return
 	
@@ -3276,8 +3281,10 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
 		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
-    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
     gc.collect()
+    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref, options)
+    gc.collect()
+
     breakpoint()
     
     #del grided 
