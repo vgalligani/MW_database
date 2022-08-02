@@ -3272,13 +3272,19 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     gc.collect()
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
+    gc.collect()
+	
     # 500m grid! 
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
 		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
-    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
     gc.collect()
+    
+
     breakpoint()
+
+    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_xlims_input, alt_ref, tfield_ref)
+    
     
     #del grided 
 
