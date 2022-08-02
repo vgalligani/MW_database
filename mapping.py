@@ -1921,24 +1921,27 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     del grid_THTH, grid_RHO, grid_TVTV, grid_HID
 	
     #-------------------------------
-    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[20,6])
-    for i in range(4):
-        im_HID = axes[i].pcolormesh(gridded_radar.point_longitude['data'][i,:,:], 
-        gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-        axes[i].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-        axes[i].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-        axes[i].plot(lon_radius, lat_radius, 'k', linewidth=0.8)   
-        axes[i].set_xlabel('Longitude')
-        axes[i].set_ylabel('Latitude')
-        cbar = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')
-        cbar = adjust_fhc_colorbar_for_pyart(cbar)
-    #- savefile
-    fig.savefig(options['fig_dir']+'RHIS_GRIDDED_firstlevels'+'.png', dpi=300,transparent=False)   
-    #plt.close()
-
+    for i in range(20):
+    	fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+    	im_HID = ax.pcolormesh(gridded_radar.point_longitude['data'][i,:,:], 
+    	gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
+    	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    	ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    	ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    	ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)  
+    	ax.set_xlabel('Longitude')
+    	ax.set_ylabel('Latitude')
+    	ax.set_title('HID '+ str( round(grid_alt[i,0]/1e3,1)) +' km')
+    	cbar = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')
+    	cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    	ax.set_xlim([options['xlim_min'], options['xlim_max']])	
+    	ax.set_ylim([options['ylim_min'], options['ylim_max']])
+    	#- savefile
+    	fig.savefig(options['fig_dir']+'RHIS_GRIDDED_verticalLEVi'+str(i)+'.png', dpi=300,transparent=False)
+	plt.close()
+	
     return
 	
 #------------------------------------------------------------------------------
@@ -3286,7 +3289,7 @@ def summary_radar_obs(radar, fname, options):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azimuths_oi, labels_PHAIL, xlims_xlims_input):
+def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
@@ -3307,7 +3310,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
 
     for ic in range(len(xlims_xlims_input)): 
         check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
-        plot_rhi_RMA(radar, 'RMA1', 0, xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
+        plot_rhi_RMA(radar, 'RMA1', xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
     gc.collect()
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
