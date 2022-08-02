@@ -1922,26 +1922,22 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
 	
     #-------------------------------
     for i in range(20):
-    	fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
-    	im_HID = ax.pcolormesh(gridded_radar.point_longitude['data'][i,:,:], 
-    	gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
-    	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    	ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    	ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    	[lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    	ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)  
-    	ax.set_xlabel('Longitude')
-    	ax.set_ylabel('Latitude')
-    	ax.set_title('HID '+ str( round(grid_alt[i,0]/1e3,1)) +' km')
-    	cbar = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')
-    	cbar = adjust_fhc_colorbar_for_pyart(cbar)
-    	ax.set_xlim([options['xlim_min'], options['xlim_max']])	
-    	ax.set_ylim([options['ylim_min'], options['ylim_max']])
-    	#- savefile
-    	fig.savefig(options['fig_dir']+'RHIS_GRIDDED_verticalLEVi'+str(i)+'.png', dpi=300,transparent=False)
-	plt.close()
-	
+        fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+        im_HID = ax.pcolormesh(gridded_radar.point_longitude['data'][i,:,:], 
+        gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+        ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)  
+        ax.set_xlabel('Longitude'); ax.set_ylabel('Latitude')
+        ax.set_title('HID '+ str( round(grid_alt[i,0]/1e3,1)) +' km')
+        cbar = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')
+        cbar = adjust_fhc_colorbar_for_pyart(cbar)
+        ax.set_xlim([options['xlim_min'], options['xlim_max']])	
+        ax.set_ylim([options['ylim_min'], options['ylim_max']])
+        fig.savefig(options['fig_dir']+'RHIS_GRIDDED_verticalLevel_'+str(i)+'.png', dpi=300,transparent=False); plt.close()
     return
 	
 #------------------------------------------------------------------------------
