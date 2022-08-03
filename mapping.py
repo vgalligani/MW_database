@@ -2730,7 +2730,7 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     cmaphid       = colors.ListedColormap(hid_colors)
 
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
-    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.4, vmax=10)
+    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0, vmax=10)
     axes.set_title('HID nlev '+str(nlev)+' PPI')
     axes.set_xlim([options['xlim_min'], options['xlim_max']])
     axes.set_ylim([options['ylim_min'], options['ylim_max']])
@@ -2790,6 +2790,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=(dzh_-dzv_) - opts['ZDRoffset'], 
 					     rho=drho_, kdp=dkdp_, 
                                              use_temp=True, band='C', T=radar_T)
+
     RHIs_nlev = np.argmax(scores, axis=0) + 1 
     radar.add_field_like('KDP','HID', RHIs_nlev, replace_existing=True)
 	
@@ -3283,6 +3284,49 @@ def summary_radar_obs(radar, fname, options):
 
         return
 
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+def run_priority2Dmap(options, radar, grided):
+
+	# HID priority:  hail (HL), high-density graupel (HG), low-density graupel (LG), aggregates (AG), 
+	# ice crystals (CR) combined with vertically oriented crystals (VI), and a final group that 
+	# combines all liquid-phase hydrometeors and wet snow (WS). 
+	# HID types:           Species #:  
+	# -------------------------------
+	# ------ OJO QUE CERO NO VAS A TENER PQ FILTRASTE ESO ANTES? 
+	# eso es lo que sale de scores, a esto se le suma +1
+        # Drizzle                  1    
+        # Rain                     2    
+        # Ice Crystals             3
+        # Aggregates               4
+        # Wet Snow                 5
+        # Vertical Ice             6
+        # Low-Density Graupel      7
+        # High-Density Graupel     8
+        # Hail                     9
+        # Big Drops                10
+	# -------------------------------
+	# -------------------------------	
+	nz = grided.fields['HID']['data'].shape[0]
+	nx = grided.fields['HID']['data'].shape[1]
+	ny = grided.fields['HID']['data'].shape[2]
+	
+	priority_map = np.zeros((nx,ny)); priority_map[:] = np.nan
+	
+	for ix in range(nx):
+		for ik in range(ny):
+			if sum(grided.fields['TH']['data'][:,ix,ik]) > 30:
+				print(ix); print(ik); stop
+				check ix = 179#173
+				check iy = 408#454
+				HID_col = grided.fields['HID']['data'][:,ix,ik].copy() 
+				if HID_col.contains() 
+					priority_map
+	
+        return
+
+
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input):
@@ -3315,10 +3359,15 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
 		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
     gc.collect()
+    run_priority2Dmap(options, radar, grided) 
+    breakpoint() 
+
+	
+
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
     gc.collect()
     plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
-    
+    gc.collect()
 
     #if len(icois) == 3: 
         #[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
