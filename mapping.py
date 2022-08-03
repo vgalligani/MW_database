@@ -3233,8 +3233,8 @@ def summary_radar_obs(radar, fname, options):
         nlev = 0 
         start_index   = radar.sweep_start_ray_index['data'][0]
         end_index   = radar.sweep_end_ray_index['data'][0]
-	lats  = radar.gate_latitude['data'][start_index:end_index]
-        lons  = radar.gate_longitude['data'][start_index:end_index]
+        lats  = radar.gate_latitude['data'][start_index:end_index]
+	lons  = radar.gate_longitude['data'][start_index:end_index]
         TH    = radar.gate_longitude['data'][start_index:end_index]
         #-------------------------- ZH y contornos y RHO
         fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[20,6])
@@ -3317,19 +3317,16 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     gc.collect()
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
     gc.collect()
-
-    breakpoint()
+    plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     
-    #del grided 
 
-    if len(icois) == 3: 
+    #if len(icois) == 3: 
         #[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
 	# GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2,
         #    GMI_lon_COI3, GMI_lat_COI3, GMI_tbs1_COI3, RN_inds_COI3, RB_inds_COI3] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+options['rfile'][15:19]+' UTC and PF at '+time_pfs[0]+' UTC', gmi_dir+options['gfile'], 0, options, era5_dir+era5_file, icoi=icois, use_freezingLev=0)
         #GMI_tbs1_37 = [GMI_tbs1_COI1[:,5], GMI_tbs1_COI2[:,5], GMI_tbs1_COI3[:,5]]
         #RN_inds     = [RN_inds_COI1, RN_inds_COI2, RN_inds_COI3]
         # ---- plot scatter plots: 
-	plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
 	#----------------------------------------------------------------------------------------------
 	#----- plot density figures 
 	#make_densityPlot(radarTH, radarZDR, RN_inds_COI1, RN_inds_COI2, RN_inds_COI3)
