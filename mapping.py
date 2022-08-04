@@ -713,7 +713,6 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     drho_grid = grided.fields['RHOHV']['data']
     dkdp_grid = grided.fields['corrKDP']['data']
 
-    #breakpoint()
     # Filters
     ni = dzh_grid.shape[0]
     nj = dzh_grid.shape[1]
@@ -1098,19 +1097,19 @@ def queesesto():
 
         grid_HID[np.where(grid_RHO<0.7)] = np.nan
 
-        #---- plot hid ppi  
-        hid_colors = ['MediumBlue', 'DarkOrange', 'LightPink',
+        #---- plot hid ppi  	 
+        hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
                 'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
         cmaphid = colors.ListedColormap(hid_colors)
-        cmaphid.set_bad('white')
-        cmaphid.set_under('white')
-        cmaphid.set_over('white')
+        #cmaphid.set_bad('white')
+        #cmaphid.set_under('white')
+        #cmaphid.set_over('white')
         # Figure
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
         im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
-        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=1.8, vmax=10.4)
+        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.4, vmax=10.4)
         
         axes[0,iz].set_title('coi='+titlecois[iz])
         if iz == 1:
@@ -2703,7 +2702,7 @@ def calc_KDP(radar):
     aa=np.ma.filled(mask_kdp,fill_value=np.nan)
     bb = np.ma.masked_invalid(aa)
 
-    radar.add_field_like('TH','NEW_kdp',bb, replace_existing=True)
+    radar.add_field_like('RHOHV','NEW_kdp',bb, replace_existing=True)
 	
     return radar 
 
@@ -2730,7 +2729,7 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     cmaphid       = colors.ListedColormap(hid_colors)
 
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
-    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0, vmax=10)
+    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.4, vmax=10.4)
     axes.set_title('HID nlev '+str(nlev)+' PPI')
     axes.set_xlim([options['xlim_min'], options['xlim_max']])
     axes.set_ylim([options['ylim_min'], options['ylim_max']])
@@ -2760,12 +2759,12 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
 					   sys_phase, diff_value)
-    radar.add_field_like('PHIDP','corrPHIDP', corr_phidp, replace_existing=True)
+    radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
 
     # Y CALCULAR KDP! 
     calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
 					   method='lanczos_conv', skipna=True)	
-    radar.add_field_like('KDP','corrKDP', calculated_KDP, replace_existing=True)
+    radar.add_field_like('RHOHV','corrKDP', calculated_KDP, replace_existing=True)
 	
     # AGREGAR HID?
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
@@ -2792,7 +2791,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
                                              use_temp=True, band='C', T=radar_T)
 
     RHIs_nlev = np.argmax(scores, axis=0) + 1 
-    radar.add_field_like('KDP','HID', RHIs_nlev, replace_existing=True)
+    radar.add_field_like('RHOHV','HID', RHIs_nlev, replace_existing=True)
 	
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -3096,7 +3095,7 @@ def plot_scatter(options, radar, icois, fname):
     end_index   = radar.sweep_end_ray_index['data'][nlev]
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
-
+	
     #----------------------------------------------------------------------------------------
     # Test plot figure: General figure with Zh and the countours identified 
     #----------------------------------------------------------------------------------------
@@ -3343,9 +3342,9 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
 
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     gc.collect()
 
     for ic in range(len(xlims_xlims_input)): 
@@ -3359,15 +3358,12 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
 		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
     gc.collect()
-    run_priority2Dmap(options, radar, grided) 
-    breakpoint() 
-
-	
-
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
     gc.collect()
     plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
+    breakpoint() 
+    #run_priority2Dmap(options, radar, grided) 
 
     #if len(icois) == 3: 
         #[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
