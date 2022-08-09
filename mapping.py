@@ -3234,8 +3234,8 @@ def summary_radar_obs(radar, fname, options):
         start_index   = radar.sweep_start_ray_index['data'][0]
         end_index   = radar.sweep_end_ray_index['data'][0]
         lats  = radar.gate_latitude['data'][start_index:end_index]
-	lons  = radar.gate_longitude['data'][start_index:end_index]
-        TH    = radar.gate_longitude['data'][start_index:end_index]
+        lons  = radar.gate_longitude['data'][start_index:end_index]
+	TH    = radar.gate_longitude['data'][start_index:end_index]
         #-------------------------- ZH y contornos y RHO
         fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[20,6])
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
@@ -3286,8 +3286,8 @@ def summary_radar_obs(radar, fname, options):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def run_priority2Dmap(options, radar, grided):
-
+def get_prioritymap(grided):
+	
 	# HID priority:  hail (HL), high-density graupel (HG), low-density graupel (LG), aggregates (AG), 
 	# ice crystals (CR) combined with vertically oriented crystals (VI), and a final group that 
 	# combines all liquid-phase hydrometeors and wet snow (WS). 
@@ -3295,18 +3295,20 @@ def run_priority2Dmap(options, radar, grided):
 	# -------------------------------
 	# ------ OJO QUE CERO NO VAS A TENER PQ FILTRASTE ESO ANTES? 
 	# eso es lo que sale de scores, a esto se le suma +1
-        # Drizzle                  1    
-        # Rain                     2    
-        # Ice Crystals             3
-        # Aggregates               4
-        # Wet Snow                 5
-        # Vertical Ice             6
-        # Low-Density Graupel      7
-        # High-Density Graupel     8
-        # Hail                     9
-        # Big Drops                10
+        # Drizzle                  1  -> rank: 6
+        # Rain                     2  -> rank: 6    
+        # Ice Crystals             3  -> rank: 4
+        # Aggregates               4  -> rank: 3
+        # Wet Snow                 5  -> rank: 6
+        # Vertical Ice             6  -> rank: 5
+        # Low-Density Graupel      7  -> rank: 2
+        # High-Density Graupel     8  -> rank: 1
+        # Hail                     9  -> rank: 0
+        # Big Drops                10 -> rank: 6
 	# -------------------------------
 	# -------------------------------	
+	prior_list = [9., 8., 7., 4., 3., 6., 5., 10., 2., 1., 0.]
+	
 	nz = grided.fields['HID']['data'].shape[0]
 	nx = grided.fields['HID']['data'].shape[1]
 	ny = grided.fields['HID']['data'].shape[2]
@@ -3314,14 +3316,33 @@ def run_priority2Dmap(options, radar, grided):
 	priority_map = np.zeros((nx,ny)); priority_map[:] = np.nan
 	
 	for ix in range(nx):
-		for ik in range(ny):
-			if sum(grided.fields['TH']['data'][:,ix,ik]) > 30:
-				print(ix); print(ik); stop
-				check ix = 179#173
-				check iy = 408#454
-				HID_col = grided.fields['HID']['data'][:,ix,ik].copy() 
-				if HID_col.contains() 
-					priority_map
+		for iy in range(ny):
+				
+	ix = 268
+	iy = 430
+# here https://www.geeksforgeeks.org/python-extracting-priority-elements-in-tuple-list/
+	HID_col = np.zeros((grided.fields['HID']['data'][:,ix,iy].shape[0]))
+	HID_col[:] = grided.fields['HID']['data'][:,ix,iy]	
+	HID_col = HID_col.round()
+	
+	ordenar!!!
+	HID_sort = [sub[0] if prior_list.index(sub[0]) < prior_list.index(sub[1])
+              else sub[1] for sub in HID_col]
+		
+	
+	HID_srt = sorted(HID_col.data, key=lambda x: 
+			 #( (x!=9., x), (x!=8., x), (x!=7., x), (x!=4., x),
+		#				(x!=3., x), (x!=6., x), (x!=5., x), (x!=10., x), (x!=2., x), 
+			#			(x!=1., x),  (x!=0., x)))  			
+		
+	plt.plot(HID_col,'*k', label='HID')
+	plt.plot(HID_srt,'or', markerfacecolor='None', label='priority sort')
+	plt.grid(True)
+	plt.yticks(np.arange(1,11,1))
+	
+			 ojo quye lkos datos estan masked??? en grided? y tambien no son int!?
+
+
 	
         return
 
@@ -3362,7 +3383,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     gc.collect()
     plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
-    breakpoint() 
+    #breakpoint() 
     #run_priority2Dmap(options, radar, grided) 
 
     #if len(icois) == 3: 
