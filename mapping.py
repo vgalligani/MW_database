@@ -741,7 +741,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
 
     fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,
                         figsize=[14,4])
-    pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['HID']['data'][start_index:end_index], cmap=cmaphid, vmin=0.4, vmax=10.4)
+    pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['HID']['data'][start_index:end_index], cmap=cmaphid, vmin=0.2, vmax=10)
     axes[0].set_title('HID radar nlev 0 PPI')
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -753,7 +753,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     
-    pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], GRIDDED_HID[0,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
+    pcm1 = axes[1].pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], GRIDDED_HID[0,:,:], cmap=cmaphid, vmin=0.2, vmax=10)
     axes[1].set_title('HID GRIDDED 0 km')
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -765,7 +765,7 @@ def plot_Zhppi_wGMIcontour(radar, lat_pf, lon_pf, general_title, fname, nlev, op
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     
-    pcm1 = axes[2].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], GRIDDED_HID[frezlev,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
+    pcm1 = axes[2].pcolormesh(grided.point_longitude['data'][frezlev,:,:], grided.point_latitude['data'][frezlev,:,:], GRIDDED_HID[frezlev,:,:], cmap=cmaphid, vmin=0.2, vmax=10)
     axes[2].set_title(r'HID GRIDDED at '+str(round(grided.z['data'][frezlev]/1e3,2))+' km)')
     axes[2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[2].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -1109,7 +1109,7 @@ def queesesto():
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
         im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
-        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.4, vmax=10.4)
+        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
         
         axes[0,iz].set_title('coi='+titlecois[iz])
         if iz == 1:
@@ -1841,7 +1841,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
 
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
 
-        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.4, vmax=10.4)
+        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
 
         axes[0,iz].set_title('coi='+titlecois[iz]) 
         if iz == 1:
@@ -1923,7 +1923,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     for i in range(20):
         fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
         im_HID = ax.pcolormesh(gridded_radar.point_longitude['data'][i,:,:], 
-        gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.4, vmax=10.4)
+        gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.2, vmax=10)
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
         ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
@@ -2438,7 +2438,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
     fig.add_subplot(221)
     mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
                 HID_transect,
-                cmap = cmaphid, vmin=0.4, vmax=10.4)
+                cmap = cmaphid, vmin=0.2, vmax=10)
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
@@ -2448,7 +2448,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         fig.add_subplot(221)
         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
                 s=1,c=HID_transect[nlev,:],
-                cmap = cmaphid, vmin=0.4, vmax=10.4)
+                cmap = cmaphid, vmin=0.2, vmax=10)
         color[nlev,:,:] = sc.to_rgba(HID_transect[nlev,:])   # pyart.graph.cm.RefDiff
         plt.close()
 
@@ -2481,7 +2481,7 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
         axes[5].set_ylabel('Altitude (km)')
         axes[5].grid()
         axes[5].set_xlim((xlim_range1, xlim_range2))
-        norm = matplotlib.colors.Normalize(vmin=0.4,vmax=10.4)
+        norm = matplotlib.colors.Normalize(vmin=0.2,vmax=10)
         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmaphid)
         cax.set_array(HID_transect)
         cbar_HID = fig2.colorbar(cax, ax=axes[5], shrink=1.1, label=r'HID')    
@@ -2729,7 +2729,7 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     cmaphid       = colors.ListedColormap(hid_colors)
 
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
-    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.4, vmax=10.4)
+    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
     axes.set_title('HID nlev '+str(nlev)+' PPI')
     axes.set_xlim([options['xlim_min'], options['xlim_max']])
     axes.set_ylim([options['ylim_min'], options['ylim_max']])
@@ -3235,8 +3235,8 @@ def summary_radar_obs(radar, fname, options):
         end_index   = radar.sweep_end_ray_index['data'][0]
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
-	TH    = radar.gate_longitude['data'][start_index:end_index]
-        #-------------------------- ZH y contornos y RHO
+        TH    = radar.gate_longitude['data'][start_index:end_index]
+	#-------------------------- ZH y contornos y RHO
         fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[20,6])
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
@@ -3284,17 +3284,18 @@ def summary_radar_obs(radar, fname, options):
         return
 
 
+
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def get_prioritymap(grided):
-	
-	# HID priority:  hail (HL), high-density graupel (HG), low-density graupel (LG), aggregates (AG), 
-	# ice crystals (CR) combined with vertically oriented crystals (VI), and a final group that 
-	# combines all liquid-phase hydrometeors and wet snow (WS). 
-	# HID types:           Species #:  
-	# -------------------------------
-	# ------ OJO QUE CERO NO VAS A TENER PQ FILTRASTE ESO ANTES? 
-	# eso es lo que sale de scores, a esto se le suma +1
+def get_prioritymap(options, grided):
+
+   	# HID priority:  hail (HL), high-density graupel (HG), low-density graupel (LG), aggregates (AG), 
+   	# ice crystals (CR) combined with vertically oriented crystals (VI), and a final group that 
+   	# combines all liquid-phase hydrometeors and wet snow (WS). 
+   	# HID types:           Species #:  
+   	# -------------------------------
+   	# ------ OJO QUE CERO NO VAS A TENER PQ FILTRASTE ESO ANTES? 
+   	# eso es lo que sale de scores, a esto se le suma +1
         # Drizzle                  1  -> rank: 6
         # Rain                     2  -> rank: 6    
         # Ice Crystals             3  -> rank: 4
@@ -3305,46 +3306,42 @@ def get_prioritymap(grided):
         # High-Density Graupel     8  -> rank: 1
         # Hail                     9  -> rank: 0
         # Big Drops                10 -> rank: 6
-	# -------------------------------
-	# -------------------------------	
-	prior_list = [9., 8., 7., 4., 3., 6., 5., 10., 2., 1., 0.]
-	
-	nz = grided.fields['HID']['data'].shape[0]
-	nx = grided.fields['HID']['data'].shape[1]
-	ny = grided.fields['HID']['data'].shape[2]
-	
-	priority_map = np.zeros((nx,ny)); priority_map[:] = np.nan
-	
-	for ix in range(nx):
-		for iy in range(ny):
-				
-	ix = 268
-	iy = 430
-# here https://www.geeksforgeeks.org/python-extracting-priority-elements-in-tuple-list/
-	HID_col = np.zeros((grided.fields['HID']['data'][:,ix,iy].shape[0]))
-	HID_col[:] = grided.fields['HID']['data'][:,ix,iy]	
-	HID_col = HID_col.round()
-	
-	ordenar!!!
-	HID_sort = [sub[0] if prior_list.index(sub[0]) < prior_list.index(sub[1])
-              else sub[1] for sub in HID_col]
-		
-	
-	HID_srt = sorted(HID_col.data, key=lambda x: 
-			 #( (x!=9., x), (x!=8., x), (x!=7., x), (x!=4., x),
-		#				(x!=3., x), (x!=6., x), (x!=5., x), (x!=10., x), (x!=2., x), 
-			#			(x!=1., x),  (x!=0., x)))  			
-		
-	plt.plot(HID_col,'*k', label='HID')
-	plt.plot(HID_srt,'or', markerfacecolor='None', label='priority sort')
-	plt.grid(True)
-	plt.yticks(np.arange(1,11,1))
-	
-			 ojo quye lkos datos estan masked??? en grided? y tambien no son int!?
-
-
-	
-        return
+   	# -------------------------------
+   	# -------------------------------	
+   	# una forma puede ser asignando prioridades ... 
+       priority = {9: 0, 8: 1, 7: 2, 4: 3, 3: 4, 6: 5, 5: 6, 10: 7, 2: 8, 1: 9, 0: 10}
+       nz = grided.fields['HID']['data'].shape[0]
+       nx = grided.fields['HID']['data'].shape[1]
+       ny = grided.fields['HID']['data'].shape[2]
+       priority_map = np.zeros((nx,ny)); priority_map[:] = np.nan
+       for ix in range(nx):
+           for iy in range(ny):
+               #ix = 268
+               #iy = 430
+               HID_col = np.zeros((grided.fields['HID']['data'][:,ix,iy].shape[0]))
+               HID_col[:] = grided.fields['HID']['data'][:,ix,iy]	
+               HID_col = HID_col.round()
+               priority_map[ix,iy] = sorted(HID_col, key=priority.get)[0]			
+       #---- plot hid ppi  
+       hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+       cmaphid = colors.ListedColormap(hid_colors)
+       fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+       pcm1 = axes.pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], priority_map, cmap=cmaphid, vmin=0.2, vmax=10)
+       axes.set_title('HID priority projection')
+       axes.set_xlim([options['xlim_min'], options['xlim_max']])
+       axes.set_ylim([options['ylim_min'], options['ylim_max']])
+       [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+       axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+       [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+       axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+       [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+       axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+       cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
+       cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+       fig.savefig(options['fig_dir']+'PriorityHID.png', dpi=300, transparent=False)  
+       #plt.close()
+       return priority_map
 
 
 #----------------------------------------------------------------------------------------------
@@ -3383,8 +3380,17 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     gc.collect()
     plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
+    HID_priority2D = get_prioritymap(options, grided)
+
+	
+
+
+
+
+
+	
+	
     #breakpoint() 
-    #run_priority2Dmap(options, radar, grided) 
 
     #if len(icois) == 3: 
         #[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
@@ -3440,19 +3446,12 @@ def main():
     xlims_mins_input  = [10, 40, 60]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
-
-
+	
     # ver tambien twitter como decia nesbitt. y exteneder casos luego! 
     # Nr pixels, mean values ? std. barplot, hid most probale! 
- 
-	
+ 	
 		
-		
-    #-------------------------- 
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
