@@ -3354,31 +3354,18 @@ def plot_scatter(options, radar, icois, fname):
         a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
         a_x = a_x[~np.isnan(a_x)]   
         a_y = a_y[~np.isnan(a_y)]   
-
         xbin = np.arange(0,80,4)
         ybin = np.arange(-15,10,1)
-        #figfig = plt.figure(figsize=(20,7)) 
-        #hist1 = plt.hist2d(a_x, a_y, bins=(xbin, ybin), cmap='magma', density=True)
-        #plt.close()
-
         H, xedges, yedges = np.histogram2d(a_x, a_y, bins=(xbin, ybin), density=True )
-        H_normalized = H/H.max((0,1)) # the max value of the histogrm is 1
-        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-        H_normalized[np.where(H_normalized==0)] = np.nan
-        # H needs to be rotated and flipped
-        H = np.rot90(H_normalized)
-        H = np.flipud(H_normalized)
-        pcm1 = axes[ic].pcolormesh(xedges, yedges, H)
-        #pcm1 = axes[ic].imshow(H_normalized, extent=extent, cmap='magma', interpolation='none',origin ='lower')
+        H = np.rot90(H)
+        H = np.flipud(H)
+        Hmasked = np.ma.masked_where(H==0,H) # Mask pixels with a value of zero
+        pcm1 = axes[ic].pcolormesh(xedges, yedges, Hmasked)
         plt.colorbar(pcm1, ax=axes[ic])
-        #pcm1 = axes[ic].hist2d(a_x, a_y, [np.arange(0,80,4),np.arange(-15,10,1)], 
-    	 #       norm=LogNorm(), cmap=discrete_cmap(10, 'brg_r'))
-        #plt.colorbar(pcm1[3], ax=axes[ic])
         axes[ic].set_title(labels_plot[ic])
         axes[ic].grid(True)
         axes[ic].set_xlim([30, 65])
-        axes[ic].set_ylim([-15, 10])
-        axes[ic].set_ylabel('ZDR')
+        axes[ic].set_ylim([-15, 10]); axes[ic].set_ylabel('ZDR')
         TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
         pix89  = len(TB_s1[:,7])
         area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
@@ -3398,7 +3385,7 @@ def plot_scatter(options, radar, icois, fname):
         s = s + '\n' + '89PCT approx. area: ' + str(np.round(area89,1)) + ' km'
         s = s + '\n' + '89PCT total footprints: ' + str(pix89)	
         s = s + '\n' + '45dBZ radar gates: ' + str(np.round(gates45dbz,1)) 
-	#for ii in range(len( options['MINPCTs_labels'] )): 
+   	 #for ii in range(len( options['MINPCTs_labels'] )):  
         #    s = s+'\n'+options['MINPCTs_labels'][ii]+': '+str(options['MINPCTs'][ii])
         axes[ic].text(62,-10, s, bbox=props, fontsize=10)
         del s, TB_s1
@@ -3448,8 +3435,7 @@ def plot_scatter(options, radar, icois, fname):
 
     del radar 
 
-    return 
- 
+    return
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 
