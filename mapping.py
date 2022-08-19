@@ -3168,10 +3168,10 @@ def get_contour_info(contorno, icois, datapts_in):
             Y1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1])
             vertices.append([contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
                                         contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
-        convexhull = ConvexHull(vertices)
+        #convexhull = ConvexHull(vertices)
         array_points = np.array(vertices)
 
-        hull_path   = Path( array_points[convexhull.vertices] )
+        #hull_path   = Path( array_points[convexhull.vertices] )
         #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
         alpha = 0.95 * alphashape.optimizealpha(array_points)
         hull_pts_CONCAVE   = alphashape.alphashape(array_points, alpha)
@@ -3195,7 +3195,10 @@ def get_contour_info(contorno, icois, datapts_in):
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 #def plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois): 
-def plot_scatter(options, radar, icois, fname): 
+def plot_scatter(options, radar, icois, fname):
+	
+    # ojo que aca agarro los verdaderos PCTMIN, no los que me pasó Sarah B. que estan 
+    # ajustados a TMI footprints. 
 	
     # read file
     f = h5py.File( fname, 'r')
@@ -3295,6 +3298,16 @@ def plot_scatter(options, radar, icois, fname):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
                 radarZDR[i,j]  = np.nan
                 radarTH[i,j]  = np.nan
+		
+    #------------------------------------------------------
+    # FIGURE CHECK CONTORNOS
+    #fig = plt.figure(figsize=(20,7)) 
+    #pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+    #for ic in range(len(GMI_tbs1_37)):
+    #    plt.plot( lon_gmi_inside[TB_inds[ic]], 	lat_gmi_inside[TB_inds[ic]], 'xr')	
+    #plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+    #plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    
     #------------------------------------------------------
     # FIGURE scatter plot check
     # scatter plots the tbs y de Zh a ver si esta ok 
@@ -3302,8 +3315,15 @@ def plot_scatter(options, radar, icois, fname):
     gs1 = gridspec.GridSpec(1, 2)
     #------------------------------------------------------
     ax1 = plt.subplot(gs1[0,0])
+    print('CALCULATED PF(MINBTs) FROM CONTOURS: ')
     for ic in range(len(GMI_tbs1_37)):
+        print('------- Nr. icoi: '+str(icois[ic])+' -------')
         plt.scatter(GMI_tbs1_37[ic], GMI_tbs1_85[ic], s=40, marker='*', color=colors_plot[ic], label=labels_plot[ic])
+        TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        print('MIN10PCTs: '  +str(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1])) ) 
+        print('MIN19PCTs: '  +str(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3])) ) 
+        print('MIN37PCTs: '  +str(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6])) ) 
+        print('MIN85PCTs: '  +str(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8])) ) 
     plt.grid(True)
     plt.legend()
     plt.xlim([140,260])
@@ -3323,37 +3343,85 @@ def plot_scatter(options, radar, icois, fname):
     fig.savefig(options['fig_dir']+'variable_scatter_plots.png', dpi=300,transparent=False)   
     #plt.close()
 	
-
-#- HISTOGRAMA hist2d con ZH y ZDR con algunas stats (areas, minTBs) 	
-from matplotlib.colors import LogNorm
-props = dict(boxstyle='round', facecolor='white')
-fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,
-                        figsize=[14,12])
-for ic in range(len(RN_inds_parallax)):
-    a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
-    a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
-    a_x = a_x[~np.isnan(a_x)]   
-    a_y = a_y[~np.isnan(a_y)]   
-    pcm1 = axes[ic].hist2d(a_x, a_y, [np.arange(0,80,4),np.arange(-15,10,1)], 
-	       norm=LogNorm(), cmap=discrete_cmap(10, 'brg_r'))
-    plt.colorbar(pcm1[3], ax=axes[ic])
-    axes[ic].set_title(labels_plot[ic])
-    axes[ic].grid(True)
-    axes[ic].set_xlim([30, 65])
-    axes[ic].set_ylim([-15, 15])
-    axes[ic].set_ylabel('ZDR')
-    if icois[ic] == options['icoi_PHAIL']:
-        axes[ic].set_title(labels_plot[ic]+', Phail: '+str(options['phail']))
+    #- HISTOGRAMA hist2d con ZH y ZDR con algunas stats (areas, minTBs) 	
+    from matplotlib.colors import LogNorm
+    props = dict(boxstyle='round', facecolor='white')
+    fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,
+                            figsize=[14,12])
+    for ic in range(len(RN_inds_parallax)):
+        a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
+        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
+        a_x = a_x[~np.isnan(a_x)]   
+        a_y = a_y[~np.isnan(a_y)]   
+        pcm1 = axes[ic].hist2d(a_x, a_y, [np.arange(0,80,4),np.arange(-15,10,1)], 
+    	       norm=LogNorm(), cmap=discrete_cmap(10, 'brg_r'))
+        plt.colorbar(pcm1[3], ax=axes[ic])
+        axes[ic].set_title(labels_plot[ic])
+        axes[ic].grid(True)
+        axes[ic].set_xlim([30, 65])
+        axes[ic].set_ylim([-15, 15])
+        axes[ic].set_ylabel('ZDR')
+        TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        if icois[ic] == options['icoi_PHAIL']:
+            axes[ic].set_title(labels_plot[ic]+', Phail: '+str(options['phail']))
         s = 'PF(MINBTs)'
-        for ii in range(len( options['MINPCTs_labels'] )): 
-            s = s+'\n'+options['MINPCTs_labels'][ii]+': '+str(options['MINPCTs'][ii])
-        axes[ic].text(62,-15, s, bbox=props)
-    axes[ic].set_xlabel('Zh (dBZ)')
+        s = s + '\n' + 'MIN10PCTs: ' + str(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1)) 
+        s = s + '\n' + 'MIN19PCTs: ' + str(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1))
+        s = s + '\n' + 'MIN37PCTs: ' + str(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1)) 
+        s = s + '\n' + 'MIN85PCTs: ' + str(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1))
+	#for ii in range(len( options['MINPCTs_labels'] )): 
+        #    s = s+'\n'+options['MINPCTs_labels'][ii]+': '+str(options['MINPCTs'][ii])
+        axes[ic].text(62,-10, s, bbox=props)
+        del s, TB_s1
+        axes[ic].set_xlabel('Zh (dBZ)')
+			
+    #------------------------------------------------------
+    # FIGURE histogram de los TBs. 
+    MINPCTS_icois = np.zeros((len(RN_inds_parallax), 4)); MINPCTS_icois[:]=np.nan
+    for ic in range(len(RN_inds_parallax)):
+        TB_s1   = tb_s1_gmi_inside[TB_inds[ic],:]
+        MINPCTs = []
+        MINPCTs.append(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1))
+        MINPCTs.append(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1))
+        MINPCTs.append(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1))
+        MINPCTs.append(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1))
+        MINPCTS_icois[ic,:] = MINPCTs
+        del MINPCTs
+
+    #MINPCTS_icois = MINPCTS_icois.T
+    fig = plt.figure(figsize=(20,7)) 
+    #-
+    barlabels = []
+    for ic in range(len(RN_inds_parallax)): 
+        if icois[ic] == options['icoi_PHAIL']:
+            barlabels.append(labels_plot[ic]+', Phail: '+str(options['phail']))
+        else:
+            barlabels.append(labels_plot[ic])
+    #-
+    name = ['MINPCT10','MINPCT19','MINPCT37','MIN89PCT']
+    barWidth = 0.25 
+    # Set position of bar on X axis   
+    br1 = np.arange(len(name)) #---- adjutst!
+    plt.bar(br1, MINPCTS_icois[0,:], color='darkblue',  width = barWidth, label='icoi0')
+    if len(RN_inds_parallax) == 2:
+        br2 = [x + barWidth for x in br1] 
+        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label='icoi1')
+    if len(RN_inds_parallax) == 3:
+        br2 = [x + barWidth for x in br1] 
+        br3 = [x + barWidth for x in br2]
+        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label='icoi1')
+        plt.bar(br3, MINPCTS_icois[2,:], color='darkgreen', width = barWidth, label='icoi2')
+    plt.ylabel('MINPCT')  
+    plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
+    plt.legend()
+
+   # a hist2d agregar: areas de contornos (PCT y ZH45), pixels GMI89. 
+
 
 
     del radar 
 
-    return
+    return MINPCTS_icois
  
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
@@ -3678,8 +3746,8 @@ def main():
     phail    = [0.534]
     MIN85PCT = [131.1081]
     MIN37PCT = [207.4052]
-    MINPCTs_labels = ['MIN10PCT', 'MAX10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [270.51, 292.98, 242.92, 207.42, 131.1081, 198.25, 208.14]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [270.51, 242.92, 207.42, 131.1081, 198.25, 208.14]
     #rfile   = 'cfrad.20180208_231641.0000_to_20180208_232230.0000_RMA1_0201_01.nc'
     rfile    = 'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' 
     gfile    = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'  #21UTC
