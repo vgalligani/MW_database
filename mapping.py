@@ -3196,10 +3196,10 @@ def get_contour_info(contorno, icois, datapts_in):
 #------------------------------------------------------------------------------
 #def plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois): 
 def plot_scatter(options, radar, icois, fname):
-	
+
     # ojo que aca agarro los verdaderos PCTMIN, no los que me pasó Sarah B. que estan 
     # ajustados a TMI footprints. 
-	
+
     # read file
     f = h5py.File( fname, 'r')
     tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
@@ -3236,7 +3236,7 @@ def plot_scatter(options, radar, icois, fname):
     end_index   = radar.sweep_end_ray_index['data'][nlev]
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
-	
+
     #----------------------------------------------------------------------------------------
     # Test plot figure: General figure with Zh and the countours identified 
     #----------------------------------------------------------------------------------------
@@ -3268,26 +3268,26 @@ def plot_scatter(options, radar, icois, fname):
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
     contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
-    
+
     if test_this == 0:
         plt.close()
-	
+
     datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
     datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
 
     TB_inds =  get_contour_info(contorno89, icois, datapts)
     RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
- 
+
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
     for ii in range(len(TB_inds)): 	
     	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
     	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
-	
+
     if len(icois)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
- 
+
     # Filters
     ni = radarTH.shape[0]
     nj = radarTH.shape[1]
@@ -3298,16 +3298,17 @@ def plot_scatter(options, radar, icois, fname):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
                 radarZDR[i,j]  = np.nan
                 radarTH[i,j]  = np.nan
-		
+
     #------------------------------------------------------
     # FIGURE CHECK CONTORNOS
-    #fig = plt.figure(figsize=(20,7)) 
-    #pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
-    #for ic in range(len(GMI_tbs1_37)):
-    #    plt.plot( lon_gmi_inside[TB_inds[ic]], 	lat_gmi_inside[TB_inds[ic]], 'xr')	
-    #plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
-    #plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
-    
+    fig = plt.figure(figsize=(20,7)) 
+    pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+    for ic in range(len(GMI_tbs1_37)):
+        plt.plot( lon_gmi_inside[TB_inds[ic]], 	lat_gmi_inside[TB_inds[ic]], 'xr')	
+        plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
+    plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+    plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+
     #------------------------------------------------------
     # FIGURE scatter plot check
     # scatter plots the tbs y de Zh a ver si esta ok 
@@ -3342,7 +3343,7 @@ def plot_scatter(options, radar, icois, fname):
     plt.grid(True)
     fig.savefig(options['fig_dir']+'variable_scatter_plots.png', dpi=300,transparent=False)   
     #plt.close()
-	
+
     #- HISTOGRAMA hist2d con ZH y ZDR con algunas stats (areas, minTBs) 	
     from matplotlib.colors import LogNorm
     props = dict(boxstyle='round', facecolor='white')
@@ -3353,28 +3354,56 @@ def plot_scatter(options, radar, icois, fname):
         a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
         a_x = a_x[~np.isnan(a_x)]   
         a_y = a_y[~np.isnan(a_y)]   
-        pcm1 = axes[ic].hist2d(a_x, a_y, [np.arange(0,80,4),np.arange(-15,10,1)], 
-    	       norm=LogNorm(), cmap=discrete_cmap(10, 'brg_r'))
-        plt.colorbar(pcm1[3], ax=axes[ic])
+
+        xbin = np.arange(0,80,4)
+        ybin = np.arange(-15,10,1)
+        #figfig = plt.figure(figsize=(20,7)) 
+        #hist1 = plt.hist2d(a_x, a_y, bins=(xbin, ybin), cmap='magma', density=True)
+        #plt.close()
+
+        H, xedges, yedges = np.histogram2d(a_x, a_y, bins=(xbin, ybin), density=True )
+        H_normalized = H/H.max((0,1)) # the max value of the histogrm is 1
+        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        H_normalized[np.where(H_normalized==0)] = np.nan
+        # H needs to be rotated and flipped
+        H = np.rot90(H_normalized)
+        H = np.flipud(H_normalized)
+        pcm1 = axes[ic].pcolormesh(xedges, yedges, H)
+        #pcm1 = axes[ic].imshow(H_normalized, extent=extent, cmap='magma', interpolation='none',origin ='lower')
+        plt.colorbar(pcm1, ax=axes[ic])
+        #pcm1 = axes[ic].hist2d(a_x, a_y, [np.arange(0,80,4),np.arange(-15,10,1)], 
+    	 #       norm=LogNorm(), cmap=discrete_cmap(10, 'brg_r'))
+        #plt.colorbar(pcm1[3], ax=axes[ic])
         axes[ic].set_title(labels_plot[ic])
         axes[ic].grid(True)
         axes[ic].set_xlim([30, 65])
-        axes[ic].set_ylim([-15, 15])
+        axes[ic].set_ylim([-15, 10])
         axes[ic].set_ylabel('ZDR')
         TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        pix89  = len(TB_s1[:,7])
+        area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
+        area89 = pix89*(area_ellipse89)
+        gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
+        gates45dbz = gates45dbz[~np.isnan(gates45dbz)]
+        gates45dbz = len(gates45dbz)
+        #area45 = len(zh45)(240*240)/1000
         if icois[ic] == options['icoi_PHAIL']:
             axes[ic].set_title(labels_plot[ic]+', Phail: '+str(options['phail']))
-        s = 'PF(MINBTs)'
-        s = s + '\n' + 'MIN10PCTs: ' + str(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1)) 
-        s = s + '\n' + 'MIN19PCTs: ' + str(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1))
-        s = s + '\n' + 'MIN37PCTs: ' + str(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1)) 
-        s = s + '\n' + 'MIN85PCTs: ' + str(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1))
+        s = 'PF(MINPCTs)'
+        s = s + '\n' + 'MIN10PCTs: ' + str(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1)) + ' K'
+        s = s + '\n' + 'MIN19PCTs: ' + str(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1)) + ' K'
+        s = s + '\n' + 'MIN37PCTs: ' + str(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1)) + ' K'
+        s = s + '\n' + 'MIN85PCTs: ' + str(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1)) + ' K'
+        s = s + '\n' '----------'
+        s = s + '\n' + '89PCT approx. area: ' + str(np.round(area89,1)) + ' km'
+        s = s + '\n' + '89PCT total footprints: ' + str(pix89)	
+        s = s + '\n' + '45dBZ radar gates: ' + str(np.round(gates45dbz,1)) 
 	#for ii in range(len( options['MINPCTs_labels'] )): 
         #    s = s+'\n'+options['MINPCTs_labels'][ii]+': '+str(options['MINPCTs'][ii])
-        axes[ic].text(62,-10, s, bbox=props)
+        axes[ic].text(62,-10, s, bbox=props, fontsize=10)
         del s, TB_s1
         axes[ic].set_xlabel('Zh (dBZ)')
-			
+
     #------------------------------------------------------
     # FIGURE histogram de los TBs. 
     MINPCTS_icois = np.zeros((len(RN_inds_parallax), 4)); MINPCTS_icois[:]=np.nan
@@ -3399,29 +3428,27 @@ def plot_scatter(options, radar, icois, fname):
             barlabels.append(labels_plot[ic])
     #-
     name = ['MINPCT10','MINPCT19','MINPCT37','MIN89PCT']
-    barWidth = 0.25 
+    barWidth = 0.15 
     # Set position of bar on X axis   
     br1 = np.arange(len(name)) #---- adjutst!
-    plt.bar(br1, MINPCTS_icois[0,:], color='darkblue',  width = barWidth, label='icoi0')
+    plt.bar(br1, MINPCTS_icois[0,:], color='darkblue',  width = barWidth, label=barlabels[0])
     if len(RN_inds_parallax) == 2:
         br2 = [x + barWidth for x in br1] 
-        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label='icoi1')
+        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label=barlabels[1])
     if len(RN_inds_parallax) == 3:
         br2 = [x + barWidth for x in br1] 
         br3 = [x + barWidth for x in br2]
-        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label='icoi1')
-        plt.bar(br3, MINPCTS_icois[2,:], color='darkgreen', width = barWidth, label='icoi2')
-    plt.ylabel('MINPCT')  
+        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+        plt.bar(br3, MINPCTS_icois[2,:], color='darkgreen', width = barWidth, label=barlabels[2])
+    plt.ylabel('MINPCT (K)')  
     plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
     plt.legend()
-
-   # a hist2d agregar: areas de contornos (PCT y ZH45), pixels GMI89. 
-
-
+    plt.title('Min. observed PCTs for COI')
+    plt.grid(True)
 
     del radar 
 
-    return MINPCTS_icois
+    return 
  
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
