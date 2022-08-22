@@ -3360,7 +3360,7 @@ def plot_scatter(options, radar, icois, fname):
         H, xedges, yedges = np.histogram2d(a_x, a_y, bins=(xbin, ybin), density=True )
         H = np.rot90(H)
         H = np.flipud(H)
-        vmax_sample[ic].append( np.nanmax(np.reshape(H, [1,-1] ))) 
+        vmax_sample.append( np.nanmax(np.reshape(H, [-1,1] ))) 
     for ic in range(len(RN_inds_parallax)):
         a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
         a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
@@ -3751,7 +3751,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
 #----------------------------------------------------------------------------------------------
 
 
-		#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # ACA EMPIEZA EL MAIN! 
 #------------------------------------------------------------------------------	
 
@@ -3798,115 +3798,43 @@ def main():
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
 	
-	
-	
-    # Nr pixels, mean values ? std. barplot, hid most probale! 
- 	
-		
-	
-	
-
-
-
-
-
-		
-
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO MSC RMA3 - 20190305: P(hail) = 0.737 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-	lat_pfs  = [-25.95] 
-	lon_pfs  = [-60.57]
-	time_pfs = ['1252'] 
-	phail    = [0.737]
-	MIN85PCT = [75.0826]
-	MIN37PCT = [164.4755] 
-    	#
-	rfile     = 'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'
-	gfile     = '1B.GPM.GMI.TB2016.20190305-S123614-E140847.028498.V05A.HDF5'
-	era5_file = '20190305_13.grib'
-	#
-	opts = {'xlim_min': -63, 'xlim_max': -58, 'ylim_min': -27, 'ylim_max': -23, 'ylim_max_zoom': -24.5, 'ZDRoffset': 3}
-	# 
-	ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")	
-	elemj      = find_nearest(ERA5_field['latitude'], lat_pfs[0])
-	elemk      = find_nearest(ERA5_field['longitude'], lon_pfs[0])	
-	tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
-	geoph_ref  = (ERA5_field['z'][:,elemj,elemk])/9.80665
-	# Covert to geop. height (https://confluence.ecmwf.int/display/CKB/ERA5%3A+compute+pressure+and+geopotential+on+model+levels%2C+geopotential+height+and+geometric+height)
-	Re         = 6371*1e3
-	alt_ref    = (Re*geoph_ref)/(Re-geoph_ref) 
-	#-------------------------- DONT CHANGE
-	radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile)
-	#
-	# ADD temperature info: 
-    	print('Freezing level at ', np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3), ' km')
-    	freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
-    	radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    	radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    	#- Add height field for 4/3 propagation
-    	radar_height = get_z_from_radar(radar)
-    	radar = add_field_to_radar_object(radar_height, radar, field_name = 'height')    
-    	iso0 = np.ma.mean(radar.fields['height']['data'][np.where(np.abs(radar.fields['sounding_temperature']['data']) < 0)])
-    	radar.fields['height_over_iso0'] = deepcopy(radar.fields['height'])
-    	radar.fields['height_over_iso0']['data'] -= iso0 
-	#----
-	#- output of plot_Zhppi_wGMIcontour depends on the number of icois of interest. Here in this case we have three:
-   	# OJO for use_freezingLev == 0 es decir ground level! 
-    	[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
-     	GMI_lon_COI2, GMI_lat_COI2, GMI_tbs1_COI2, RN_inds_COI2, RB_inds_COI2] = plot_Zhppi_wGMIcontour(radar, lat_pfs, lon_pfs, 'radar at '+rfile[15:19]+' UTC and PF at '+time_pfs[0]+' UTC', 
-                           gmi_dir+gfile, 0, opts, era5_dir+era5_file, icoi=[6,7], use_freezingLev=0)
-	# SWEEP 0
-	plot_sweep0(radar, opts, '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile)
-	plot_gmi('/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, opts,
-                                  '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', rfile, [lon_pfs[0]], [lat_pfs[0]], 
-			 	reference_satLOS=100)
-	# CHECK TRANSECTS
-	check_transec(radar, 176, lon_pfs, lat_pfs)       
-	check_transec(radar, 210, lon_pfs, lat_pfs)      
-	check_transec(radar, 30, lon_pfs, lat_pfs)      
-	# CHECK BB -----------------------------------------------------------------------------------------
-	rfileBB='cfrad.20190212_092509.0000_to_20190212_092757.0000_RMA3_0200_02.nc'
-	radarBB = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/find_BB/'+rfileBB)
-	plot_sweep_nlev(radarBB, opts, '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'+gfile, 3)
-	check_transec_rma_campos('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/find_BB/', 
-				 fileBB, 200, 'ZDR', 3)       
-	check_transec(radarBB, 200, lon_pfs, lat_pfs)       
-	# ---------------------------------------------------------------------------------------------------
-	#- CHECK 1,5,10 KM RESOLUTION	
-	grided_05KM = pyart.map.grid_from_radars(radar, grid_shape=(20, 950, 950), 
-                                       grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
-                                                    (-np.max(radar.range['data']), np.max(radar.range['data']))),
-                                       roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')    
-	grided_1KM = pyart.map.grid_from_radars(radar, grid_shape=(20, 470, 470), 
-                                       grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
-                                                    (-np.max(radar.range['data']), np.max(radar.range['data']))),
-                                       roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')    
-    	grided_5KM = pyart.map.grid_from_radars(radar, grid_shape=(20, 94, 94), 
-                                   grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
-                                                (-np.max(radar.range['data']), np.max(radar.range['data']))),
-                                   roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
-    	grided_10KM = pyart.map.grid_from_radars(radar, grid_shape=(20, 48, 48), 
-                               grid_limits=((0.,20000,), (-np.max(radar.range['data']), np.max(radar.range['data'])),
-                                            (-np.max(radar.range['data']), np.max(radar.range['data']))),
-                               roi_func='dist_beam', min_radius=500.0, weighting_function='BARNES2')
-	#- and run pseudo RHIS
-	make_pseudoRHISfromGrid(grided_1KM, radar, [176,210,30],['6[Phail = 0.534]','7',''], [100, 100, 100])
-	make_pseudoRHISfromGrid(grided_5KM, radar, [176,210,30],['6[Phail = 0.534]','7',''], [100, 100, 100])
-	make_pseudoRHISfromGrid(grided_10KM, radar, [176,210,30],['6[Phail = 0.534]','7',''], [100, 100, 100])
-	#- run with radar grid
-	plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', 
-		     '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', 'RMA3', 0, 150, 176, 3, 5)
-	plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', 
-		     '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', 'RMA3', 0, 200, 210, 3, 5)
-	plot_rhi_RMA(rfile, '/home/victoria.galligani/Work/Studies/Hail_MW/radar_figures', 
-		     '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/', 'RMA3', 0, 150, 30, 3, 5)		
-		
+    #   MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		
+    # 	278.0306	297.0986	249.9366	164.4755	 75.0826	199.9341	223.8100
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    lat_pfs  = [-25.95] 
+    lon_pfs  = [-60.57]
+    time_pfs = ['1252'] 
+    phail    = [0.737]
+    MIN85PCT = [75.0826]
+    MIN37PCT = [164.4755] 
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [278.03, 249.94, 164.48, 75.08, 223.81] 
+    #
+    rfile     = 'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190305-S123614-E140847.028498.V05A.HDF5'
+    era5_file = '20190305_13.grib'
+    #
+    # REPORTES TWITTER ... 
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -63, 'xlim_max': -58, 'ylim_min': -27, 'ylim_max': -23, 'ylim_max_zoom': -24.5, 'ZDRoffset': 3, 
+	    'rfile': 'RMA3/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
+	    'x_supermin':-63, 'x_supermax':-58, 'y_supermin':-27, 'y_supermax':-23, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190305_RMA3/', 
+	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL':6}
+    icois_input  = [6,7] 
+    azimuths_oi  = [176,210,30]
+    labels_PHAIL = ['6[Phail = 0.737]','7'] 
+    xlims_xlims_input  = [150, 200, 150] 
+    xlims_mins_input  = [0, 0, 0]	
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
-		
 
-	
-		
+
 
