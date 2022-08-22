@@ -3349,6 +3349,7 @@ def plot_scatter(options, radar, icois, fname):
     props = dict(boxstyle='round', facecolor='white')
     fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,
                             figsize=[14,12])
+    vmax_sample = [] 
     for ic in range(len(RN_inds_parallax)):
         a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
         a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
@@ -3359,8 +3360,19 @@ def plot_scatter(options, radar, icois, fname):
         H, xedges, yedges = np.histogram2d(a_x, a_y, bins=(xbin, ybin), density=True )
         H = np.rot90(H)
         H = np.flipud(H)
+        vmax_sample[ic].append( np.nanmax(np.reshape(H, [1,-1] ))) 
+    for ic in range(len(RN_inds_parallax)):
+        a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
+        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
+        a_x = a_x[~np.isnan(a_x)]   
+        a_y = a_y[~np.isnan(a_y)]   
+        xbin = np.arange(0,80,4)
+        ybin = np.arange(-15,10,1)
+        H, xedges, yedges = np.histogram2d(a_x, a_y, bins=(xbin, ybin), density=True )
+        H = np.rot90(H)
+        H = np.flipud(H)    
         Hmasked = np.ma.masked_where(H==0,H) # Mask pixels with a value of zero
-        pcm1 = axes[ic].pcolormesh(xedges, yedges, Hmasked)
+        pcm1 = axes[ic].pcolormesh(xedges, yedges, Hmasked, vmin=0, vmax=np.nanmax(vmax_sample))
         plt.colorbar(pcm1, ax=axes[ic])
         axes[ic].set_title(labels_plot[ic])
         axes[ic].grid(True)
