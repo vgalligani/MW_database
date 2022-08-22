@@ -2647,7 +2647,7 @@ def despeckle_phidp(phi, rho, zh):
     dphi = np.copy(phi)
     
     # Descartamos pixeles donde RHO es menor que un umbral (e.g., 0.7) o no está definido (e.g., NaN)
-    #dphi[np.isnan(rho)] = np.nan
+    dphi[np.isnan(rho)] = np.nan
     #rho_thr = 0.93
     #dphi[rho < rho_thr] = np.nan
     
@@ -2751,8 +2751,8 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
         zh_h = zh[i,:]
         for j in range(nj):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
-                phiphi[i,j]  = np.nan
-                #rho[i,j]  = np.nan
+                phiphi[i,j]  = np.nan 
+                rho[i,j]  = np.nan   # este antes comentado! 
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
@@ -2891,17 +2891,49 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
 #------------------------------------------------------------------------------
 def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
+    #---------------------------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------------------------------------
+    if tesing == 1: 	
+	gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+	era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+	r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+	radar = pyart.io.read(r_dir+opts['rfile'])
+	nlev = 0
+	start_index = radar.sweep_start_ray_index['data'][nlev]
+	end_index   = radar.sweep_end_ray_index['data'][nlev]
+	# copy PHIDP for sysphase
+	PHIDP_nanMasked = radar.fields['PHIDP']['data'].copy() 
+	PHIDP_nanMasked[np.where(PHIDP_nanMasked<0)] = 0
+	radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
+
+	phiphi = phi.copy()
+	ni = phi.shape[0]
+	nj = phi.shape[1]
+ 	for i in range(ni):
+ 	  rho_h = rho[i,:]
+  	  zh_h = zh[i,:]
+   	  for j in range(nj):
+       	  if (rho_h[j]<0.7) or (zh_h[j]<30):
+         	phiphi[i,j]  = np.nan
+         	rho[i,j]  = np.nan
+	dphi = despeckle_phidp(phiphi, rho, zh)
+	plt.plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
+	plt.plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP_unmasked']['data'][start_index:end_index][filas,:]), '*b', label='obs. phidp masked')
+	plt.plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
+    #---------------------------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------------------------------------
     # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
     # breakpoint()
     # Esto es para todas las elevaciones
 
-    # mask ? 
-    radar.fields['RHOHV']['data'][np.where(radar.fields['RHOHV']['data']<0)] = np.nan
-    radar.fields['PHIDP']['data'][np.where(radar.fields['PHIDP']['data']<0)] = 0
-
-    #radar.fields['PHIDP'][np.where(radar.fields['RHOHV']<0.7)] = np.nan		
+    # copy PHIDP for sysphase
+    PHIDP_nanMasked = radar.fields['PHIDP']['data'].copy() 
+    PHIDP_nanMasked[np.where(PHIDP_nanMasked<0)] = 0
+    radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
+    # radar.fields['RHOHV']['data'][np.where(radar.fields['RHOHV']['data']<0)] = np.nan  esto lo estoy haciendo dentro de depeckle?
+    # radar.fields['PHIDP'][np.where(radar.fields['RHOHV']<0.7)] = np.nan		
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
-							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP_unmasked')
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
 					   sys_phase, diff_value)
     radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
