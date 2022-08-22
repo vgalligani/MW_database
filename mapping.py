@@ -1005,22 +1005,23 @@ def plot_sweep0(radar, opts, fname):
 	axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['m']), linewidths=1.5);
 	axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
 	#-------------------------- DOPPLER FOR OVERVIEW - SC
-	VEL = radar.fields['VRAD']['data'][start_index:end_index]
-	vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='VRAD', nyq=39.9)
-	radar.add_field('velocity_texture', vel_texture, replace_existing=True)
-	velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='VRAD', nyquist_vel=39.9,centered=True)
-	radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
-	VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
-	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
-	pcm1 = axes[2].pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
-	cbar = plt.colorbar(pcm1, ax=axes[2], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-	cbar.cmap.set_under(under)
-	cbar.cmap.set_over(over)
-	axes[2].set_xlim([opts['xlim_min'], opts['xlim_max']])	
-	axes[2].set_ylim(opts['ylim_min'], opts['ylim_max'])
-	axes[2].set_title('Vr corrected (w/ 45dBZ contour)')
-	axes[2].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
-	axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+	if 'VRAD' in radar.fields.keys():  
+		VEL = radar.fields['VRAD']['data'][start_index:end_index]
+		vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='VRAD', nyq=39.9)
+		radar.add_field('velocity_texture', vel_texture, replace_existing=True)
+		velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='VRAD', nyquist_vel=39.9,centered=True)
+		radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
+		VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
+		[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
+		pcm1 = axes[2].pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
+		cbar = plt.colorbar(pcm1, ax=axes[2], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+		cbar.cmap.set_under(under)
+		cbar.cmap.set_over(over)
+		axes[2].set_xlim([opts['xlim_min'], opts['xlim_max']])	
+		axes[2].set_ylim(opts['ylim_min'], opts['ylim_max'])
+		axes[2].set_title('Vr corrected (w/ 45dBZ contour)')
+		axes[2].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['k']), linewidths=1.5);	
+		axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
 
 	return
 
@@ -2891,8 +2892,14 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
 def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
     # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
-
+    # breakpoint()
     # Esto es para todas las elevaciones
+
+    # mask ? 
+    radar.fields['RHOHV']['data'][np.where(radar.fields['RHOHV']['data']<0)] = np.nan
+    radar.fields['PHIDP']['data'][np.where(radar.fields['PHIDP']['data']<0)] = 0
+
+    #radar.fields['PHIDP'][np.where(radar.fields['RHOHV']<0.7)] = np.nan		
     sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
 							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
@@ -3472,7 +3479,7 @@ def ignore_plots():
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 def summary_radar_obs(radar, fname, options):  
-	
+
         # read 
         f = h5py.File( fname, 'r')
         tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
@@ -3498,7 +3505,7 @@ def summary_radar_obs(radar, fname, options):
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
         TH    = radar.gate_longitude['data'][start_index:end_index]
-	
+
 	#-------------------------- ZH y contornos y RHO
         fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[24,6])
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
@@ -3531,38 +3538,41 @@ def summary_radar_obs(radar, fname, options):
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
         axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         #-------------------------- DOPPLER FOR OVERVIEW - SC
-        VEL = radar.fields['VRAD']['data'][start_index:end_index]
-        vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='VRAD', nyq=39.9)
-        radar.add_field('velocity_texture', vel_texture, replace_existing=True)
-        velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='VRAD', nyquist_vel=39.9,centered=True)
-        radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
-        VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
-        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
-        pcm1 = axes[2].pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
-        cbar = plt.colorbar(pcm1, ax=axes[2], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-        cbar.cmap.set_under(under)
-        cbar.cmap.set_over(over)
-        axes[2].set_xlim([options['x_supermin'], options['x_supermax']])	
-        axes[2].set_ylim([options['y_supermin'], options['y_supermax']])
-        axes[2].set_title('Vr corrected (w/ 45dBZ contour)')
-        axes[2].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);
-        CS=axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,225], colors=(['black', 'black']), linewidths=1.5);
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-        axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-        axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-        axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-	
+       	if 'VRAD' in radar.fields.keys():  
+            VEL = radar.fields['VRAD']['data'][start_index:end_index]
+            vel_texture = pyart.retrieve.calculate_velocity_texture(radar, vel_field='VRAD', nyq=39.9)
+            radar.add_field('velocity_texture', vel_texture, replace_existing=True)
+            velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='VRAD', nyquist_vel=39.9,centered=True)
+            radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
+            VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
+            [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
+            pcm1 = axes[2].pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
+            cbar = plt.colorbar(pcm1, ax=axes[2], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+            cbar.cmap.set_under(under)
+            cbar.cmap.set_over(over)
+            axes[2].set_xlim([options['x_supermin'], options['x_supermax']])	
+            axes[2].set_ylim([options['y_supermin'], options['y_supermax']])
+            axes[2].set_title('Vr corrected (w/ 45dBZ contour)')
+            axes[2].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);
+            CS=axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,225], colors=(['black', 'black']), linewidths=1.5);
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+            axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+            axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+            axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+            for ireportes in range(len(options['REPORTES_geo'])):
+           		axes[2].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+
+
         labels_cont = ['GMI 200K contour', 'GMI 225K contour']
         for i in range(len(labels_cont)):
             CS.collections[i].set_label(labels_cont[i])
         for ireportes in range(len(options['REPORTES_geo'])):
             axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
             axes[1].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
-            axes[2].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
-        axes[2].legend(fontsize=11)	
-	
+        axes[1].legend(fontsize=11)	
+
         fig.savefig(options['fig_dir']+'PPIs_Summary'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
         #plt.close()
 
@@ -3597,10 +3607,10 @@ def summary_radar_obs(radar, fname, options):
         plt.legend(fontsize=11) 
        	general_title='radar at '+options['rfile'][15:19]+' UTC and PF at '+str(options['time_pfs'])+')'
         plt.suptitle(general_title)
-	
+
         fig.savefig(options['fig_dir']+'PPIs_MAIN_Summary'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
         #plt.close()
-	
+
         return
 
 
@@ -3837,4 +3847,91 @@ def main():
 
 
 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20181111: P(hail) = 0.653 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
+    #  	2018	11	11	22	34	 -28.19	 -65.22	0.918		277.6442	301.7387	229.7393	160.9113	 82.5090	198.7533	  0.0000	1
+    #  	2018	11	11	22	34	 -27.02	 -65.19	0.687		282.8392	309.9369	237.3588	184.5343	 96.5291	195.3130	184.8400	1
+		
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20181214: P(hail) = 0.839, 0.967
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #  	2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
+    # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
+    # 	2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
+    # 	2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
+	
+	
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20190308: P(hail) = 0.895
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
 
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA5 - 20200815: P(hail) = 0.727
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2020	08	15	02	15	 -24.17	 -55.94	0.547		276.0569	284.5401	247.3784	192.5272	110.7962	196.9116	144.4400	1
+    #	2020	08	15	02	15	 -25.28	 -54.11	0.725		273.2686	290.1380	241.5902	181.1631	101.1417	199.9028	108.2200	1
+	
+
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20180209: P(hail) = 0.762
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181001: P(hail) = 0.965
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181031: P(hail) = 0.931
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181215: P(hail) = 0.747
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+								
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181218: P(hail) = 0.964, 0.596
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20190209: P(hail) = 0.989
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+		
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA8 - 20181112: P(hail) = 0.740
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+	
+	
+    # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA8 - 20181112: P(hail) = 0.758
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+	
+	
