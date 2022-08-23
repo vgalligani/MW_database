@@ -3778,6 +3778,33 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
 	
     return
 
+#---------------------------------------------------------------------------------------------- 
+#---------------------------------------------------------------------------------------------- 
+def add_field_to_radar_object(field, radar, field_name, 
+                              long_name, standard_name, MASKCOPY_field):
+    """
+    Adds a newly created field to the Py-ART radar object. 
+    If MASKCOPY_field is a masked array, make the new field masked the same as MASKCOPY_field.
+    """
+    fill_value = -9999.0
+    masked_field = np.ma.asanyarray(field)
+    masked_field.mask = masked_field == fill_value
+    if hasattr(radar.fields[MASKCOPY_field]['data'], 'mask'):
+        setattr(masked_field, 'mask', 
+                np.logical_or(masked_field.mask, radar.fields[MASKCOPY_field]['data'].mask))
+        fill_value = radar.fields[MASKCOPY_field]['_FillValue']
+    field_dict = {'data': masked_field,
+                  'units': 'unitless',
+                  'long_name': long_name,
+                  'standard_name': standard_name,
+                  '_FillValue': fill_value}
+    radar.add_field(field_name, field_dict, replace_existing=True)
+    return radar
+
+#---------------------------------------------------------------------------------------------- 
+#---------------------------------------------------------------------------------------------- 
+
+
 #---------------------------------------------------------------------------------------------- OLD RUN GENERAL additioanl stuff. 
 #if len(icois) == 3: 
 #[gridded, frezlev, GMI_lon_COI1, GMI_lat_COI1, GMI_tbs1_COI1, RN_inds_COI1, RB_inds_COI1, 
@@ -3885,25 +3912,29 @@ def main():
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     TH    = radar.fields['TH']['data'][start_index:end_index]
+    TV    = radar.fields['TV']['data'][start_index:end_index]
     RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
+    #
+    
+    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
+		ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+	
     # GRAFICAR
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     plt.pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
     plt.pcolormesh(lons, lats, TH.mask); plt.colorbar()
     #- USAR NUEVAS MASCARAS!!!
+    radar = add_field_to_radar_object(radar.fields['RHOHV']['data'].data, radar, 'RHOHV_new', 
+                         'Cross correlation ratio (RHOHV)', 'cross_correlation_ratio_hv', 'RHOHV')
+		
+		
 
-	
-	
-	
-	
-    # copy PHIDP for sysphase
-    PHIDP_nanMasked = radar.fields['PHIDP']['data'].data.copy() 
-    PHIDP_nanMasked[np.where(PHIDP_nanMasked==radar.fields['PHIDP']['data'].fill_value)] = 0
-    radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
-    radar.fields['RHOHV']['data'].mask = True
-    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
-		ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP_unmasked')
+
+
+
+
+
     print(sys_phase)
     # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
