@@ -25,6 +25,8 @@ import copy
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import gc
+import math
+
 
 import alphashape
 from descartes import PolygonPatch
@@ -2887,7 +2889,124 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
 
     return 
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_sys_phase(radar, ncp_lev, rhohv_lev, ncp_field, rhv_field, phidp_field):
 
+    """
+    Adapted from pyart 
+    ----------
+    Determine the system phase.
+    Parameters
+    ----------
+    radar : Radar
+        Radar object for which to determine the system phase.
+    ncp_lev : float, optional
+        Miminum normal coherent power level. Regions below this value will
+        not be included in the phase calculation.
+    rhohv_lev : float, optional
+        Miminum copolar coefficient level. Regions below this value will not
+        be included in the phase calculation.
+    ncp_field, rhv_field, phidp_field : str, optional
+        Field names within the radar object which represent the normal
+        coherent power, the copolar coefficient, and the differential phase
+        shift. A value of None for any of these parameters will use the
+        default field name as defined in the Py-ART configuration file.
+
+    Returns
+    -------
+    sys_phase : float or None
+        Estimate of the system phase. None is not estimate can be made.
+    """
+	
+    # parse the field parameters
+    if ncp_field is None:
+        ncp_field = get_field_name('normalized_coherent_power')
+    if rhv_field is None:
+        rhv_field = get_field_name('cross_correlation_ratio')
+    if phidp_field is None:
+        phidp_field = get_field_name('differential_phase')
+
+    ncp   = radar.fields[ncp_field]['data'][:, 30:]
+    rhv   = radar.fields[rhv_field]['data'][:, 30:]
+    phidp = np.array(radar.fields[phidp_field]['data'])[:, 30:]
+    last_ray_idx = radar.sweep_end_ray_index['data'][0]
+
+    return _det_sys_phase(ncp, rhv, phidp, last_ray_idx, ncp_lev,
+                          rhohv_lev)
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# this function adapted from the Scipy Cookbook:
+# http://www.scipy.org/Cookbook/SignalSmooth
+def smooth_and_trim(x, window_len=11, window='hanning'):
+    """
+    Smooth data using a window with requested size.
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+    Parameters
+    ----------
+    x : array
+        The input signal.
+    window_len : int, optional
+        The dimension of the smoothing window; should be an odd integer.
+    window : str
+        The type of window from 'flat', 'hanning', 'hamming', 'bartlett',
+        'blackman' or 'sg_smooth'. A flat window will produce a moving
+        average smoothing.
+    Returns
+    -------
+    y : array
+        The smoothed signal with length equal to the input signal.
+    """
+    if x.ndim != 1:
+        raise ValueError("smooth only accepts 1 dimension arrays.")
+    if x.size < window_len:
+        raise ValueError("Input vector needs to be bigger than window size.")
+    if window_len < 3:
+        return x
+    valid_windows = ['flat', 'hanning', 'hamming', 'bartlett', 'blackman',
+                     'sg_smooth']
+    if window not in valid_windows:
+        raise ValueError("Window is on of " + ' '.join(valid_windows))
+
+    s = np.r_[x[window_len - 1:0:-1], x, x[-1:-window_len:-1]]
+
+    if window == 'flat':  # moving average
+        w = np.ones(int(window_len), 'd')
+    elif window == 'sg_smooth':
+        w = np.array([0.1, .25, .3, .25, .1])
+    else:
+        w = eval('np.' + window + '(window_len)')
+
+    y = np.convolve(w / w.sum(), s, mode='valid')
+
+    return y[int(window_len / 2):len(x) + int(window_len / 2)]
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+def _det_sys_phase(ncp, rhv, phidp, last_ray_idx, ncp_lev=0.4,
+                   rhv_lev=0.7):
+    """ ADAPTED FROM PYART 
+    Determine the system phase, see :py:func:`det_sys_phase`. """
+    good = False
+    phases = []
+    for radial in range(last_ray_idx + 1):
+        meteo = np.logical_and(ncp[radial, :] > ncp_lev,
+                               rhv[radial, :] > rhv_lev)
+        mpts = np.where(meteo)
+        if len(mpts[0]) > 25:
+            good = True
+            msmth_phidp = smooth_and_trim(phidp[radial, mpts[0]], 9)
+            phases.append(msmth_phidp[0:25].min())
+    if not good:
+        return None
+    return np.median(phases)
+
+#
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
@@ -2928,13 +3047,13 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     # Esto es para todas las elevaciones
 
     # copy PHIDP for sysphase
-    PHIDP_nanMasked = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nanMasked[np.where(PHIDP_nanMasked<0)] = 0
-    radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
+    #PHIDP_nanMasked = radar.fields['PHIDP']['data'].copy() 
+    #PHIDP_nanMasked[np.where(PHIDP_nanMasked<0)] = 0
+    #radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
     # radar.fields['RHOHV']['data'][np.where(radar.fields['RHOHV']['data']<0)] = np.nan  esto lo estoy haciendo dentro de depeckle?
     # radar.fields['PHIDP'][np.where(radar.fields['RHOHV']<0.7)] = np.nan		
-    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
-							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP_unmasked')
+    sys_phase  = get_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
+							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
 					   sys_phase, diff_value)
     radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
@@ -3804,6 +3923,16 @@ def add_field_to_radar_object(field, radar, field_name,
 
 #---------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------- 
+def firstNonNan(listfloats):
+  for item in listfloats:
+    if math.isnan(item) == False:
+      return item
+
+#---------------------------------------------------------------------------------------------- 
+#---------------------------------------------------------------------------------------------- 
+
+
+
 
 
 #---------------------------------------------------------------------------------------------- OLD RUN GENERAL additioanl stuff. 
@@ -3924,6 +4053,69 @@ def main():
     radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
 		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)    
+
+    #------------------------------------------------------------------------------
+    #-----------------------------------------
+    # calcular todo junto (sys_phase y correcciones con mismo campo!) 
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile) 
+    PHIORIG = radar.fields['PHIDP']['data'].copy() 
+    # replace PHIDP w/ np.nan
+    PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+    PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+    rhv = radar.fields['RHOHV']['data'].copy()
+    z_h = radar.fields['TH']['data'].copy()
+    PHIDP_nans = np.where( (rhv>0.7) & (z_h>30), PHIDP_nans, np.nan)
+    #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[14,7])
+    pc0 = axes[0].pcolormesh(lons,lats, PHIDP_nans[start_index:end_index]); plt.colorbar(pc0, ax=axes[0]); axes[0].set_title('limpio para calcular sys phase')
+    pc1 = axes[1].pcolormesh(lons,lats, rhv[start_index:end_index], vmin=0.7, vmax=1.0); plt.colorbar(pc1, ax=axes[1]); axes[1].set_title('RHOHV')
+    pc2 = axes[2].pcolormesh(lons,lats, PHIORIG[start_index:end_index]); plt.colorbar(pc2, ax=axes[2]); axes[2].set_title('dato crudo')
+
+    #sys_phase  = get_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    phases_nlev = []
+    for nlev in range(10):
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats  = radar.gate_latitude['data'][start_index:end_index]
+        lons  = radar.gate_longitude['data'][start_index:end_index]
+        TH    = radar.fields['TH']['data'][start_index:end_index]
+        TV    = radar.fields['TV']['data'][start_index:end_index]
+        RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+        PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index]); 
+        PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan; 
+        rhv = RHOHV.copy();
+        z_h = TH.copy()
+        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+        #last_ray_idx = radar.sweep_end_ray_index['data'][nlev]
+        # por cada radial encontrar first non nan value: 
+        phases = []
+        print(nlev)
+        print(last_ray_idx)
+        print(PHIDP.shape)
+        for radial in range(radar.sweep_end_ray_index['data'][0]):
+            if firstNonNan(PHIDP[radial,30:]):
+                phases.append(firstNonNan(PHIDP[radial,30:]))
+        fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[14,7])
+        plt.plot(phases)
+        phases_nlev.append(np.median(phases))
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
     # TESTING NLEV=0
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
