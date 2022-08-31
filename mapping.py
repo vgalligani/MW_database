@@ -2649,9 +2649,7 @@ def despeckle_phidp(phi, rho, zh):
     dphi = phi.copy()
     
     # Descartamos pixeles donde RHO es menor que un umbral (e.g., 0.7) o no está definido (e.g., NaN)
-    #dphi[np.isnan(rho)] = np.nan
-    #rho_thr = 0.93
-    #dphi[rho < rho_thr] = np.nan
+    dphi[np.isnan(rho)] = np.nan
     
     # Calculamos la textura de RHO (rhot) y descartamos todos los pixeles de PHIDP por encima
     # de un umbral de rhot (e.g., 0.25)
@@ -2666,12 +2664,12 @@ def despeckle_phidp(phi, rho, zh):
     ni = phi.shape[0]
     nj = phi.shape[1]
 
-    for i in range(ni):
-        rho_h = rho[i,:]
-        zh_h = zh[i,:]
-        for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
-                dphi[i,j]  = np.nan		
+    #for i in range(ni):
+    #    rho_h = rho[i,:]
+    #    zh_h = zh[i,:]
+    #    for j in range(nj):
+    #        if (rho_h[j]<0.7) or (zh_h[j]<30):
+    #            dphi[i,j]  = np.nan		
 	
     return dphi
 		
@@ -2687,7 +2685,6 @@ def unfold_phidp(phi, rho, diferencia):
     nr = phi.shape[0]
 
     phi_cor = np.zeros((nr, nb)) #Asigno cero a la nueva variable phidp corregida
-    phi_cor[:] = np.nan
 
     v1 = np.zeros(nb)  #Vector v1
 
@@ -2755,7 +2752,7 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
         for j in range(nj):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan 
-                rho[i,j]  = np.nan   # este antes comentado! 
+                rho[i,j]     = np.nan   # este antes comentado! 
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
@@ -2766,13 +2763,13 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
             if phi_h[j] <= np.nanmax(np.fmax.accumulate(phi_h[0:j])): 
               	uphi_i[i,j] = uphi_i[i,j-1] 
 		
-    breakpoint() 	
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
     # phi_cor[rho<0.7] = np.nan
-
+    phi_cor[phi_cor <= 0] = np.nan
+    
     # Smoothing final:
     for i in range(ni):
         phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
@@ -3048,49 +3045,26 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 
     #---------------------------------------------------------------------------------------------------------
     #---------------------------------------------------------------------------------------------------------
-    if tesing == 1: 	
-	gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-	era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
-	r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
-	radar = pyart.io.read(r_dir+opts['rfile'])
-	nlev = 0
-	start_index = radar.sweep_start_ray_index['data'][nlev]
-	end_index   = radar.sweep_end_ray_index['data'][nlev]
-	# copy PHIDP for sysphase
-	PHIDP_nanMasked = radar.fields['PHIDP']['data'].copy() 
-	PHIDP_nanMasked[np.where(PHIDP_nanMasked<0)] = 0
-	radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
-
-	phiphi = phi.copy()
-	ni = phi.shape[0]
-	nj = phi.shape[1]
- 	for i in range(ni):
- 	  rho_h = rho[i,:]
-  	  zh_h = zh[i,:]
-   	  for j in range(nj):
-       	  if (rho_h[j]<0.7) or (zh_h[j]<30):
-         	phiphi[i,j]  = np.nan
-         	rho[i,j]  = np.nan
-	dphi = despeckle_phidp(phiphi, rho, zh)
-	plt.plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
-	plt.plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP_unmasked']['data'][start_index:end_index][filas,:]), '*b', label='obs. phidp masked')
-	plt.plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
-    #---------------------------------------------------------------------------------------------------------
-    #---------------------------------------------------------------------------------------------------------
     # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
     # breakpoint()
-    # Esto es para todas las elevaciones
-
-    # copy PHIDP for sysphase
-    #PHIDP_nanMasked = radar.fields['PHIDP']['data'].copy() 
-    #PHIDP_nanMasked[np.where(PHIDP_nanMasked<0)] = 0
-    #radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
-    # radar.fields['RHOHV']['data'][np.where(radar.fields['RHOHV']['data']<0)] = np.nan  esto lo estoy haciendo dentro de depeckle?
-    # radar.fields['PHIDP'][np.where(radar.fields['RHOHV']<0.7)] = np.nan		
-    sys_phase  = get_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
-							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
-    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
-					   sys_phase, diff_value)
+    #----- cambiado para RMA3: 	
+    #sys_phase  = get_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
+    #	 						ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
+    #dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
+    #					   sys_phase, diff_value)
+    #------ REMPLAZADO POR:
+    sys_phase = get_sys_phase_simple(radar)
+    # replace PHIDP w/ np.nan
+    PHIORIG = radar.fields['PHIDP']['data'].copy() 
+    PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+    PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+    mask = radar.fields['PHIDP']['data'].data.copy()    
+    mask[:] = False
+    PHIDP_nans.mask = mask
+    radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
+		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
+    #------------	
     radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
 
     # Y CALCULAR KDP! 
@@ -3248,14 +3222,14 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
     axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]+sys_phase), color='magenta', label='phidp corrected');
-    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected-sysphase');
+    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='purple', label='phidp corrected-sysphase');
     axes[1].legend()
     axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
     axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Obs. KDP');
     axes[2].legend()
-    axes[0].set_xlim([50, 120])
-    axes[1].set_xlim([50, 120])
-    axes[2].set_xlim([50, 120])
+    #axes[0].set_xlim([50, 120])
+    #axes[1].set_xlim([50, 120])
+    #axes[2].set_xlim([50, 120])
     axes[2].set_ylim([-1, 5])
     axes[2].grid(True) 
     axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
@@ -4068,12 +4042,13 @@ def main():
     xlims_xlims_input  = [150, 200, 150] 
     xlims_mins_input  = [0, 0, 0]	
     # OJO. sys_phase no le sirve que haya -9999. no toma masked array! 
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
-
-   #run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
 	
 	
+		
+		
     radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile) 
     #------
     # copy PHIDP for sysphase
@@ -4092,7 +4067,6 @@ def main():
     #------------------------------------------------------------------------------
     #-----------------------------------------
     # calcular todo junto (sys_phase y correcciones con mismo campo!) 
-    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile)
 	
     start_index = radar.sweep_start_ray_index['data'][0]
     end_index   = radar.sweep_end_ray_index['data'][0]
@@ -4101,6 +4075,7 @@ def main():
     pc1 = axes[1].pcolormesh(lons,lats, rhv[start_index:end_index], vmin=0.7, vmax=1.0); plt.colorbar(pc1, ax=axes[1]); axes[1].set_title('RHOHV')
     pc2 = axes[2].pcolormesh(lons,lats, PHIORIG[start_index:end_index]); plt.colorbar(pc2, ax=axes[2]); axes[2].set_title('dato crudo')
 
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile)
     sys_phase = get_sys_phase_simple(radar)
     # replace PHIDP w/ np.nan
     PHIORIG = radar.fields['PHIDP']['data'].copy() 
@@ -4108,7 +4083,7 @@ def main():
     PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
     rhv = radar.fields['RHOHV']['data'].copy()
     z_h = radar.fields['TH']['data'].copy()
-    PHIDP_nans = np.where( (rhv>0.7) & (z_h>30), PHIDP_nans, np.nan)
+    #PHIDP_nans = np.where( (rhv>0.7) & (z_h>30), PHIDP_nans, np.nan)
     radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
     # check corrections 
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
