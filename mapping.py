@@ -2687,9 +2687,10 @@ def unfold_phidp(phi, rho, diferencia):
     nr = phi.shape[0]
 
     phi_cor = np.zeros((nr, nb)) #Asigno cero a la nueva variable phidp corregida
-    
+    phi_cor[:] = np.nan
+
     v1 = np.zeros(nb)  #Vector v1
-    
+
     # diferencia = 200 # Valor que toma la diferencia entre uno y otro pixel dentro de un mismo azimuth
     
     for m in range(0, nr):
@@ -2713,7 +2714,7 @@ def unfold_phidp(phi, rho, diferencia):
     
         phi_cor[m,:] = v2
     
-    phi_cor[phi_cor <= 0] = np.nan
+    #phi_cor[phi_cor <= 0] = np.nan
     #phi_cor[rho < .7] = np.nan
     
     return phi_cor
@@ -2765,8 +2766,8 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
             if phi_h[j] <= np.nanmax(np.fmax.accumulate(phi_h[0:j])): 
               	uphi_i[i,j] = uphi_i[i,j-1] 
 		
-    breakpoint() #miercoles: ojo! 	llegue hasta que funcione dphi, algo raro en el unfolding!	
-    # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero
+    breakpoint() 	
+    # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
@@ -2888,6 +2889,40 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     #plt.close()
 
     return 
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_sys_phase_simple(radar):
+
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+
+    phases_nlev = []
+    for nlev in range(radar.nsweeps-1):
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats  = radar.gate_latitude['data'][start_index:end_index]
+        lons  = radar.gate_longitude['data'][start_index:end_index]
+        TH    = radar.fields['TH']['data'][start_index:end_index]
+        TV    = radar.fields['TV']['data'][start_index:end_index]
+        RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+        PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+        PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        rhv = RHOHV.copy()
+        z_h = TH.copy()
+        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+        # por cada radial encontrar first non nan value: 
+        phases = []
+        for radial in range(radar.sweep_end_ray_index['data'][0]):
+            if firstNonNan(PHIDP[radial,30:]):
+                phases.append(firstNonNan(PHIDP[radial,30:]))
+        phases_nlev.append(np.median(phases))
+    phases_out = np.nanmedian(phases_nlev) 
+
+    return phases_out
+
+
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -4057,16 +4092,8 @@ def main():
     #------------------------------------------------------------------------------
     #-----------------------------------------
     # calcular todo junto (sys_phase y correcciones con mismo campo!) 
-    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile) 
-    PHIORIG = radar.fields['PHIDP']['data'].copy() 
-    # replace PHIDP w/ np.nan
-    PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
-    rhv = radar.fields['RHOHV']['data'].copy()
-    z_h = radar.fields['TH']['data'].copy()
-    PHIDP_nans = np.where( (rhv>0.7) & (z_h>30), PHIDP_nans, np.nan)
-    #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
-
+    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile)
+	
     start_index = radar.sweep_start_ray_index['data'][0]
     end_index   = radar.sweep_end_ray_index['data'][0]
     fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[14,7])
@@ -4074,37 +4101,36 @@ def main():
     pc1 = axes[1].pcolormesh(lons,lats, rhv[start_index:end_index], vmin=0.7, vmax=1.0); plt.colorbar(pc1, ax=axes[1]); axes[1].set_title('RHOHV')
     pc2 = axes[2].pcolormesh(lons,lats, PHIORIG[start_index:end_index]); plt.colorbar(pc2, ax=axes[2]); axes[2].set_title('dato crudo')
 
-    #sys_phase  = get_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
-    phases_nlev = []
-    for nlev in range(10):
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats  = radar.gate_latitude['data'][start_index:end_index]
-        lons  = radar.gate_longitude['data'][start_index:end_index]
-        TH    = radar.fields['TH']['data'][start_index:end_index]
-        TV    = radar.fields['TV']['data'][start_index:end_index]
-        RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
-        PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index]); 
-        PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan; 
-        rhv = RHOHV.copy();
-        z_h = TH.copy()
-        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
-        #last_ray_idx = radar.sweep_end_ray_index['data'][nlev]
-        # por cada radial encontrar first non nan value: 
-        phases = []
-        print(nlev)
-        print(last_ray_idx)
-        print(PHIDP.shape)
-        for radial in range(radar.sweep_end_ray_index['data'][0]):
-            if firstNonNan(PHIDP[radial,30:]):
-                phases.append(firstNonNan(PHIDP[radial,30:]))
-        fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[14,7])
-        plt.plot(phases)
-        phases_nlev.append(np.median(phases))
-	
-	
-	
-	
+    sys_phase = get_sys_phase_simple(radar)
+    # replace PHIDP w/ np.nan
+    PHIORIG = radar.fields['PHIDP']['data'].copy() 
+    PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+    PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+    rhv = radar.fields['RHOHV']['data'].copy()
+    z_h = radar.fields['TH']['data'].copy()
+    PHIDP_nans = np.where( (rhv>0.7) & (z_h>30), PHIDP_nans, np.nan)
+    radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+    # check corrections 
+    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
+		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)    
+
+    #-EJEMPLO de azimuth
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    target_azimuth = azimuths[210]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+    #-figure
+    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[14,7])
+    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['RHOHV']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
+    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['TH']['data'][start_index:end_index][filas,:]), '-r', label='ZH')
+    axes[0].legend()
+    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
+    axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
+    axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
+    #axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
+    #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
+    plt.legend()	
+
+
 	
 	
 	
@@ -4132,22 +4158,7 @@ def main():
     #
     # 	
 
-    #
-    #-EJEMPLO de azimuth
-    azimuths = radar.azimuth['data'][start_index:end_index]
-    target_azimuth = azimuths[210]
-    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-    #-figure
-    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[14,7])
-    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['RHOHV']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
-    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['TH']['data'][start_index:end_index][filas,:]), '-r', label='ZH')
-    axes[0].legend()
-    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
-    axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
-    axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
-    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
-    #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
-    plt.legend()
+
 
 	
 	
