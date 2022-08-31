@@ -2622,9 +2622,6 @@ def calc_freezinglevel(era5_dir, era5_file, lat_pf, lon_pf):
 	Re         = 6371*1e3
 	alt_ref    = (Re*geoph_ref)/(Re-geoph_ref) 
 	freezing_lev = np.array(alt_ref[find_nearest(tfield_ref, 0)]/1e3) 
-
-	
-	
 	
 	return alt_ref, tfield_ref, freezing_lev
 
@@ -2750,9 +2747,9 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
+	    if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan 
-                rho[i,j]     = np.nan   # este antes comentado! 
+                 rho[i,j]     = np.nan   
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
@@ -2768,8 +2765,9 @@ def correct_phidp(phi, rho, zh, sys_phase, diferencia):
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
     # phi_cor[rho<0.7] = np.nan
-    phi_cor[phi_cor <= 0] = np.nan
-    
+    phi_cor[phi_cor < 0] = np.nan #antes <= ? 
+    phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
+
     # Smoothing final:
     for i in range(ni):
         phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
@@ -3055,13 +3053,13 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #------ REMPLAZADO POR:
     sys_phase = get_sys_phase_simple(radar)
     # replace PHIDP w/ np.nan
-    PHIORIG = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
-    mask = radar.fields['PHIDP']['data'].data.copy()    
-    mask[:] = False
-    PHIDP_nans.mask = mask
-    radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+    #PHIORIG = radar.fields['PHIDP']['data'].copy() 
+    #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+    #PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+    #mask = radar.fields['PHIDP']['data'].data.copy()    
+    #mask[:] = False
+    #PHIDP_nans.mask = mask
+    #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
     dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
 		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
     #------------	
@@ -3163,6 +3161,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[0,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    THH =  radar.fields['TH']['data'][start_index:end_index]
     pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
     axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
@@ -3180,6 +3179,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
     pcm1 = axes[1,1].pcolormesh(lons, lats, radar.fields['corrPHIDP']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
+    axes[1,1].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[1,1].set_title('CORR Phidp radar nlev '+str(nlev)+'  PPI')
     axes[1,1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,1].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -3195,6 +3195,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
     pcm1 = axes[1,2].pcolormesh(lons, lats, calculated_KDP[start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
+    axes[1,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[1,2].set_title('Calc. KDP nlev '+str(nlev)+' PPI')
     axes[1,2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,2].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -3873,6 +3874,15 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
     radar = pyart.io.read(r_dir+options['rfile'])
+    
+    if options['radar_name'] == 'RMA3':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIDP_nans.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
 	
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
@@ -3997,7 +4007,7 @@ def main():
 	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3}
+	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
     icois_input  = [1,3,4] 
     azimuths_oi  = [356,220,192]
     labels_PHAIL = ['1','3[Phail = 0.534]','4'] 
@@ -4035,7 +4045,7 @@ def main():
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190305_RMA3/', 
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL':6}
+	   'icoi_PHAIL':6, 'radar_name':'RMA3'}
     icois_input  = [6,7] 
     azimuths_oi  = [176,210,30]
     labels_PHAIL = ['6[Phail = 0.737]','7'] 
