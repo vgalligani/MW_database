@@ -2738,19 +2738,20 @@ def check_increasing(A):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def correct_phidp(phi, rho, zh, sys_phase, diferencia):
+def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
 
     phiphi = phi.copy()
+    rho = rho_data.copy()
     ni = phi.shape[0]
     nj = phi.shape[1]
     for i in range(ni):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-	    if (rho_h[j]<0.7) or (zh_h[j]<30):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan 
-                 rho[i,j]     = np.nan   
-	
+                rho[i,j]     = np.nan 
+		
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
     uphi_accum = [] 	
@@ -3916,29 +3917,6 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
 	
     return
-
-#---------------------------------------------------------------------------------------------- 
-#---------------------------------------------------------------------------------------------- 
-def add_field_to_radar_object(field, radar, field_name, 
-                              long_name, standard_name, MASKCOPY_field):
-    """
-    Adds a newly created field to the Py-ART radar object. 
-    If MASKCOPY_field is a masked array, make the new field masked the same as MASKCOPY_field.
-    """
-    fill_value = -9999.0
-    masked_field = np.ma.asanyarray(field)
-    masked_field.mask = masked_field == fill_value
-    if hasattr(radar.fields[MASKCOPY_field]['data'], 'mask'):
-        setattr(masked_field, 'mask', 
-                np.logical_or(masked_field.mask, radar.fields[MASKCOPY_field]['data'].mask))
-        fill_value = radar.fields[MASKCOPY_field]['_FillValue']
-    field_dict = {'data': masked_field,
-                  'units': 'unitless',
-                  'long_name': long_name,
-                  'standard_name': standard_name,
-                  '_FillValue': fill_value}
-    radar.add_field(field_name, field_dict, replace_existing=True)
-    return radar
 
 #---------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------- 
