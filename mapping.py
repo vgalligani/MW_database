@@ -3071,6 +3071,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 					   method='lanczos_conv', skipna=True)	
     radar.add_field_like('RHOHV','corrKDP', calculated_KDP, replace_existing=True)
 	
+	
     # AGREGAR HID?
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
@@ -3078,6 +3079,10 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     dzv_  = radar.fields['TV']['data'].copy()
     drho_ = radar.fields['RHOHV']['data'].copy()
     dkdp_ = radar.fields['corrKDP']['data'].copy()
+
+    # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
+    dkdp_[np.where(drho_.data==radar.fields['RHOHV']['data'].fill_value)] = np.nan
+
     # Filters
     ni = dzh_.shape[0]
     nj = dzh_.shape[1]
@@ -3096,7 +3101,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
                                              use_temp=True, band='C', T=radar_T)
 
     RHIs_nlev = np.argmax(scores, axis=0) + 1 
-    radar.add_field_like('RHOHV','HID', RHIs_nlev, replace_existing=True)
+    radar.add_field_like('corrKDP','HID', RHIs_nlev, replace_existing=True)
 	
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -3885,6 +3890,14 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         PHIDP_nans.mask = mask
         radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
 	
+    if options['radar_name'] == 'RMA1':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+    	
+	
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
@@ -4034,6 +4047,108 @@ def main():
 
 
 	
+
+
+
+
+
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20181111: P(hail) = 0.653 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
+    #  	2018	11	11	22	34	 -28.19	 -65.22	0.918		277.6442	301.7387	229.7393	160.9113	 82.5090	198.7533	  0.0000	1
+    #  	2018	11	11	22	34	 -27.02	 -65.19	0.687		282.8392	309.9369	237.3588	184.5343	 96.5291	195.3130	184.8400	1
+		
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20181214: P(hail) = 0.839, 0.967
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #  	2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
+    # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
+    # 	2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
+    # 	2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
+	
+	
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20190308: P(hail) = 0.895
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
+
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA5 - 20200815: P(hail) = 0.727
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2020	08	15	02	15	 -24.17	 -55.94	0.547		276.0569	284.5401	247.3784	192.5272	110.7962	196.9116	144.4400	1
+    #	2020	08	15	02	15	 -25.28	 -54.11	0.725		273.2686	290.1380	241.5902	181.1631	101.1417	199.9028	108.2200	1
+	
+
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20180209: P(hail) = 0.762
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181001: P(hail) = 0.965
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181031: P(hail) = 0.931
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181215: P(hail) = 0.747
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+								
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181218: P(hail) = 0.964, 0.596
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20190209: P(hail) = 0.989
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+		
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA8 - 20181112: P(hail) = 0.740
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+	
+	
+    # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA8 - 20181112: P(hail) = 0.758
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 		
 		
@@ -4154,96 +4269,4 @@ def main():
 
 
     print(sys_phase)
-
-
-
-
-
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181111: P(hail) = 0.653 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
-    #  	2018	11	11	22	34	 -28.19	 -65.22	0.918		277.6442	301.7387	229.7393	160.9113	 82.5090	198.7533	  0.0000	1
-    #  	2018	11	11	22	34	 -27.02	 -65.19	0.687		282.8392	309.9369	237.3588	184.5343	 96.5291	195.3130	184.8400	1
-		
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181214: P(hail) = 0.839, 0.967
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #  	2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
-    # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
-    # 	2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
-    # 	2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
-	
-	
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20190308: P(hail) = 0.895
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
-
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA5 - 20200815: P(hail) = 0.727
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2020	08	15	02	15	 -24.17	 -55.94	0.547		276.0569	284.5401	247.3784	192.5272	110.7962	196.9116	144.4400	1
-    #	2020	08	15	02	15	 -25.28	 -54.11	0.725		273.2686	290.1380	241.5902	181.1631	101.1417	199.9028	108.2200	1
-	
-
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20180209: P(hail) = 0.762
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181001: P(hail) = 0.965
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181031: P(hail) = 0.931
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181215: P(hail) = 0.747
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-
-								
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181218: P(hail) = 0.964, 0.596
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20190209: P(hail) = 0.989
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-		
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA8 - 20181112: P(hail) = 0.740
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-
-	
-	
-    # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA8 - 20181112: P(hail) = 0.758
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-
-	
 	
