@@ -3096,7 +3096,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
                 drho_[i,j]  = np.nan
                 dkdp_[i,j]  = np.nan
 
-    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=(dzh_-dzv_) - opts['ZDRoffset'], 
+    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=(dzh_-dzv_) - options['ZDRoffset'], 
 					     rho=drho_, kdp=dkdp_, 
                                              use_temp=True, band='C', T=radar_T)
 
