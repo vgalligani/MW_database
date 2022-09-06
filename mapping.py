@@ -2828,7 +2828,8 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     lons  = radar.gate_longitude['data'][start_index:end_index]
     rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
-    KDP   = radar.fields['KDP']['data'][start_index:end_index]
+    if 'KDP' in radar.fields.keys():  
+        KDP   = radar.fields['KDP']['data'][start_index:end_index]
     ZH    = radar.fields['TH']['data'][start_index:end_index]
     RHIs_nlev = radar.fields['HID']['data'][start_index:end_index]
 
