@@ -1879,7 +1879,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         grid_range = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
         grid_RHO   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
         grid_HID   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
-        grid_KDP   = np.zeros((gridded_radar.fields['KDP']['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
+        grid_KDP   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
 
         # need to find x/y pair for each gate at the surface 
         for i in range(lons[filas,:].shape[2]):	
