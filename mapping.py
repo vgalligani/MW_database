@@ -3457,7 +3457,15 @@ def plot_scatter(options, radar, icois, fname):
     for ii in range(len(TB_inds)): 	
     	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
     	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
-
+	
+    if len(icois)==1:
+        colors_plot = ['k']
+        labels_plot = [str('icoi=')+str(icois[0])] 	
+	
+    if len(icois)==2:
+        colors_plot = ['k', 'darkblue']
+        labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1])] 
+	
     if len(icois)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
@@ -4038,13 +4046,13 @@ def main():
 	   'icoi_PHAIL':6, 'radar_name':'RMA3'}
     icois_input  = [6,7] 
     azimuths_oi  = [176,210,30]
-    labels_PHAIL = ['6[Phail = 0.737]','7'] 
+    labels_PHAIL = ['6[Phail = 0.737]','7', ''] 
     xlims_xlims_input  = [150, 200, 150] 
     xlims_mins_input  = [0, 0, 0]	
     # OJO. sys_phase no le sirve que haya -9999. no toma masked array! 
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
-
+    return
 	
 
 
