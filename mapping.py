@@ -12,7 +12,6 @@ from os.path import isfile, join
 import pandas as pd
 from pyart.correct import phase_proc
 import xarray as xr
-from pyart.core.transforms import antenna_to_cartesian
 from copy import deepcopy
 import matplotlib.colors as colors
 import wradlib as wrl    
@@ -3698,7 +3697,7 @@ def summary_radar_obs(radar, fname, options):
         axes[1].set_ylim([options['y_supermin'], options['y_supermax']])
         axes[1].set_title('RHOHV (w/ 45dBZ contour)')
         axes[1].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);
-        axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,225], colors=(['black', 'black']), linewidths=1.5);
+        CS = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,225], colors=(['black', 'black']), linewidths=1.5);
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
         axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
