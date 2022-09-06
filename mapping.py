@@ -3377,7 +3377,7 @@ def plot_scatter(options, radar, icois, fname):
 
     # ojo que aca agarro los verdaderos PCTMIN, no los que me pasó Sarah B. que estan 
     # ajustados a TMI footprints. 
-
+    breakpoint()
     # read file
     f = h5py.File( fname, 'r')
     tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
