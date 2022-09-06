@@ -1932,7 +1932,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         #gridded_radar.fields['height_over_iso0']['data'] -= iso0 
         #
         #for i in range(lons[filas,:].shape[2]):	
-        #    scores          = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=(grid_TVTV[:,i]-grid_THTH[:,i]) - opts['ZDRoffset'], 
+        #    scores          = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=(grid_TVTV[:,i]-grid_THTH[:,i]) - options['ZDRoffset'], 
 	#						 rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
         #                                    use_temp=True, band='C', T=radargrid_TT)
         #    grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
@@ -1949,7 +1949,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
 
-        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-opts['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
 
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
 
@@ -3420,7 +3420,7 @@ def plot_scatter(options, radar, icois, fname):
     #-- Zh: 
     if 'TH' in radar.fields.keys():  
         radarTH = radar.fields['TH']['data'][start_index:end_index]
-        radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-opts['ZDRoffset']
+        radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-options['ZDRoffset']
     elif 'DBZH' in radar.fields.keys():
         radarTH = radar.fields['DBZH']['data'][start_index:end_index]
     elif 'reflectivity' in radar.fields.keys(): 
@@ -3509,7 +3509,7 @@ def plot_scatter(options, radar, icois, fname):
     #------------------------------------------------------	
     ax1 = plt.subplot(gs1[0,1])
     for ic in range(len(RN_inds_parallax)):
-        plt.scatter(np.ravel(radarTH)[RN_inds_parallax[ic]], np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset'], s=20, marker='x', color=colors_plot[ic], label=labels_plot[ic])
+        plt.scatter(np.ravel(radarTH)[RN_inds_parallax[ic]], np.ravel(radarZDR)[RN_inds_parallax[ic]]-options['ZDRoffset'], s=20, marker='x', color=colors_plot[ic], label=labels_plot[ic])
     plt.xlabel('ZH')
     plt.ylabel('ZDR')	
     plt.ylim([-15, 10])
@@ -3526,7 +3526,7 @@ def plot_scatter(options, radar, icois, fname):
     vmax_sample = [] 
     for ic in range(len(RN_inds_parallax)):
         a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
-        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
+        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-options['ZDRoffset']).copy()
         a_x = a_x[~np.isnan(a_x)]   
         a_y = a_y[~np.isnan(a_y)]   
         xbin = np.arange(0,80,4)
@@ -3537,7 +3537,7 @@ def plot_scatter(options, radar, icois, fname):
         vmax_sample.append( np.nanmax(np.reshape(H, [-1,1] ))) 
     for ic in range(len(RN_inds_parallax)):
         a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
-        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-opts['ZDRoffset']).copy()
+        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-options['ZDRoffset']).copy()
         a_x = a_x[~np.isnan(a_x)]   
         a_y = a_y[~np.isnan(a_y)]   
         xbin = np.arange(0,80,4)
