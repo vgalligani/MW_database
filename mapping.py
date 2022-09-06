@@ -3509,8 +3509,8 @@ def plot_scatter(options, radar, icois, fname):
         print('MIN85PCTs: '  +str(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8])) ) 
     plt.grid(True)
     plt.legend()
-    plt.xlim([140,260])
-    plt.ylim([100,240])
+    #plt.xlim([140,260])
+    #plt.ylim([100,240])
     plt.xlabel('TBV(37)')
     plt.ylabel('TBV(85)')
 
