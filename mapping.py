@@ -3914,7 +3914,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    #radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     gc.collect()
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
@@ -3973,6 +3973,80 @@ def firstNonNan(listfloats):
 
 def main(): 
 
+		
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20181111 at 1250: P(hail) = 0.653 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
+    lon_pfs  = [-64.53]
+    lat_pfs  = [-31.83]
+    time_pfs = ['1250UTC']
+    phail    = [0.653]
+    MIN85PCT = [100.5397]
+    MIN37PCT = [190.0948]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [274.57, 249.42, 190.09, 100.54, 197.71, 209.46]
+    #
+    rfile     = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
+    era5_file = '20181111_13_RMA1.grib'
+    # REPORTES TWITTER ...  (de la base de datos de relampago
+    reportes_granizo_twitterAPI_geo = [[-31.84, -64.98], [-30.73, -64.82], [-31.66, -64.43], [-30.67, -64.07], [-32.44, -64.40]]
+    reportes_granizo_twitterAPI_meta = ['19UCT', '21UTC', '2340UTC', '0035UTC', '0220UTC']
+    opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
+	    'ZDRoffset': 1, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 220, 'x_supermin':-65, 'x_supermax':-64,
+	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am_RMA1/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
+    icois_input  = [2,3] 
+    azimuths_oi  = [215,110]
+    labels_PHAIL = ['2 []','3[Phail = ]'] 
+    xlims_xlims_input  = [150, 150] 
+    xlims_mins_input  = [0, 0]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+	
+	
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20181111: P(hail) = 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #  	2018	11	11	22	34	 -28.19	 -65.22	0.918		277.6442	301.7387	229.7393	160.9113	 82.5090	198.7533	  0.0000	1
+    #  	2018	11	11	22	34	 -27.02	 -65.19	0.687		282.8392	309.9369	237.3588	184.5343	 96.5291	
+    reportes_granizo_twitterAPI_geo = [[-31.84, -64.98], [-30.73, -64.82], [-31.66, -64.43], [-30.67, -64.07], [-32.44, -64.40]]
+    reportes_granizo_twitterAPI_meta = ['19UCT', '21UTC', '2340UTC', '0035UTC', '0220UTC']
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20181214: P(hail) = 0.839, 0.967
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #  	2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
+    # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
+    # 	2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
+    # 	2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
+	
+	
+	
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20190308: P(hail) = 0.895
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
+
+	
+    return
+
+def old_main(): 
+	
+	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 	
@@ -4059,33 +4133,6 @@ def main():
 
 
 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181111: P(hail) = 0.653 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
-    #  	2018	11	11	22	34	 -28.19	 -65.22	0.918		277.6442	301.7387	229.7393	160.9113	 82.5090	198.7533	  0.0000	1
-    #  	2018	11	11	22	34	 -27.02	 -65.19	0.687		282.8392	309.9369	237.3588	184.5343	 96.5291	195.3130	184.8400	1
-		
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181214: P(hail) = 0.839, 0.967
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #  	2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
-    # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
-    # 	2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
-    # 	2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
-	
-	
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20190308: P(hail) = 0.895
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
 
 	
 	
