@@ -3114,7 +3114,8 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     lons  = radar.gate_longitude['data'][start_index:end_index]
     rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
-    KDP   = radar.fields['KDP']['data'][start_index:end_index]
+    if 'KDP' in radar.fields.keys():  
+    	KDP   = radar.fields['KDP']['data'][start_index:end_index]
     ZH    = radar.fields['TH']['data'][start_index:end_index]
 
     fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
@@ -3151,9 +3152,9 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
-    pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
+    if 'KDP' in radar.fields.keys():  
+    	pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
     axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -3164,6 +3165,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     plt.colorbar(pcm1, ax=axes[0,2])
     axes[0,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     THH =  radar.fields['TH']['data'][start_index:end_index]
@@ -3231,7 +3233,8 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='purple', label='phidp corrected-sysphase');
     axes[1].legend()
     axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
-    axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Obs. KDP');
+    if 'KDP' in radar.fields.keys():  
+        axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Obs. KDP');
     axes[2].legend()
     #axes[0].set_xlim([50, 120])
     #axes[1].set_xlim([50, 120])
