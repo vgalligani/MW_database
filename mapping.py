@@ -3377,7 +3377,7 @@ def plot_scatter(options, radar, icois, fname):
 
     # ojo que aca agarro los verdaderos PCTMIN, no los que me pasó Sarah B. que estan 
     # ajustados a TMI footprints. 
-    breakpoint()
+    #breakpoint()
     # read file
     f = h5py.File( fname, 'r')
     tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
@@ -3388,6 +3388,7 @@ def plot_scatter(options, radar, icois, fname):
     lat_s2_gmi = f[u'/S2/Latitude'][:,:]
     f.close()
 
+    ##------------------------------------------------------------------------------------------------
     for j in range(lon_gmi.shape[1]):
       tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
       tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
@@ -3395,8 +3396,8 @@ def plot_scatter(options, radar, icois, fname):
       lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
       lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
       lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
-
-    # keep domain of interest only by keeping those where the center nadir obs is inside domain
+	
+    ## keep domain of interest only by keeping those where the center nadir obs is inside domain
     inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
                               np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
     inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
@@ -3408,7 +3409,31 @@ def plot_scatter(options, radar, icois, fname):
     tb_s1_gmi_inside = tb_s1_gmi[inside_s1, :]
 
     PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
+    ##------------------------------------------------------------------------------------------------
 
+    # Tambien se puenden hacer recortes guardando los indices. ejemplo para S1: 
+    #idx1 = (lat_gmi>=options['ylim_min']) & (lat_gmi<=options['ylim_max']+1) & (lon_gmi>=options['xlim_min']) & (lon_gmi<=options['xlim_max']+2)
+    #S1_sub_lat  = lat_gmi[:,:][idx1] 
+    #S1_sub_lon  = lon_gmi[:,:][idx1]
+    #S1_subch89V = tb_s1_gmi[:,:,7][idx1]		
+
+    #idx2 = (lat_s2_gmi>=options['ylim_min']) & (lat_s2_gmi<=options['ylim_max']+1) & (lon_s2_gmi>=options['xlim_min']) & (lon_s2_gmi<=options['xlim_max']+2)
+    #S2_sub_lat  = lat_s2_gmi[:,:][idx2] 
+    #S2_sub_lon  = lon_s2_gmi[:,:][idx2]
+
+    # CALCULATE PCTs
+    #for j in range(lon_gmi.shape[1]):
+    #  tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+    #  tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   	
+    #  lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+    #  lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
+    #  lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+    #  lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
+		
+    # PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi)
+    ##------------------------------------------------------------------------------------------------
+
+	
     nlev=0
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -3450,17 +3475,22 @@ def plot_scatter(options, radar, icois, fname):
     if test_this == 0:
         plt.close()
 
-    datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
-    datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
 
-    TB_inds =  get_contour_info(contorno89, icois, datapts)
+    datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+    #datapts = np.column_stack(( np.ravel(lon_gmi), np.ravel(lat_gmi) ))
+    datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
+
+    TB_inds = get_contour_info(contorno89, icois, datapts)
     RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
 
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
     for ii in range(len(TB_inds)): 	
-    	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
-    	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
+     	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
+     	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
+    #for ii in range(len(TB_inds)): 	
+    # 	GMI_tbs1_37.append( tb_s1_gmi[TB_inds[ii],5] ) 
+    # 	GMI_tbs1_85.append( tb_s1_gmi[TB_inds[ii],7] ) 
 	
     if len(icois)==1:
         colors_plot = ['k']
@@ -3491,6 +3521,7 @@ def plot_scatter(options, radar, icois, fname):
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     for ic in range(len(GMI_tbs1_37)):
         plt.plot( lon_gmi_inside[TB_inds[ic]], 	lat_gmi_inside[TB_inds[ic]], 'xr')	
+        #plt.plot( lon_gmi[TB_inds[ic]], lat_gmi[TB_inds[ic]], 'xr')	       
         plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
     plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
     plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
@@ -3507,6 +3538,7 @@ def plot_scatter(options, radar, icois, fname):
         print('------- Nr. icoi: '+str(icois[ic])+' -------')
         plt.scatter(GMI_tbs1_37[ic], GMI_tbs1_85[ic], s=40, marker='*', color=colors_plot[ic], label=labels_plot[ic])
         TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
         print('MIN10PCTs: '  +str(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1])) ) 
         print('MIN19PCTs: '  +str(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3])) ) 
         print('MIN37PCTs: '  +str(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6])) ) 
@@ -3565,8 +3597,9 @@ def plot_scatter(options, radar, icois, fname):
         axes[ic].set_xlim([30, 65])
         axes[ic].set_ylim([-15, 10]); axes[ic].set_ylabel('ZDR')
         TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
         pix89  = len(TB_s1[:,7])
-        area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
+	area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
         area89 = pix89*(area_ellipse89)
         gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
         gates45dbz = gates45dbz[~np.isnan(gates45dbz)]
@@ -3594,8 +3627,9 @@ def plot_scatter(options, radar, icois, fname):
     MINPCTS_icois = np.zeros((len(RN_inds_parallax), 4)); MINPCTS_icois[:]=np.nan
     for ic in range(len(RN_inds_parallax)):
         TB_s1   = tb_s1_gmi_inside[TB_inds[ic],:]
-        MINPCTs = []
-        MINPCTs.append(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1))
+        #TB_s1   = tb_s1_gmi[TB_inds[ic],:]
+       	MINPCTs = []
+	MINPCTs.append(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1))
         MINPCTs.append(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1))
         MINPCTs.append(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1))
         MINPCTs.append(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1))
@@ -3981,52 +4015,7 @@ def main():
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181111 at 1250: P(hail) = 0.653 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
-    lon_pfs  = [-64.53]
-    lat_pfs  = [-31.83]
-    time_pfs = ['1250UTC']
-    phail    = [0.653]
-    MIN85PCT = [100.5397]
-    MIN37PCT = [190.0948]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [274.57, 249.42, 190.09, 100.54, 197.71, 209.46]
-    #
-    rfile     = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
-    gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
-    era5_file = '20181111_13_RMA1.grib'
-    # REPORTES TWITTER ...  (de la base de datos de relampago
-    reportes_granizo_twitterAPI_geo = [[-31.84, -64.98], [-30.73, -64.82], [-31.66, -64.43], [-30.67, -64.07], [-32.44, -64.40]]
-    reportes_granizo_twitterAPI_meta = ['19UCT', '21UTC', '2340UTC', '0035UTC', '0220UTC']
-    opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
-	    'ZDRoffset': 1, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 220, 'x_supermin':-65, 'x_supermax':-64,
-	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am_RMA1/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
-    icois_input  = [2,3] 
-    azimuths_oi  = [215,110]
-    labels_PHAIL = ['2 []','3[Phail = ]'] 
-    xlims_xlims_input  = [150, 150] 
-    xlims_mins_input  = [0, 0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-	
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181111: P(hail) = 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #  	2018	11	11	22	34	 -28.19	 -65.22	0.918		277.6442	301.7387	229.7393	160.9113	 82.5090	198.7533	  0.0000	1
-    #  	2018	11	11	22	34	 -27.02	 -65.19	0.687		282.8392	309.9369	237.3588	184.5343	 96.5291	
-    reportes_granizo_twitterAPI_geo = [[-31.84, -64.98], [-30.73, -64.82], [-31.66, -64.43], [-30.67, -64.07], [-32.44, -64.40]]
-    reportes_granizo_twitterAPI_meta = ['19UCT', '21UTC', '2340UTC', '0035UTC', '0220UTC']
-	
+
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA1 - 20181214: P(hail) = 0.839, 0.967
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
@@ -4035,7 +4024,38 @@ def main():
     # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
     # 	2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
     # 	2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
-	
+    lon_pfs  = [-65.99] # [-63.11] [-61.40] [-59.65]
+    lat_pfs  = [-31.30] # [-31.90] [-32.30] [-33.90]
+    time_pfs = ['0310UTC']
+    phail    = [0.839] # [0.967] [0.998] [0.863]
+    MIN85PCT = [89.09] # [71.08] [45.91] [67.82] 
+    MIN37PCT = [169.37] # [133.99] [80.12] [151.73] 
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [268.73, 224.68, 169.37, 89.09, 199.99, 	194.18] 
+    #MINPCTs  = [260.02, 201.87, 133.99, 71.08, 199.84, 212.55]
+    #MINPCTs  = [235.52, 130.79, 80.12, 45.91, 199.95, 205.97]
+    #MINPCTs  = [274.45, 239.07, 151.73, 67.82, 195.69, 196.58]
+    # 0304 is raining on top ... 'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc'
+    # rfile =  'cfrad.20181214_024550.0000_to_20181214_024714.0000_RMA1_0301_02.nc' 
+    rfile = 'cfrad.20181214_025529.0000_to_20181214_030210.0000_RMA1_0301_01.nc' 
+    gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
+    era5_file = '20181214_03_RMA1.grib'
+    # REPORTES TWITTER ... 
+    reportes_granizo_twitterAPI_geo = [[-32.19, -64.57]]
+    reportes_granizo_twitterAPI_meta = [['0320UTC']]
+    opts = {'xlim_min': -66, 'xlim_max': -61.5, 'ylim_min': -33, 'ylim_max': -30, 
+	    'ZDRoffset': 1, 'ylim_max_zoom':-31, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 125, 'x_supermin':-66, 'x_supermax':-61.5,
+	    'y_supermin':-33, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL': 16, 'radar_name':'RMA1'}
+    icois_input  = [15, 16] 
+    azimuths_oi  = [215, 110]
+    labels_PHAIL = ['', ''] 
+    xlims_xlims_input  = [150, 150] 
+    xlims_mins_input  = [0, 0]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
 	
 	
@@ -4129,7 +4149,43 @@ def old_main():
     xlims_mins_input  = [0, 0, 0]	
     # OJO. sys_phase no le sirve que haya -9999. no toma masked array! 
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # ESTE CASO ELIMINADO - DETRAS DE LAS SIERRAS ... 
+    # CASO RMA1 - 20181111 at 1250: P(hail) = 0.653 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
+    # lon_pfs  = [-64.53]
+    # lat_pfs  = [-31.83]
+    # time_pfs = ['1250UTC']
+    # phail    = [0.653]
+    # MIN85PCT = [100.5397]
+    # MIN37PCT = [190.0948]
+    # MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    # MINPCTs  = [274.57, 249.42, 190.09, 100.54, 197.71, 209.46]
+    #
+    # rfile     = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
+    # gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
+    # era5_file = '20181111_13_RMA1.grib'
+    # REPORTES TWITTER ...  (de la base de datos de relampago
+    #reportes_granizo_twitterAPI_geo = [[-31.84, -64.98], [-30.73, -64.82], [-31.66, -64.43], [-30.67, -64.07], [-32.44, -64.40]]
+    #reportes_granizo_twitterAPI_meta = ['19UCT', '21UTC', '2340UTC', '0035UTC', '0220UTC']
+    # opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
+    # 	    'ZDRoffset': 1, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+    #	    'window_calc_KDP': 7, 'azimuth_ray': 220, 'x_supermin':-65, 'x_supermax':-64,
+    #	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am_RMA1/', 
+    #	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+    #	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+    # 	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
+    #icois_input  = [2,3] 
+    #azimuths_oi  = [215,110]
+    #labels_PHAIL = ['2 []','3[Phail = ]'] 
+    #xlims_xlims_input  = [150, 150] 
+    #xlims_mins_input  = [0, 0]		
+    #run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+	
+	
     return
 	
 
