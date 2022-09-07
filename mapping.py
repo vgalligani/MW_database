@@ -25,7 +25,7 @@ import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import gc
 import math
-
+from pyart.core.transforms import antenna_to_cartesian
 
 import alphashape
 from descartes import PolygonPatch
@@ -1861,6 +1861,11 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     plt.rcParams['font.sans-serif'] = ['Helvetica']
     plt.rcParams['font.serif'] = ['Helvetica']
 
+    if 'TH' in radar.fields.keys():  
+            THNAME= 'TH'
+    elif 'DBZHCC' in radar.fields.keys():        
+           THNAME = 'DBZHCC'
+
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -1873,15 +1878,15 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     for iz in range(len(azi_oi)):
         target_azimuth = azimuths[azi_oi[iz]]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()	
-        grid_lon   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
-        grid_lat   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
-        grid_THTH  = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
-        grid_TVTV  = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
-        grid_alt   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
-        grid_range = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
-        grid_RHO   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
-        grid_HID   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
-        grid_KDP   = np.zeros((gridded_radar.fields['TH']['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
+        grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
+        grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
+        grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
+        grid_TVTV  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
+        grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
+        grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
+        grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
+        grid_HID   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
+        grid_KDP   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
 
         # need to find x/y pair for each gate at the surface 
         for i in range(lons[filas,:].shape[2]):	
@@ -1892,8 +1897,8 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             ([xloc], [yloc]) = np.where(c == np.min(c))	
             grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
             grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
-            grid_TVTV[:,i]  = gridded_radar.fields['TV']['data'][:,xloc,yloc]
-            grid_THTH[:,i]  = gridded_radar.fields['TH']['data'][:,xloc,yloc]
+            grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+            grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
             grid_RHO[:,i]   = gridded_radar.fields['RHOHV']['data'][:,xloc,yloc]
             grid_alt[:,i]   = gridded_radar.z['data'][:]
             x               = gridded_radar.point_x['data'][:,xloc,yloc]
@@ -2131,8 +2136,9 @@ def check_transec_rma_campos(dat_dir, file_PAR_all, test_transect, campo, nlev):
 	
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
-def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options):
+def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options):
 
+    radar_name = options['radar_name']
     print(radar.fields.keys())
 
     plt.matplotlib.rc('font', family='serif', size = 20)
@@ -2213,6 +2219,15 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
             ZDRZDR[RHORHO<0.75]=np.nan
             RHORHO[RHORHO<0.75]=np.nan
 	
+        elif radar_name == 'DOW7':
+            ZHZH  = radar.fields['DBZHCC']['data'][start_index:end_index]
+            TV     = radar.fields['DBZVCC']['data'][start_index:end_index]     
+            ZDRZDR = radar.fields['ZDRC']['data'][start_index:end_index]      
+            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]
+            KDPKDP  = radar.fields['KDP']['data'][start_index:end_index]   	
+            HIDHID  =  radar.fields['HID']['data'][start_index:end_index]       
+            PHIPHI  =  radar.fields['PHIDP']['data'][start_index:end_index]       
+
         lats        = radar.gate_latitude['data'][start_index:end_index]
         lons        = radar.gate_longitude['data'][start_index:end_index]
         # En verdad buscar azimuth no transecta ... 
@@ -2610,6 +2625,453 @@ def plot_rhi_RMA(radar, radar_name, xlim_range1, xlim_range2, test_transect, ZDR
 	
     return
 
+
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------	
+def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options):
+
+    radar_name = options['radar_name']
+    print(radar.fields.keys())
+
+    plt.matplotlib.rc('font', family='serif', size = 20)
+    plt.rcParams['font.sans-serif'] = ['Helvetica']
+    plt.rcParams['font.serif'] = ['Helvetica']
+
+    #- Radar sweep
+    lats0        = radar.gate_latitude['data']
+    lons0        = radar.gate_longitude['data']
+    azimuths     = radar.azimuth['data']
+			
+    Ze_transect     = np.zeros( [len(files_list), lats0.shape[1] ]); Ze_transect[:]=np.nan
+    ZDR_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); ZDR_transect[:]=np.nan
+    PHI_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); PHI_transect[:]=np.nan
+    lon_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); lon_transect[:]=np.nan
+    lat_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); lat_transect[:]=np.nan
+    RHO_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); RHO_transect[:]=np.nan
+    PHIDP_transect  = np.zeros( [len(files_list), lats0.shape[1] ]); RHO_transect[:]=np.nan
+    approx_altitude = np.zeros( [len(files_list), lats0.shape[1] ]); approx_altitude[:]=np.nan
+    color           = np.full(( len(files_list), lats0.shape[1], 4), np.nan)
+    gate_range      = np.zeros( [len(files_list), lats0.shape[1] ]); gate_range[:]=np.nan
+    HID_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); HID_transect[:]=np.nan
+    KDP_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); KDP_transect[:]=np.nan
+    alt_43aproox    = np.zeros( [len(files_list), lats0.shape[1] ]); alt_43aproox[:]=np.nan
+	
+    azydims = lats0.shape[1]-1
+
+    nlev = 0
+    for file in files_list:
+      if 'low_v176' in file:
+        radar   = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
+        ZHZH    = radar.fields['DBZHCC']['data']
+        TV      = radar.fields['DBZVCC']['data']   
+        ZDRZDR  = radar.fields['ZDRC']['data']      
+        RHORHO  = radar.fields['RHOHV']['data']
+        KDPKDP  = radar.fields['KDP']['data']  	
+        HIDHID  = radar.fields['HID']['data']
+        PHIPHI  = radar.fields['PHIDP']['data']   
+
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        # En verdad buscar azimuth no transecta ... 
+        azimuths    = radar.azimuth['data']
+        # ojo que esto no se si aplica ... 
+        target_azimuth = azimuths[test_transect]  #- target azimuth for nlev=0 test case is 301.5
+	filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect[nlev,:]     = lons[filas,:]
+        lat_transect[nlev,:]     = lats[filas,:]
+        #
+        gateZ    = radar.gate_z['data']
+        gateX    = radar.gate_x['data']
+        gateY    = radar.gate_y['data']
+        gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+        #
+        Ze_transect[nlev,:]      = ZHZH[filas,:]
+        ZDR_transect[nlev,:]     = ZDRZDR[filas,:]
+        RHO_transect[nlev,:]     = RHORHO[filas,:]
+        KDP_transect[nlev,:]     = KDPKDP[filas,:]	
+        PHIDP_transect[nlev,:]   = PHIPHI[filas,:]	
+        HID_transect[nlev,:]     = HIDHID[filas,:]
+        alt_43aproox[nlev,:]     = radar.fields['height']['data'][filas,:]
+        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
+        alt_43aproox[nlev,:]    = np.ravel(radar.fields['height']['data'][filas,:])
+        approx_altitude[nlev,:] = zgate/1e3;
+        gate_range[nlev,:]      = gates_range[filas,:]/1e3;
+        nlev = nlev + 1
+	#
+        #scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
+        #                                     rho=RHO_transect[nlev,:], kdp=KDP_transect[nlev,:], 
+        #                                     use_temp=True, band='C', T=radar_T)
+        #HID_transect[nlev,:]  = np.argmax(scores, axis=0) + 1 
+    #---------------------------------------- REFLECTIVITY
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(111)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude, Ze_transect, cmap=colormaps('ref'), vmin=0, vmax=60)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons (scatter plot para sacar el color de cada pixel)
+    print(len(radar.sweep_start_ray_index['data']))
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+         fig = plt.figure(figsize=[30,10])
+         fig.add_subplot(221)
+         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                 s=1,c=Ze_transect[nlev,:],
+                 cmap=colormaps('ref'), vmin=0, vmax=60)
+         color[nlev,:,:] = sc.to_rgba(Ze_transect[nlev,:])
+         plt.close()
+
+    #- Try polygons
+    fig2, axes = plt.subplots(nrows=6,ncols=1,constrained_layout=True,figsize=[10,20]) 
+
+    fig1 = plt.figure(figsize=(20,20))
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+         if nlev > 9: continue
+         # Create the cone for each elevation IN TERMS OF RANGE. 
+         # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
+         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+         P1 = Polygon([( gate_range[nlev,0],    approx_altitude[nlev,0]-ancho_haz_i0      ),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                   ( gate_range[nlev,0],    approx_altitude[nlev,0]+ancho_haz_i0      )])
+         ancho = 50/1E3
+         # Location of gates? Every 100m?  
+         LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                   (gate_range[nlev,x]+ancho, 0),
+                   (gate_range[nlev,x]+ancho, 50),
+                   (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+         # Plot
+         for i, l in enumerate(LS):
+             # Get the polygon of the intersection between the cone and the space 
+             #reserved for a specific point
+             inter = l.intersection(P1)
+             x,y = inter.exterior.xy    
+             # Then plot it, filled by the color we want
+             axes[0].fill(x, y, color = color[nlev,i,:], )
+             x, y = P1.exterior.xy
+         axes[0].set_ylim([0, 20])
+         axes[0].set_ylabel('Altitude (km)')
+         axes[0].grid()
+         axes[0].set_xlim((xlim_range1, xlim_range2))
+         norm = matplotlib.colors.Normalize(vmin=0.,vmax=60.)
+         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('ref'))
+         cax.set_array(Ze_transect)
+         cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
+         axes[0].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+    
+    del mycolorbar, x, y, P1, inter, LS, Ze_transect
+    axes[0].set_title('Transect Nr. '+str(test_transect))
+    #---------------------------------------- ZDR
+    N = (5+2)
+    cmap_ZDR = discrete_cmap(int(N), 'jet') 
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                ZDR_transect,
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=ZDR_transect[nlev,:],
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
+        color[nlev,:,:] = sc.to_rgba(ZDR_transect[nlev,:])
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        if nlev > 9: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[1].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[1].set_ylim([0, 20])
+        axes[1].set_ylabel('Altitude (km)')
+        axes[1].grid()
+        axes[1].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=-2.,vmax=5.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap_ZDR)
+        cax.set_array(ZDR_transect)
+        cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
+        axes[1].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, ZDR_transect
+    #---------------------------------------- RHOHV
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                RHO_transect,
+                cmap = pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=RHO_transect[nlev,:],
+                cmap= pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+        color[nlev,:,:] = sc.to_rgba(RHO_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        if nlev > 9: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[2].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[2].set_ylim([0, 20])
+        axes[2].set_ylabel('Altitude (km)')
+        axes[2].grid()
+        axes[2].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0.7,vmax=1.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.RefDiff)
+        cax.set_array(RHO_transect)
+        cbar_rho = fig2.colorbar(cax, ax=axes[2], shrink=1.1, ticks=np.arange(0.7,1.01,0.1), label=r'$\rho_{hv}$')     
+        axes[2].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, RHO_transect
+
+    #---------------------------------------- PHIDP
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                PHIDP_transect,
+                cmap = pyart.graph.cm.Wild25, vmin=0, vmax=360.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=PHIDP_transect[nlev,:],
+                cmap= pyart.graph.cm.Wild25, vmin=0, vmax=360.)
+        color[nlev,:,:] = sc.to_rgba(PHIDP_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        if nlev > 9: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[3].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[3].set_ylim([0, 20])
+        axes[3].set_ylabel('Altitude (km)')
+        axes[3].grid()
+        axes[3].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0,vmax=360.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.Wild25)
+        cax.set_array(PHIDP_transect)
+        cbar_Phidp = fig2.colorbar(cax, ax=axes[3], shrink=1.1, label=r'PHIDP')     
+        axes[3].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, PHIDP_transect
+
+
+
+    #---------------------------------------- KDP
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                KDP_transect,
+                cmap = pyart.graph.cm.Theodore16, vmin=0, vmax=5.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=KDP_transect[nlev,:],
+                cmap= pyart.graph.cm.Theodore16, vmin=0, vmax=5.)
+        color[nlev,:,:] = sc.to_rgba(KDP_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        if nlev > 9: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[4].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[4].set_ylim([0, 20])
+        axes[4].set_ylabel('Altitude (km)')
+        axes[4].grid()
+        axes[4].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0,vmax=5.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.Theodore16)
+        cax.set_array(KDP_transect)
+        cbar_Phidp = fig2.colorbar(cax, ax=axes[4], shrink=1.1, label=r'KDP')     
+        axes[4].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, KDP_transect
+
+
+
+
+
+
+
+
+    #---------------------------------------- HID
+    hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+    #cmaphid.set_bad('white')
+    #cmaphid.set_under('white')
+
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                HID_transect,
+                cmap = cmaphid, vmin=0.2, vmax=10)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=HID_transect[nlev,:],
+                cmap = cmaphid, vmin=0.2, vmax=10)
+        color[nlev,:,:] = sc.to_rgba(HID_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+        if nlev > 9: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[5].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[5].set_ylim([0, 20])
+        axes[5].set_ylabel('Altitude (km)')
+        axes[5].grid()
+        axes[5].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0.2,vmax=10)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmaphid)
+        cax.set_array(HID_transect)
+        cbar_HID = fig2.colorbar(cax, ax=axes[5], shrink=1.1, label=r'HID')    
+        cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+        axes[5].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+    del mycolorbar, x, y, P1, inter, LS, HID_transect
+
+    #- savefile
+    fig2.savefig(options['fig_dir']+'PseudoRHI_'+'Transect_'+str(test_transect)+'.png', dpi=300,transparent=False)   
+    #plt.close()
+	
+	
+    return
+
+
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def calc_freezinglevel(era5_dir, era5_file, lat_pf, lon_pf):
@@ -2951,8 +3413,8 @@ def get_sys_phase_simple_dow7(radar):
     # por cada radial encontrar first non nan value: 
     phases = []
     for radial in range(radar.sweep_end_ray_index['data'][0]):
-		if firstNonNan(PHIDP[radial,30:]):
-                     phases.append(firstNonNan(PHIDP[radial,30:]))
+        if firstNonNan(PHIDP[radial,30:]):
+            phases.append(firstNonNan(PHIDP[radial,30:]))
     phases_nlev = np.median(phases)
 
     return phases_nlev
@@ -3089,9 +3551,9 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #					   sys_phase, diff_value)
     #------ REMPLAZADO POR:
     if 'TH' in radar.fields.keys():  
-    	sys_phase = get_sys_phase_simple(radar)
+        sys_phase = get_sys_phase_simple(radar)
     elif 'DBZHCC' in radar.fields.keys():
-	sys_phase = get_sys_phase_simple_dow7(radar)
+        sys_phase = get_sys_phase_simple_dow7(radar)
     # replace PHIDP w/ np.nan
     #PHIORIG = radar.fields['PHIDP']['data'].copy() 
     #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
@@ -3299,6 +3761,153 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 
     return radar
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
+
+    # AGREGAR HID?
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    if 'TH' in radar.fields.keys():  
+        dzh_  = radar.fields['TH']['data'].copy()
+        dzv_  = radar.fields['TV']['data'].copy()
+    elif 'DBZHCC' in radar.fields.keys():
+        dzh_  = radar.fields['DBZHCC']['data'].copy()
+        dzv_  = radar.fields['DBZVCC']['data'].copy()
+        dZDR  = radar.fields['ZDRC']['data'].copy()
+    drho_ = radar.fields['RHOHV']['data'].copy()
+    dkdp_ = radar.fields['KDP']['data'].copy()
+
+    # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
+    dkdp_[np.where(drho_.data==radar.fields['RHOHV']['data'].fill_value)] = np.nan
+
+    # Filters
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+        rho_h = drho_[i,:]
+        zh_h = dzh_[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                dzh_[i,j]  = np.nan
+                dzv_[i,j]  = np.nan
+                drho_[i,j]  = np.nan
+                dkdp_[i,j]  = np.nan
+
+    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], 
+					     rho=drho_, kdp=dkdp_, 
+                                             use_temp=True, band='C', T=radar_T)
+
+    RHIs_nlev = np.argmax(scores, axis=0) + 1 
+    radar.add_field_like('KDP','HID', RHIs_nlev, replace_existing=True)
+
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+
+    #-EJEMPLO de azimuth
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    target_azimuth = azimuths[azimuth_ray]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    rhoHV = radar.fields['RHOHV']['data'][start_index:end_index]
+    PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
+    if 'KDP' in radar.fields.keys():  
+    	KDP   = radar.fields['KDP']['data'][start_index:end_index]
+
+    fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
+                        figsize=[14,7])
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+    pcm1 = axes[0,0].pcolormesh(lons, lats, rhoHV, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,0].set_title('RHOHV radar nlev '+str(nlev)+' PPI')
+    axes[0,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,0])
+    axes[0,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[0,1].pcolormesh(lons, lats, radar.fields['PHIDP']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,1].set_title('Phidp radar nlev '+str(nlev)+' PPI')
+    axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,1].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,1])
+    axes[0,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
+    if 'KDP' in radar.fields.keys():  
+    	pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,2])
+    axes[0,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    if 'TH' in radar.fields.keys():  
+        ZHFIELD = 'TH'
+        THH =  radar.fields['TH']['data'][start_index:end_index]
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    elif 'DBZHCC' in radar.fields.keys():
+        ZHFIELD = 'DBZHCC'
+        THH =  radar.fields['DBZHCC']['data'][start_index:end_index]
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)		
+    axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
+    axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,0])
+    axes[1,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[1,1].pcolormesh(lons, lats, radar.fields['PHIDP']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[1,1].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
+    axes[1,1].set_title('CORR Phidp radar nlev '+str(nlev)+'  PPI')
+    axes[1,1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,1].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,1])
+    axes[1,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    fig.savefig(options['fig_dir']+'PPIs_KDPcorr'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
+    #plt.close()
+
+    return radar
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -3650,8 +4259,8 @@ def plot_scatter(options, radar, icois, fname):
         TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
         #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
         pix89  = len(TB_s1[:,7])
-	area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
-        area89 = pix89*(area_ellipse89)
+        area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
+	area89 = pix89*(area_ellipse89)
         gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
         gates45dbz = gates45dbz[~np.isnan(gates45dbz)]
         gates45dbz = len(gates45dbz)
@@ -3742,6 +4351,7 @@ def ignore_plots():
         return
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
 def summary_radar_obs(radar, fname, options):  
 
         # read 
@@ -3768,17 +4378,21 @@ def summary_radar_obs(radar, fname, options):
         end_index   = radar.sweep_end_ray_index['data'][0]
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
-        TH    = radar.gate_longitude['data'][start_index:end_index]
-
-	#-------------------------- ZH y contornos y RHO
+        TH    = radar.gate_longitude['data'][start_index:end_index] 
+        	#-------------------------- ZH y contornos y RHO
         fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[24,6])
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-        pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+        if 'TH' in radar.fields.keys():  
+            THNAME= 'TH'
+            pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+        elif 'DBZHCC' in radar.fields.keys():        
+            THNAME= 'DBZHCC'
+            pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
         plt.colorbar(pcm1, ax=axes[0])
         axes[0].set_xlim([options['x_supermin'], options['x_supermax']])	
         axes[0].set_ylim([options['y_supermin'], options['y_supermax']])	
         axes[0].set_title('ZH (w/ 45dBZ contour)')
-        axes[0].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);	
+        axes[0].contour(lons[:], lats[:], radar.fields[THNAME]['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);	
         axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,225], colors=(['black', 'black']), linewidths=1.5);
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
         axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
@@ -3876,7 +4490,6 @@ def summary_radar_obs(radar, fname, options):
         #plt.close()
 
         return
-
 
 
 #----------------------------------------------------------------------------------------------
@@ -3999,18 +4612,25 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)     
 
-    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    if options['radar_name'] == 'DOW7':
+	radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+	plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+	for ic in range(len(xlims_xlims_input)): 
+           check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
+	   plot_rhi_DOW7(radar, options['files_list'], xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options)
+	
+    #radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    #plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    #plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    #plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     #radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     gc.collect()
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
 
-    for ic in range(len(xlims_xlims_input)): 
-        check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
-        plot_rhi_RMA(radar, 'RMA1', xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
+    #for ic in range(len(xlims_xlims_input)): 
+    #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
+    #    plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
     gc.collect()
 
     # 500m grid! 
@@ -4026,6 +4646,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
 	
     return
+
+
 
 #---------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------- 
@@ -4135,8 +4757,8 @@ def main():
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57]]
     reportes_granizo_twitterAPI_meta = [['0320UTC']]
     opts = {'xlim_min': -66, 'xlim_max': -61.5, 'ylim_min': -33, 'ylim_max': -30, 
-	    'ZDRoffset': 1, 'ylim_max_zoom':-31, 'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 125, 'x_supermin':-66, 'x_supermax':-61.5,
+	    'ZDRoffset': 0, 'ylim_max_zoom':-31, 'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 60, 'x_supermin':-66, 'x_supermax':-61.5,
 	    'y_supermin':-33, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
