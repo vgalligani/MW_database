@@ -1243,7 +1243,9 @@ def add_field_to_radar_object(field, radar, field_name='FH', units='unitless',
     if 'TH' in radar.fields.keys():  
         dz_field='TH'
     elif 'DBZH' in radar.fields.keys():
-        dz_field='DBZH'   
+        dz_field='DBZH'
+    elif 'DBZHCC' in radar.fields.keys():
+        dz_field='DBZHCC'
     fill_value = -32768
     masked_field = np.ma.asanyarray(field)
     masked_field.mask = masked_field == fill_value
@@ -2900,11 +2902,18 @@ def get_sys_phase_simple(radar):
         end_index   = radar.sweep_end_ray_index['data'][nlev]
         lats  = radar.gate_latitude['data'][start_index:end_index]
         lons  = radar.gate_longitude['data'][start_index:end_index]
-        TH    = radar.fields['TH']['data'][start_index:end_index]
-        TV    = radar.fields['TV']['data'][start_index:end_index]
-        RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
-        PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
-        PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        if 'TH' in radar.fields.keys():  
+            TH    = radar.fields['TH']['data'][start_index:end_index]
+            TV    = radar.fields['TV']['data'][start_index:end_index]
+            RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+            PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+            PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        elif 'DBZHCC' in radar.fields.keys():
+            TH    = radar.fields['DBZHCC']['data'][start_index:end_index]
+            TV    = radar.fields['DBZVCC']['data'][start_index:end_index]
+            RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+            PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+            PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan		
         rhv = RHOHV.copy()
         z_h = TH.copy()
         PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
@@ -2917,7 +2926,6 @@ def get_sys_phase_simple(radar):
     phases_out = np.nanmedian(phases_nlev) 
 
     return phases_out
-
 
 
 #------------------------------------------------------------------------------
@@ -3061,8 +3069,12 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #mask[:] = False
     #PHIDP_nans.mask = mask
     #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
-    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
+    if 'TH' in radar.fields.keys():  
+        dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
 		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
+    elif 'DBZHCC' in radar.fields.keys():
+        dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
+		radar.fields['RHOHV']['data'], radar.fields['DBZHCC']['data'], sys_phase, 280)
     #------------	
     radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
 
@@ -3070,13 +3082,17 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
 					   method='lanczos_conv', skipna=True)	
     radar.add_field_like('RHOHV','corrKDP', calculated_KDP, replace_existing=True)
-	
-	
+
+
     # AGREGAR HID?
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    dzh_  = radar.fields['TH']['data'].copy()
-    dzv_  = radar.fields['TV']['data'].copy()
+    if 'TH' in radar.fields.keys():  
+        dzh_  = radar.fields['TH']['data'].copy()
+        dzv_  = radar.fields['TV']['data'].copy()
+    elif 'DBZHCC' in radar.fields.keys():
+        dzh_  = radar.fields['DBZHCC']['data'].copy()
+        dzv_  = radar.fields['DBZVCC']['data'].copy()
     drho_ = radar.fields['RHOHV']['data'].copy()
     dkdp_ = radar.fields['corrKDP']['data'].copy()
 
@@ -3102,10 +3118,10 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 
     RHIs_nlev = np.argmax(scores, axis=0) + 1 
     radar.add_field_like('corrKDP','HID', RHIs_nlev, replace_existing=True)
-	
+
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
-	
+
     #-EJEMPLO de azimuth
     azimuths = radar.azimuth['data'][start_index:end_index]
     target_azimuth = azimuths[azimuth_ray]
@@ -3170,8 +3186,14 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     THH =  radar.fields['TH']['data'][start_index:end_index]
-    pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, 
+    if 'TH' in radar.fields.keys():  
+        ZHFIELD = 'TH'
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
+    elif 'DBZHCC' in radar.fields.keys():
+        ZHFIELD = 'DBZHCC'
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)		
     axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
     axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -3225,7 +3247,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #-figure
     fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,figsize=[14,10])
     axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['RHOHV']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
-    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['TH']['data'][start_index:end_index][filas,:]), '-r', label='ZH')
+    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields[ZHFIELD]['data'][start_index:end_index][filas,:]), '-r', label='ZH')
     axes[0].legend()
     axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
     axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
@@ -4004,7 +4026,6 @@ def firstNonNan(listfloats):
 #make_densityPlot(gridedTH, gridedZDR, RB_inds_COI1, RB_inds_COI2, RB_inds_COI3)
 #----------------------------------------------------------------------------------------------
 
-
 #------------------------------------------------------------------------------
 # ACA EMPIEZA EL MAIN! 
 #------------------------------------------------------------------------------	
@@ -4017,39 +4038,80 @@ def main():
 	
 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181214: P(hail) = 0.839, 0.967
+    # CASO RMA1 - 20181214: P(hail) = 0.967 ... USAR DOW7!
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #  	2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
+    #  	ESTE FUERA DEL RANGO: 2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
     # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
-    # 	2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
-    # 	2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
-    lon_pfs  = [-65.99] # [-63.11] [-61.40] [-59.65]
-    lat_pfs  = [-31.30] # [-31.90] [-32.30] [-33.90]
+    # 	ESTE FUERA DEL RANGO: 2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
+    # 	ESTE FUERA DEL RANGO: 2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
+    lon_pfs  = [-63.11] # [-61.40] [-59.65]
+    lat_pfs  = [-31.90] # [-32.30] [-33.90]
     time_pfs = ['0310UTC']
-    phail    = [0.839] # [0.967] [0.998] [0.863]
-    MIN85PCT = [89.09] # [71.08] [45.91] [67.82] 
-    MIN37PCT = [169.37] # [133.99] [80.12] [151.73] 
+    phail    = [0.967] # [0.998] [0.863]
+    MIN85PCT = [71.08] # [45.91] [67.82] 
+    MIN37PCT = [133.99] # [80.12] [151.73] 
     MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [268.73, 224.68, 169.37, 89.09, 199.99, 	194.18] 
-    #MINPCTs  = [260.02, 201.87, 133.99, 71.08, 199.84, 212.55]
+    #MINPCTs  = [268.73, 224.68, 169.37, 89.09, 199.99, 	194.18] 
+    MINPCTs  = [260.02, 201.87, 133.99, 71.08, 199.84, 212.55]
     #MINPCTs  = [235.52, 130.79, 80.12, 45.91, 199.95, 205.97]
     #MINPCTs  = [274.45, 239.07, 151.73, 67.82, 195.69, 196.58]
     # 0304 is raining on top ... 'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc'
     # rfile =  'cfrad.20181214_024550.0000_to_20181214_024714.0000_RMA1_0301_02.nc' 
-    rfile = 'cfrad.20181214_025529.0000_to_20181214_030210.0000_RMA1_0301_01.nc' 
+    # rfile = 'cfrad.20181214_025529.0000_to_20181214_030210.0000_RMA1_0301_01.nc' 
+    # USE DOW7 for lowest level
+    rfile = 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc' 
+    # mimic RMA1 file system: 
+    counter = 0	    
+    radar0       = pyart.io.read_cfradial('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/' + 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc')
+    start_index = radar0.sweep_start_ray_index['data'][0]
+    end_index   = radar0.sweep_end_ray_index['data'][0]
+    lats0       = radar0.gate_latitude['data'][start_index:end_index]
+ 
+    files_list = ['cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc',
+		  'cfrad.20181214_022019_DOW7low_v176_s02_el1.98_SUR.nc',
+		  'cfrad.20181214_022031_DOW7low_v176_s03_el3.97_SUR.nc',
+		  'cfrad.20181214_022043_DOW7low_v176_s04_el5.98_SUR.nc',
+		  'cfrad.20181214_022055_DOW7low_v176_s05_el7.98_SUR.nc',
+		  'cfrad.20181214_022106_DOW7low_v176_s06_el9.98_SUR.nc',
+		  'cfrad.20181214_022118_DOW7low_v176_s07_el11.98_SUR.nc',
+		  'cfrad.20181214_022130_DOW7low_v176_s08_el13.99_SUR.nc',
+		  'cfrad.20181214_022142_DOW7low_v176_s09_el15.97_SUR.nc',
+		  'cfrad.20181214_022154_DOW7low_v176_s10_el17.97_SUR.nc',
+		  'cfrad.20181214_022206_DOW7low_v176_s11_el19.98_SUR.nc',	  
+		  'cfrad.20181214_022218_DOW7low_v176_s12_el21.98_SUR.nc',
+		  'cfrad.20181214_022230_DOW7low_v176_s13_el23.99_SUR.nc',
+		  'cfrad.20181214_022241_DOW7low_v176_s14_el25.98_SUR.nc',	  
+		  'cfrad.20181214_022253_DOW7low_v176_s15_el27.98_SUR.nc',
+		  'cfrad.20181214_022305_DOW7low_v176_s16_el29.98_SUR.nc',
+		  'cfrad.20181214_022317_DOW7low_v176_s17_el31.98_SUR.nc',
+		  'cfrad.20181214_022329_DOW7low_v176_s18_el33.98_SUR.nc',	    
+		  'cfrad.20181214_022341_DOW7low_v176_s19_el36.98_SUR.nc',
+		  'cfrad.20181214_022353_DOW7low_v176_s20_el40.97_SUR.nc',
+		  'cfrad.20181214_022405_DOW7low_v176_s21_el44.98_SUR.nc',
+		  'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']
+    for file in files_list:
+      if 'low_v176' in file:
+        print(file)
+        radarDOW7 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
+	
+
+	
+	
+	
+    #	
     gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
     era5_file = '20181214_03_RMA1.grib'
     # REPORTES TWITTER ... 
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57]]
     reportes_granizo_twitterAPI_meta = [['0320UTC']]
     opts = {'xlim_min': -66, 'xlim_max': -61.5, 'ylim_min': -33, 'ylim_max': -30, 
-	    'ZDRoffset': 1, 'ylim_max_zoom':-31, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+	    'ZDRoffset': 1, 'ylim_max_zoom':-31, 'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
 	    'window_calc_KDP': 7, 'azimuth_ray': 125, 'x_supermin':-66, 'x_supermax':-61.5,
 	    'y_supermin':-33, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 16, 'radar_name':'RMA1'}
+	   'icoi_PHAIL': 16, 'radar_name':'DOW7'}
     icois_input  = [15, 16] 
     azimuths_oi  = [215, 110]
     labels_PHAIL = ['', ''] 
