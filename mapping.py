@@ -2832,10 +2832,14 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
     if 'KDP' in radar.fields.keys():  
         KDP   = radar.fields['KDP']['data'][start_index:end_index]
-    ZH    = radar.fields['TH']['data'][start_index:end_index]
     RHIs_nlev = radar.fields['HID']['data'][start_index:end_index]
-
-
+    if 'TH' in radar.fields.keys():  
+        ZHFIELD = 'TH'
+        ZH =  radar.fields['TH']['data'][start_index:end_index]
+    elif 'DBZHCC' in radar.fields.keys():
+        ZHFIELD = 'DBZHCC'
+        ZH =  radar.fields['DBZHCC']['data'][start_index:end_index]
+	
     #---- plot hid ppi  
     hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
               'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
@@ -2927,7 +2931,31 @@ def get_sys_phase_simple(radar):
 
     return phases_out
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_sys_phase_simple_dow7(radar):
 
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    TH    = radar.fields['DBZHCC']['data'][start_index:end_index]
+    TV    = radar.fields['DBZVCC']['data'][start_index:end_index]
+    RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+    PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+    PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan		
+    rhv = RHOHV.copy()
+    z_h = TH.copy()
+    PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+    # por cada radial encontrar first non nan value: 
+    phases = []
+    for radial in range(radar.sweep_end_ray_index['data'][0]):
+		if firstNonNan(PHIDP[radial,30:]):
+                     phases.append(firstNonNan(PHIDP[radial,30:]))
+    phases_nlev = np.median(phases)
+
+    return phases_nlev
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def get_sys_phase(radar, ncp_lev, rhohv_lev, ncp_field, rhv_field, phidp_field):
@@ -3060,7 +3088,10 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
     #					   sys_phase, diff_value)
     #------ REMPLAZADO POR:
-    sys_phase = get_sys_phase_simple(radar)
+    if 'TH' in radar.fields.keys():  
+    	sys_phase = get_sys_phase_simple(radar)
+    elif 'DBZHCC' in radar.fields.keys():
+	sys_phase = get_sys_phase_simple_dow7(radar)
     # replace PHIDP w/ np.nan
     #PHIORIG = radar.fields['PHIDP']['data'].copy() 
     #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
@@ -3070,11 +3101,9 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #PHIDP_nans.mask = mask
     #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
     if 'TH' in radar.fields.keys():  
-        dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
-		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
+        dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
     elif 'DBZHCC' in radar.fields.keys():
-        dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
-		radar.fields['RHOHV']['data'], radar.fields['DBZHCC']['data'], sys_phase, 280)
+        dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['DBZHCC']['data'], sys_phase, 280)
     #------------	
     radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
 
@@ -3133,7 +3162,6 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     PHIDP = radar.fields['PHIDP']['data'][start_index:end_index]
     if 'KDP' in radar.fields.keys():  
     	KDP   = radar.fields['KDP']['data'][start_index:end_index]
-    ZH    = radar.fields['TH']['data'][start_index:end_index]
 
     fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
                         figsize=[14,7])
@@ -3185,13 +3213,14 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    THH =  radar.fields['TH']['data'][start_index:end_index]
     if 'TH' in radar.fields.keys():  
         ZHFIELD = 'TH'
+        THH =  radar.fields['TH']['data'][start_index:end_index]
         pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
     elif 'DBZHCC' in radar.fields.keys():
         ZHFIELD = 'DBZHCC'
+        THH =  radar.fields['DBZHCC']['data'][start_index:end_index]
         pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)		
     axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
