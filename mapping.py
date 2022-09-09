@@ -2630,7 +2630,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
-def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options):
+def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options, tfield_ref, alt_ref):
 
     radar_name = options['radar_name']
     print(radar.fields.keys())
@@ -2669,35 +2669,62 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
         ZDRZDR  = radar.fields['ZDRC']['data']      
         RHORHO  = radar.fields['RHOHV']['data']
         KDPKDP  = radar.fields['KDP']['data']  	
-        HIDHID  = radar.fields['HID']['data']
         PHIPHI  = radar.fields['PHIDP']['data']   
-
+        #
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        dzh_  = radar.fields['DBZHCC']['data'].copy()
+        dzv_  = radar.fields['DBZVCC']['data'].copy()
+        dZDR  = radar.fields['ZDRC']['data'].copy()
+        drho_ = radar.fields['RHOHV']['data'].copy()
+        dkdp_ = radar.fields['KDP']['data'].copy()
+        # dkdp_[np.where(drho_.data==radar.fields['RHOHV']['data'].fill_value)] = np.nan
+        # Filters
+        ni = dzh_.shape[0]
+        nj = dzh_.shape[1]
+        for i in range(ni):
+            rho_h = drho_[i,:]
+            zh_h = dzh_[i,:]
+            for j in range(nj):
+                if (rho_h[j]<0.7) or (zh_h[j]<30):
+                    dzh_[i,j]  = np.nan
+                    dzv_[i,j]  = np.nan
+                    drho_[i,j]  = np.nan
+                    dkdp_[i,j]  = np.nan
+        scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], 
+					     rho=drho_, kdp=dkdp_, 
+                         use_temp=True, band='C', T=radar_T)
+        HIDHID = np.argmax(scores, axis=0) + 1 
+        radar.add_field_like('KDP','HID', HIDHID, replace_existing=True)
+	
         lats        = radar.gate_latitude['data']
         lons        = radar.gate_longitude['data']
         # En verdad buscar azimuth no transecta ... 
         azimuths    = radar.azimuth['data']
         # ojo que esto no se si aplica ... 
-        target_azimuth = azimuths[test_transect]  #- target azimuth for nlev=0 test case is 301.5
-	filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-        lon_transect[nlev,:]     = lons[filas,:]
-        lat_transect[nlev,:]     = lats[filas,:]
+        TransectNo = test_transect
+	#target_azimuth = azimuths[test_transect]  #- target azimuth for nlev=0 test case is 301.5
+        #filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect[nlev,:]     = lons[TransectNo,:]
+        lat_transect[nlev,:]     = lats[TransectNo,:]
         #
         gateZ    = radar.gate_z['data']
         gateX    = radar.gate_x['data']
         gateY    = radar.gate_y['data']
         gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
         #
-        Ze_transect[nlev,:]      = ZHZH[filas,:]
-        ZDR_transect[nlev,:]     = ZDRZDR[filas,:]
-        RHO_transect[nlev,:]     = RHORHO[filas,:]
-        KDP_transect[nlev,:]     = KDPKDP[filas,:]	
-        PHIDP_transect[nlev,:]   = PHIPHI[filas,:]	
-        HID_transect[nlev,:]     = HIDHID[filas,:]
-        alt_43aproox[nlev,:]     = radar.fields['height']['data'][filas,:]
-        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[filas,:]/1e3, azimuths[filas],radar.get_elevation(nlev)[0]);
-        alt_43aproox[nlev,:]    = np.ravel(radar.fields['height']['data'][filas,:])
+        Ze_transect[nlev,:]      = ZHZH[TransectNo,:]
+        ZDR_transect[nlev,:]     = ZDRZDR[TransectNo,:]
+        RHO_transect[nlev,:]     = RHORHO[TransectNo,:]
+        KDP_transect[nlev,:]     = KDPKDP[TransectNo,:]	
+        PHIDP_transect[nlev,:]   = PHIPHI[TransectNo,:]	
+        HID_transect[nlev,:]     = HIDHID[TransectNo,:]	
+        #alt_43aproox[nlev,:]     = radar.fields['height']['data'][filas,:]
+        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], np.double(file[41:45]) );
+	# eso del paper de granizo: [xgate, ygate, zgate] = pyart.core.antenna_to_cartesian(gate_range[TransectNo,:]/1e3, azimuths[TransectNo], 
+        #alt_43aproox[nlev,:]    = np.ravel(radar.fields['height']['data'][filas,:])
         approx_altitude[nlev,:] = zgate/1e3;
-        gate_range[nlev,:]      = gates_range[filas,:]/1e3;
+        gate_range[nlev,:]      = gates_range[TransectNo,:]/1e3;
         nlev = nlev + 1
 	#
         #scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
@@ -3765,6 +3792,11 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
 #------------------------------------------------------------------------------
 def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
+    #---- plot hid ppi  
+    hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+           'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+
     # AGREGAR HID?
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
@@ -3904,6 +3936,21 @@ def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfie
     plt.colorbar(pcm1, ax=axes[1,1])
     axes[1,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 
+    pcm1 = axes[1,2].pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
+    axes[1,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
+    axes[1,2].set_title('HID '+str(nlev)+' PPI')
+    axes[1,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    cbar_HID = plt.colorbar(pcm1, ax=axes[1,2], shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+	
     fig.savefig(options['fig_dir']+'PPIs_KDPcorr'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
     #plt.close()
 
@@ -4613,11 +4660,11 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     radar = add_43prop_field(radar)     
 
     if options['radar_name'] == 'DOW7':
-	radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-	plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-	for ic in range(len(xlims_xlims_input)): 
-           check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
-	   plot_rhi_DOW7(radar, options['files_list'], xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options)
+        radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        for ic in range(len(xlims_xlims_input)): 
+            check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
+            plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
 	
     #radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     #plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
@@ -4718,7 +4765,6 @@ def main():
     start_index = radar0.sweep_start_ray_index['data'][0]
     end_index   = radar0.sweep_end_ray_index['data'][0]
     lats0       = radar0.gate_latitude['data'][start_index:end_index]
- 
     files_list = ['cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc',
 		  'cfrad.20181214_022019_DOW7low_v176_s02_el1.98_SUR.nc',
 		  'cfrad.20181214_022031_DOW7low_v176_s03_el3.97_SUR.nc',
@@ -4740,16 +4786,7 @@ def main():
 		  'cfrad.20181214_022341_DOW7low_v176_s19_el36.98_SUR.nc',
 		  'cfrad.20181214_022353_DOW7low_v176_s20_el40.97_SUR.nc',
 		  'cfrad.20181214_022405_DOW7low_v176_s21_el44.98_SUR.nc',
-		  'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']
-    for file in files_list:
-      if 'low_v176' in file:
-        print(file)
-        radarDOW7 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
-	
-
-	
-	
-	
+		  'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']	
     #	
     gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
     era5_file = '20181214_03_RMA1.grib'
@@ -4762,7 +4799,7 @@ def main():
 	    'y_supermin':-33, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 16, 'radar_name':'DOW7'}
+	   'icoi_PHAIL': 16, 'radar_name':'DOW7', 'files_list':files_list}
     icois_input  = [15, 16] 
     azimuths_oi  = [215, 110]
     labels_PHAIL = ['', ''] 
