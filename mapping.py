@@ -4097,12 +4097,12 @@ def plot_scatter(options, radar, icois, fname):
 
     ##------------------------------------------------------------------------------------------------
     for j in range(lon_gmi.shape[1]):
-      tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
-      tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan   
-      lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
-      lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan  
-      lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
-      lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan  	
+      tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']),:] = np.nan
+      tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']),:] = np.nan   
+      lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']),:] = np.nan
+      lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']),:] = np.nan  
+      lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']),:] = np.nan
+      lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']),:] = np.nan  	
 	
     ## keep domain of interest only by keeping those where the center nadir obs is inside domain
     inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
@@ -4149,6 +4149,9 @@ def plot_scatter(options, radar, icois, fname):
     end_index   = radar.sweep_end_ray_index['data'][nlev]
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[14,12])
+    axes.pcolormesh(lon_gmi_inside, lat_gmi_inside, tb_s1_gmi[inside_s1, 5], cmap= GMI_colormap())
 
     #----------------------------------------------------------------------------------------
     # Test plot figure: General figure with Zh and the countours identified 
@@ -4314,7 +4317,7 @@ def plot_scatter(options, radar, icois, fname):
         pix89  = len(TB_s1[:,7])
         area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
         area89 = pix89*(area_ellipse89)
-	gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
+        gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
         gates45dbz = gates45dbz[~np.isnan(gates45dbz)]
         gates45dbz = len(gates45dbz)
         #area45 = len(zh45)(240*240)/1000
@@ -4809,7 +4812,7 @@ def main():
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
 	   'icoi_PHAIL': 16, 'radar_name':'DOW7', 'files_list':files_list}
-    icois_input  = [15, 16] 
+    icois_input  = [16] 
     azimuths_oi  = [300, 273, 450]
     labels_PHAIL = ['', '', ''] 
     xlims_xlims_input  = [80, 80, 80] 
