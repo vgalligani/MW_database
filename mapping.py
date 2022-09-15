@@ -2740,7 +2740,7 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
 
     #- De esta manera me guardo el color con el que rellenar los polygons (scatter plot para sacar el color de cada pixel)
     print(len(radar.sweep_start_ray_index['data']))
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+    for nlev in range(len(files_list)):
          fig = plt.figure(figsize=[30,10])
          fig.add_subplot(221)
          sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
@@ -2753,8 +2753,8 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
     fig2, axes = plt.subplots(nrows=6,ncols=1,constrained_layout=True,figsize=[10,20]) 
 
     fig1 = plt.figure(figsize=(20,20))
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
-         if nlev > 9: continue
+    for nlev in range(len(files_list)):
+         if nlev > 10: continue
          # Create the cone for each elevation IN TERMS OF RANGE. 
          # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
          ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
@@ -2802,7 +2802,7 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+    for nlev in range(len(files_list)):
         # scatter plot para sacar el color de cada pixel 
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
@@ -2814,8 +2814,8 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
-        if nlev > 9: continue
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -2858,7 +2858,7 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+    for nlev in range(len(files_list)):
         # scatter plot para sacar el color de cada pixel 
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
@@ -2870,8 +2870,8 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
-        if nlev > 9: continue
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -2915,7 +2915,7 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+    for nlev in range(len(files_list)):
         # scatter plot para sacar el color de cada pixel 
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
@@ -2927,8 +2927,8 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
-        if nlev > 9: continue
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -2974,7 +2974,7 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+    for nlev in range(len(files_list)):
         # scatter plot para sacar el color de cada pixel 
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
@@ -2986,8 +2986,8 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
-        if nlev > 9: continue
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -3044,7 +3044,7 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
     plt.close()
 
     #- De esta manera me guardo el color con el que rellenar los polygons
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
+    for nlev in range(len(files_list)):
         # scatter plot para sacar el color de cada pixel 
         fig = plt.figure(figsize=[30,10])
         fig.add_subplot(221)
@@ -3056,8 +3056,8 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
 
     #- Try polygons
     #fig1.add_subplot(412)
-    for nlev in range(len(radar.sweep_start_ray_index['data'])):
-        if nlev > 9: continue
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
         # Create the cone for each elevation IN TERMS OF RANGE. 
         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
@@ -4097,12 +4097,12 @@ def plot_scatter(options, radar, icois, fname):
 
     ##------------------------------------------------------------------------------------------------
     for j in range(lon_gmi.shape[1]):
-      tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-      tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
-      lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-      lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
-      lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-      lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
+      tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
+      tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan   
+      lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
+      lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan  
+      lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
+      lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan  	
 	
     ## keep domain of interest only by keeping those where the center nadir obs is inside domain
     inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
@@ -4139,7 +4139,10 @@ def plot_scatter(options, radar, icois, fname):
 		
     # PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi)
     ##------------------------------------------------------------------------------------------------
-
+    if 'TH' in radar.fields.keys():  
+       THNAME= 'TH'
+    elif 'DBZHCC' in radar.fields.keys():        
+       THNAME= 'DBZHCC'
 	
     nlev=0
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -4160,7 +4163,10 @@ def plot_scatter(options, radar, icois, fname):
     elif 'DBZH' in radar.fields.keys():
         radarTH = radar.fields['DBZH']['data'][start_index:end_index]
     elif 'reflectivity' in radar.fields.keys(): 
-        radarTH = radar.fields['reflectivity']['data'][start_index:end_index]
+        radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+    elif 'DBZHCC' in radar.fields.keys(): 
+        radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
+        radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
     elif 'attenuation_corrected_reflectivity_h' in radar.fields.keys(): 
         radarTH = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
@@ -4307,8 +4313,8 @@ def plot_scatter(options, radar, icois, fname):
         #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
         pix89  = len(TB_s1[:,7])
         area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
-	area89 = pix89*(area_ellipse89)
-        gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
+        area89 = pix89*(area_ellipse89)
+	gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
         gates45dbz = gates45dbz[~np.isnan(gates45dbz)]
         gates45dbz = len(gates45dbz)
         #area45 = len(zh45)(240*240)/1000
@@ -4335,8 +4341,8 @@ def plot_scatter(options, radar, icois, fname):
     for ic in range(len(RN_inds_parallax)):
         TB_s1   = tb_s1_gmi_inside[TB_inds[ic],:]
         #TB_s1   = tb_s1_gmi[TB_inds[ic],:]
-       	MINPCTs = []
-	MINPCTs.append(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1))
+        MINPCTs = []
+        MINPCTs.append(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1))
         MINPCTs.append(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1))
         MINPCTs.append(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1))
         MINPCTs.append(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1))
@@ -4454,7 +4460,7 @@ def summary_radar_obs(radar, fname, options):
         axes[1].set_xlim([options['x_supermin'], options['x_supermax']])	
         axes[1].set_ylim([options['y_supermin'], options['y_supermax']])
         axes[1].set_title('RHOHV (w/ 45dBZ contour)')
-        axes[1].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);
+        axes[1].contour(lons[:], lats[:], radar.fields[THNAME]['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);
         CS = axes[1].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,225], colors=(['black', 'black']), linewidths=1.5);
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
         axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
@@ -4478,7 +4484,7 @@ def summary_radar_obs(radar, fname, options):
             axes[2].set_xlim([options['x_supermin'], options['x_supermax']])	
             axes[2].set_ylim([options['y_supermin'], options['y_supermax']])
             axes[2].set_title('Vr corrected (w/ 45dBZ contour)')
-            axes[2].contour(lons[:], lats[:], radar.fields['TH']['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);
+            axes[2].contour(lons[:], lats[:], radar.fields[THNAME]['data'][start_index:end_index][:], [45], colors=(['navy']), linewidths=2);
             CS=axes[2].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,225], colors=(['black', 'black']), linewidths=1.5);
             [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
             axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
@@ -4507,7 +4513,7 @@ def summary_radar_obs(radar, fname, options):
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
                         figsize=[14,12])
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-        pcm1 = axes.pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+        pcm1 = axes.pcolormesh(lons, lats, radar.fields[THNAME]['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
         cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
         cbar.cmap.set_under(under)
         cbar.cmap.set_over(over)
@@ -4530,7 +4536,10 @@ def summary_radar_obs(radar, fname, options):
         for ireportes in range(len(options['REPORTES_geo'])):
            plt.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
         plt.legend(fontsize=11) 
-       	general_title='radar at '+options['rfile'][15:19]+' UTC and PF at '+str(options['time_pfs'])+')'
+        if opts['radar_name'] == 'DOW7':
+            general_title='radar at '+options['rfile'][20:24]+' UTC and PF at '+str(options['time_pfs'])+')'	
+        else:
+            general_title='radar at '+options['rfile'][15:19]+' UTC and PF at '+str(options['time_pfs'])+')'
         plt.suptitle(general_title)
 
         fig.savefig(options['fig_dir']+'PPIs_MAIN_Summary'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
@@ -4662,24 +4671,27 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     if options['radar_name'] == 'DOW7':
         radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-        for ic in range(len(xlims_xlims_input)): 
-            check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
-            plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
-	
-    #radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        #for ic in range(len(xlims_xlims_input)): 
+        #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
+        #    plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
+    else: 
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        for ic in range(len(xlims_xlims_input)):
+            check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
+            plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
     gc.collect()
+    plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
 
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
-
-    #for ic in range(len(xlims_xlims_input)): 
-    #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
-    #    plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
+    gc.collect()
+    plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
 
+	
     # 500m grid! 
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
@@ -4687,10 +4699,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     gc.collect()
     make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
     gc.collect()
-    plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
-    gc.collect()
     HID_priority2D = get_prioritymap(options, radar, grided)
-    plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
 	
     return
 
@@ -4761,7 +4770,7 @@ def main():
     rfile = 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc' 
     # mimic RMA1 file system: 
     counter = 0	    
-    radar0       = pyart.io.read_cfradial('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/' + 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc')
+    radar0      = pyart.io.read_cfradial('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/' + 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc')
     start_index = radar0.sweep_start_ray_index['data'][0]
     end_index   = radar0.sweep_end_ray_index['data'][0]
     lats0       = radar0.gate_latitude['data'][start_index:end_index]
@@ -4793,18 +4802,18 @@ def main():
     # REPORTES TWITTER ... 
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57]]
     reportes_granizo_twitterAPI_meta = [['0320UTC']]
-    opts = {'xlim_min': -66, 'xlim_max': -61.5, 'ylim_min': -33, 'ylim_max': -30, 
+    opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 
 	    'ZDRoffset': 0, 'ylim_max_zoom':-31, 'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 60, 'x_supermin':-66, 'x_supermax':-61.5,
-	    'y_supermin':-33, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
+	    'window_calc_KDP': 7, 'azimuth_ray': 60, 'x_supermin': -65.3, 'x_supermax':-63.3,
+	    'y_supermin':-32.4, 'y_supermax':-31, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
 	   'icoi_PHAIL': 16, 'radar_name':'DOW7', 'files_list':files_list}
     icois_input  = [15, 16] 
-    azimuths_oi  = [215, 110]
-    labels_PHAIL = ['', ''] 
-    xlims_xlims_input  = [150, 150] 
-    xlims_mins_input  = [0, 0]		
+    azimuths_oi  = [300, 273, 450]
+    labels_PHAIL = ['', '', ''] 
+    xlims_xlims_input  = [80, 80, 80] 
+    xlims_mins_input  = [0, 0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
 	
