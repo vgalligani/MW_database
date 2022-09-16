@@ -4095,27 +4095,37 @@ def plot_scatter(options, radar, icois, fname):
     lat_s2_gmi = f[u'/S2/Latitude'][:,:]
     f.close()
 
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb = tb_s1_gmi.copy()
+
+    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+	
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
     ##------------------------------------------------------------------------------------------------
-    for j in range(lon_gmi.shape[1]):
-      tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']),:] = np.nan
-      tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']),:] = np.nan   
-      lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']),:] = np.nan
-      lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']),:] = np.nan  
-      lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']),:] = np.nan
-      lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']),:] = np.nan  	
+    #for j in range(lon_gmi.shape[1]):
+    #  tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+    #  tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
+    #  lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+    #  lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
+    #  lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+    #  lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
 	
     ## keep domain of interest only by keeping those where the center nadir obs is inside domain
-    inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min'], lon_gmi <=  options['xlim_max']), 
-                              np.logical_and(lat_gmi >= options['ylim_min'], lat_gmi <= options['ylim_max']))
-    inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min'], lon_s2_gmi <=  options['xlim_max']), 
-                                         np.logical_and(lat_s2_gmi >= options['ylim_min'], lat_s2_gmi <= options['ylim_max']))    
-    lon_gmi_inside   = lon_gmi[inside_s1] 
-    lat_gmi_inside   = lat_gmi[inside_s1] 	
-    lon_gmi2_inside  = lon_s2_gmi[inside_s2] 	
-    lat_gmi2_inside  = lat_s2_gmi[inside_s2] 	
-    tb_s1_gmi_inside = tb_s1_gmi[inside_s1, :]
-
-    PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
+    ##inside_s1   = np.logical_and(np.logical_and(lon_gmi >= options['xlim_min']-5, lon_gmi <=  options['xlim_max']+5), 
+    ##                          np.logical_and(lat_gmi >= options['ylim_min']-5, lat_gmi <= options['ylim_max']+5))
+    ##inside_s2   = np.logical_and(np.logical_and(lon_s2_gmi >= options['xlim_min']-5, lon_s2_gmi <=  options['xlim_max']+5), 
+    ##                                     np.logical_and(lat_s2_gmi >= options['ylim_min']-5, lat_s2_gmi <= options['ylim_max']+5))    
+    ##lon_gmi_inside   = lon_gmi[inside_s1] 
+    ##lat_gmi_inside   = lat_gmi[inside_s1] 	
+    ##lon_gmi2_inside  = lon_s2_gmi[inside_s2] 	
+    ##lat_gmi2_inside  = lat_s2_gmi[inside_s2] 	
+    ##tb_s1_gmi_inside = tb_s1_gmi[inside_s1, :]
+    ##
+    ##PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 
     ##------------------------------------------------------------------------------------------------
 
     # Tambien se puenden hacer recortes guardando los indices. ejemplo para S1: 
@@ -4137,7 +4147,7 @@ def plot_scatter(options, radar, icois, fname):
     #  lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
     #  lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
 		
-    # PCT10, PCT19, PCT37, PCT89 = calc_PCTs(tb_s1_gmi)
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
     ##------------------------------------------------------------------------------------------------
     if 'TH' in radar.fields.keys():  
        THNAME= 'TH'
@@ -4151,7 +4161,7 @@ def plot_scatter(options, radar, icois, fname):
     lons  = radar.gate_longitude['data'][start_index:end_index]
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
                         figsize=[14,12])
-    axes.pcolormesh(lon_gmi_inside, lat_gmi_inside, tb_s1_gmi[inside_s1, 5], cmap= GMI_colormap())
+    axes.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20])
 
     #----------------------------------------------------------------------------------------
     # Test plot figure: General figure with Zh and the countours identified 
@@ -4185,15 +4195,26 @@ def plot_scatter(options, radar, icois, fname):
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
-    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])# , colors=(['r']), linewidths=1.5);
+    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:])# , [200], colors=(['k']), linewidths=1.5);
+    axes.set_xlim([-70,-60]); axes.set_ylim([-40,-20])
+    for item in contorno89.collections:
+        counter=0
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1]
+            plt.plot(x,y, label=str(counter))
+            print(i)
+            plt.legend(loc=1)# , ncol=2)
+            counter=counter+1
 
     if test_this == 0:
         plt.close()
-
-
-    datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
-    #datapts = np.column_stack(( np.ravel(lon_gmi), np.ravel(lat_gmi) ))
+	
+    datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
+    ##datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+    ##datapts = np.column_stack(( np.ravel(lon_gmi), np.ravel(lat_gmi) ))
     datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
 
     TB_inds = get_contour_info(contorno89, icois, datapts)
@@ -4201,9 +4222,16 @@ def plot_scatter(options, radar, icois, fname):
 
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
-    for ii in range(len(TB_inds)): 	
-     	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
-     	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
+	
+    S1_sub_tb_v2 = S1_sub_tb[:,:,:][idx1]		
+
+    for ii in range(len(TB_inds)): 
+     	GMI_tbs1_37.append( S1_sub_tb_v2[TB_inds[ii],5] ) 
+     	GMI_tbs1_85.append( S1_sub_tb_v2[TB_inds[ii],7] ) 
+	
+    ##for ii in range(len(TB_inds)): 	
+    ## 	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
+    ## 	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
     #for ii in range(len(TB_inds)): 	
     # 	GMI_tbs1_37.append( tb_s1_gmi[TB_inds[ii],5] ) 
     # 	GMI_tbs1_85.append( tb_s1_gmi[TB_inds[ii],7] ) 
@@ -4236,12 +4264,14 @@ def plot_scatter(options, radar, icois, fname):
     fig = plt.figure(figsize=(20,7)) 
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     for ic in range(len(GMI_tbs1_37)):
-        plt.plot( lon_gmi_inside[TB_inds[ic]], 	lat_gmi_inside[TB_inds[ic]], 'xr')	
+        plt.plot( S1_sub_lon[TB_inds[ic]], S1_sub_lat[TB_inds[ic]], 'xr')
+	##plt.plot( lon_gmi_inside[TB_inds[ic]], 	lat_gmi_inside[TB_inds[ic]], 'xr')	
         #plt.plot( lon_gmi[TB_inds[ic]], lat_gmi[TB_inds[ic]], 'xr')	       
         plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
     plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
     plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
 
+	
     #------------------------------------------------------
     # FIGURE scatter plot check
     # scatter plots the tbs y de Zh a ver si esta ok 
