@@ -1330,13 +1330,22 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     # borrar coi del input y que loopee por todos ... 
     #plt.matplotlib.rc('font', family='serif', size = 20)
     #plt.rcParams['font.sans-serif'] = ['Helvetica']
-    #plt.rcParams['font.serif'] = ['Helvetica']
 
     if options['radar_name'] == 'RMA1':
         reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
     elif options['radar_name'] == 'DOW7':
         reflectivity_name = 'DBZHCC'   
-
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        ZH          = radar.fields[reflectivity_name]['data']
+	
     s_sizes=450
     user = platform.system()
     if   user == 'Linux':
@@ -1557,23 +1566,16 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     #----------------------------------------------------------------------------------------
     # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
     #----------------------------------------------------------------------------------------
-    nlev = 0 
-    start_index = radar.sweep_start_ray_index['data'][nlev]
-    end_index   = radar.sweep_end_ray_index['data'][nlev]
-    lats        = radar.gate_latitude['data'][start_index:end_index]
-    lons        = radar.gate_longitude['data'][start_index:end_index]
-    ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                        figsize=[7,6])
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[7,6])
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     axes.pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
     axes.set_title('Ground Level')
     axes.set_xlim([options['xlim_min']-5, options['xlim_max']+5])
-    axes.set_ylim([options['ylim_min']-5, options['ylim_max']-5])
+    axes.set_ylim([options['ylim_min']-5, options['ylim_max']+5])
     # -----
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
-    contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 225], colors=(['k']), linewidths=1.5);    
+    #contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 225], colors=(['k']), linewidths=1.5);
+
     # ---- GET COIs:
     for item in contorno89.collections:
         for i in item.get_paths():
@@ -1603,9 +1605,9 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
         #
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
-        plt.pcolormesh(lon_gmi, lat_gmi, PCT89, cmap = cmaps['turbo_r'] ); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
-        plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
-        plt.title(str(item))
+        axes.pcolormesh(lon_gmi, lat_gmi, PCT89, cmap = cmaps['turbo_r'] ); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
+        axes.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
+        axes.title(str(item))
 
 
         if ii==0:
@@ -2708,8 +2710,16 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
     return
 
 
-
-
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def stack_ppis(radar, files_list'): 
+	       
+    #- HERE MAKE PPIS SIMILAR TO RMA1S ... ? to achive the gridded field ... 
+	       
+	       
+	       
+	       
+    return radar_stacked
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
 def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options, tfield_ref, alt_ref):
@@ -3207,8 +3217,7 @@ def add_43prop_field(radar):
 	
 	return radar 
 
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
+
 def despeckle_phidp(phi, rho, zh):
     '''
     Elimina pixeles aislados de PhiDP
@@ -4357,9 +4366,9 @@ def plot_scatter(options, radar, icois, fname):
     end_index   = radar.sweep_end_ray_index['data'][nlev]
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                        figsize=[14,12])
-    axes.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20])
+    #fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+    #                    figsize=[14,12])
+    #axes.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20])
 
     #----------------------------------------------------------------------------------------
     # Test plot figure: General figure with Zh and the countours identified 
@@ -4393,22 +4402,11 @@ def plot_scatter(options, radar, icois, fname):
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])# , colors=(['r']), linewidths=1.5);
-    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:])# , [200], colors=(['k']), linewidths=1.5);
+    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200] , colors=(['r']), linewidths=1.5);
+    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [200], colors=(['k']), linewidths=1.5);
     
-    axes.set_xlim([-70,-60]); axes.set_ylim([-40,-20])
-
-    # Find the contour of intere
-    for item in contorno89.collections:
-        counter=0
-        for i in item.get_paths():
-            v = i.vertices
-            x = v[:, 0]
-            y = v[:, 1]
-            plt.plot(x,y, label=str(counter))
-            print(i)
-            plt.legend(loc=1)# , ncol=2)
-            counter=counter+1
+    axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
 
     if test_this == 0:
         plt.close()
@@ -4465,7 +4463,8 @@ def plot_scatter(options, radar, icois, fname):
     fig = plt.figure(figsize=(20,7)) 
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     for ic in range(len(GMI_tbs1_37)):
-        plt.plot( S1_sub_lon[TB_inds[ic]], S1_sub_lat[TB_inds[ic]], 'xr')
+        plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' ); 
+	###plt.plot( S1_sub_lon[TB_inds[ic]], S1_sub_lat[TB_inds[ic]], 'xr')
 	##plt.plot( lon_gmi_inside[TB_inds[ic]], 	lat_gmi_inside[TB_inds[ic]], 'xr')	
         #plt.plot( lon_gmi[TB_inds[ic]], lat_gmi[TB_inds[ic]], 'xr')	       
         plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
@@ -4484,7 +4483,8 @@ def plot_scatter(options, radar, icois, fname):
     for ic in range(len(GMI_tbs1_37)):
         print('------- Nr. icoi: '+str(icois[ic])+' -------')
         plt.scatter(GMI_tbs1_37[ic], GMI_tbs1_85[ic], s=40, marker='*', color=colors_plot[ic], label=labels_plot[ic])
-        TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]         
+	##TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
         #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
         print('MIN10PCTs: '  +str(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1])) ) 
         print('MIN19PCTs: '  +str(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3])) ) 
@@ -4543,7 +4543,7 @@ def plot_scatter(options, radar, icois, fname):
         axes[ic].grid(True)
         axes[ic].set_xlim([30, 65])
         axes[ic].set_ylim([-15, 10]); axes[ic].set_ylabel('ZDR')
-        TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]  
         #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
         pix89  = len(TB_s1[:,7])
         area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
@@ -4573,7 +4573,7 @@ def plot_scatter(options, radar, icois, fname):
     # FIGURE histogram de los TBs. 
     MINPCTS_icois = np.zeros((len(RN_inds_parallax), 4)); MINPCTS_icois[:]=np.nan
     for ic in range(len(RN_inds_parallax)):
-        TB_s1   = tb_s1_gmi_inside[TB_inds[ic],:]
+        TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]         
         #TB_s1   = tb_s1_gmi[TB_inds[ic],:]
         MINPCTs = []
         MINPCTs.append(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1))
@@ -4905,6 +4905,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     if options['radar_name'] == 'DOW7':
         radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+	radar_stacked = stack_ppis(radar, options['files_list'])
         #for ic in range(len(xlims_xlims_input)): 
         #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
         #    plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
@@ -4917,25 +4918,24 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         for ic in range(len(xlims_xlims_input)):
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
+	# 500m grid! 
+    	grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
+		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+   	gc.collect()
+	make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+	HID_priority2D = get_prioritymap(options, radar, grided)
+
     gc.collect()
     plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
-
-    visual_coi_identification(options, radar, fname)
-
+    #visual_coi_identification(options, radar, gmi_dir+options['gfile'])
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
     gc.collect()
 
     plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
 
-	
-    # 500m grid! 
-    grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
-		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
-    gc.collect()
-    make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
-    gc.collect()
+
     HID_priority2D = get_prioritymap(options, radar, grided)
 	
     return
