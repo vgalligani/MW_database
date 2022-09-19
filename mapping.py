@@ -1569,6 +1569,8 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     axes.pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
     axes.set_title('Ground Level')
+    axes.set_xlim([options['xlim_min']-5, options['xlim_max']+5])
+    axes.set_ylim([options['ylim_min']-5, options['ylim_max']-5])
     # -----
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 225], colors=(['k']), linewidths=1.5);    
@@ -1601,7 +1603,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
         #
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
-        plt.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
+        plt.pcolormesh(lon_gmi, lat_gmi, PCT89, cmap = cmaps['turbo_r'] ); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
         plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
         plt.title(str(item))
 
@@ -3440,13 +3442,13 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
     lat_s2_gmi = f[u'/S2/Latitude'][:,:]
     f.close()
-    for j in range(lon_gmi.shape[1]):
-            tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-            tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
-            lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-            lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
-            lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-            lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
+    for j in range(lon_gmi.shape[1]):  # ANTES ERA +-5
+            tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+10),:] = np.nan
+            tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-10),:] = np.nan   
+            lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+10),:] = np.nan
+            lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-10),:] = np.nan  
+            lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+10),:] = np.nan
+            lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-10),:] = np.nan  	
     PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
     CS = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 225], colors=(['black', 'gray']), linewidths=1.5)
     labels_cont = ['GMI 200K contour', 'GMI 225K contour']
