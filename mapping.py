@@ -2712,14 +2712,70 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def stack_ppis(radar, files_list'): 
-	       
+def stack_ppis(radar, files_list, freezing_lev, radar_T, tfield_ref, alt_ref): 
     #- HERE MAKE PPIS SIMILAR TO RMA1S ... ? to achive the gridded field ... 
-	       
-	       
-	       
-	       
-    return radar_stacked
+    #- Radar sweep
+    lats0        = radar.gate_latitude['data']
+    lons0        = radar.gate_longitude['data']
+    azimuths     = radar.azimuth['data']
+    #
+    Ze     = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); Ze[:]=np.nan
+    ZDR    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); ZDR[:]=np.nan
+    PHI    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); PHI[:]=np.nan
+    lon    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lon[:]=np.nan
+    lat    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lat[:]=np.nan
+    RHO    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); RHO[:]=np.nan
+    PHIDP  = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); PHIDP[:]=np.nan
+    HID    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); HID[:]=np.nan
+    KDP    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); KDP[:]=np.nan
+    approx_altitude = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); approx_altitude[:]=np.nan
+    gate_range      = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); gate_range[:]=np.nan
+    alt_43aproox    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); alt_43aproox[:]=np.nan
+    #
+    nlev = 0
+    for file in files_list:
+        if 'low_v176' in file:
+            radar   = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
+            ZHZH    = radar.fields['DBZHCC']['data']
+            TV      = radar.fields['DBZVCC']['data']   
+            ZDRZDR  = radar.fields['ZDRC']['data']      
+            RHORHO  = radar.fields['RHOHV']['data']
+            KDPKDP  = radar.fields['KDP']['data']  	
+            PHIPHI  = radar.fields['PHIDP']['data']   
+            #
+            radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+            radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+            dzh_  = radar.fields['DBZHCC']['data'].copy()
+            dzv_  = radar.fields['DBZVCC']['data'].copy()
+            dZDR  = radar.fields['ZDRC']['data'].copy()
+            drho_ = radar.fields['RHOHV']['data'].copy()
+            dkdp_ = radar.fields['KDP']['data'].copy()
+            # Filters
+            ni = dzh_.shape[0]
+            nj = dzh_.shape[1]
+            for i in range(ni):
+                rho_h = drho_[i,:]
+                zh_h = dzh_[i,:]
+                for j in range(nj):
+                    if (rho_h[j]<0.7) or (zh_h[j]<30):
+                        dzh_[i,j]  = np.nan
+                        dzv_[i,j]  = np.nan
+                        drho_[i,j]  = np.nan
+                        dkdp_[i,j]  = np.nan
+            scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)
+            HIDHID = np.argmax(scores, axis=0) + 1 
+            #
+            gateZ    = radar.gate_z['data']
+            gateX    = radar.gate_x['data']
+            gateY    = radar.gate_y['data']
+            gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+            [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], np.double(    file[41:45]) );       
+            #
+            lats        = radar.gate_latitude['data']
+            lons        = radar.gate_longitude['data']	       
+          	 #------- aca hay que stack correctamente por azimuths? 
+            breakpoint() 
+    return
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
 def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options, tfield_ref, alt_ref):
@@ -4905,7 +4961,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     if options['radar_name'] == 'DOW7':
         radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-	radar_stacked = stack_ppis(radar, options['files_list'])
+	radar_stacked = stack_ppis(radar, options['files_list'],  freezing_lev, radar_T, tfield_ref, alt_ref)
         #for ic in range(len(xlims_xlims_input)): 
         #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
         #    plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
