@@ -1316,6 +1316,8 @@ def adjust_meth_colorbar_for_pyart(cb, tropical=False):
 
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
 def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
 
     # coi       len(contorno89.collections[0].get_paths()) = cantidad de contornos.
@@ -1334,7 +1336,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         reflectivity_name = 'TH'   
     elif options['radar_name'] == 'DOW7':
         reflectivity_name = 'DBZHCC'   
-	
+
     s_sizes=450
     user = platform.system()
     if   user == 'Linux':
@@ -1379,7 +1381,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     S2_sub_tb   = tb_s2_gmi.copy()
     S2_sub_lat  = lat_s2_gmi.copy()
     S2_sub_lon  = lon_s2_gmi.copy()	
-	
+
     # Tambien se puenden hacer recortes guardando los indices. ejemplo para S1: 
     idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
     #idx1 = (lat_gmi>=options['ylim_min']) & (lat_gmi<=options['ylim_max']+1) & (lon_gmi>=options['xlim_min']) & (lon_gmi<=options['xlim_max']+2)
@@ -1422,7 +1424,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     #BT37 = griddata( (S1_sub_lon, S1_sub_lat), tb_s1_gmi[:,:,5][idx1], (xx,yy), method='nearest')	
     #BT85 = griddata( (S1_sub_lon, S1_sub_lat), tb_s1_gmi[:,:,7][idx1], (xx,yy), method='nearest')	
     #BT166 = griddata( (S2_sub_lon, S2_sub_lat), tb_s2_gmi[:,:,0][idx2], (xx,yy), method='nearest')	
-	
+
     fig = plt.figure(figsize=(30,10)) 
     gs1 = gridspec.GridSpec(1, 3)
 
@@ -1561,7 +1563,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     lats        = radar.gate_latitude['data'][start_index:end_index]
     lons        = radar.gate_longitude['data'][start_index:end_index]
     ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-	
+
     fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
                         figsize=[7,6])
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
@@ -1593,21 +1595,31 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         check_points = np.vstack((hull_coors_CONCAVE)).T
         concave_path = Path(check_points)
         #-------
-        datapts = np.column_stack((S1_sub_lon,S1_sub_lat))
+        ##datapts = np.column_stack((S1_sub_lon,S1_sub_lat))
+        datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] ))
         # Ahora como agarro los Zh, ZDR, etc inside the contour ... 
         datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
+        #
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
+        plt.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
+        plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
+        plt.title(str(item))
+
 
         if ii==0:
             inds_1  = concave_path.contains_points(datapts)
-            axes.plot(S1_sub_lon[inds_1], S1_sub_lat[inds_1], 'o', markersize=10, markerfacecolor='black')
+            #axes.plot(S1_sub_lon[inds_1], S1_sub_lat[inds_1], 'o', markersize=10, markerfacecolor='black')
+            axes.plot(lon_gmi[:,:][idx1][inds_1], lat_gmi[:,:][idx1][inds_1], 'o', markersize=10, markerfacecolor='black')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='black', label='icoi:'+str(icoi[0]))
         if ii==1:
             inds_2  = concave_path.contains_points(datapts)
-            axes.plot(S1_sub_lon[inds_2], S1_sub_lat[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+            #axes.plot(S1_sub_lon[inds_2], S1_sub_lat[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+            axes.plot(lon_gmi[:,:][idx1][inds_2], lat_gmi[:,:][idx1][inds_2], 'o', markersize=10, markerfacecolor='black')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkblue', label='icoi:'+str(icoi[1]))
         if ii==2:
             inds_3  = concave_path.contains_points(datapts)
-            axes.plot(S1_sub_lon[inds_3], S1_sub_lat[inds_3], 'o', markersize=10, markerfacecolor='darkred')
+            #axes.plot(S1_sub_lon[inds_3], S1_sub_lat[inds_3], 'o', markersize=10, markerfacecolor='darkred')
+            axes.plot(lon_gmi[:,:][idx1][inds_3], lat_gmi[:,:][idx1][inds_3], 'o', markersize=10, markerfacecolor='black')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkred', label='icoi:'+str(icoi[2]))
 
     print(ii)
@@ -1625,7 +1637,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     # Addlabels to icois! 
     axes.legend()
-      
+
     # Add labels:
     labels = ["200 K"] 
     for i in range(len(labels)):
