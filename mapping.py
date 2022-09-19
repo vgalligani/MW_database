@@ -2712,7 +2712,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def stack_ppis(radar, files_list, freezing_lev, radar_T, tfield_ref, alt_ref): 
+def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, alt_ref): 
     #- HERE MAKE PPIS SIMILAR TO RMA1S ... ? to achive the gridded field ... 
     #- Radar sweep
     lats0        = radar.gate_latitude['data']
@@ -2721,7 +2721,6 @@ def stack_ppis(radar, files_list, freezing_lev, radar_T, tfield_ref, alt_ref):
     #
     Ze     = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); Ze[:]=np.nan
     ZDR    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); ZDR[:]=np.nan
-    PHI    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); PHI[:]=np.nan
     lon    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lon[:]=np.nan
     lat    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lat[:]=np.nan
     RHO    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); RHO[:]=np.nan
@@ -2750,6 +2749,7 @@ def stack_ppis(radar, files_list, freezing_lev, radar_T, tfield_ref, alt_ref):
             dZDR  = radar.fields['ZDRC']['data'].copy()
             drho_ = radar.fields['RHOHV']['data'].copy()
             dkdp_ = radar.fields['KDP']['data'].copy()
+            dphi_ = radar.fields['PHIDP']['data'].copy()
             # Filters
             ni = dzh_.shape[0]
             nj = dzh_.shape[1]
@@ -2762,6 +2762,7 @@ def stack_ppis(radar, files_list, freezing_lev, radar_T, tfield_ref, alt_ref):
                         dzv_[i,j]  = np.nan
                         drho_[i,j]  = np.nan
                         dkdp_[i,j]  = np.nan
+			dphi_[i,j]  = np.nan
             scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)
             HIDHID = np.argmax(scores, axis=0) + 1 
             #
@@ -2769,12 +2770,22 @@ def stack_ppis(radar, files_list, freezing_lev, radar_T, tfield_ref, alt_ref):
             gateX    = radar.gate_x['data']
             gateY    = radar.gate_y['data']
             gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
-            [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], np.double(    file[41:45]) );       
             #
             lats        = radar.gate_latitude['data']
             lons        = radar.gate_longitude['data']	       
-          	 #------- aca hay que stack correctamente por azimuths? 
-            breakpoint() 
+            #------- aca hay que stack correctamente por azimuths? 
+	    for TransectNo in range(len(lats0.shape[0])): 
+            	[xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], np.double(    file[41:45]) );       
+    		Ze[nlev,TransectNo,:]    =  dzh_[TransectNo,:]
+     		ZDR[nlev,TransectNo,:]   =  dZDR[TransectNo,:]  
+    		RHO[nlev,TransectNo,:]   =  drho_[TransectNo,:]
+    		PHIDP[nlev,TransectNo,:] =  dphi_[TransectNo,:]
+    		HID[nlev,TransectNo,:]   =  HIDHID[TransectNo,:] 
+    		KDP[nlev,TransectNo,:]   =  dkdp_[TransectNo,:]
+    		lon[nlev,TransectNo,:]   =  lons[TransectNo,:]   
+    		lat[nlev,TransectNo,:]   =  lats[TransectNo,:] 
+	    nlev = nlev + 1		
+    breakpoint() 
     return
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
