@@ -1899,9 +1899,9 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
     plt.rcParams['font.serif'] = ['Helvetica']
 
     if 'TH' in radar.fields.keys():  
-            THNAME= 'TH'
+            THname= 'TH'
     elif 'DBZHCC' in radar.fields.keys():        
-           THNAME = 'DBZHCC'
+           THname = 'DBZHCC'
 	
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -5524,7 +5524,7 @@ def old_main():
     # OJO. sys_phase no le sirve que haya -9999. no toma masked array! 
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- -de--- ---- ---- ---- ----- ---- ---- ---- 
     # ESTE CASO ELIMINADO - DETRAS DE LAS SIERRAS ... 
     # CASO RMA1 - 20181111 at 1250: P(hail) = 0.653 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
