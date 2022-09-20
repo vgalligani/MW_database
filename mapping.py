@@ -2713,6 +2713,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, alt_ref): 
+	
     #- HERE MAKE PPIS SIMILAR TO RMA1S ... ? to achive the gridded field ... 
     #- Radar sweep
     lats0        = radar.gate_latitude['data']
@@ -2728,13 +2729,19 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
     HID    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); HID[:]=np.nan
     KDP    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); KDP[:]=np.nan
     approx_altitude = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); approx_altitude[:]=np.nan
-    gate_range      = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); gate_range[:]=np.nan
+    #gate_range      = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); gate_range[:]=np.nan
     alt_43aproox    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); alt_43aproox[:]=np.nan
+    #
+    gate_range      = np.zeros( [len(files_list), lats0.shape[1] ]); gate_range[:]=np.nan
+    azis   = np.zeros( [len(files_list), lats0.shape[0] ]); azis[:]=np.nan
+    fixed_angle     = np.zeros( [len(files_list)] ); fixed_angle[:]=np.nan
     #
     nlev = 0
     for file in files_list:
         if 'low_v176' in file:
             radar   = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
+	    fixed_angle[nlev] = radar.fixed_angle['data'].data[0]
+	    azis[nlev,:]      = radar.azimuth['data']
             ZHZH    = radar.fields['DBZHCC']['data']
             TV      = radar.fields['DBZVCC']['data']   
             ZDRZDR  = radar.fields['ZDRC']['data']      
@@ -2762,8 +2769,8 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
                         dzv_[i,j]  = np.nan
                         drho_[i,j]  = np.nan
                         dkdp_[i,j]  = np.nan
-			dphi_[i,j]  = np.nan
-            scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)
+                        dphi_[i,j]  = np.nan
+	    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)
             HIDHID = np.argmax(scores, axis=0) + 1 
             #
             gateZ    = radar.gate_z['data']
@@ -2772,20 +2779,65 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
             gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
             #
             lats        = radar.gate_latitude['data']
-            lons        = radar.gate_longitude['data']	       
+            lons        = radar.gate_longitude['data']	     
+		
             #------- aca hay que stack correctamente por azimuths? 
-	    for TransectNo in range(len(lats0.shape[0])): 
-            	[xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], np.double(    file[41:45]) );       
-    		Ze[nlev,TransectNo,:]    =  dzh_[TransectNo,:]
-     		ZDR[nlev,TransectNo,:]   =  dZDR[TransectNo,:]  
-    		RHO[nlev,TransectNo,:]   =  drho_[TransectNo,:]
-    		PHIDP[nlev,TransectNo,:] =  dphi_[TransectNo,:]
-    		HID[nlev,TransectNo,:]   =  HIDHID[TransectNo,:] 
-    		KDP[nlev,TransectNo,:]   =  dkdp_[TransectNo,:]
-    		lon[nlev,TransectNo,:]   =  lons[TransectNo,:]   
-    		lat[nlev,TransectNo,:]   =  lats[TransectNo,:] 
-	    nlev = nlev + 1		
-    breakpoint() 
+            for TransectNo in range(lats0.shape[0]): 
+                [xgate, ygate, zgate]    = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], np.double(    file[41:45]) );       
+                Ze[nlev,TransectNo,:]    = dzh_[TransectNo,:]
+                ZDR[nlev,TransectNo,:]   = dZDR[TransectNo,:]  
+                RHO[nlev,TransectNo,:]   = drho_[TransectNo,:]
+                PHIDP[nlev,TransectNo,:] = dphi_[TransectNo,:]
+                HID[nlev,TransectNo,:]   = HIDHID[TransectNo,:] 
+                KDP[nlev,TransectNo,:]   = dkdp_[TransectNo,:]
+                lon[nlev,TransectNo,:]   = lons[TransectNo,:]   
+                lat[nlev,TransectNo,:]   = lats[TransectNo,:] 
+
+            nlev = nlev + 1
+	
+    # From https://arm-doe.github.io/pyart/notebooks/basic_ingest_using_test_radar_object.html	
+    radar_stack = pyart.testing.make_empty_ppi_radar(lat.shape[2], lat.shape[1], lat.shape[0])
+    # Start filling the radar attributes with variables in the dataset.
+    radar_stack.latitude['data']    = np.array([radar.latitude['data'][0]])
+    radar_stack.longitude['data']   = np.array([radar.longitude['data'][0]])
+    radar_stack.range['data']       = np.array( radar.range['data'][:] )
+    radar_stack.fixed_angle['data'] = np.array( fixed_angle )
+    for i in range(): 
+    radar_stack.azimuth['data'] = np.array( azy[0,:] )  # ..... rma1 aca tiene nlev*720 ... 
+    radar_stack.sweep_number['data'] = np.array(  np.arange(0,nlev,1) )
+
+    #radar_stack.altitude['data']        = np.array(data['altitude'])	
+    #radar.sweep_start_ray_index['data'] = np.array(data['sweep_start_ray_index'])
+    #radar.sweep_end_ray_index['data']   = np.array(data['sweep_end_ray_index'])
+
+    #radar_stack.elevation['data'] = np.array([fixed_angle]*len(azy[0,:])).squeeze()
+    radar_stack.init_gate_altitude()
+    radar_stack.init_gate_longitude_latitude()
+
+
+
+    # Let's work on the field data, we will just do reflectivity for now, but any of the
+    # other fields can be done the same way and added as a key pair in the fields dict.
+    from pyart.config import get_metadata
+    ref_dict = get_metadata('reflecitivity_horizontal')
+    ref_dict['data'] = np.array(Ze)
+    radar.fields = {'DBZHCC': ref_dict}
+	
+    ref_dict = get_metadata('reflecitivity_horizontal')
+    ref_dict['data'] = np.array(Ze)
+    radar.fields = {'DBZHCC': ref_dict} 
+	
+	
+	            ZHZH    = radar.fields['DBZHCC']['data']
+            TV      = radar.fields['DBZVCC']['data']   
+            ZDRZDR  = radar.fields['ZDRC']['data']      
+            RHORHO  = radar.fields['RHOHV']['data']
+            KDPKDP  = radar.fields['KDP']['data']  	
+            PHIPHI  = radar.fields['PHIDP']['data']   
+	
+ref_dict['data']
+	
+	
     return
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
