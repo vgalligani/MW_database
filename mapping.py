@@ -2733,15 +2733,15 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
     alt_43aproox    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); alt_43aproox[:]=np.nan
     #
     gate_range      = np.zeros( [len(files_list), lats0.shape[1] ]); gate_range[:]=np.nan
-    azis   = np.zeros( [len(files_list), lats0.shape[0] ]); azis[:]=np.nan
+    azy   = np.zeros( [len(files_list), lats0.shape[0] ]); azy[:]=np.nan
     fixed_angle     = np.zeros( [len(files_list)] ); fixed_angle[:]=np.nan
     #
     nlev = 0
     for file in files_list:
         if 'low_v176' in file:
             radar   = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
-	    fixed_angle[nlev] = radar.fixed_angle['data'].data[0]
-	    azis[nlev,:]      = radar.azimuth['data']
+            fixed_angle[nlev] = radar.fixed_angle['data'].data[0]
+            azy[nlev,:]  = radar.azimuth['data']
             ZHZH    = radar.fields['DBZHCC']['data']
             TV      = radar.fields['DBZVCC']['data']   
             ZDRZDR  = radar.fields['ZDRC']['data']      
@@ -2770,8 +2770,7 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
                         drho_[i,j]  = np.nan
                         dkdp_[i,j]  = np.nan
                         dphi_[i,j]  = np.nan
-	    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)
-            HIDHID = np.argmax(scores, axis=0) + 1 
+            scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)            HIDHID = np.argmax(scores, axis=0) + 1 
             #
             gateZ    = radar.gate_z['data']
             gateX    = radar.gate_x['data']
@@ -2802,43 +2801,84 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
     radar_stack.longitude['data']   = np.array([radar.longitude['data'][0]])
     radar_stack.range['data']       = np.array( radar.range['data'][:] )
     radar_stack.fixed_angle['data'] = np.array( fixed_angle )
-    for i in range(): 
-    radar_stack.azimuth['data'] = np.array( azy[0,:] )  # ..... rma1 aca tiene nlev*720 ... 
+    azi_all = []
+    rays_per_sweep = []
+    raye_per_sweep = []
+    rayN = 0
+    elev = np.zeros( [azy.shape[0]*azy.shape[1]] ); elev[:]=np.nan  
+    for i in range(azy.shape[0]):
+        rays_per_sweep.append(rayN)
+        rayN = rayN + azy.shape[1]
+        raye_per_sweep.append(rayN-1)
+        for j in range(azy.shape[1]):
+            azi_all.append(  azy[i,j] ) 
+    ii = 0
+    for i in range(azy.shape[0]):
+        for j in range(azy.shape[1]):
+            elev[ii] = fixed_angle[i]
+            ii=ii+1
+    radar_stack.azimuth['data'] = np.array( azi_all ) 
     radar_stack.sweep_number['data'] = np.array(  np.arange(0,nlev,1) )
-
-    #radar_stack.altitude['data']        = np.array(data['altitude'])	
-    #radar.sweep_start_ray_index['data'] = np.array(data['sweep_start_ray_index'])
-    #radar.sweep_end_ray_index['data']   = np.array(data['sweep_end_ray_index'])
-
-    #radar_stack.elevation['data'] = np.array([fixed_angle]*len(azy[0,:])).squeeze()
+    radar_stack.sweep_start_ray_index['data'] = np.array( rays_per_sweep )
+    radar_stack.sweep_end_ray_index['data']   = np.array( raye_per_sweep )
+    radar_stack.altitude['data']        = [ radar.altitude['data'][0] ]
+    # elevation is theta too. 
+    radar_stack.elevation['data'] = elev
     radar_stack.init_gate_altitude()
     radar_stack.init_gate_longitude_latitude()
 
-
-
+    #plt.plot(radar_stack.gate_longitude['data'], radar_stack.gate_latitude['data'], 'ok') 
     # Let's work on the field data, we will just do reflectivity for now, but any of the
     # other fields can be done the same way and added as a key pair in the fields dict.
     from pyart.config import get_metadata
-    ref_dict = get_metadata('reflecitivity_horizontal')
-    ref_dict['data'] = np.array(Ze)
-    radar.fields = {'DBZHCC': ref_dict}
+    Ze_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); Ze_all[:]=np.nan  
+    ZDR_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); ZDR_all[:]=np.nan  
+    RHOHV_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); RHOHV_all[:]=np.nan  
+    PHIDP_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); PHIDP_all[:]=np.nan  
+    KDP_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); KDP_all[:]=np.nan  
+    HID_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); HID_all[:]=np.nan  
+    ii = 0
+    for i in range(azy.shape[0]):
+        for j in range(Ze.shape[1]):
+            Ze_all[ii,:]    = Ze[i,j,:]
+            ZDR_all[ii,:]   = ZDR[i,j,:]
+            RHOHV_all[ii,:] = RHO[i,j,:]
+            PHIDP_all[ii,:] = PHIDP[i,j,:]
+            KDP_all[ii,:] = KDP[i,j,:]
+            HID_all[ii,:] = HID[i,j,:]
+            ii=ii+1
+		
+    #- REFLECTIVITY 
+    ref_dict = get_metadata('DBZHCC')
+    ref_dict['data'] = np.array(Ze_all)
+    radar_stack.fields = {'DBZHCC': ref_dict}
+ 
+    #- ZDR
+    ref_dict = get_metadata('ZDRC')
+    ref_dict['data'] = np.array(ZDR_all)
+    radar_stack.fields = {'ZDRC': ref_dict} 
+
+    #- RHOHV
+    ref_dict = get_metadata('RHOHV')
+    ref_dict['data'] = np.array(RHOHV_all)
+    radar_stack.fields = {'RHOHV': ref_dict} 
+
+    #- PHIDP
+    ref_dict = get_metadata('PHIDP')
+    ref_dict['data'] = np.array(PHIDP_all)
+    radar_stack.fields = {'PHIDP': ref_dict} 	
+    
+    #- KDP
+    ref_dict = get_metadata('KDP')
+    ref_dict['data'] = np.array(KDP_all)
+    radar_stack.fields = {'KDP': ref_dict} 
+    
+    #- HID
+    ref_dict = get_metadata('HID')
+    ref_dict['data'] = np.array(HID_all)
+    radar_stack.fields = {'HID': ref_dict}
 	
-    ref_dict = get_metadata('reflecitivity_horizontal')
-    ref_dict['data'] = np.array(Ze)
-    radar.fields = {'DBZHCC': ref_dict} 
-	
-	
-	            ZHZH    = radar.fields['DBZHCC']['data']
-            TV      = radar.fields['DBZVCC']['data']   
-            ZDRZDR  = radar.fields['ZDRC']['data']      
-            RHORHO  = radar.fields['RHOHV']['data']
-            KDPKDP  = radar.fields['KDP']['data']  	
-            PHIPHI  = radar.fields['PHIDP']['data']   
-	
-ref_dict['data']
-	
-	
-    return
+    return radar_stack
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
 def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options, tfield_ref, alt_ref):
@@ -5028,6 +5068,14 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         #for ic in range(len(xlims_xlims_input)): 
         #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
         #    plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
+	breakpoint()
+	grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
+		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+   	gc.collect()
+	make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+	HID_priority2D = get_prioritymap(options, radar, grided)
+	
     else: 
         radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
@@ -5054,8 +5102,6 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
 
-
-    HID_priority2D = get_prioritymap(options, radar, grided)
 	
     return
 
