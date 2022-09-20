@@ -2770,8 +2770,9 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
                         drho_[i,j]  = np.nan
                         dkdp_[i,j]  = np.nan
                         dphi_[i,j]  = np.nan
-            scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)            HIDHID = np.argmax(scores, axis=0) + 1 
-            #
+            scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)            
+            HIDHID = np.argmax(scores, axis=0) + 1 
+	    #
             gateZ    = radar.gate_z['data']
             gateX    = radar.gate_x['data']
             gateY    = radar.gate_y['data']
@@ -2849,35 +2850,39 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
             ii=ii+1
 		
     #- REFLECTIVITY 
-    ref_dict = get_metadata('DBZHCC')
-    ref_dict['data'] = np.array(Ze_all)
-    radar_stack.fields = {'DBZHCC': ref_dict}
+    ref_dict_ZH = get_metadata('DBZHCC')
+    ref_dict_ZH['data'] = np.array(Ze_all)
  
     #- ZDR
-    ref_dict = get_metadata('ZDRC')
-    ref_dict['data'] = np.array(ZDR_all)
-    radar_stack.fields = {'ZDRC': ref_dict} 
+    ref_dict_ZDR = get_metadata('ZDRC')
+    ref_dict_ZDR['data'] = np.array(ZDR_all)
 
     #- RHOHV
-    ref_dict = get_metadata('RHOHV')
-    ref_dict['data'] = np.array(RHOHV_all)
-    radar_stack.fields = {'RHOHV': ref_dict} 
+    ref_dict_RHOHV = get_metadata('RHOHV')
+    ref_dict_RHOHV['data'] = np.array(RHOHV_all)
 
     #- PHIDP
-    ref_dict = get_metadata('PHIDP')
-    ref_dict['data'] = np.array(PHIDP_all)
-    radar_stack.fields = {'PHIDP': ref_dict} 	
+    ref_dict_PHIDP = get_metadata('PHIDP')
+    ref_dict_PHIDP['data'] = np.array(PHIDP_all)
     
     #- KDP
-    ref_dict = get_metadata('KDP')
-    ref_dict['data'] = np.array(KDP_all)
+    ref_dict_KDP = get_metadata('KDP')
+    ref_dict_KDP['data'] = np.array(KDP_all)
     radar_stack.fields = {'KDP': ref_dict} 
     
     #- HID
-    ref_dict = get_metadata('HID')
-    ref_dict['data'] = np.array(HID_all)
-    radar_stack.fields = {'HID': ref_dict}
+    ref_dict_HID = get_metadata('HID')
+    ref_dict_HID['data'] = np.array(HID_all)
 	
+    radar_stack.fields = {'DBZHCC': ref_dict_ZH, 
+			  'ZDRC':   ref_dict_ZDR,
+			  'RHOHV':  ref_dict_RHOHV,
+			  'PHIDP':  ref_dict_PHIDP,
+			  'KDP':    ref_dict_KDP,
+			  'HID':    ref_dict_HID}
+			  
+
+		
     return radar_stack
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
@@ -5070,8 +5075,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         #    plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
 	breakpoint()
 	grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
-		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+      		(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
+		np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
    	gc.collect()
 	make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
 	HID_priority2D = get_prioritymap(options, radar, grided)
