@@ -1607,7 +1607,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
         axes.pcolormesh(lon_gmi, lat_gmi, PCT89, cmap = cmaps['turbo_r'] ); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
         axes.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
-        axes.title(str(item))
+        #axes.title(str(item))
 
 
         if ii==0:
@@ -1897,29 +1897,24 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
     plt.matplotlib.rc('font', family='serif', size = 20)
     plt.rcParams['font.sans-serif'] = ['Helvetica']
     plt.rcParams['font.serif'] = ['Helvetica']
-
-    if 'TH' in radar.fields.keys():  
-            THname= 'TH'
-    elif 'DBZHCC' in radar.fields.keys():        
-           THname = 'DBZHCC'
-	   TVname = 'ZDRC'
-	
-    nlev = 0 
-    start_index = radar.sweep_start_ray_index['data'][nlev]
-    end_index   = radar.sweep_end_ray_index['data'][nlev]
-    lats        = radar.gate_latitude['data'][start_index:end_index]
-    lons        = radar.gate_longitude['data'][start_index:end_index]
-    azimuths    = radar.azimuth['data'][start_index:end_index]
+    THname = 'DBZHCC' 
+    TVname = 'ZDRC'
+    breakpoint()
+    start_index = radar.sweep_start_ray_index['data']
+    end_index   = radar.sweep_end_ray_index['data']
+    lats        = radar.gate_latitude['data']
+    lons        = radar.gate_longitude['data']
+    azimuths    = radar.azimuth['data']
 
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[13,12])
 
     for iz in range(len(azi_oi)):
         target_azimuth = azimuths[azi_oi[iz]]
-        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()	
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()	 # <==== ?????
         grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
         grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
         grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
-        grid_ZDR  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
+        grid_ZDR   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
         grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
         grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
         grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
@@ -1935,7 +1930,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
             ([xloc], [yloc]) = np.where(c == np.min(c))	
             grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
             grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
-            grid_ZDR[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+            grid_ZDR[:,i]   = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
             grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
             grid_RHO[:,i]   = gridded_radar.fields['RHOHV']['data'][:,xloc,yloc]
             grid_alt[:,i]   = gridded_radar.z['data'][:]
@@ -1953,7 +1948,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
             zh_h = grid_THTH[i,:]
             for j in range(nj):
                 if (rho_h[j]<0.7) or (zh_h[j]<0):
-                    grid_THTH[i,j]  = np.nan
+                    grid_THTH[i,j] = np.nan
                     grid_ZDR[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan			
 				
@@ -5278,9 +5273,9 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
-        #for ic in range(len(xlims_xlims_input)): 
-        #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
-        #    plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
+        for ic in range(len(xlims_xlims_input)): 
+		check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
+		plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
         grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
       		(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
               np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
