@@ -2418,10 +2418,9 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]       
         if radar_name == 'RMA1':
-            ZHZH       if radar_name == 'RMA1':
-            ZHZH       = radar.fields['TH']['data'][start_index:end_index]
-            TV       = radar.fields['TV']['data'][start_index:end_index]
-            ZDRZDR      = (ZHZH-TV)-ZDRoffset   
+            ZHZH    = radar.fields['TH']['data'][start_index:end_index]
+            TV      = radar.fields['TV']['data'][start_index:end_index]
+            ZDRZDR  = (ZHZH-TV)-ZDRoffset   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]       
             PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
@@ -2465,9 +2464,10 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             ZDRZDR[RHORHO<0.75]=np.nan
             RHORHO[RHORHO<0.75]=np.nan
 	
-        elif radar_name == 'DOW7':       = radar.fields['TH']['data'][start_index:end_index]
-            TV       = radar.fields['TV']['data'][start_index:end_index]
-            ZDRZDR      = (ZHZH-TV)-ZDRoffset   
+        elif radar_name == 'DOW7':       
+            TH   = radar.fields['TH']['data'][start_index:end_index]
+            TV   = radar.fields['TV']['data'][start_index:end_index]
+            ZDRZDR  = (ZHZH-TV)-ZDRoffset   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]       
             PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
@@ -5276,17 +5276,17 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     if options['radar_name'] == 'DOW7':
         radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-	radar_stacked = stack_ppis(radar, options['files_list'],  freezing_lev, radar_T, tfield_ref, alt_ref)
+        radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         #for ic in range(len(xlims_xlims_input)): 
         #    check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)	
         #    plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
-	grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
+        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
       		(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
-		np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
-   	gc.collect()
-	make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
-	HID_priority2D = get_prioritymap(options, radar, grided)
-	
+              np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+        gc.collect()
+        make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+        HID_priority2D = get_prioritymap(options, radar, grided)
+
     else: 
         radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
@@ -5296,26 +5296,22 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         for ic in range(len(xlims_xlims_input)):
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
-	# 500m grid! 
-    	grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
-		np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
-   	gc.collect()
-	make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
-	HID_priority2D = get_prioritymap(options, radar, grided)
-
-    gc.collect()
-    plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
-	
-    #visual_coi_identification(options, radar, gmi_dir+options['gfile'])
+        # 500m grid! 
+        grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+        gc.collect()
+        make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+        HID_priority2D = get_prioritymap(options, radar, grided)
+        gc.collect()
     
+    plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
+    #visual_coi_identification(options, radar, gmi_dir+options['gfile'])
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
     gc.collect()
 
     plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
 
-	
     return
 
 
