@@ -1902,6 +1902,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
             THname= 'TH'
     elif 'DBZHCC' in radar.fields.keys():        
            THname = 'DBZHCC'
+	   TVname = 'ZDRC'
 	
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -1918,7 +1919,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
         grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
         grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
         grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
-        grid_TVTV  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
+        grid_ZDR  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
         grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
         grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
         grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
@@ -1934,7 +1935,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
             ([xloc], [yloc]) = np.where(c == np.min(c))	
             grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
             grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
-            grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+            grid_ZDR[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
             grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
             grid_RHO[:,i]   = gridded_radar.fields['RHOHV']['data'][:,xloc,yloc]
             grid_alt[:,i]   = gridded_radar.z['data'][:]
@@ -1942,7 +1943,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
             y               = gridded_radar.point_y['data'][:,xloc,yloc]
             z               = gridded_radar.point_z['data'][:,xloc,yloc]
             grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
-            grid_KDP[:,i]   = gridded_radar.fields['corrKDP']['data'][:,xloc,yloc]
+            grid_KDP[:,i]   = gridded_radar.fields['KDP']['data'][:,xloc,yloc]
             grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
 	
         ni = grid_HID.shape[0]
@@ -1953,7 +1954,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
             for j in range(nj):
                 if (rho_h[j]<0.7) or (zh_h[j]<0):
                     grid_THTH[i,j]  = np.nan
-                    grid_TVTV[i,j]  = np.nan
+                    grid_ZDR[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan			
 				
 				
@@ -1993,7 +1994,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
 
-        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_ZDR, cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
 
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
 
@@ -2073,7 +2074,7 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
     #- savefile
     fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
     #plt.close()
-    del grid_THTH, grid_RHO, grid_TVTV, grid_HID
+    del grid_THTH, grid_RHO, grid_ZDR, grid_HID
 	
     #-------------------------------
     for i in range(20):
