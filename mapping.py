@@ -3905,6 +3905,31 @@ def get_sys_phase_simple_dow7(radar):
     return phases_nlev
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+def get_sys_phase_simple_CSPR2(radar):
+
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    TH    = radar.fields['reflectivity']['data'][start_index:end_index]
+    TV    = radar.fields['reflectivity_v']['data'][start_index:end_index]
+    RHOHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
+    PHIDP = np.array(radar.fields['differential_phase']['data'][start_index:end_index])+180
+    PHIDP[np.where(PHIDP==radar.fields['differential_phase']['data'].fill_value)] = np.nan		
+    rhv = RHOHV.copy()
+    z_h = TH.copy()
+    PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+    # por cada radial encontrar first non nan value: 
+    phases = []
+    for radial in range(radar.sweep_end_ray_index['data'][0]):
+        if firstNonNan(PHIDP[radial,30:]):
+            phases.append(firstNonNan(PHIDP[radial,30:]))
+    phases_nlev = np.median(phases)
+
+    return phases_nlev
+#------------------------------------------------------------------------------
+
 def get_sys_phase(radar, ncp_lev, rhohv_lev, ncp_field, rhv_field, phidp_field):
 
     """
@@ -4417,7 +4442,7 @@ def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfie
 
 
 #------------------------------------------------------------------------------
-def CSPR2_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
+def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
     #---- plot hid ppi  
     hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
@@ -4431,10 +4456,34 @@ def CSPR2_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfi
     dzh_  = radar.fields['reflectivity']['data'].copy()
     dZDR  = radar.fields['differential_reflectivity']['data'].copy()
     drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
-    dkdp_ = radar.fields['differential_phase']['data'].copy()
+    dkdp_ = radar.fields['specific_differential_phase']['data'].copy()
 
     # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
     dkdp_[np.where(drho_.data==radar.fields['copol_correlation_coeff']['data'].fill_value)] = np.nan
+
+				
+    #------------	
+    #------------		
+    sys_phase = get_sys_phase_simple_CSPR2(radar)
+    # replace PHIDP w/ np.nan
+    #PHIORIG = radar.fields['PHIDP']['data'].copy() 
+    #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+    #PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+    #mask = radar.fields['PHIDP']['data'].data.copy()    
+    #mask[:] = False
+    #PHIDP_nans.mask = mask
+    #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+    dphi, uphi, corr_phidp = correct_phidp((radar.fields['differential_phase']['data'])+180, radar.fields['copol_correlation_coeff']['data'], 
+					   radar.fields['reflectivity']['data'], sys_phase, 280)
+    #------------	
+    radar.add_field_like('reflectivity','corrPHIDP', corr_phidp, replace_existing=True)
+
+    # Y CALCULAR KDP! 
+    calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
+					   method='lanczos_conv', skipna=True)	
+    radar.add_field_like('reflectivity','corrKDP', calculated_KDP, replace_existing=True)
+    #------------	
+    #------------	
 
     # Filters
     ni = dzh_.shape[0]
@@ -4447,31 +4496,30 @@ def CSPR2_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfi
                 dzh_[i,j]  = np.nan
                 dZDR[i,j]  = np.nan
                 drho_[i,j]  = np.nan
-                dkdp_[i,j]  = np.nan
-
+                corr_phidp[i,j]  = np.nan
+		calculated_KDP[i,j]  = np.nan
+		
+		
     scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], 
-					     rho=drho_, kdp=dkdp_, 
+					     rho=drho_, kdp=calculated_KDP, 
                                              use_temp=True, band='C', T=radar_T)
 
     RHIs_nlev = np.argmax(scores, axis=0) + 1 
-    radar.add_field_like('differential_phase','HID', RHIs_nlev, replace_existing=True)
-
-
-    #-EJEMPLO de azimuth
-    azimuths = radar.azimuth['data']
-    target_azimuth = azimuths[azimuth_ray]
-    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-
+    radar.add_field_like('specific_differential_phase','HID', RHIs_nlev, replace_existing=True)
 
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
 
+    #-EJEMPLO de azimuth
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    target_azimuth = azimuths[azimuth_ray]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     rhoHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
-    PHIDP = radar.fields['specific_differential_phase']['data'][start_index:end_index]
-    if 'differential_phase' in radar.fields.keys():  
-    	KDP   = radar.fields['differential_phase']['data'][start_index:end_index]
+    PHIDP = corrPHIDP[start_index:end_index].copy()
+    KDP   = calculated_KDP[start_index:end_index].copy()
 
     fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
                         figsize=[14,7])
@@ -4507,9 +4555,10 @@ def CSPR2_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfi
 
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
-    if 'KDP' in radar.fields.keys():  
-    	pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
+    pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
+    THH =  radar.fields['reflectivity']['data'][start_index:end_index]
+    axes[0,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -4546,7 +4595,7 @@ def CSPR2_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfi
     axes[1,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
-    pcm1 = axes[1,1].pcolormesh(lons, lats, PHIDP, cmap=cmap, 
+    pcm1 = axes[1,1].pcolormesh(lons, lats, corr_phidp, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
     axes[1,1].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[1,1].set_title('CORR Phidp radar nlev '+str(nlev)+'  PPI')
@@ -4561,7 +4610,7 @@ def CSPR2_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfi
     plt.colorbar(pcm1, ax=axes[1,1])
     axes[1,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 
-    pcm1 = axes[1,2].pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
+    pcm1 = axes[1,2].pcolormesh(lons, lats, RHIs_nlev[start_index:end_index], cmap = cmaphid, vmin=0.2, vmax=10)
     axes[1,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[1,2].set_title('HID '+str(nlev)+' PPI')
     axes[1,2].set_xlim([options['xlim_min'], options['xlim_max']])
@@ -5453,7 +5502,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         HID_priority2D = get_prioritymap(options, radar, grided)
 
     elif options['radar_name'] == 'CSPR2':
-        radar = CSPR2_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         for ic in range(len(xlims_xlims_input)): 
