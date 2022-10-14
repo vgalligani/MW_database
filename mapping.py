@@ -4453,14 +4453,13 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
 
-    dzh_  = radar.fields['reflectivity']['data'].copy()
-    dZDR  = radar.fields['differential_reflectivity']['data'].copy()
+    dzh_  = radar.fields['attenuation_corrected_reflectivity_h']['data'].copy()
+    dZDR  = radar.fields['attenuation_corrected_differential_reflectivity']['data'].copy()
     drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
     dkdp_ = radar.fields['specific_differential_phase']['data'].copy()
 
     # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
     dkdp_[np.where(drho_.data==radar.fields['copol_correlation_coeff']['data'].fill_value)] = np.nan
-
 				
     #------------	
     #------------		
@@ -4517,7 +4516,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     rhoHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
-    PHIDP = corrPHIDP[start_index:end_index].copy()
+    PHIDP = (radar.fields['differential_phase']['data'][start_index:end_index])+180
     KDP   = calculated_KDP[start_index:end_index].copy()
 
     fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
@@ -4557,7 +4556,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
     THH =  radar.fields['reflectivity']['data'][start_index:end_index]
-    axes[0,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
+    #axes[0,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -4594,7 +4593,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[1,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
-    pcm1 = axes[1,1].pcolormesh(lons, lats, corr_phidp, cmap=cmap, 
+    pcm1 = axes[1,1].pcolormesh(lons, lats, corr_phidp[start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
     axes[1,1].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[1,1].set_title('CORR Phidp radar nlev '+str(nlev)+'  PPI')
@@ -5493,8 +5492,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
-        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
-	(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
+	grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
+      		(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
               np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
         make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
@@ -5507,8 +5506,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
-        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
-	(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
+	grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
+      		(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
               np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
         make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
@@ -5603,7 +5602,7 @@ def main():
     # REPORTES TWITTER ...  (de la base de datos de relampago solo a las 2340 en la zona, y en tweets en la madrugada 1216am) 
     reportes_granizo_twitterAPI_geo = [[]]
     reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
+    opts = {'xlim_min': -65.5, 'xlim_max': -63.6, 'ylim_min': -33, 'ylim_max': -31.5, 
     	    'ZDRoffset': 0, 'ylim_max_zoom':-30.5, 'rfile': 'CSPR2_data/'+rfile, 'gfile': gfile, 
     	    'window_calc_KDP': 7, 'azimuth_ray': 220, 'x_supermin':-65, 'x_supermax':-64,
     	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
