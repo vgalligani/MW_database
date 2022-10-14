@@ -3696,7 +3696,7 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
+            if (rho_h[j]<0.7) or (zh_h[j]<20):
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan 
 		
@@ -4457,7 +4457,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     dZDR  = radar.fields['attenuation_corrected_differential_reflectivity']['data'].copy()
     drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
     dkdp_ = radar.fields['specific_differential_phase']['data'].copy()
-
+    ZHFIELD = 'attenuation_corrected_reflectivity_h'
     # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
     dkdp_[np.where(drho_.data==radar.fields['copol_correlation_coeff']['data'].fill_value)] = np.nan
 				
@@ -4473,7 +4473,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     #PHIDP_nans.mask = mask
     #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
     dphi, uphi, corr_phidp = correct_phidp((radar.fields['differential_phase']['data'])+180, radar.fields['copol_correlation_coeff']['data'], 
-					   radar.fields['reflectivity']['data'], sys_phase, 280)
+					   radar.fields['attenuation_corrected_reflectivity_h']['data'], sys_phase, 280)
     #------------	
     radar.add_field_like('reflectivity','corrPHIDP', corr_phidp, replace_existing=True)
 
@@ -4555,7 +4555,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
     pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    THH =  radar.fields['reflectivity']['data'][start_index:end_index]
+    THH =  radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
     #axes[0,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
     axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -4570,16 +4570,11 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    if 'reflectivity' in radar.fields.keys():  
-        ZHFIELD = 'reflectivity'
-        THH =  radar.fields['reflectivity']['data'][start_index:end_index]
+    if 'attenuation_corrected_reflectivity_h' in radar.fields.keys():  
+        ZHFIELD = 'attenuation_corrected_reflectivity_h'
+        THH =  radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
         pcm1 = axes[1,0].pcolormesh(lons, lats, THH, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
-    elif 'DBZHCC' in radar.fields.keys():
-        ZHFIELD = 'DBZHCC'
-        THH =  radar.fields['DBZHCC']['data']
-        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'], cmap=cmap, 
-			  vmin=vmin, vmax=vmax)		
     axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
     axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -4626,6 +4621,36 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     fig.savefig(options['fig_dir']+'PPIs_KDPcorr'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
     #plt.close()
 
+    #----------------------------------------------------------------------
+    #-figure
+    fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,figsize=[14,10])
+    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['copol_correlation_coeff']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
+    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields[ZHFIELD]['data'][start_index:end_index][filas,:]), '-r', label='ZH')
+    axes[0].legend()
+    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['differential_phase']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
+    axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
+    axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
+    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]+sys_phase), color='magenta', label='phidp corrected');
+    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='purple', label='phidp corrected-sysphase');
+    axes[1].legend()
+    axes[1].set_xlim([0,100])
+    axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
+    if 'KDP' in radar.fields.keys():  
+        axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Obs. KDP');
+    axes[2].legend()
+    #axes[0].set_xlim([50, 120])
+    #axes[1].set_xlim([50, 120])
+    #axes[2].set_xlim([50, 120])
+    axes[2].set_ylim([-1, 5])
+    axes[2].grid(True) 
+    axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
+    axes[2].set_xlim([0,100])
+    fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
+    #plt.close()
+
+
+
+	
     return radar
 
 #------------------------------------------------------------------------------
