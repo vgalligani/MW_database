@@ -3646,8 +3646,8 @@ def unfold_phidp(phi, rho, diferencia):
             if np.isnan(a):
                 v2[l] = v2[l-1]
 
-            elif a > diferencia:
-                v2[l] = v1[l] - 360
+            elif a > diferencia:  # np.abs(a) ? 
+                v2[l] = v1[l] + 360 # para -180to180 1ue le sumo 360, aca v1[l]-360
                 if v2[l-1] - v2[l] > 100:  # Esto es por el doble folding cuando es mayor a 700
                     v2[l] = v1[l] + v2[l-1]
 
@@ -3701,8 +3701,9 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
                 rho[i,j]     = np.nan 
 		
     dphi = despeckle_phidp(phiphi, rho, zh)
-    uphi_i = unfold_phidp(dphi, rho, diferencia) 
+    uphi_f = unfold_phidp(dphi, rho, diferencia) 
     uphi_accum = [] 	
+    uphi_i = uphi_f.copy()
     for i in range(ni):
         phi_h = uphi_i[i,:]
         for j in range(1,nj-1,1):
@@ -3721,7 +3722,7 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     for i in range(ni):
         phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
                                             window='flat')
-    return dphi, uphi_i, phi_cor
+    return dphi, uphi_f, phi_cor
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -3914,10 +3915,9 @@ def get_sys_phase_simple_CSPR2(radar):
 
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
-    TH    = radar.fields['reflectivity']['data'][start_index:end_index]
-    TV    = radar.fields['reflectivity_v']['data'][start_index:end_index]
+    TH    = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
     RHOHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
-    PHIDP = np.array(radar.fields['differential_phase']['data'][start_index:end_index])
+    PHIDP = np.array(radar.fields['differential_phase']['data'][start_index:end_index])+360
     PHIDP[np.where(PHIDP==radar.fields['differential_phase']['data'].fill_value)] = np.nan		
     rhv = RHOHV.copy()
     z_h = TH.copy()
@@ -5519,8 +5519,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
-	grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
-      		(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
+        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
+	(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
               np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
         make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
@@ -5533,8 +5533,8 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
-	grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
-      		(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
+        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
+	(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
               np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
         make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
