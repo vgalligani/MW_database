@@ -5473,9 +5473,10 @@ def get_prioritymap(options, radar, grided):
        labels_cont = ['GMI 200K contour', 'GMI 225K contour']
        for i in range(len(labels_cont)):
          CS.collections[i].set_label(labels_cont[i])
-       for ireportes in range(len(options['REPORTES_geo'])):
-         axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
-       plt.legend() 
+       if len(options['REPORTES_meta'])>0:
+         for ireportes in range(len(options['REPORTES_geo'])):
+             axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+         plt.legend() 
 
 
 	
