@@ -3647,7 +3647,7 @@ def unfold_phidp(phi, rho, diferencia):
                 v2[l] = v2[l-1]
 
             elif a > diferencia:
-                v2[l] = v1[l] + 360
+                v2[l] = v1[l] - 360
                 if v2[l-1] - v2[l] > 100:  # Esto es por el doble folding cuando es mayor a 700
                     v2[l] = v1[l] + v2[l-1]
 
