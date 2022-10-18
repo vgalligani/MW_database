@@ -5638,11 +5638,11 @@ def main():
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
-    icois_input  = [2] 
-    azimuths_oi  = [50]
-    labels_PHAIL = ['2 []'] 
-    xlims_xlims_input  = [150] 
-    xlims_mins_input  = [0]		
+    icois_input  = [2,2] 
+    azimuths_oi  = [50,30]
+    labels_PHAIL = ['2 []','2 []'] 
+    xlims_xlims_input  = [160, 160] 
+    xlims_mins_input  = [0,0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 		
 	
