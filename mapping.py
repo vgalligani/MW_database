@@ -1883,9 +1883,10 @@ def check_transec(radar, test_transect, lon_pf, lat_pf, options):
     labels_cont = ['GMI 200K contour', 'GMI 225K contour']
     for i in range(len(labels_cont)):
         CS.collections[i].set_label(labels_cont[i])
-    for ireportes in range(len(options['REPORTES_geo'])):
-        axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
-    plt.legend() 
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+        plt.legend() 
     
     fig.savefig(options['fig_dir']+'PPI_transect_'+'azi'+str(test_transect)+'.png', dpi=300,transparent=False)   
     return 
@@ -2103,9 +2104,10 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     plt.rcParams['font.serif'] = ['Helvetica']
 
     if 'TH' in radar.fields.keys():  
-            THNAME= 'TH'
+            THname= 'TH'
+            TVname= 'TV'
     elif 'DBZHCC' in radar.fields.keys():        
-           THNAME = 'DBZHCC'
+           THname = 'DBZHCC'
 
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -5635,11 +5637,11 @@ def main():
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
-    icois_input  = [2,3] 
-    azimuths_oi  = [215,110]
-    labels_PHAIL = ['2 []','3[Phail = ]'] 
-    xlims_xlims_input  = [150, 150] 
-    xlims_mins_input  = [0, 0]		
+    icois_input  = [2] 
+    azimuths_oi  = [50]
+    labels_PHAIL = ['2 []'] 
+    xlims_xlims_input  = [150] 
+    xlims_mins_input  = [0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 		
 	
