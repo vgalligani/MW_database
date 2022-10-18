@@ -3696,10 +3696,11 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<35):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan 
-		
+
+
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_f = unfold_phidp(dphi, rho, diferencia) 
     uphi_accum = [] 	
@@ -3831,9 +3832,10 @@ def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_
     labels_cont = ['GMI 200K contour', 'GMI 225K contour']
     for i in range(len(labels_cont)):
       CS.collections[i].set_label(labels_cont[i])
-    for ireportes in range(len(options['REPORTES_geo'])):
-        axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
-    plt.legend() 
+    if len(options['REPORTES_meta'])>0:
+    	for ireportes in range(len(options['REPORTES_geo'])):
+        	axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+    	plt.legend() 
 
     fig.savefig(options['fig_dir']+'PPIs_HID'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
     #plt.close()
@@ -4267,7 +4269,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     #axes[2].set_xlim([50, 120])
     axes[2].set_ylim([-1, 5])
     axes[2].grid(True) 
-    axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
+    axes[2].plot([0, np.nanmax(radar.range['data']/1e3)], [0, 0], color='darkgreen', linestyle='-') 
     fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
     #plt.close()
 
@@ -5602,6 +5604,55 @@ def firstNonNan(listfloats):
 #------------------------------------------------------------------------------	
 
 def main(): 
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+
+   # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20190308: P(hail) = 0.895
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
+    lon_pfs  = [-63.74]
+    lat_pfs  = [-30.75]
+    time_pfs = ['0204UTC']
+    phail    = [0.895]
+    MIN85PCT = [62.15]
+    MIN37PCT = [147.72]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [271.69, 241.93, 147.72, 62.15, 199.09, 226.01]
+    #
+    rfile    = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
+    era5_file = '20190308_02_RMA1.grib'
+    # REPORTES TWITTER ...  (de la base de datos de relampago solo a las 2340 en la zona, y en tweets en la madrugada 1216am) 
+    reportes_granizo_twitterAPI_geo = [[]]
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
+    	    'ZDRoffset': 0.5, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+    	    'window_calc_KDP': 7, 'azimuth_ray': 50, 'x_supermin':-65, 'x_supermax':-64,
+    	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 
+    	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+    	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+     	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
+    icois_input  = [2,3] 
+    azimuths_oi  = [215,110]
+    labels_PHAIL = ['2 []','3[Phail = ]'] 
+    xlims_xlims_input  = [150, 150] 
+    xlims_mins_input  = [0, 0]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+		
+	
+
+
+
+
+
+
+	
+    return
+
+def main(): 
 
 		
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
@@ -5644,11 +5695,6 @@ def main():
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 		
 	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20190308: P(hail) = 0.895
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
 
 	
     return
