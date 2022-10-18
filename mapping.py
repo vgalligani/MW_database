@@ -3696,7 +3696,7 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<20):
+            if (rho_h[j]<0.7) or (zh_h[j]<35):
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan 
 		
@@ -3903,8 +3903,10 @@ def get_sys_phase_simple_dow7(radar):
     phases_nlev = np.median(phases)
 
     return phases_nlev
+
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+
 def get_sys_phase_simple_CSPR2(radar):
 
     start_index = radar.sweep_start_ray_index['data'][0]
@@ -3915,7 +3917,7 @@ def get_sys_phase_simple_CSPR2(radar):
     TH    = radar.fields['reflectivity']['data'][start_index:end_index]
     TV    = radar.fields['reflectivity_v']['data'][start_index:end_index]
     RHOHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
-    PHIDP = np.array(radar.fields['differential_phase']['data'][start_index:end_index])+180
+    PHIDP = np.array(radar.fields['differential_phase']['data'][start_index:end_index])
     PHIDP[np.where(PHIDP==radar.fields['differential_phase']['data'].fill_value)] = np.nan		
     rhv = RHOHV.copy()
     z_h = TH.copy()
