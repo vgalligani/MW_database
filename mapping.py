@@ -3790,7 +3790,7 @@ def plot_HID_PPI_CSPR2(radar, options, nlev, azimuth_ray, diff_value, tfield_ref
     KDP   = radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index]
     RHIs_nlev = radar.fields['HID']['data'][start_index:end_index]
     ZHFIELD = 'corrected_reflectivity'
-    ZH =  radar.fields['TH']['data'][start_index:end_index]
+    ZH =  radar.fields[ZHFIELD]['data'][start_index:end_index]
 
     #---- plot hid ppi  
     hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
@@ -4575,11 +4575,10 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
                 dzh_[i,j]  = np.nan
                 dZDR[i,j]  = np.nan
                 drho_[i,j]  = np.nan
-                corr_phidp[i,j]  = np.nan
-                calculated_KDP[i,j]  = np.nan		
+                dkdp_[i,j]  = np.nan		
 
     scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR, 
-					     rho=drho_, kdp=calculated_KDP, 
+					     rho=drho_, kdp=dkdp_, 
                                              use_temp=True, band='C', T=radar_T)
 
     RHIs_nlev = np.argmax(scores, axis=0) + 1 
@@ -4693,9 +4692,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['differential_phase']['data'][start_index:end_index][filas,:]), 'or', label='phidp')
     axes[1].legend()
     axes[1].set_xlim([0,100])
-    axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
-    if 'KDP' in radar.fields.keys():  
-        axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index][filas,:]), color='gray', label='KDP');
+    axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index][filas,:]), color='gray', label='KDP');
     axes[2].legend()
     #axes[0].set_xlim([50, 120])
     #axes[1].set_xlim([50, 120])
