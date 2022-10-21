@@ -3705,6 +3705,14 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
 
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_f = unfold_phidp(dphi, rho, diferencia) 
+	
+    for i in range(ni):
+        rho_h = rho[i,:]
+        zh_h = zh[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                uphi_f[i,j]  = np.nan 
+	
     uphi_accum = [] 	
     uphi_i = uphi_f.copy()
     for i in range(ni):
@@ -3716,7 +3724,7 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
-    phi_cor = subtract_sys_phase(uphi, sys_phase)
+    phi_cor = subtract_sys_phase(uphi, sys_phase) + 360
     # phi_cor[rho<0.7] = np.nan
     phi_cor[phi_cor < 0] = np.nan #antes <= ? 
     phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
@@ -5629,7 +5637,7 @@ def main():
     MINPCTs  = [274.57, 249.42, 190.09, 100.54, 197.71, 209.46]
     #
     #rfile    = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
-    rfile     = 'corcsapr2cfrppiqcM1.b1.20181111.130003.nc' #'corcsapr2cfrppiM1.a1.20181111.130003.nc'
+    rfile     = 'corcsapr2cmacppiM1.c1.20181111.130003.nc' #'corcsapr2cfrppiM1.a1.20181111.130003.nc'
     gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
     era5_file = '20181111_13_RMA1.grib'
     # REPORTES TWITTER ...  (de la base de datos de relampago solo a las 2340 en la zona, y en tweets en la madrugada 1216am) 
