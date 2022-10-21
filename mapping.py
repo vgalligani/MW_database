@@ -3776,8 +3776,74 @@ def calc_KDP(radar):
     radar.add_field_like('RHOHV','NEW_kdp',bb, replace_existing=True)
 	
     return radar 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def plot_HID_PPI_CSPR2(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
+
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    rhoHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
+    PHIDP = radar.fields['filtered_corrected_differential_phase']['data'][start_index:end_index]
+    KDP   = radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index]
+    RHIs_nlev = radar.fields['HID']['data'][start_index:end_index]
+    ZHFIELD = 'corrected_reflectivity'
+    ZH =  radar.fields['TH']['data'][start_index:end_index]
+
+    #---- plot hid ppi  
+    hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid       = colors.ListedColormap(hid_colors)
+
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+    pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
+    axes.set_title('HID nlev '+str(nlev)+' PPI (at '+str(options['time_pfs'])+')')
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
 
 
+
+    # agregar: 	
+    # read 
+    f = h5py.File( options['gmi_dir']+options['gfile'], 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    for j in range(lon_gmi.shape[1]):  # ANTES ERA +-5
+            tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+10),:] = np.nan
+            tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-10),:] = np.nan   
+            lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+10),:] = np.nan
+            lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-10),:] = np.nan  
+            lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+10),:] = np.nan
+            lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-10),:] = np.nan  	
+    PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
+    CS = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 225], colors=(['black', 'gray']), linewidths=1.5)
+    labels_cont = ['GMI 200K contour', 'GMI 225K contour']
+    for i in range(len(labels_cont)):
+      CS.collections[i].set_label(labels_cont[i])
+    if len(options['REPORTES_meta'])>0:
+    	for ireportes in range(len(options['REPORTES_geo'])):
+        	axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+    	plt.legend() 
+
+    fig.savefig(options['fig_dir']+'PPIs_HID'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
+    #plt.close()
+
+    return
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def plot_HID_PPI(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
@@ -4467,14 +4533,14 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
 
-    dzh_  = radar.fields['attenuation_corrected_reflectivity_h']['data'].copy()
-    dZDR  = radar.fields['attenuation_corrected_differential_reflectivity']['data'].copy()
+    dzh_  = radar.fields['corrected_reflectivity']['data'].copy()
+    dZDR  = radar.fields['corrected_differential_reflectivity']['data'].copy()
     drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
-    dkdp_ = radar.fields['specific_differential_phase']['data'].copy()
+    dkdp_ = radar.fields['filtered_corrected_specific_diff_phase']['data'].copy()
     ZHFIELD = 'attenuation_corrected_reflectivity_h'
     # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
     dkdp_[np.where(drho_.data==radar.fields['copol_correlation_coeff']['data'].fill_value)] = np.nan
-				
+
     #------------	
     #------------		
     sys_phase = get_sys_phase_simple_CSPR2(radar)
@@ -4486,15 +4552,15 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     #mask[:] = False
     #PHIDP_nans.mask = mask
     #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
-    dphi, uphi, corr_phidp = correct_phidp((radar.fields['differential_phase']['data'])+180, radar.fields['copol_correlation_coeff']['data'], 
-					   radar.fields['attenuation_corrected_reflectivity_h']['data'], sys_phase, 280)
+    #dphi, uphi, corr_phidp = correct_phidp((radar.fields['differential_phase']['data'])+180, radar.fields['copol_correlation_coeff']['data'], 
+    #					   radar.fields['attenuation_corrected_reflectivity_h']['data'], sys_phase, 280)
     #------------	
-    radar.add_field_like('reflectivity','corrPHIDP', corr_phidp, replace_existing=True)
+    #radar.add_field_like('reflectivity','corrPHIDP', corr_phidp, replace_existing=True)
 
     # Y CALCULAR KDP! 
-    calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
-					   method='lanczos_conv', skipna=True)	
-    radar.add_field_like('reflectivity','corrKDP', calculated_KDP, replace_existing=True)
+    #calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
+    #					   method='lanczos_conv', skipna=True)	
+    #radar.add_field_like('reflectivity','corrKDP', calculated_KDP, replace_existing=True)
     #------------	
     #------------	
 
@@ -4511,13 +4577,13 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
                 drho_[i,j]  = np.nan
                 corr_phidp[i,j]  = np.nan
                 calculated_KDP[i,j]  = np.nan		
-		
-    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], 
+
+    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR, 
 					     rho=drho_, kdp=calculated_KDP, 
                                              use_temp=True, band='C', T=radar_T)
 
     RHIs_nlev = np.argmax(scores, axis=0) + 1 
-    radar.add_field_like('specific_differential_phase','HID', RHIs_nlev, replace_existing=True)
+    radar.add_field_like('filtered_corrected_differential_phase','HID', RHIs_nlev, replace_existing=True)
 
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -4530,8 +4596,8 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     lats  = radar.gate_latitude['data'][start_index:end_index]
     lons  = radar.gate_longitude['data'][start_index:end_index]
     rhoHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
-    PHIDP = (radar.fields['differential_phase']['data'][start_index:end_index])+180
-    KDP   = calculated_KDP[start_index:end_index].copy()
+    PHIDP = (radar.fields['filtered_corrected_differential_phase']['data'][start_index:end_index])+360
+    KDP   = radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index]
 
     fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
                         figsize=[14,7])
@@ -4584,10 +4650,9 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    if 'attenuation_corrected_reflectivity_h' in radar.fields.keys():  
-        ZHFIELD = 'attenuation_corrected_reflectivity_h'
-        THH =  radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
-        pcm1 = axes[1,0].pcolormesh(lons, lats, THH, cmap=cmap, 
+    ZHFIELD = 'corrected_reflectivity'
+    THH =  radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+    pcm1 = axes[1,0].pcolormesh(lons, lats, THH, cmap=cmap, 
 			  vmin=vmin, vmax=vmax)
     axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
     axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
@@ -4600,22 +4665,6 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
     plt.colorbar(pcm1, ax=axes[1,0])
     axes[1,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
-
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
-    pcm1 = axes[1,1].pcolormesh(lons, lats, corr_phidp[start_index:end_index], cmap=cmap, 
-			  vmin=vmin, vmax=vmax)
-    axes[1,1].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
-    axes[1,1].set_title('CORR Phidp radar nlev '+str(nlev)+'  PPI')
-    axes[1,1].set_xlim([options['xlim_min'], options['xlim_max']])
-    axes[1,1].set_ylim([options['ylim_min'], options['ylim_max']])
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
-    plt.colorbar(pcm1, ax=axes[1,1])
-    axes[1,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
 
     pcm1 = axes[1,2].pcolormesh(lons, lats, RHIs_nlev[start_index:end_index], cmap = cmaphid, vmin=0.2, vmax=10)
     axes[1,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
@@ -4631,7 +4680,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
     cbar_HID = plt.colorbar(pcm1, ax=axes[1,2], shrink=1.1, label=r'HID')    
     cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
-	
+
     fig.savefig(options['fig_dir']+'PPIs_KDPcorr'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
     #plt.close()
 
@@ -4641,16 +4690,12 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['copol_correlation_coeff']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
     axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields[ZHFIELD]['data'][start_index:end_index][filas,:]), '-r', label='ZH')
     axes[0].legend()
-    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['differential_phase']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
-    axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
-    axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
-    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]+sys_phase), color='magenta', label='phidp corrected');
-    axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='purple', label='phidp corrected-sysphase');
+    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['differential_phase']['data'][start_index:end_index][filas,:]), 'or', label='phidp')
     axes[1].legend()
     axes[1].set_xlim([0,100])
     axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
     if 'KDP' in radar.fields.keys():  
-        axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['KDP']['data'][start_index:end_index][filas,:]), color='gray', label='Obs. KDP');
+        axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index][filas,:]), color='gray', label='KDP');
     axes[2].legend()
     #axes[0].set_xlim([50, 120])
     #axes[1].set_xlim([50, 120])
@@ -4664,7 +4709,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
 
 
 
-	
+
     return radar
 
 #------------------------------------------------------------------------------
@@ -5543,7 +5588,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
 
     elif options['radar_name'] == 'CSPR2':
         radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-        plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        plot_HID_PPI_CSPR2(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
@@ -5650,11 +5695,11 @@ def main():
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'CSPR2'}
-    #icois_input  = [2,3] 
-    #azimuths_oi  = [215,110]
-    #labels_PHAIL = ['2 []','3[Phail = ]'] 
-    #xlims_xlims_input  = [150, 150] 
-    #xlims_mins_input  = [0, 0]		
+    icois_input  = [2,3] 
+    azimuths_oi  = [215,110]
+    labels_PHAIL = ['3[]','3[Phail = ]'] 
+    xlims_xlims_input  = [150, 150] 
+    xlims_mins_input  = [0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 		
 	
