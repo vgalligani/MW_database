@@ -5348,18 +5348,18 @@ def summary_radar_obs(radar, fname, options):
             axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
             [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
             axes[2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-	    if len(options['REPORTES_meta'])>0:
-              for ireportes in range(len(options['REPORTES_geo'])):
-                axes[2].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
 
+            if len(options['REPORTES_meta'])>0:
+                for ireportes in range(len(options['REPORTES_geo'])):
+                    axes[2].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
 
         labels_cont = ['GMI 200K contour', 'GMI 225K contour']
         for i in range(len(labels_cont)):
-            CS.collections[i].set_label(labels_cont[i])
-        if len(options['REPORTES_meta'])>0:
-		for ireportes in range(len(options['REPORTES_geo'])):
-			axes[1].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
-			axes[1].legend(fontsize=11)	
+          CS.collections[i].set_label(labels_cont[i])
+          if len(options['REPORTES_meta'])>0:
+              for ireportes in range(len(options['REPORTES_geo'])):
+                  plt.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+              plt.legend(fontsize=11) 
 
         fig.savefig(options['fig_dir']+'PPIs_Summary'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
         #plt.close()
