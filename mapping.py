@@ -5609,57 +5609,7 @@ def firstNonNan(listfloats):
 #------------------------------------------------------------------------------	
 
 def main(): 
-	
-    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
-   # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20190308: P(hail) = 0.895
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
-    lon_pfs  = [-63.74]
-    lat_pfs  = [-30.75]
-    time_pfs = ['0204UTC']
-    phail    = [0.895]
-    MIN85PCT = [62.15]
-    MIN37PCT = [147.72]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [271.69, 241.93, 147.72, 62.15, 199.09, 226.01]
-    #
-    rfile    = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
-    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
-    era5_file = '20190308_02_RMA1.grib'
-    # REPORTES TWITTER ...  (de la base de datos de relampago solo a las 2340 en la zona, y en tweets en la madrugada 1216am) 
-    reportes_granizo_twitterAPI_geo = [[]]
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
-    	    'ZDRoffset': 0.5, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
-    	    'window_calc_KDP': 7, 'azimuth_ray': 50, 'x_supermin':-65, 'x_supermax':-62,
-    	    'y_supermin':-32, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 
-    	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-    	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-     	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
-    icois_input  = [3,3] 
-    azimuths_oi  = [50,30]
-    labels_PHAIL = ['3 []','3 []'] 
-    xlims_xlims_input  = [160, 160] 
-    xlims_mins_input  = [0,0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-		
-	
-
-
-
-
-
-
-	
-    return
-
-def main(): 
-
-		
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 
@@ -5679,7 +5629,7 @@ def main():
     MINPCTs  = [274.57, 249.42, 190.09, 100.54, 197.71, 209.46]
     #
     #rfile    = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
-    rfile     = 'corcsapr2cfrppiM1.a1.20181111.130003.nc'
+    rfile     = 'corcsapr2cfrppiqcM1.b1.20181111.130003.nc' #'corcsapr2cfrppiM1.a1.20181111.130003.nc'
     gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
     era5_file = '20181111_13_RMA1.grib'
     # REPORTES TWITTER ...  (de la base de datos de relampago solo a las 2340 en la zona, y en tweets en la madrugada 1216am) 
@@ -5895,6 +5845,43 @@ def old_main():
     #xlims_xlims_input  = [150, 150] 
     #xlims_mins_input  = [0, 0]		
     #run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+
+	
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA1 - 20190308: P(hail) = 0.895
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
+    lon_pfs  = [-63.74]
+    lat_pfs  = [-30.75]
+    time_pfs = ['0204UTC']
+    phail    = [0.895]
+    MIN85PCT = [62.15]
+    MIN37PCT = [147.72]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [271.69, 241.93, 147.72, 62.15, 199.09, 226.01]
+    #
+    rfile    = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
+    era5_file = '20190308_02_RMA1.grib'
+    # REPORTES TWITTER ...  (de la base de datos de relampago solo a las 2340 en la zona, y en tweets en la madrugada 1216am) 
+    reportes_granizo_twitterAPI_geo = [[]]
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
+    	    'ZDRoffset': 0.5, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+    	    'window_calc_KDP': 7, 'azimuth_ray': 50, 'x_supermin':-65, 'x_supermax':-62,
+    	    'y_supermin':-32, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 
+    	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+    	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+     	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
+    icois_input  = [3,3] 
+    azimuths_oi  = [50,30]
+    labels_PHAIL = ['3 []','3 []'] 
+    xlims_xlims_input  = [160, 160] 
+    xlims_mins_input  = [0,0]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+		
+	
 	
 	
     return
