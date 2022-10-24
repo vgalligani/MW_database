@@ -3578,6 +3578,476 @@ def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZD
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------	
+def plot_rhi_CSPR2(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options, tfield_ref, alt_ref):
+
+    radar_name = options['radar_name']
+    print(radar.fields.keys())
+
+    plt.matplotlib.rc('font', family='serif', size = 20)
+    plt.rcParams['font.sans-serif'] = ['Helvetica']
+    plt.rcParams['font.serif'] = ['Helvetica']
+
+    #- Radar sweep
+    lats0        = radar.gate_latitude['data']
+    lons0        = radar.gate_longitude['data']
+    azimuths     = radar.azimuth['data']
+
+    files_list = radar.fixed_angle['data']
+			
+    Ze_transect     = np.zeros( [len(files_list), lats0.shape[1] ]); Ze_transect[:]=np.nan
+    ZDR_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); ZDR_transect[:]=np.nan
+    PHI_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); PHI_transect[:]=np.nan
+    lon_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); lon_transect[:]=np.nan
+    lat_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); lat_transect[:]=np.nan
+    RHO_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); RHO_transect[:]=np.nan
+    PHIDP_transect  = np.zeros( [len(files_list), lats0.shape[1] ]); RHO_transect[:]=np.nan
+    approx_altitude = np.zeros( [len(files_list), lats0.shape[1] ]); approx_altitude[:]=np.nan
+    color           = np.full(( len(files_list), lats0.shape[1], 4), np.nan)
+    gate_range      = np.zeros( [len(files_list), lats0.shape[1] ]); gate_range[:]=np.nan
+    HID_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); HID_transect[:]=np.nan
+    KDP_transect    = np.zeros( [len(files_list), lats0.shape[1] ]); KDP_transect[:]=np.nan
+    alt_43aproox    = np.zeros( [len(files_list), lats0.shape[1] ]); alt_43aproox[:]=np.nan
+	
+    azydims = lats0.shape[1]-1
+
+    ZHZH    = radar.fields['corrected_reflectivity']['data']
+    ZDRZDR  = radar.fields['corrected_differential_reflectivity']['data']      
+    RHORHO  = radar.fields['copol_correlation_coeff']['data']
+    KDPKDP  = radar.fields['filtered_corrected_specific_diff_phase']['data']  	
+    PHIPHI  = radar.fields['filtered_corrected_differential_phase']['data']   
+    #
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    dzh_  = radar.fields['corrected_reflectivity']['data'].copy()
+    dZDR  = radar.fields['corrected_differential_reflectivity']['data'].copy()
+    drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
+    dkdp_ = radar.fields['filtered_corrected_specific_diff_phase']['data'].copy()
+    # Filters
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+         rho_h = drho_[i,:]
+         zh_h = dzh_[i,:]
+         for j in range(nj):
+             if (rho_h[j]<0.7) or (zh_h[j]<30):
+                  dzh_[i,j]  = np.nan
+                  dzv_[i,j]  = np.nan
+                  drho_[i,j]  = np.nan
+                  dkdp_[i,j]  = np.nan
+    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], 
+					     rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)
+    HIDHID = np.argmax(scores, axis=0) + 1 
+    radar.add_field_like('copol_correlation_coeff','HID', HIDHID, replace_existing=True)
+	
+    lats        = radar.gate_latitude['data']
+    lons        = radar.gate_longitude['data']
+    # En verdad buscar azimuth no transecta ... 
+    azimuths    = radar.azimuth['data']
+    # ojo que esto no se si aplica ... 
+    TransectNo = test_transect
+    for nlev in range(len(files_list)):
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lon_transect[nlev,:]     = lons[start_index:end_index][TransectNo,:]
+        lat_transect[nlev,:]     = lats[start_index:end_index][TransectNo,:]
+        #
+        gateZ    = radar.gate_z['data'][start_index:end_index]
+        gateX    = radar.gate_x['data'][start_index:end_index]
+        gateY    = radar.gate_y['data'][start_index:end_index]
+        gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+        #
+        Ze_transect[nlev,:]      = ZHZH[start_index:end_index][TransectNo,:]
+        ZDR_transect[nlev,:]     = ZDRZDR[start_index:end_index][TransectNo,:]
+        RHO_transect[nlev,:]     = RHORHO[start_index:end_index][TransectNo,:]
+        KDP_transect[nlev,:]     = KDPKDP[start_index:end_index][TransectNo,:]	
+        PHIDP_transect[nlev,:]   = PHIPHI[start_index:end_index][TransectNo,:]	
+        HID_transect[nlev,:]     = HIDHID[start_index:end_index][TransectNo,:]	
+        #alt_43aproox[nlev,:]     = radar.fields['height']['data'][filas,:]
+        [xgate, ygate, zgate]   = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], files_list[nlev] );
+	# eso del paper de granizo: [xgate, ygate, zgate] = pyart.core.antenna_to_cartesian(gate_range[TransectNo,:]/1e3, azimuths[TransectNo], 
+        #alt_43aproox[nlev,:]    = np.ravel(radar.fields['height']['data'][filas,:])
+        approx_altitude[nlev,:] = zgate/1e3;
+        gate_range[nlev,:]      = gates_range[TransectNo,:]/1e3;
+	#
+        #scores          = csu_fhc.csu_fhc_summer(dz=Ze_transect[nlev,:], zdr=ZDR_transect[nlev,:], 
+        #                                     rho=RHO_transect[nlev,:], kdp=KDP_transect[nlev,:], 
+        #                                     use_temp=True, band='C', T=radar_T)
+        #HID_transect[nlev,:]  = np.argmax(scores, axis=0) + 1 
+    #---------------------------------------- REFLECTIVITY
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(111)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude, Ze_transect, cmap=colormaps('ref'), vmin=0, vmax=60)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons (scatter plot para sacar el color de cada pixel)
+    print(len(radar.sweep_start_ray_index['data']))
+    for nlev in range(len(files_list)):
+         fig = plt.figure(figsize=[30,10])
+         fig.add_subplot(221)
+         sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                 s=1,c=Ze_transect[nlev,:],
+                 cmap=colormaps('ref'), vmin=0, vmax=60)
+         color[nlev,:,:] = sc.to_rgba(Ze_transect[nlev,:])
+         plt.close()
+
+    #- Try polygons
+    fig2, axes = plt.subplots(nrows=6,ncols=1,constrained_layout=True,figsize=[10,20]) 
+
+    fig1 = plt.figure(figsize=(20,20))
+    for nlev in range(len(files_list)):
+         if nlev > 10: continue
+         # Create the cone for each elevation IN TERMS OF RANGE. 
+         # ===> ACA HABRIA QUE AGREGAR COMO CAMBIA LA ALTURA CON EL RANGE (?)
+         ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+         ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+         P1 = Polygon([( gate_range[nlev,0],    approx_altitude[nlev,0]-ancho_haz_i0      ),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                   ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                   ( gate_range[nlev,0],    approx_altitude[nlev,0]+ancho_haz_i0      )])
+         ancho = 50/1E3
+         # Location of gates? Every 100m?  
+         LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                   (gate_range[nlev,x]+ancho, 0),
+                   (gate_range[nlev,x]+ancho, 50),
+                   (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+         # Plot
+         for i, l in enumerate(LS):
+             # Get the polygon of the intersection between the cone and the space 
+             #reserved for a specific point
+             inter = l.intersection(P1)
+             x,y = inter.exterior.xy    
+             # Then plot it, filled by the color we want
+             axes[0].fill(x, y, color = color[nlev,i,:], )
+             x, y = P1.exterior.xy
+         axes[0].set_ylim([0, 20])
+         axes[0].set_ylabel('Altitude (km)')
+         axes[0].grid()
+         axes[0].set_xlim((xlim_range1, xlim_range2))
+         norm = matplotlib.colors.Normalize(vmin=0.,vmax=60.)
+         cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormaps('ref'))
+         cax.set_array(Ze_transect)
+         cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
+         axes[0].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+    
+    del mycolorbar, x, y, P1, inter, LS, Ze_transect
+    axes[0].set_title('Transect Nr. '+str(test_transect))
+    #---------------------------------------- ZDR
+    N = (5+2)
+    cmap_ZDR = discrete_cmap(int(N), 'jet') 
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                ZDR_transect,
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(files_list)):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=ZDR_transect[nlev,:],
+                cmap=cmap_ZDR, vmin=-2, vmax=5.)
+        color[nlev,:,:] = sc.to_rgba(ZDR_transect[nlev,:])
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[1].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[1].set_ylim([0, 20])
+        axes[1].set_ylabel('Altitude (km)')
+        axes[1].grid()
+        axes[1].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=-2.,vmax=5.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap_ZDR)
+        cax.set_array(ZDR_transect)
+        cbar_zdr = fig2.colorbar(cax, ax=axes[1], shrink=1.1, ticks=np.arange(-2.,5.01,1.), label='ZDR')     
+        axes[1].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, ZDR_transect
+    #---------------------------------------- RHOHV
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                RHO_transect,
+                cmap = pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(files_list)):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=RHO_transect[nlev,:],
+                cmap= pyart.graph.cm.RefDiff, vmin=0.7, vmax=1.)
+        color[nlev,:,:] = sc.to_rgba(RHO_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[2].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[2].set_ylim([0, 20])
+        axes[2].set_ylabel('Altitude (km)')
+        axes[2].grid()
+        axes[2].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0.7,vmax=1.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.RefDiff)
+        cax.set_array(RHO_transect)
+        cbar_rho = fig2.colorbar(cax, ax=axes[2], shrink=1.1, ticks=np.arange(0.7,1.01,0.1), label=r'$\rho_{hv}$')     
+        axes[2].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, RHO_transect
+
+    #---------------------------------------- PHIDP
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                PHIDP_transect,
+                cmap = pyart.graph.cm.Wild25, vmin=0, vmax=360.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(files_list)):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=PHIDP_transect[nlev,:],
+                cmap= pyart.graph.cm.Wild25, vmin=0, vmax=360.)
+        color[nlev,:,:] = sc.to_rgba(PHIDP_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[3].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[3].set_ylim([0, 20])
+        axes[3].set_ylabel('Altitude (km)')
+        axes[3].grid()
+        axes[3].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0,vmax=360.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.Wild25)
+        cax.set_array(PHIDP_transect)
+        cbar_Phidp = fig2.colorbar(cax, ax=axes[3], shrink=1.1, label=r'PHIDP')     
+        axes[3].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, PHIDP_transect
+
+
+
+    #---------------------------------------- KDP
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                KDP_transect,
+                cmap = pyart.graph.cm.Theodore16, vmin=0, vmax=5.)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(files_list)):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=KDP_transect[nlev,:],
+                cmap= pyart.graph.cm.Theodore16, vmin=0, vmax=5.)
+        color[nlev,:,:] = sc.to_rgba(KDP_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[4].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[4].set_ylim([0, 20])
+        axes[4].set_ylabel('Altitude (km)')
+        axes[4].grid()
+        axes[4].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0,vmax=5.)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=pyart.graph.cm.Theodore16)
+        cax.set_array(KDP_transect)
+        cbar_Phidp = fig2.colorbar(cax, ax=axes[4], shrink=1.1, label=r'KDP')     
+        axes[4].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+
+    del mycolorbar, x, y, P1, inter, LS, KDP_transect
+
+
+
+
+
+
+
+
+    #---------------------------------------- HID
+    hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+    #cmaphid.set_bad('white')
+    #cmaphid.set_under('white')
+
+    #- Simple pcolormesh plot! 
+    fig = plt.figure(figsize=[15,11])
+    fig.add_subplot(221)
+    mycolorbar = plt.pcolormesh(lon_transect, approx_altitude,
+                HID_transect,
+                cmap = cmaphid, vmin=0.2, vmax=10)
+    plt.close()
+
+    #- De esta manera me guardo el color con el que rellenar los polygons
+    for nlev in range(len(files_list)):
+        # scatter plot para sacar el color de cada pixel 
+        fig = plt.figure(figsize=[30,10])
+        fig.add_subplot(221)
+        sc = plt.scatter(lon_transect[nlev,:], approx_altitude[nlev,:],
+                s=1,c=HID_transect[nlev,:],
+                cmap = cmaphid, vmin=0.2, vmax=10)
+        color[nlev,:,:] = sc.to_rgba(HID_transect[nlev,:])   # pyart.graph.cm.RefDiff
+        plt.close()
+
+    #- Try polygons
+    #fig1.add_subplot(412)
+    for nlev in range(len(files_list)):
+        if nlev > 10: continue
+        # Create the cone for each elevation IN TERMS OF RANGE. 
+        ancho_haz_i0    = (np.pi/180*gate_range[nlev,0]/2)
+        ancho_haz_i1099 = (np.pi/180*gate_range[nlev,azydims]/2)
+        P1 = Polygon([( gate_range[nlev,0],   approx_altitude[nlev,0]-ancho_haz_i0      ),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]-ancho_haz_i1099),
+                  ( gate_range[nlev,azydims], approx_altitude[nlev,azydims]+ancho_haz_i1099),
+                  ( gate_range[nlev,0],       approx_altitude[nlev,0]+ancho_haz_i0      )])
+        ancho = 50/1E3
+        # Location of gates? Every 100m?  
+        LS = [Polygon([(gate_range[nlev,x]-ancho, 0),
+                  (gate_range[nlev,x]+ancho, 0),
+                  (gate_range[nlev,x]+ancho, 50),
+                  (gate_range[nlev,x]-ancho, 50)]) for x in np.arange(approx_altitude.shape[1])]
+        # Plot
+        #ax1 = plt.gca()
+        for i, l in enumerate(LS):
+            inter = l.intersection(P1)
+            x,y = inter.exterior.xy
+            # Then plot it, filled by the color we want
+            axes[5].fill(x, y, color = color[nlev,i,:], )
+            x, y = P1.exterior.xy
+        axes[5].set_ylim([0, 20])
+        axes[5].set_ylabel('Altitude (km)')
+        axes[5].grid()
+        axes[5].set_xlim((xlim_range1, xlim_range2))
+        norm = matplotlib.colors.Normalize(vmin=0.2,vmax=10)
+        cax = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmaphid)
+        cax.set_array(HID_transect)
+        cbar_HID = fig2.colorbar(cax, ax=axes[5], shrink=1.1, label=r'HID')    
+        cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+        axes[5].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
+    del mycolorbar, x, y, P1, inter, LS, HID_transect
+
+    #- savefile
+    fig2.savefig(options['fig_dir']+'PseudoRHI_'+'Transect_'+str(test_transect)+'.png', dpi=300,transparent=False)   
+    #plt.close()
+	
+	
+    return
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+
 def calc_freezinglevel(era5_dir, era5_file, lat_pf, lon_pf):
 	
 	ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")	
@@ -5634,12 +6104,12 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
 	#radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
-            plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
+            plot_rhi_CSPR2(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options, tfield_ref, alt_ref)
         grided  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),  
 	(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
               np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
-        make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+        make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
         HID_priority2D = get_prioritymap(options, radar, grided)
 	
     else: 
