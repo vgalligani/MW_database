@@ -2151,7 +2151,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
             grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
             #grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc
-            grid_ZDR = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+            grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
             grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
             grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
             grid_alt[:,i]   = gridded_radar.z['data'][:]
