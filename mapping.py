@@ -5414,6 +5414,9 @@ def summary_radar_obs(radar, fname, options):
             velocity_dealiased = pyart.correct.dealias_region_based(radar, vel_field='VRAD', nyquist_vel=39.9,centered=True)
             radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)
             VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
+        elif 'corrected_velocity' in radar.fields.keys():  
+            VEL_cor = radar.fields['corrected_velocity']['data'][start_index:end_index]
+        if 'VRAD' in radar.fields.keys() or 'corrected_velocity' in radar.fields.keys():  
             [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('doppler')
             pcm1 = axes[2].pcolormesh(lons, lats, VEL_cor, cmap=cmap, vmin=vmin, vmax=vmax)
             cbar = plt.colorbar(pcm1, ax=axes[2], shrink=1, label=units, ticks = np.arange(vmin,max,intt))
