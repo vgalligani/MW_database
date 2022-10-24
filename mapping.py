@@ -2405,6 +2405,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
     plt.matplotlib.rc('font', family='serif', size = 20)
     plt.rcParams['font.sans-serif'] = ['Helvetica']
     plt.rcParams['font.serif'] = ['Helvetica']
+    maxalt = 15
 
     #- Radar sweep
     nelev       = 0
@@ -2427,7 +2428,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
     HID_transect    = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); HID_transect[:]=np.nan
     KDP_transect      = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); KDP_transect[:]=np.nan
     alt_43aproox      = np.zeros( [len(radar.sweep_start_ray_index['data']), lats0.shape[1] ]); alt_43aproox[:]=np.nan
-	
+
     azydims = lats0.shape[1]-1
 
     for nlev in range(len(radar.sweep_start_ray_index['data'])):
@@ -2441,14 +2442,14 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
             HIDHID  =  radar.fields['HID']['data'][start_index:end_index]       
-	
+
         elif radar_name == 'RMA5':
             ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'DBZV' in radar.fields.keys(): 
                 TV     = radar.fields['DBZV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]    
-	
+
         elif radar_name == 'RMA4':
             if 'TH' in radar.fields.keys():
                 ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -2460,7 +2461,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             elif  'ZDR' in radar.fields.keys(): 
                 ZDRZDR     = (radar.fields['ZDR']['data'][start_index:end_index])-ZDRoffset 
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
-	
+
         elif radar_name == 'RMA3':
             if 'TH' in radar.fields.keys():
                 ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -2472,7 +2473,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             elif  'ZDR' in radar.fields.keys(): 
                 ZDRZDR     = radar.fields['ZDR']['data'][start_index:end_index]     
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]   
-	
+
         elif radar_name == 'CSPR2':
             TH   = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
             ZDRZDR  =  radar.fields['corrected_differential_reflectivity']['data'][start_index:end_index]
@@ -2482,7 +2483,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             HIDHID  =  radar.fields['HID']['data'][start_index:end_index]     
             ZDRZDR[RHORHO<0.75]=np.nan
             RHORHO[RHORHO<0.75]=np.nan
-	
+
         elif radar_name == 'DOW7':       
             TH   = radar.fields['TH']['data'][start_index:end_index]
             TV   = radar.fields['TV']['data'][start_index:end_index]
@@ -2491,14 +2492,14 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
             HIDHID  =  radar.fields['HID']['data'][start_index:end_index]       
-	
+
         elif radar_name == 'RMA5':
             ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
             if 'DBZV' in radar.fields.keys(): 
                 TV     = radar.fields['DBZV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]    
-	
+
         elif radar_name == 'RMA4':
             if 'TH' in radar.fields.keys():
                 ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -2510,7 +2511,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             elif  'ZDR' in radar.fields.keys(): 
                 ZDRZDR     = (radar.fields['ZDR']['data'][start_index:end_index])-ZDRoffset 
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
-	
+
         elif radar_name == 'RMA3':
             if 'TH' in radar.fields.keys():
                 ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -2522,15 +2523,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             elif  'ZDR' in radar.fields.keys(): 
                 ZDRZDR     = radar.fields['ZDR']['data'][start_index:end_index]     
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]   
-	
-        elif radar_name == 'CSPR2':
-            ZHZH       = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
-	            ZHZH       = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
-            ZDRZDR     = radar.fields['attenuation_corrected_differential_reflectivity']['data'][start_index:end_index]
-            RHORHO     = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]       
-            ZDRZDR[RHORHO<0.75]=np.nan
-            RHORHO[RHORHO<0.75]=np.nan
-	
+
         elif radar_name == 'DOW7':
             ZHZH  = radar.fields['DBZHCC']['data'][start_index:end_index]
             TV     = radar.fields['DBZVCC']['data'][start_index:end_index]     
@@ -2617,7 +2610,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
              # Then plot it, filled by the color we want
              axes[0].fill(x, y, color = color[nlev,i,:], )
              x, y = P1.exterior.xy
-         axes[0].set_ylim([0, 20])
+         axes[0].set_ylim([0, maxalt])
          axes[0].set_ylabel('Altitude (km)')
          axes[0].grid()
          axes[0].set_xlim((xlim_range1, xlim_range2))
@@ -2626,7 +2619,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
          cax.set_array(Ze_transect)
          cbar_z = fig2.colorbar(cax, ax=axes[0], shrink=1.1, ticks=np.arange(0,60.01,10), label='Zh (dBZ)')
          axes[0].axhline(y=freezing_lev,color='k',linestyle='--', linewidth=1.2)
-    
+
     del mycolorbar, x, y, P1, inter, LS, Ze_transect
     axes[0].set_title('Transect Nr. '+str(test_transect))
     #---------------------------------------- ZDR
@@ -2676,7 +2669,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             # Then plot it, filled by the color we want
             axes[1].fill(x, y, color = color[nlev,i,:], )
             x, y = P1.exterior.xy
-        axes[1].set_ylim([0, 20])
+        axes[1].set_ylim([0, maxalt])
         axes[1].set_ylabel('Altitude (km)')
         axes[1].grid()
         axes[1].set_xlim((xlim_range1, xlim_range2))
@@ -2732,7 +2725,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             # Then plot it, filled by the color we want
             axes[2].fill(x, y, color = color[nlev,i,:], )
             x, y = P1.exterior.xy
-        axes[2].set_ylim([0, 20])
+        axes[2].set_ylim([0, maxalt])
         axes[2].set_ylabel('Altitude (km)')
         axes[2].grid()
         axes[2].set_xlim((xlim_range1, xlim_range2))
@@ -2789,7 +2782,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             # Then plot it, filled by the color we want
             axes[3].fill(x, y, color = color[nlev,i,:], )
             x, y = P1.exterior.xy
-        axes[3].set_ylim([0, 20])
+        axes[3].set_ylim([0, maxalt])
         axes[3].set_ylabel('Altitude (km)')
         axes[3].grid()
         axes[3].set_xlim((xlim_range1, xlim_range2))
@@ -2848,7 +2841,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             # Then plot it, filled by the color we want
             axes[4].fill(x, y, color = color[nlev,i,:], )
             x, y = P1.exterior.xy
-        axes[4].set_ylim([0, 20])
+        axes[4].set_ylim([0, maxalt])
         axes[4].set_ylabel('Altitude (km)')
         axes[4].grid()
         axes[4].set_xlim((xlim_range1, xlim_range2))
@@ -2918,7 +2911,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             # Then plot it, filled by the color we want
             axes[5].fill(x, y, color = color[nlev,i,:], )
             x, y = P1.exterior.xy
-        axes[5].set_ylim([0, 20])
+        axes[5].set_ylim([0, maxalt])
         axes[5].set_ylabel('Altitude (km)')
         axes[5].grid()
         axes[5].set_xlim((xlim_range1, xlim_range2))
@@ -2933,8 +2926,8 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
     #- savefile
     fig2.savefig(options['fig_dir']+'PseudoRHI_'+'Transect_'+str(test_transect)+'.png', dpi=300,transparent=False)   
     #plt.close()
-	
-	
+
+
     return
 
 
