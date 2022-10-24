@@ -4633,7 +4633,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
     pcm1 = axes[0,1].pcolormesh(lons, lats, PHIDP, cmap=cmap, 
-			  vmin=-180, vmax=180)
+			  vmin=vmin, vmax=vmax)
     axes[0,1].set_title('Phidp radar nlev '+str(nlev)+' PPI')
     axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,1].set_ylim([options['ylim_min'], options['ylim_max']])
