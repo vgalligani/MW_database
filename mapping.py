@@ -1347,6 +1347,12 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         lats        = radar.gate_latitude['data']
         lons        = radar.gate_longitude['data']
         ZH          = radar.fields[reflectivity_name]['data']
+    elif options['radar_name'] == 'CSPR2':
+        reflectivity_name = 'corrected_reflectivity'   
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        ZH          = radar.fields[reflectivity_name]['data']
+	
 	
     s_sizes=450
     user = platform.system()
@@ -5710,7 +5716,7 @@ def main():
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'CSPR2'}
     icois_input  = [2,3] 
-    azimuths_oi  = [208,219]
+    azimuths_oi  = [208,222]
     labels_PHAIL = ['3[]','3[Phail = ]'] 
     xlims_xlims_input  = [100, 100] 
     xlims_mins_input  = [0, 0]		
