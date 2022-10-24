@@ -5078,14 +5078,14 @@ def plot_scatter(options, radar, icois, fname):
         radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-options['ZDRoffset']
     elif 'DBZH' in radar.fields.keys():
         radarTH = radar.fields['DBZH']['data'][start_index:end_index]
-    elif 'reflectivity' in radar.fields.keys(): 
-        radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+    #elif 'reflectivity' in radar.fields.keys(): 
+    #    radarTH = radar.fields['DBZH']['data'][start_index:end_index]
     elif 'DBZHCC' in radar.fields.keys(): 
         radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
         radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
     elif 'corrected_reflectivity' in radar.fields.keys(): 
         radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
-        radarZDR = radar.fields[ZDRCname]['data'][start_index:end_index]
+        radarZDR = radar.fields[ZDRname]['data'][start_index:end_index]
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
@@ -5377,7 +5377,7 @@ def summary_radar_obs(radar, fname, options):
         elif 'corrected_reflectivity' in radar.fields.keys():        
             THNAME= 'corrected_reflectivity'
             pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['corrected_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
-            RHOHVname='RHOHV'
+            RHOHVname='copol_correlation_coeff'
 
         plt.colorbar(pcm1, ax=axes[0])
         axes[0].set_xlim([options['x_supermin'], options['x_supermax']])	
@@ -5737,9 +5737,9 @@ def main():
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'CSPR2'}
-    icois_input  = [2,3] 
-    azimuths_oi  = [208,222]
-    labels_PHAIL = ['3[]','3[Phail = ]'] 
+    icois_input  = [6,6] 
+    azimuths_oi  = [208,225]
+    labels_PHAIL = ['6[Phail = 0.653]','6[Phail = 0.653]'] 
     xlims_xlims_input  = [100, 100] 
     xlims_mins_input  = [0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
