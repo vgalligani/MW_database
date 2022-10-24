@@ -2106,8 +2106,17 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     if 'TH' in radar.fields.keys():  
             THname= 'TH'
             TVname= 'TV'
+            KDPname='corrKDP'
     elif 'DBZHCC' in radar.fields.keys():        
            THname = 'DBZHCC'
+           KDPname='corrKDP'
+    elif 'corrected_reflectivity' in radar.fields.keys():        
+           TH   = 'corrected_reflectivity'
+           ZDRname =  'corrected_differential_reflectivity'
+           RHOname = 'copol_correlation_coeff'       
+           PHIname = 'filtered_corrected_differential_phase'       
+           KDPname = 'filtered_corrected_specific_diff_phase'
+
 
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -2140,17 +2149,18 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             ([xloc], [yloc]) = np.where(c == np.min(c))	
             grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
             grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
-            grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+            #grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc
+            grid_ZDR = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
             grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
-            grid_RHO[:,i]   = gridded_radar.fields['RHOHV']['data'][:,xloc,yloc]
+            grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
             grid_alt[:,i]   = gridded_radar.z['data'][:]
             x               = gridded_radar.point_x['data'][:,xloc,yloc]
             y               = gridded_radar.point_y['data'][:,xloc,yloc]
             z               = gridded_radar.point_z['data'][:,xloc,yloc]
             grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
-            grid_KDP[:,i]   = gridded_radar.fields['corrKDP']['data'][:,xloc,yloc]
+            grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
             grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
-	
+
         ni = grid_HID.shape[0]
         nj = grid_HID.shape[1]
         for i in range(ni):
@@ -2161,8 +2171,8 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
                     grid_THTH[i,j]  = np.nan
                     grid_TVTV[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan			
-				
-				
+
+
         #Filters
         #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
         #grid_THTH[np.where(grid_RHO<0.6)] = np.nan	
@@ -2199,7 +2209,8 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
 
-        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+        #im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_ZDR)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
 
         im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
 
@@ -2215,7 +2226,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
             axes[3,iz].set_ylim([0,15])
-	
+
         if iz == 2:
             axes[0,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
             axes[1,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
@@ -2225,7 +2236,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
             axes[3,iz].set_ylim([0,15])
-	
+
         if iz == 3:
             axes[0,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
             axes[1,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
@@ -2235,7 +2246,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
             axes[3,iz].set_ylim([0,15])
-		
+
         if iz == 0:
             axes[0,0].set_ylabel('Altitude (km)')
             axes[1,0].set_ylabel('Altitude (km)')
@@ -2250,7 +2261,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
             axes[3,iz].set_ylim([0,15])
-	
+
         if iz == len(azi_oi)-1: 
 	    # Add colorbars #ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height])
             pm1    = axes[0,iz-1].get_position().get_points().flatten()
@@ -2275,12 +2286,12 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
 
             pm2    = axes[3,iz-1].get_position().get_points().flatten()
 
-		
+
     #- savefile
     fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
     #plt.close()
     del grid_THTH, grid_RHO, grid_TVTV, grid_HID
-	
+
     #-------------------------------
     for i in range(20):
         fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
@@ -4621,7 +4632,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
     pcm1 = axes[0,1].pcolormesh(lons, lats, PHIDP, cmap=cmap, 
-			  vmin=vmin, vmax=vmax)
+			  vmin=-180, vmax=180)
     axes[0,1].set_title('Phidp radar nlev '+str(nlev)+' PPI')
     axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0,1].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -4705,7 +4716,8 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[2].grid(True) 
     axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
     axes[2].set_xlim([0,100])
-    fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
+    axes[0].set_xlim([0,100])
+	fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
     #plt.close()
 
 
@@ -5594,12 +5606,11 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
-	breakpoint()
-        grided  = pyart.map.grid_from_radars(radar, grid_shape=(38, 440, 440), grid_limits=((0.,20000,),  
+        grided  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),  
 	(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
               np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
-        make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+        make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
         HID_priority2D = get_prioritymap(options, radar, grided)
 	
     else: 
@@ -5698,9 +5709,9 @@ def main():
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'CSPR2'}
     icois_input  = [2,3] 
-    azimuths_oi  = [215,110]
+    azimuths_oi  = [208,215]
     labels_PHAIL = ['3[]','3[Phail = ]'] 
-    xlims_xlims_input  = [150, 150] 
+    xlims_xlims_input  = [100, 100] 
     xlims_mins_input  = [0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 		
