@@ -2456,9 +2456,12 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]   
 	
         elif radar_name == 'CSPR2':
-            ZHZH       = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
-            ZDRZDR     = radar.fields['attenuation_corrected_differential_reflectivity']['data'][start_index:end_index]
-            RHORHO     = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]       
+            TH   = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+            ZDRZDR  =  radar.fields['corrected_differential_reflectivity']['data'][start_index:end_index]
+            RHORHO  = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]       
+            PHIPHI  = radar.fields['filtered_corrected_differential_phase']['data'][start_index:end_index]       
+            KDPKDP  = radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index]       
+            HIDHID  =  radar.fields['HID']['data'][start_index:end_index]     
             ZDRZDR[RHORHO<0.75]=np.nan
             RHORHO[RHORHO<0.75]=np.nan
 	
@@ -2504,6 +2507,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
 	
         elif radar_name == 'CSPR2':
             ZHZH       = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
+	            ZHZH       = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
             ZDRZDR     = radar.fields['attenuation_corrected_differential_reflectivity']['data'][start_index:end_index]
             RHORHO     = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]       
             ZDRZDR[RHORHO<0.75]=np.nan
@@ -4537,7 +4541,7 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     dZDR  = radar.fields['corrected_differential_reflectivity']['data'].copy()
     drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
     dkdp_ = radar.fields['filtered_corrected_specific_diff_phase']['data'].copy()
-    ZHFIELD = 'attenuation_corrected_reflectivity_h'
+    ZHFIELD = 'corrected_reflectivity'
     # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
     dkdp_[np.where(drho_.data==radar.fields['copol_correlation_coeff']['data'].fill_value)] = np.nan
 
@@ -5586,13 +5590,14 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     elif options['radar_name'] == 'CSPR2':
         radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI_CSPR2(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-        radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
+        #radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
-            plot_rhi_DOW7(radar, options['files_list'], xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options,tfield_ref, alt_ref) 
-        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),  
-	(-np.max(radar_stacked.range['data']), np.max(radar_stacked.range['data'])),(-np.max(radar_stacked.range['data']), 
-              np.max(radar_stacked.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+            plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
+	breakpoint()
+        grided  = pyart.map.grid_from_radars(radar, grid_shape=(38, 440, 440), grid_limits=((0.,20000,),  
+	(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
+              np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
         make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
         HID_priority2D = get_prioritymap(options, radar, grided)
