@@ -5710,7 +5710,7 @@ def main():
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'CSPR2'}
     icois_input  = [2,3] 
-    azimuths_oi  = [208,215]
+    azimuths_oi  = [208,219]
     labels_PHAIL = ['3[]','3[Phail = ]'] 
     xlims_xlims_input  = [100, 100] 
     xlims_mins_input  = [0, 0]		
