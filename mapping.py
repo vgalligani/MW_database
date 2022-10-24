@@ -2475,6 +2475,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]   
 
         elif radar_name == 'CSPR2':
+            ZHZH = 'corrected_reflectivity'
             TH   = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
             ZDRZDR  =  radar.fields['corrected_differential_reflectivity']['data'][start_index:end_index]
             RHORHO  = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]       
