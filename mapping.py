@@ -5358,10 +5358,17 @@ def summary_radar_obs(radar, fname, options):
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
         if 'TH' in radar.fields.keys():  
             THNAME= 'TH'
+            RHOHVname='RHOHV'
             pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['TH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
         elif 'DBZHCC' in radar.fields.keys():        
             THNAME= 'DBZHCC'
+            RHOHVname='RHOHV'
             pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+        elif 'corrected_reflectivity' in radar.fields.keys():        
+            THNAME= 'corrected_reflectivity'
+            pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['corrected_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+            RHOHVname='RHOHV'
+
         plt.colorbar(pcm1, ax=axes[0])
         axes[0].set_xlim([options['x_supermin'], options['x_supermax']])	
         axes[0].set_ylim([options['y_supermin'], options['y_supermax']])	
@@ -5376,7 +5383,7 @@ def summary_radar_obs(radar, fname, options):
         axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
 
         [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
-        pcm1 = axes[1].pcolormesh(lons, lats, radar.fields['RHOHV']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+        pcm1 = axes[1].pcolormesh(lons, lats, radar.fields[RHOHVname]['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
         plt.colorbar(pcm1, ax=axes[1])
         axes[1].set_xlim([options['x_supermin'], options['x_supermax']])	
         axes[1].set_ylim([options['y_supermin'], options['y_supermax']])
@@ -5456,9 +5463,9 @@ def summary_radar_obs(radar, fname, options):
         for i in range(len(labels_cont)):
           CS.collections[i].set_label(labels_cont[i])
         if len(options['REPORTES_meta'])>0:
-    	  for ireportes in range(len(options['REPORTES_geo'])):
-    	     plt.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
-          plt.legend(fontsize=11) 
+            for ireportes in range(len(options['REPORTES_geo'])):
+                plt.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+        plt.legend(fontsize=11) 
         if options['radar_name'] == 'DOW7':
             general_title='radar at '+options['rfile'][20:24]+' UTC and PF at '+str(options['time_pfs'])+')'	
         else:
@@ -5609,7 +5616,9 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     elif options['radar_name'] == 'CSPR2':
         radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI_CSPR2(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-        #radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
+        plot_HID_PPI_CSPR2(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        plot_HID_PPI_CSPR2(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+	#radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         for ic in range(len(xlims_xlims_input)): 
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
