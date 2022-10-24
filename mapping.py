@@ -5039,9 +5039,24 @@ def plot_scatter(options, radar, icois, fname):
     ##------------------------------------------------------------------------------------------------
     if 'TH' in radar.fields.keys():  
        THNAME= 'TH'
+       RHOHVname = 'RHOHV'
     elif 'DBZHCC' in radar.fields.keys():        
        THNAME= 'DBZHCC'
-	
+       RHOHVname = 'RHOHV'
+    elif 'corrected_reflectivity' in radar.fields.keys():        
+       THNAME= 'corrected_reflectivity'	
+       RHOHVname = 'copol_correlation_coeff'
+       ZDRname = 'corrected_differential_reflectivity'
+
+
+            #ZHZH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+            #TH   = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+            #ZDRZDR  =  radar.fields['corrected_differential_reflectivity']['data'][start_index:end_index]
+            #RHORHO  = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]       
+            #PHIPHI  = radar.fields['filtered_corrected_differential_phase']['data'][start_index:end_index]       
+            #KDPKDP  = radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index]    
+
+
     nlev=0
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -5068,8 +5083,9 @@ def plot_scatter(options, radar, icois, fname):
     elif 'DBZHCC' in radar.fields.keys(): 
         radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
         radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
-    elif 'attenuation_corrected_reflectivity_h' in radar.fields.keys(): 
-        radarTH = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
+    elif 'corrected_reflectivity' in radar.fields.keys(): 
+        radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+        radarZDR = radar.fields[ZDRCname]['data'][start_index:end_index]
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
@@ -5132,7 +5148,7 @@ def plot_scatter(options, radar, icois, fname):
     ni = radarTH.shape[0]
     nj = radarTH.shape[1]
     for i in range(ni):
-        rho_h = radar.fields['RHOHV']['data'][start_index:end_index][i,:]
+        rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
         zh_h  = radarTH[i,:].copy()
         for j in range(nj):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
