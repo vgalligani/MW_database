@@ -1989,7 +1989,6 @@ def make_pseudoRHISfromGrid_DOW7(gridded_radar, radar, azi_oi, titlecois, xlims_
     plt.rcParams['font.serif'] = ['Helvetica']
     THname = 'DBZHCC' 
     TVname = 'ZDRC'
-    breakpoint()
     start_index = radar.sweep_start_ray_index['data']
     end_index   = radar.sweep_end_ray_index['data']
     lats        = radar.gate_latitude['data']
