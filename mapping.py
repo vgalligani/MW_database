@@ -1828,6 +1828,89 @@ def calc_PCTs(TB_s1):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+def check_transec_CSPR(radar, test_transect, lon_pf, lat_pf, options):
+	
+    nlev  = 0  
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[13,12])
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats = radar.gate_latitude['data'][start_index:end_index]
+    lons = radar.gate_longitude['data'][start_index:end_index]
+    pcm1 = axes.pcolormesh(lons, lats, radar.fields['corrected_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    axes.grid()
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    TransectNo = np.nanmin(np.asarray(abs(azimuths-test_transect)<=0.5).nonzero())
+    lon_transect  = lons[start_index:end_index][TransectNo,:]
+    lat_transect    = lats[start_index:end_index][TransectNo,:]
+    plt.plot(lon_transect, lat_transect, '-k')	
+    plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+    for iPF in range(len(lat_pf)):
+        plt.plot(lon_pf[iPF], lat_pf[iPF], marker='*', markersize=40, markerfacecolor="None",
+            markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center') 
+
+    # read 
+    f = h5py.File( options['gmi_dir']+options['gfile'], 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    for j in range(lon_gmi.shape[1]):
+        tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+        tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
+        lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+        lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
+        lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
+        lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
+    PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
+    CS = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 225], colors=(['black', 'gray']), linewidths=1.5)
+    labels_cont = ['GMI 200K contour', 'GMI 225K contour']
+    for i in range(len(labels_cont)):
+        CS.collections[i].set_label(labels_cont[i])
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+        plt.legend() 
+    
+    fig.savefig(options['fig_dir']+'PPI_transect_'+'azi'+str(test_transect)+'.png', dpi=300,transparent=False)   
+    return 
+
+
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def check_transec(radar, test_transect, lon_pf, lat_pf, options):
 	
@@ -3642,27 +3725,22 @@ def plot_rhi_CSPR2(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, fr
     HIDHID = np.argmax(scores, axis=0) + 1 
     radar.add_field_like('copol_correlation_coeff','HID', HIDHID, replace_existing=True)
 	
+    files_list = radar.fixed_angle['data']
     lats        = radar.gate_latitude['data']
     lons        = radar.gate_longitude['data']
-    # En verdad buscar azimuth no transecta ... 
-    azimuths    = radar.azimuth['data']
-    # ojo que esto no se si aplica ... 
-    #TransectNo = test_transect
     for nlev in range(len(files_list)):
-	fig = plt.figure()
-  	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    	start_index = radar.sweep_start_ray_index['data'][nlev]
-    	end_index   = radar.sweep_end_ray_index['data'][nlev]
-	plt.pcolormesh(lons[start_index:end_index], lats[start_index:end_index], radar.fields['corrected_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
-	cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-	cbar.cmap.set_under(under)
-	#
-	#-EJEMPLO de azimuth
-	azimuths = radar.azimuth['data'][start_index:end_index]
-	filas = np.asarray(abs(azimuths-test_transect)<=0.1).nonzero()
-        lon_transect[nlev,:]     = lons[start_index:end_index][filas,:]
-        lat_transect[nlev,:]     = lats[start_index:end_index][filas,:]
-	plt.plot(lon_transect[nlev,:], lat_transect[nlev,:], '-k')
+        fig = plt.figure()
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        pcm1 = plt.pcolormesh(lons[start_index:end_index], lats[start_index:end_index], radar.fields['corrected_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        azimuths = radar.azimuth['data'][start_index:end_index]
+        TransectNo = np.nanmin(np.asarray(abs(azimuths-test_transect)<=0.5).nonzero())
+        lon_transect[nlev,:]     = lons[start_index:end_index][TransectNo,:]
+        lat_transect[nlev,:]     = lats[start_index:end_index][TransectNo,:]
+        plt.plot(lon_transect[nlev,:], lat_transect[nlev,:], '-k')	
         #
         gateZ    = radar.gate_z['data'][start_index:end_index]
         gateX    = radar.gate_x['data'][start_index:end_index]
@@ -6113,7 +6191,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         plot_HID_PPI_CSPR2(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
 	#radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         for ic in range(len(xlims_xlims_input)): 
-            check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
+            check_transec_CSPR(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_CSPR2(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options, tfield_ref, alt_ref)
         grided  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),  
 	(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
@@ -6218,7 +6296,7 @@ def main():
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
      	   'icoi_PHAIL': 3, 'radar_name':'CSPR2'}
     icois_input  = [6,6] 
-    azimuths_oi  = [208,225]
+    azimuths_oi  = [30,19]
     labels_PHAIL = ['6[Phail = 0.653]','6[Phail = 0.653]'] 
     xlims_xlims_input  = [100, 100] 
     xlims_mins_input  = [0, 0]		
