@@ -2214,10 +2214,14 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     azimuths    = radar.azimuth['data'][start_index:end_index]
 
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[13,12])
-
+    
     for iz in range(len(azi_oi)):
         target_azimuth = azimuths[azi_oi[iz]]
-        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()	
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
+        if options['radar_name'] == 'CSPR2':
+            del filas
+	    target_azimuth = azimuths[options['alternate_azi'][iz]]
+            filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()			
         grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
         grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
         grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
@@ -6360,16 +6364,16 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         plot_HID_PPI_CSPR2(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI_CSPR2(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI_CSPR2(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-	radar_stacked = stack_ppis_CSPR(radar,  options, freezing_lev, radar_T, tfield_ref, alt_ref)
+	#radar_stacked = stack_ppis_CSPR(radar,  options, freezing_lev, radar_T, tfield_ref, alt_ref)
         #for ic in range(len(xlims_xlims_input)): 
         #    check_transec_CSPR(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
         #    plot_rhi_CSPR2(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options, tfield_ref, alt_ref)
-        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),  
+        grided  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),  
 	(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
               np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
-        make_pseudoRHISfromGrid_DOW7(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
-        HID_priority2D = get_prioritymap(options, radar, grided)
+        make_pseudoRHISfromGrid(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+        #HID_priority2D = get_prioritymap(options, radar, grided)
 	
     else: 
         radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
@@ -6465,7 +6469,7 @@ def main():
     	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-     	   'icoi_PHAIL': 3, 'radar_name':'CSPR2'}
+     	   'icoi_PHAIL': 3, 'radar_name':'CSPR2', 'alternate_azi':[210, 220]}
     icois_input  = [6,6] 
     azimuths_oi  = [30,19]
     labels_PHAIL = ['6[Phail = 0.653]','6[Phail = 0.653]'] 
