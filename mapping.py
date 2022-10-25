@@ -3189,6 +3189,178 @@ def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, al
     return radar_stack
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------	
+#------------------------------------------------------------------------------
+def stack_ppis_CSPR(radar, options, freezing_lev, radar_T, tfield_ref, alt_ref): 
+
+    #- HERE MAKE PPIS SIMILAR TO RMA1S ... ? to achive the gridded field ... 
+    #- Radar sweep
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]	
+    lats0        = radar.gate_latitude['data'][start_index:end_index]
+    lons0        = radar.gate_longitude['data'][start_index:end_index]
+    files_list =  radar.fixed_angle['data']         
+    #
+    Ze     = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); Ze[:]=np.nan
+    ZDR    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); ZDR[:]=np.nan
+    lon    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lon[:]=np.nan
+    lat    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lat[:]=np.nan
+    RHO    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); RHO[:]=np.nan
+    PHIDP  = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); PHIDP[:]=np.nan
+    HID    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); HID[:]=np.nan
+    KDP    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); KDP[:]=np.nan
+    approx_altitude = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); approx_altitude[:]=np.nan
+    alt_43aproox    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); alt_43aproox[:]=np.nan
+    #
+    gate_range      = np.zeros( [len(files_list), lats0.shape[1] ]); gate_range[:]=np.nan
+    azy   = np.zeros( [len(files_list), lats0.shape[0] ]); azy[:]=np.nan
+    fixed_angle     = np.zeros( [len(files_list)] ); fixed_angle[:]=np.nan
+    #
+    nlev = 0
+    for file in files_list:
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]	
+        fixed_angle[nlev] = radar.fixed_angle['data'].data[nlev]
+        azy[nlev,:]  = radar.azimuth['data'][start_index:end_index]
+        azimuths     = radar.azimuth['data'][start_index:end_index]
+        ZHZH    = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+        ZDRZDR  = radar.fields['corrected_differential_reflectivity']['data'][start_index:end_index] 
+        RHORHO  = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
+        KDPKDP  = radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index]  	
+        PHIPHI  = radar.fields['filtered_corrected_differential_phase']['data'][start_index:end_index]   
+        #
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        dzh_  = radar.fields['corrected_reflectivity']['data'].copy()
+        dZDR  = radar.fields['corrected_differential_reflectivity']['data'].copy()
+        drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
+        dkdp_ = radar.fields['filtered_corrected_specific_diff_phase']['data'].copy()
+        dphi_ = radar.fields['filtered_corrected_differential_phase']['data'].copy()
+        # Filters
+        ni = dzh_.shape[0]
+        nj = dzh_.shape[1]
+        for i in range(ni):
+            rho_h = drho_[i,:]
+            zh_h = dzh_[i,:]
+            for j in range(nj):
+                if (rho_h[j]<0.7) or (zh_h[j]<30):
+                    dzh_[i,j]  = np.nan
+                    drho_[i,j]  = np.nan
+                    dkdp_[i,j]  = np.nan
+                    dphi_[i,j]  = np.nan
+        scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)            
+        HIDHID = np.argmax(scores, axis=0) + 1 
+        gateZ    = radar.gate_z['data']
+        gateX    = radar.gate_x['data']
+        gateY    = radar.gate_y['data']
+        gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+        #
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']	     
+        #------- aca hay que stack correctamente por azimuths? 
+        for TransectNo in range(lats0.shape[0]): 
+            [xgate, ygate, zgate]    = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], fixed_angle[nlev] );       
+            Ze[nlev,TransectNo,:]    = dzh_[TransectNo,:]
+            ZDR[nlev,TransectNo,:]   = dZDR[TransectNo,:]  
+            RHO[nlev,TransectNo,:]   = drho_[TransectNo,:]
+            PHIDP[nlev,TransectNo,:] = dphi_[TransectNo,:]
+            HID[nlev,TransectNo,:]   = HIDHID[TransectNo,:] 
+            KDP[nlev,TransectNo,:]   = dkdp_[TransectNo,:]
+            lon[nlev,TransectNo,:]   = lons[TransectNo,:]   
+            lat[nlev,TransectNo,:]   = lats[TransectNo,:] 
+
+        nlev = nlev + 1
+
+    # From https://arm-doe.github.io/pyart/notebooks/basic_ingest_using_test_radar_object.html	
+    radar_stack = pyart.testing.make_empty_ppi_radar(lat.shape[2], lat.shape[1], lat.shape[0])
+    # Start filling the radar attributes with variables in the dataset.
+    radar_stack.latitude['data']    = np.array([radar.latitude['data'][0]])
+    radar_stack.longitude['data']   = np.array([radar.longitude['data'][0]])
+    radar_stack.range['data']       = np.array( radar.range['data'][:] )
+    radar_stack.fixed_angle['data'] = np.array( fixed_angle )
+    azi_all = []
+    rays_per_sweep = []
+    raye_per_sweep = []
+    rayN = 0
+    elev = np.zeros( [azy.shape[0]*azy.shape[1]] ); elev[:]=np.nan  
+    for i in range(azy.shape[0]):
+        rays_per_sweep.append(rayN)
+        rayN = rayN + azy.shape[1]
+        raye_per_sweep.append(rayN-1)
+        for j in range(azy.shape[1]):
+            azi_all.append(  azy[i,j] ) 
+    ii = 0
+    for i in range(azy.shape[0]):
+        for j in range(azy.shape[1]):
+            elev[ii] = fixed_angle[i]
+            ii=ii+1
+    radar_stack.azimuth['data'] = np.array( azi_all ) 
+    radar_stack.sweep_number['data'] = np.array(  np.arange(0,nlev,1) )
+    radar_stack.sweep_start_ray_index['data'] = np.array( rays_per_sweep )
+    radar_stack.sweep_end_ray_index['data']   = np.array( raye_per_sweep )
+    radar_stack.altitude['data']        = [ radar.altitude['data'][0] ]
+    # elevation is theta too. 
+    radar_stack.elevation['data'] = elev
+    radar_stack.init_gate_altitude()
+    radar_stack.init_gate_longitude_latitude()
+
+    #plt.plot(radar_stack.gate_longitude['data'], radar_stack.gate_latitude['data'], 'ok') 
+    # Let's work on the field data, we will just do reflectivity for now, but any of the
+    # other fields can be done the same way and added as a key pair in the fields dict.
+    from pyart.config import get_metadata
+    Ze_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); Ze_all[:]=np.nan  
+    ZDR_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); ZDR_all[:]=np.nan  
+    RHOHV_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); RHOHV_all[:]=np.nan  
+    PHIDP_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); PHIDP_all[:]=np.nan  
+    KDP_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); KDP_all[:]=np.nan  
+    HID_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); HID_all[:]=np.nan  
+    ii = 0
+    for i in range(azy.shape[0]):
+        for j in range(Ze.shape[1]):
+            Ze_all[ii,:]    = Ze[i,j,:]
+            ZDR_all[ii,:]   = ZDR[i,j,:]
+            RHOHV_all[ii,:] = RHO[i,j,:]
+            PHIDP_all[ii,:] = PHIDP[i,j,:]
+            KDP_all[ii,:] = KDP[i,j,:]
+            HID_all[ii,:] = HID[i,j,:]
+            ii=ii+1
+
+    #- REFLECTIVITY 
+    ref_dict_ZH = get_metadata('DBZHCC')
+    ref_dict_ZH['data'] = np.array(Ze_all)
+
+    #- ZDR
+    ref_dict_ZDR = get_metadata('ZDRC')
+    ref_dict_ZDR['data'] = np.array(ZDR_all)
+
+    #- RHOHV
+    ref_dict_RHOHV = get_metadata('RHOHV')
+    ref_dict_RHOHV['data'] = np.array(RHOHV_all)
+
+    #- PHIDP
+    ref_dict_PHIDP = get_metadata('PHIDP')
+    ref_dict_PHIDP['data'] = np.array(PHIDP_all)
+
+    #- KDP
+    ref_dict_KDP = get_metadata('KDP')
+    ref_dict_KDP['data'] = np.array(KDP_all)
+
+    #- HID
+    ref_dict_HID = get_metadata('HID')
+    ref_dict_HID['data'] = np.array(HID_all)
+
+    radar_stack.fields = {'DBZHCC': ref_dict_ZH, 
+			  'ZDRC':   ref_dict_ZDR,
+			  'RHOHV':  ref_dict_RHOHV,
+			  'PHIDP':  ref_dict_PHIDP,
+			  'KDP':    ref_dict_KDP,
+			  'HID':    ref_dict_HID}
+
+
+
+    return radar_stack
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------	
+
 def plot_rhi_DOW7(radar, files_list, xlim_range1, xlim_range2, test_transect, ZDRoffset, freezing_lev, radar_T, options, tfield_ref, alt_ref):
 
     radar_name = options['radar_name']
@@ -3738,7 +3910,7 @@ def plot_rhi_CSPR2(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, fr
         azimuths = radar.azimuth['data'][start_index:end_index]
         TransectNo = np.nanmin(np.asarray(abs(azimuths-test_transect)<=0.5).nonzero())
         lon_transect[nlev,:]     = lons[start_index:end_index][TransectNo,:]
-        lat_transect[nlev,:]     = lats[start_index:end_index][TransectNo,:]
+        lat_transect[nlev,:]     = lats[start_index:end_index][TransectNo,:]      
         plt.plot(lon_transect[nlev,:], lat_transect[nlev,:], '-k')	
         #
         gateZ    = radar.gate_z['data'][start_index:end_index]
@@ -6188,11 +6360,11 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         plot_HID_PPI_CSPR2(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI_CSPR2(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI_CSPR2(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-	#radar_stacked = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
-        for ic in range(len(xlims_xlims_input)): 
-            check_transec_CSPR(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
-            plot_rhi_CSPR2(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options, tfield_ref, alt_ref)
-        grided  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),  
+	radar_stacked = stack_ppis_CSPR(radar,  options, freezing_lev, radar_T, tfield_ref, alt_ref)
+        #for ic in range(len(xlims_xlims_input)): 
+        #    check_transec_CSPR(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
+        #    plot_rhi_CSPR2(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options, tfield_ref, alt_ref)
+        grided  = pyart.map.grid_from_radars(radar_stacked, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),  
 	(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), 
               np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
         gc.collect()
@@ -6297,7 +6469,7 @@ def main():
     icois_input  = [6,6] 
     azimuths_oi  = [30,19]
     labels_PHAIL = ['6[Phail = 0.653]','6[Phail = 0.653]'] 
-    xlims_xlims_input  = [100, 100] 
+    xlims_xlims_input  = [80, 80] 
     xlims_mins_input  = [0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 		
