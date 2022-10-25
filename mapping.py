@@ -3634,7 +3634,7 @@ def plot_rhi_CSPR2(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, fr
          for j in range(nj):
              if (rho_h[j]<0.7) or (zh_h[j]<30):
                   dzh_[i,j]  = np.nan
-                  dzv_[i,j]  = np.nan
+                  dZDR[i,j]  = np.nan
                   drho_[i,j]  = np.nan
                   dkdp_[i,j]  = np.nan
     scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], 
@@ -3647,12 +3647,22 @@ def plot_rhi_CSPR2(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, fr
     # En verdad buscar azimuth no transecta ... 
     azimuths    = radar.azimuth['data']
     # ojo que esto no se si aplica ... 
-    TransectNo = test_transect
+    #TransectNo = test_transect
     for nlev in range(len(files_list)):
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lon_transect[nlev,:]     = lons[start_index:end_index][TransectNo,:]
-        lat_transect[nlev,:]     = lats[start_index:end_index][TransectNo,:]
+	fig = plt.figure()
+  	[units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    	start_index = radar.sweep_start_ray_index['data'][nlev]
+    	end_index   = radar.sweep_end_ray_index['data'][nlev]
+	plt.pcolormesh(lons[start_index:end_index], lats[start_index:end_index], radar.fields['corrected_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+	cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+	cbar.cmap.set_under(under)
+	#
+	#-EJEMPLO de azimuth
+	azimuths = radar.azimuth['data'][start_index:end_index]
+	filas = np.asarray(abs(azimuths-test_transect)<=0.1).nonzero()
+        lon_transect[nlev,:]     = lons[start_index:end_index][filas,:]
+        lat_transect[nlev,:]     = lats[start_index:end_index][filas,:]
+	plt.plot(lon_transect[nlev,:], lat_transect[nlev,:], '-k')
         #
         gateZ    = radar.gate_z['data'][start_index:end_index]
         gateX    = radar.gate_x['data'][start_index:end_index]
