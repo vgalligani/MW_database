@@ -5622,7 +5622,7 @@ def visual_coi_identification(options, radar, fname):
     S1_sub_lon  = lon_gmi.copy()
     S1_sub_tb = tb_s1_gmi.copy()
 
-    idx1 = (lat_gmi>=options['ylim_min']-15) & (lat_gmi<=options['ylim_max']+15) & (lon_gmi>=options['xlim_min']-15) & (lon_gmi<=options['xlim_max']+15)
+    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
 
     S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
     S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
@@ -6798,7 +6798,7 @@ def main_RMA5_20200815():
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
 	   'icoi_PHAIL': 3, 'radar_name':'RMA5','alternate_azi':[331, 335, 50]}
-    icois_input  = [8,8,8] 
+    icois_input  = [7,7,7] 
     azimuths_oi  = [331,335, 50]
     labels_PHAIL = ['[Phail = 0.725]','[Phail = 0.725]', '[]'] 
     xlims_xlims_input  = [190, 190, 150] 
