@@ -2564,6 +2564,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]  
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
             HIDHID  =  radar.fields['HID']['data'][start_index:end_index]    
+            PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
 	
         elif radar_name == 'RMA3':
             if 'TH' in radar.fields.keys():
