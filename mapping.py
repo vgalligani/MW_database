@@ -2205,7 +2205,10 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
            PHIname = 'filtered_corrected_differential_phase'       
            KDPname = 'filtered_corrected_specific_diff_phase'
            THname =  'corrected_reflectivity'
-
+    elif 'DBZH' in radar.fields.keys():        
+           THname = 'DBZH'
+           KDPname='corrKDP'
+	
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -2537,7 +2540,10 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
                 ZDRZDR = ZHZH-TV   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]    
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
-
+            PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
+            KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
+            HIDHID  =  radar.fields['HID']['data'][start_index:end_index]    
+	
         elif radar_name == 'RMA4':
             if 'TH' in radar.fields.keys():
                 ZHZH       = radar.fields['TH']['data'][start_index:end_index]
@@ -2581,14 +2587,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
             PHIPHI  = radar.fields['corrPHIDP']['data'][start_index:end_index]       
             KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
             HIDHID  =  radar.fields['HID']['data'][start_index:end_index]       
-
-        elif radar_name == 'RMA5':
-            ZHZH       = radar.fields['DBZH']['data'][start_index:end_index]
-            if 'DBZV' in radar.fields.keys(): 
-                TV     = radar.fields['DBZV']['data'][start_index:end_index]     
-                ZDRZDR = ZHZH-TV   
-            RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]    
-            KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
+ 
 
         elif radar_name == 'RMA4':
             if 'TH' in radar.fields.keys():
@@ -4453,31 +4452,22 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan 
-
-
+    phiphi[:,0:20]  = np.nan 
+    rho[:,0:20]    = np.nan 
+	
     dphi = despeckle_phidp(phiphi, rho, zh)
-    uphi_f = unfold_phidp(dphi, rho, diferencia) 
-	
-    #for i in range(ni): 
-    #    rho_h = rho[i,:]
-    #    zh_h = zh[i,:]
-    #    for j in range(nj):
-    #        if (rho_h[j]<0.7) or (zh_h[j]<30):
-    #            uphi_f[i,j]  = np.nan 
-	
-    uphi_accum = [] 	
-    uphi_i = uphi_f.copy()
+    uphi_i = unfold_phidp(dphi, rho, diferencia) 
     uphi_accum = [] 	
     for i in range(ni):
         phi_h = uphi_i[i,:]
         for j in range(1,nj-1,1):
             if phi_h[j] <= np.nanmax(np.fmax.accumulate(phi_h[0:j])): 
               	uphi_i[i,j] = uphi_i[i,j-1] 
-		
+
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
-    phi_cor = subtract_sys_phase(uphi, sys_phase) #+ 360
+    phi_cor = subtract_sys_phase(uphi, sys_phase)
     # phi_cor[rho<0.7] = np.nan
     phi_cor[phi_cor < 0] = np.nan #antes <= ? 
     phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
@@ -4486,7 +4476,7 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     for i in range(ni):
         phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
                                             window='flat')
-    return dphi, uphi_f, phi_cor
+    return dphi, uphi_i, phi_cor
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
