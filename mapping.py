@@ -1353,6 +1353,11 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         lons        = radar.gate_longitude['data']
         ZH          = radar.fields[reflectivity_name]['data']
 	
+    elif options['radar_name'] == 'RMA5':
+        reflectivity_name = 'DBZH'   
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        ZH          = radar.fields[reflectivity_name]['data']	
 	
     s_sizes=450
     user = platform.system()
@@ -5658,6 +5663,8 @@ def visual_coi_identification(options, radar, fname):
         radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
     elif 'attenuation_corrected_reflectivity_h' in radar.fields.keys(): 
         radarTH = radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
+    elif 'DBZH' in radar.fields.keys(): 
+        radarTH = radar.fields['DBZH']['data'][start_index:end_index]	
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
@@ -6125,7 +6132,11 @@ def summary_radar_obs(radar, fname, options):
             THNAME= 'corrected_reflectivity'
             pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['corrected_reflectivity']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
             RHOHVname='copol_correlation_coeff'
-
+        elif 'DBZH' in radar.fields.keys():        
+            THNAME= 'DBZH'
+            pcm1 = axes[0].pcolormesh(lons, lats, radar.fields['DBZH']['data'][start_index:end_index], cmap=cmap, vmin=vmin, vmax=vmax)
+            RHOHVname='RHOHV'
+	
         plt.colorbar(pcm1, ax=axes[0])
         axes[0].set_xlim([options['x_supermin'], options['x_supermax']])	
         axes[0].set_ylim([options['y_supermin'], options['y_supermax']])	
