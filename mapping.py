@@ -2207,8 +2207,10 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
            THname =  'corrected_reflectivity'
     elif 'DBZH' in radar.fields.keys():        
            THname = 'DBZH'
-           KDPname='corrKDP'
-	
+           KDPname ='corrKDP'
+           TVname   = 'DBZV'  
+           TVname   = 'RHOHV'  
+		
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -2217,21 +2219,20 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     azimuths    = radar.azimuth['data'][start_index:end_index]
 
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[13,12])
-    
+
     for iz in range(len(azi_oi)):
-            target_azimuth = azimuths[options['alternate_azi'][iz]]
+        target_azimuth = azimuths[options['alternate_azi'][iz]]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
         if options['radar_name'] == 'CSPR2':
             del filas
-	    target_azimuth = azimuths[options['alternate_azi'][iz]]
+            target_azimuth = azimuths[options['alternate_azi'][iz]]
             filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()			
         grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
         grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
         grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
         grid_TVTV  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
         grid_ZDR   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
-	
-	grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
+        grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
         grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
         grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
         grid_HID   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
@@ -2246,8 +2247,9 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             ([xloc], [yloc]) = np.where(c == np.min(c))	
             grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
             grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
-            #grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc
-            grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+            grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+            #grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+            grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
             grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
             grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
             grid_alt[:,i]   = gridded_radar.z['data'][:]
@@ -6779,11 +6781,11 @@ def main_RMA5_20200815():
 	    'y_supermin':-27, 'y_supermax':-25, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA5'}
+	   'icoi_PHAIL': 3, 'radar_name':'RMA5','alternate_azi':[331, 335, 50]}
     icois_input  = [1,3,4] 
-    azimuths_oi  = [50,80,100]
-    labels_PHAIL = ['1[Phail = 0.547]','3[Phail = 0.725]','4'] 
-    xlims_xlims_input  = [100, 100, 100] 
+    azimuths_oi  = [331,335, 50]
+    labels_PHAIL = ['[Phail = 0.725]','[Phail = 0.725]', ''] 
+    xlims_xlims_input  = [190, 190, 150] 
     xlims_mins_input  = [0, 0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
