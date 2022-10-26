@@ -5804,7 +5804,7 @@ def plot_scatter(options, radar, icois, fname):
     elif 'DBZH' in radar.fields.keys():        
        THNAME= 'DBZH'	
        RHOHVname = 'RHOHV'
-       TVNAME= 'DBZH'	
+       TVNAME= 'DBZV'	
 
             #ZHZH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
             #TH   = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
@@ -5835,7 +5835,8 @@ def plot_scatter(options, radar, icois, fname):
         radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-options['ZDRoffset']
     elif 'DBZH' in radar.fields.keys():
         radarTH = radar.fields['DBZH']['data'][start_index:end_index]
-    #elif 'reflectivity' in radar.fields.keys(): 
+        radarZDR = radar.fields['DBZH']['data'][start_index:end_index]-radar.fields['DBZV']['data'][start_index:end_index]
+	#elif 'reflectivity' in radar.fields.keys(): 
     #    radarTH = radar.fields['DBZH']['data'][start_index:end_index]
     elif 'DBZHCC' in radar.fields.keys(): 
         radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
@@ -5843,9 +5844,7 @@ def plot_scatter(options, radar, icois, fname):
     elif 'corrected_reflectivity' in radar.fields.keys(): 
         radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
         radarZDR = radar.fields[ZDRname]['data'][start_index:end_index]
-    elif 'DBZH' in radar.fields.keys():        
-        radarTH = radar.fields['DBZH']['data'][start_index:end_index]
-        radarZDR = radar.fields['DBZH']['data'][start_index:end_index]-radar.fields['DBZV']['data'][start_index:end_index]
+
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
