@@ -1358,6 +1358,15 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         lats        = radar.gate_latitude['data']
         lons        = radar.gate_longitude['data']
         ZH          = radar.fields[reflectivity_name]['data']	
+
+    elif options['radar_name'] == 'RMA4':
+        reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
 	
     s_sizes=450
     user = platform.system()
@@ -6844,9 +6853,9 @@ def main_RMA4_20180209():
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
 	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[190, 225, 245]}
-    icois_input  = [1,1,1] 
+    icois_input  = [10,17,19] 
     azimuths_oi  = [190,225,245]
-    labels_PHAIL = ['3[Phail = 0.762]','',''] 
+    labels_PHAIL = ['','[Phail = 0.762]','[Phail = 0.762]'] 
     xlims_xlims_input  = [150,150,150] 
     xlims_mins_input  = [0,0,0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
