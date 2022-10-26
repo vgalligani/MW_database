@@ -6862,16 +6862,59 @@ def main_RMA4_20180209():
 	
     return
 	
+def main_RMA4_20181001(): 
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20181001: P(hail) = 0.965
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2018	10	01	09	53	 -29.61	 -57.16	0.521		280.5028	298.9543	252.9822	192.1327	 99.2545	199.7923	151.8300	1
+
+    lon_pfs  = [-57.16]
+    lat_pfs  = [-29.61]
+    time_pfs = ['0953UTC']
+    phail    = [0.521]
+    MIN85PCT = [99.25]
+    MIN37PCT = [192.13]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [280.50, 281.36, 252.98, 192.1327, 99.25, 199.79, 151.83]
+    rfile    = 'cfrad.20181001_095450.0000_to_20181001_100038.0000_RMA4_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20181001-S093732-E111006.026085.V05A.HDF5' 
+    era5_file = '20181001_09_RMA4.grib' 
+    # REPORTES TWITTER ... 
+    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
+    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
+    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+	    'ZDRoffset': 0,  # >>>FIND!! 
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
+	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181001_RMA4/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[190, 225, 245]}
+    icois_input  = [10,17,19] 
+    azimuths_oi  = [190,225,245]
+    labels_PHAIL = ['','[Phail = 0.762]','[Phail = 0.762]'] 
+    xlims_xlims_input  = [150,150,150] 
+    xlims_mins_input  = [0,0,0]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+	
+    return
+
+
+
+def main_RMA4_20181031(): 
 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20181031: P(hail) = 0.931
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    return
+
 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20181215: P(hail) = 0.747
@@ -6910,128 +6953,4 @@ def main_RMA4_20180209():
 	
 	
 	
-	
-	
-	
-	
-	
-		
-		
-    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile) 
-    #------
-    # copy PHIDP for sysphase
-    PHIDP_nanMasked = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nanMasked[np.where(PHIDP_nanMasked==radar.fields['PHIDP']['data'].fill_value)] = 0
-    radar.add_field_like('PHIDP', 'PHIDP_unmasked', PHIDP_nanMasked)
-    sys_phase  = pyart.correct.phase_proc.det_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
-							ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP_unmasked')
-    # replace PHIDP w/ np.nan
-    PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
-    radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
-    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
-		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)    
-
-    #------------------------------------------------------------------------------
-    #-----------------------------------------
-    # calcular todo junto (sys_phase y correcciones con mismo campo!) 
-	
-    start_index = radar.sweep_start_ray_index['data'][0]
-    end_index   = radar.sweep_end_ray_index['data'][0]
-    fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True, figsize=[14,7])
-    pc0 = axes[0].pcolormesh(lons,lats, PHIDP_nans[start_index:end_index]); plt.colorbar(pc0, ax=axes[0]); axes[0].set_title('limpio para calcular sys phase')
-    pc1 = axes[1].pcolormesh(lons,lats, rhv[start_index:end_index], vmin=0.7, vmax=1.0); plt.colorbar(pc1, ax=axes[1]); axes[1].set_title('RHOHV')
-    pc2 = axes[2].pcolormesh(lons,lats, PHIORIG[start_index:end_index]); plt.colorbar(pc2, ax=axes[2]); axes[2].set_title('dato crudo')
-
-    radar = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA3/'+rfile)
-    sys_phase = get_sys_phase_simple(radar)
-    # replace PHIDP w/ np.nan
-    PHIORIG = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
-    PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
-    rhv = radar.fields['RHOHV']['data'].copy()
-    z_h = radar.fields['TH']['data'].copy()
-    #PHIDP_nans = np.where( (rhv>0.7) & (z_h>30), PHIDP_nans, np.nan)
-    radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
-    # check corrections 
-    dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], 
-		radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)    
-
-    #-EJEMPLO de azimuth
-    azimuths = radar.azimuth['data'][start_index:end_index]
-    target_azimuth = azimuths[210]
-    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-    #-figure
-    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[14,7])
-    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['RHOHV']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
-    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['TH']['data'][start_index:end_index][filas,:]), '-r', label='ZH')
-    axes[0].legend()
-    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['PHIDP']['data'][start_index:end_index][filas,:]), 'or', label='obs. phidp')
-    axes[1].plot(radar.range['data']/1e3, np.ravel(dphi[start_index:end_index][filas,:]), '*b', label='despeckle phidp'); 
-    axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
-    #axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='magenta', label='phidp corrected');
-    #plt.plot(radar.range['data']/1e3, np.ravel(uphidp_2[filas,:]), color='k', label='uphidp2');
-    plt.legend()	
-
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-    # TESTING NLEV=0
-    nlev = 0 
-    start_index = radar.sweep_start_ray_index['data'][nlev]
-    end_index   = radar.sweep_end_ray_index['data'][nlev]
-    lats  = radar.gate_latitude['data'][start_index:end_index]
-    lons  = radar.gate_longitude['data'][start_index:end_index]
-    TH    = radar.fields['TH']['data'][start_index:end_index]
-    TV    = radar.fields['TV']['data'][start_index:end_index]
-    RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
-    PHIDP = radar.fields['PHIDP_unmasked']['data'][start_index:end_index]
-    plt.pcolormesh(lons,lats, PHIDP[start_index:end_index])
-    plt.contour(lons, lats, TH, [45], colors='k')
-    plt.colorbar()
-    #
-    # 	
-
-
-
-	
-	
-	
-	
-	
-    radar_rma1 = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'+'RMA1/'+'cfrad.20180208_205749.0000_to_20180208_210014.0000_RMA1_0201_03.nc' )
-    PHIDP_rma1 = radar_rma1.fields['PHIDP']['data']
-    start_index_rma1 = radar_rma1.sweep_start_ray_index['data'][nlev]
-    end_index_rma1   = radar_rma1.sweep_end_ray_index['data'][nlev]
-    lats_rma1  = radar_rma1.gate_latitude['data'][start_index:end_index]
-    lons_rma1  = radar_rma1.gate_longitude['data'][start_index:end_index]
-    plt.pcolormesh(lons,lats, PHIDP_rma1[start_index_rma1:end_index_rma1])
-	
-
-	
-    # GRAFICAR
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    plt.pcolormesh(lons, lats, TH, cmap=cmap, vmin=vmin, vmax=vmax)
-    plt.pcolormesh(lons, lats, TH.mask); plt.colorbar()
-    #- USAR NUEVAS MASCARAS!!!
-    radar = add_field_to_radar_object(radar.fields['RHOHV']['data'].data, radar, 'RHOHV_new', 
-                         'Cross correlation ratio (RHOHV)', 'cross_correlation_ratio_hv', 'RHOHV')
-		
-		
-
-
-
-
-
-
-    print(sys_phase)
 	
