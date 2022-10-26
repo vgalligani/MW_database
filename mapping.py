@@ -4458,15 +4458,16 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_f = unfold_phidp(dphi, rho, diferencia) 
 	
-    for i in range(ni):
-        rho_h = rho[i,:]
-        zh_h = zh[i,:]
-        for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
-                uphi_f[i,j]  = np.nan 
+    #for i in range(ni): 
+    #    rho_h = rho[i,:]
+    #    zh_h = zh[i,:]
+    #    for j in range(nj):
+    #        if (rho_h[j]<0.7) or (zh_h[j]<30):
+    #            uphi_f[i,j]  = np.nan 
 	
     uphi_accum = [] 	
     uphi_i = uphi_f.copy()
+    uphi_accum = [] 	
     for i in range(ni):
         phi_h = uphi_i[i,:]
         for j in range(1,nj-1,1):
