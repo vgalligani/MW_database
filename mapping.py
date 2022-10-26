@@ -5103,6 +5103,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     axes[1].plot(radar.range['data']/1e3, np.ravel(uphi[start_index:end_index][filas,:]), color='darkgreen', label='unfolded phidp');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]+sys_phase), color='magenta', label='phidp corrected');
     axes[1].plot(radar.range['data']/1e3, np.ravel(corr_phidp[start_index:end_index][filas,:]), color='purple', label='phidp corrected-sysphase');
+    axes[1].set_ylim([-5, 360])
     axes[1].legend()
     axes[2].plot(radar.range['data']/1e3, np.ravel(calculated_KDP[start_index:end_index][filas,:]), color='k', label='Calc. KDP');
     if 'KDP' in radar.fields.keys():  
@@ -6376,6 +6377,13 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         PHIORIG.mask = mask
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
 	
+    if options['radar_name'] == 'RMA4':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+	
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
@@ -6416,7 +6424,6 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         plot_HID_PPI(radar, options, 0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         plot_HID_PPI(radar, options, 2, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-        radar = correct_PHIDP_KDP(radar, options, nlev=1, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         for ic in range(len(xlims_xlims_input)):
             check_transec(radar, azimuths_oi[ic], lon_pfs, lat_pfs, options)
             plot_rhi_RMA(radar, xlims_mins_input[ic], xlims_xlims_input[ic], azimuths_oi[ic], options['ZDRoffset'], freezing_lev, radar_T, options)
@@ -6834,11 +6841,11 @@ def main_RMA4_20180209():
     # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
     reportes_granizo_twitterAPI_geo = []
     reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -26, 'ylim_max': -29.5, 
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 0,  # >>>FIND!! 
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
 	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
-	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-26, 'y_supermax':-29.5, 
+	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180209_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
