@@ -4476,7 +4476,7 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
-    phi_cor = subtract_sys_phase(uphi, sys_phase) + 360
+    phi_cor = subtract_sys_phase(uphi, sys_phase) #+ 360
     # phi_cor[rho<0.7] = np.nan
     phi_cor[phi_cor < 0] = np.nan #antes <= ? 
     phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
@@ -4904,8 +4904,6 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
         sys_phase = get_sys_phase_simple_dow7(radar)
     elif 'DBZH' in radar.fields.keys():
         sys_phase = get_sys_phase_simple(radar)	
-	
-    breakpoint()	
     # replace PHIDP w/ np.nan
     #PHIORIG = radar.fields['PHIDP']['data'].copy() 
     #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
@@ -4928,7 +4926,6 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
 					   method='lanczos_conv', skipna=True)	
     radar.add_field_like('RHOHV','corrKDP', calculated_KDP, replace_existing=True)
-
 
     # AGREGAR HID?
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
@@ -6362,7 +6359,13 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         mask[:] = False
         PHIORIG.mask = mask
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
-    	
+ 
+    if options['radar_name'] == 'RMA5':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
 	
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
@@ -6745,16 +6748,14 @@ def main_RMA5_20200815():
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
     #	2020	08	15	02	15	 -24.17	 -55.94	0.547		276.0569	284.5401	247.3784	192.5272	110.7962	196.9116	144.4400	1
     #	2020	08	15	02	15	 -25.28	 -54.11	0.725		273.2686	290.1380	241.5902	181.1631	101.1417	199.9028	108.2200	1
-    lon_pfs  = [ -55.94, -54.11 ]
-    lat_pfs  = [ -24.17, -25.28 ]
-    time_pfs = ['0215UTC','0215UTC']
-    phail    = [0.547,	0.725 ]
-    MIN85PCT = [110.80, 101.14]
-    MIN37PCT = [192.53, 181.16]
+    lon_pfs  = [ -54.11 ]
+    lat_pfs  = [ -25.28 ]
+    time_pfs = ['0215UTC']
+    phail    = [ 0.725 ]
+    MIN85PCT = [ 101.14]
+    MIN37PCT = [ 181.16]
     MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs_1  = [276.06, 247.38, 192.53, 110.80, 196.91, 144.44] 
-    MINPCTs_2  = [273.23, 241.59, 181.16, 101.14, 199.90, 108.22] 
-    MINPCTs = [MINPCTs_1, MINPCTs_2]
+    MINPCTs  = [273.23, 241.59, 181.16, 101.14, 199.90, 108.22] 
     rfile    = 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc' 
     gfile    = '1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
     era5_file = '20200815_02.grib'
