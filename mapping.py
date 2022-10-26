@@ -6842,12 +6842,12 @@ def main_RMA4_20180209():
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180209_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA4'}
-    icois_input  = [1] 
-    azimuths_oi  = [180]
-    labels_PHAIL = ['3[Phail = 0.762]'] 
-    xlims_xlims_input  = [150] 
-    xlims_mins_input  = [0]		
+	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[190, 225]}
+    icois_input  = [1,1] 
+    azimuths_oi  = [190,225]
+    labels_PHAIL = ['3[Phail = 0.762]',''] 
+    xlims_xlims_input  = [150,150] 
+    xlims_mins_input  = [0,0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
     return
