@@ -5622,7 +5622,7 @@ def visual_coi_identification(options, radar, fname):
     S1_sub_lon  = lon_gmi.copy()
     S1_sub_tb = tb_s1_gmi.copy()
 
-    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+    idx1 = (lat_gmi>=options['ylim_min']-15) & (lat_gmi<=options['ylim_max']+15) & (lon_gmi>=options['xlim_min']-15) & (lon_gmi<=options['xlim_max']+15)
 
     S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
     S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
@@ -5681,7 +5681,7 @@ def visual_coi_identification(options, radar, fname):
     contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])# , colors=(['r']), linewidths=1.5);
     contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:])# , [200], colors=(['k']), linewidths=1.5);
 
-    axes.set_xlim([-70,-60]); axes.set_ylim([-40,-20])
+    axes.set_xlim([-70,-50]); axes.set_ylim([-40,-20])
 
     # Find the contour of intere
     for item in contorno89.collections:
@@ -5712,8 +5712,8 @@ def visual_coi_identification(options, radar, fname):
         inds = hull_path.contains_points(datapts)
         
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
-        plt.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
-        plt.plot(lon_gmi[:,:][idx1][inds], lat_gmi[:,:][idx1][inds],'x' ); 
+        plt.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-50]); plt.ylim([-40,-20]); 
+        plt.plot(lon_gmi[:,:][idx1][inds], lat_gmi[:,:][idx1][inds],'xm','markersize'=20 ); 
         plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
         plt.title(str(item))
     return
@@ -5801,7 +5801,10 @@ def plot_scatter(options, radar, icois, fname):
        THNAME= 'corrected_reflectivity'	
        RHOHVname = 'copol_correlation_coeff'
        ZDRname = 'corrected_differential_reflectivity'
-
+    elif 'DBZH' in radar.fields.keys():        
+       THNAME= 'DBZH'	
+       RHOHVname = 'RHOHV'
+       TVNAME= 'DBZH'	
 
             #ZHZH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
             #TH   = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
@@ -5840,6 +5843,9 @@ def plot_scatter(options, radar, icois, fname):
     elif 'corrected_reflectivity' in radar.fields.keys(): 
         radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
         radarZDR = radar.fields[ZDRname]['data'][start_index:end_index]
+    elif 'DBZH' in radar.fields.keys():        
+        radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+        radarZDR = radar.fields['DBZH']['data'][start_index:end_index]-radar.fields['DBZV']['data'][start_index:end_index]
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
     cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
@@ -6793,9 +6799,9 @@ def main_RMA5_20200815():
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
 	   'icoi_PHAIL': 3, 'radar_name':'RMA5','alternate_azi':[331, 335, 50]}
-    icois_input  = [1,3,4] 
+    icois_input  = [8,8,8] 
     azimuths_oi  = [331,335, 50]
-    labels_PHAIL = ['[Phail = 0.725]','[Phail = 0.725]', ''] 
+    labels_PHAIL = ['[Phail = 0.725]','[Phail = 0.725]', '[]'] 
     xlims_xlims_input  = [190, 190, 150] 
     xlims_mins_input  = [0, 0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
