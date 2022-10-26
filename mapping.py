@@ -2216,7 +2216,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[13,12])
     
     for iz in range(len(azi_oi)):
-        target_azimuth = azimuths[azi_oi[iz]]
+            target_azimuth = azimuths[options['alternate_azi'][iz]]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
         if options['radar_name'] == 'CSPR2':
             del filas
@@ -2227,6 +2227,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
         grid_TVTV  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
         grid_ZDR   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
+	
 	grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
         grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
         grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
@@ -2535,6 +2536,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
                 TV     = radar.fields['DBZV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]    
+            KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
 
         elif radar_name == 'RMA4':
             if 'TH' in radar.fields.keys():
@@ -2586,6 +2588,7 @@ def plot_rhi_RMA(radar, xlim_range1, xlim_range2, test_transect, ZDRoffset, free
                 TV     = radar.fields['DBZV']['data'][start_index:end_index]     
                 ZDRZDR = ZHZH-TV   
             RHORHO  = radar.fields['RHOHV']['data'][start_index:end_index]    
+            KDPKDP  = radar.fields['corrKDP']['data'][start_index:end_index]       
 
         elif radar_name == 'RMA4':
             if 'TH' in radar.fields.keys():
@@ -4693,8 +4696,14 @@ def get_sys_phase_simple(radar):
             RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
             PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
             PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan		
+        elif 'DBZH' in radar.fields.keys():
+            TH    = radar.fields['DBZH']['data'][start_index:end_index]
+            TV    = radar.fields['DBZV']['data'][start_index:end_index]
+            RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+            PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+            PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan	
         rhv = RHOHV.copy()
-        z_h = TH.copy()
+	z_h = TH.copy()
         PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
         # por cada radial encontrar first non nan value: 
         phases = []
@@ -4893,6 +4902,10 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
         sys_phase = get_sys_phase_simple(radar)
     elif 'DBZHCC' in radar.fields.keys():
         sys_phase = get_sys_phase_simple_dow7(radar)
+    elif 'DBZH' in radar.fields.keys():
+        sys_phase = get_sys_phase_simple(radar)	
+	
+    breakpoint()	
     # replace PHIDP w/ np.nan
     #PHIORIG = radar.fields['PHIDP']['data'].copy() 
     #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
@@ -4905,6 +4918,9 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
         dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
     elif 'DBZHCC' in radar.fields.keys():
         dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['DBZHCC']['data'], sys_phase, 280)
+    elif 'DBZH' in radar.fields.keys():
+        dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['DBZH']['data'], sys_phase, 280)
+    #------------	
     #------------	
     radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
 
@@ -4923,6 +4939,9 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     elif 'DBZHCC' in radar.fields.keys():
         dzh_  = radar.fields['DBZHCC']['data'].copy()
         dzv_  = radar.fields['DBZVCC']['data'].copy()
+    elif 'DBZH' in radar.fields.keys():
+        dzh_  = radar.fields['DBZH']['data'].copy()
+        dzv_  = radar.fields['DBZV']['data'].copy()	
     drho_ = radar.fields['RHOHV']['data'].copy()
     dkdp_ = radar.fields['corrKDP']['data'].copy()
 
@@ -5024,6 +5043,11 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
         THH =  radar.fields['DBZHCC']['data'][start_index:end_index]
         pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'][start_index:end_index], cmap=cmap, 
 			  vmin=vmin, vmax=vmax)		
+    elif 'DBZH' in radar.fields.keys():
+        ZHFIELD = 'DBZH'
+        THH =  radar.fields['DBZH']['data'][start_index:end_index]
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['DBZH']['data'][start_index:end_index], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)	
     axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
     axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
@@ -5451,8 +5475,8 @@ def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfiel
     axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
     axes[2].set_xlim([0,100])
     axes[0].set_xlim([0,100])
-	fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
-    #plt.close()
+    fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
+#plt.close()
 
 
 
@@ -6436,7 +6460,7 @@ def firstNonNan(listfloats):
 # ACA EMPIEZA EL MAIN! 
 #------------------------------------------------------------------------------	
 
-def main(): 
+def main_20181111(): 
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
@@ -6476,14 +6500,10 @@ def main():
     xlims_xlims_input  = [80, 80] 
     xlims_mins_input  = [0, 0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-		
-	
-
-	
+			
     return
 
 def old_main(): 
-	
 	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
@@ -6524,7 +6544,6 @@ def old_main():
     xlims_xlims_input  = [60, 100, 150] 
     xlims_mins_input  = [10, 40, 60]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO MSC RMA3 - 20190305: P(hail) = 0.737 
@@ -6710,16 +6729,14 @@ def old_main():
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 		
 	
-	
-	
     return
 	
 
 
-
-
-
-
+def main_RMA5_20200815(): 
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 	
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
@@ -6728,6 +6745,59 @@ def old_main():
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
     #	2020	08	15	02	15	 -24.17	 -55.94	0.547		276.0569	284.5401	247.3784	192.5272	110.7962	196.9116	144.4400	1
     #	2020	08	15	02	15	 -25.28	 -54.11	0.725		273.2686	290.1380	241.5902	181.1631	101.1417	199.9028	108.2200	1
+    lon_pfs  = [ -55.94, -54.11 ]
+    lat_pfs  = [ -24.17, -25.28 ]
+    time_pfs = ['0215UTC','0215UTC']
+    phail    = [0.547,	0.725 ]
+    MIN85PCT = [110.80, 101.14]
+    MIN37PCT = [192.53, 181.16]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs_1  = [276.06, 247.38, 192.53, 110.80, 196.91, 144.44] 
+    MINPCTs_2  = [273.23, 241.59, 181.16, 101.14, 199.90, 108.22] 
+    MINPCTs = [MINPCTs_1, MINPCTs_2]
+    rfile    = 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
+    era5_file = '20200815_02.grib'
+    # REPORTES TWITTER ... el 0814 aprox. 23HL
+    # https://www.facebook.com/watch/?v=966163750473561 
+    # https://revistacodigos.com/fuerte-temporal-de-lluvias-y-granizo-azoto-a-distintas-localidades-de-misiones/ 
+    # https://www.elterritorio.com.ar/noticias/2020/08/14/672043-la-tormenta-con-granizo-afecto-a-varios-barrios-de-jardin-america
+    # WANDA (-25.93, -54.57)
+    # Jardin de america (-27.03, -55.24)
+    # San vicente (-35.03, -58.43)
+    # Salto Encantado (-27.06, -54.83)
+    # Posadas (-27.39, -55.93)
+    # Puerto Leoni (-26.98, -55.16)
+    # Colonia Polana (-26.98, -55.32)
+    # El Dorado (-26.41, -54.66)
+    #reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24], [-35.03, -58.43], [-27.06, -54.83], [-27.39, -55.93], [-26.98, -55.16], 
+    #				      [-26.98, -55.32], [-26.41, -54.66]]
+    #    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America', 'San Vicente', 'Salto Encantado','Posadas','Puerto Leoni',
+    #					'Colonia Polana','El Dorado']
+    # En horas de la tarde/noche: Jardin de america. 
+    # https://www.primeraedicion.com.ar/nota/100320388/temporal-de-granizo-afecto-a-la-zona-centro-de-misiones/: 
+    # El evento climático tuvo a su vez, gran actividad eléctrica. En Jardín América contaron que en los barrios 162 Viviendas, 
+    # El Ceibo y Lomas de Jardín los hielos eran del tamaño de una pelota de tenis. 
+    # En las localidades aledañas como Leoni e Hipólito Yrigoyen también hubo reportes de daños.
+    reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24]] 
+    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America']
+    opts = {'xlim_min': -55.0, 'xlim_max': -52.0, 'ylim_min': -27.5, 'ylim_max': -25.0, 
+	    'ZDRoffset': 2, 'ylim_max_zoom':-25.0, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 50, 'x_supermin':-55, 'x_supermax':-52,
+	    'y_supermin':-27, 'y_supermax':-25, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL': 3, 'radar_name':'RMA5'}
+    icois_input  = [1,3,4] 
+    azimuths_oi  = [50,80,100]
+    labels_PHAIL = ['1[Phail = 0.547]','3[Phail = 0.725]','4'] 
+    xlims_xlims_input  = [100, 100, 100] 
+    xlims_mins_input  = [0, 0, 0]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+	
+    return
+
+	
 	
 
 	
@@ -6735,7 +6805,37 @@ def old_main():
     # CASO RMA4 - 20180209: P(hail) = 0.762
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-
+    lon_pfs  = []
+    lat_pfs  = []
+    time_pfs = ['UTC']
+    phail    = []
+    MIN85PCT = []
+    MIN37PCT = []
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = [, , , , , ]
+    rfile    = '' 
+    gfile    = '' 
+    era5_file = '_hh_RMA1.grib'
+    # REPORTES TWITTER ... 
+    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
+    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
+    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
+    reportes_granizo_twitterAPI_geo = [[-31.49, -64.54], [-31.42, -64.50], [-31.42, -64.19]]
+    reportes_granizo_twitterAPI_meta = ['SAA (1930UTC)', 'VCP (1942UTC)', 'CDB (24UTC)']
+    opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
+	    'ZDRoffset': 4, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 210, 'x_supermin':-65, 'x_supermax':-64,
+	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL': 3, 'radar_name':'RMA5'}
+    icois_input  = [1,3,4] 
+    azimuths_oi  = [356,220,192]
+    labels_PHAIL = ['1','3[Phail = 0.534]','4'] 
+    xlims_xlims_input  = [60, 100, 150] 
+    xlims_mins_input  = [10, 40, 60]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+	
 	
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
