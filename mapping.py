@@ -5833,7 +5833,9 @@ def get_contour_info(contorno, icois, datapts_in):
         if ii == 2:
             inds_3   = concave_path.contains_points(datapts_in)
             TB_inds      = [inds_1, inds_2, inds_3]
-    
+        if ii == 3:
+            inds_4   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1, inds_2, inds_3, inds_4]   
 
     return TB_inds
 
@@ -5955,7 +5957,319 @@ def visual_coi_identification(options, radar, fname):
         plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
         plt.title(str(item))
     return
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#def plot_scatter(options, GMI_tbs1_37, GMI_tbs1_85, RN_inds, radar, icois): 
+def plot_scatter_4icois(options, radar, icois, fname):
 
+    # ojo que aca agarro los verdaderos PCTMIN, no los que me pasó Sarah B. que estan 
+    # ajustados a TMI footprints. 
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb = tb_s1_gmi.copy()
+
+    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+	
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
+		
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
+    ##------------------------------------------------------------------------------------------------
+    if 'TH' in radar.fields.keys():  
+       THNAME= 'TH'
+       RHOHVname = 'RHOHV'
+    elif 'DBZHCC' in radar.fields.keys():        
+       THNAME= 'DBZHCC'
+       RHOHVname = 'RHOHV'
+    elif 'corrected_reflectivity' in radar.fields.keys():        
+       THNAME= 'corrected_reflectivity'	
+       RHOHVname = 'copol_correlation_coeff'
+       ZDRname = 'corrected_differential_reflectivity'
+    elif 'DBZH' in radar.fields.keys():        
+       THNAME= 'DBZH'	
+       RHOHVname = 'RHOHV'
+       TVNAME= 'DBZV'	
+
+    nlev=0
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    #fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+    #                    figsize=[14,12])
+    #axes.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20])
+
+    #----------------------------------------------------------------------------------------
+    # Test plot figure: General figure with Zh and the countours identified 
+    #----------------------------------------------------------------------------------------
+    test_this = 1
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+                        figsize=[14,12])
+    #-- Zh: 
+    if 'TH' in radar.fields.keys():  
+        radarTH = radar.fields['TH']['data'][start_index:end_index]
+        radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-options['ZDRoffset']
+    elif 'DBZH' in radar.fields.keys():
+        radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+        radarZDR = radar.fields['DBZH']['data'][start_index:end_index]-radar.fields['DBZV']['data'][start_index:end_index]
+	#elif 'reflectivity' in radar.fields.keys(): 
+    #    radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+    elif 'DBZHCC' in radar.fields.keys(): 
+        radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
+        radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
+    elif 'corrected_reflectivity' in radar.fields.keys(): 
+        radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+        radarZDR = radar.fields[ZDRname]['data'][start_index:end_index]
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+    cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+    cbar.cmap.set_under(under)
+    cbar.cmap.set_over(over)
+    axes.grid(True)
+    axes.legend(loc='upper left')
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200] , colors=(['r']), linewidths=1.5);
+    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [200], colors=(['k']), linewidths=1.5);
+    
+    axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+
+    if test_this == 0:
+        plt.close()
+	
+    datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
+    ##datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
+    ##datapts = np.column_stack(( np.ravel(lon_gmi), np.ravel(lat_gmi) ))
+    datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
+
+    TB_inds = get_contour_info(contorno89, icois, datapts)
+    RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
+
+    GMI_tbs1_37 = []
+    GMI_tbs1_85 = [] 	
+	
+    S1_sub_tb_v2 = S1_sub_tb[:,:,:][idx1]		
+
+    for ii in range(len(TB_inds)): 
+     	GMI_tbs1_37.append( S1_sub_tb_v2[TB_inds[ii],5] ) 
+     	GMI_tbs1_85.append( S1_sub_tb_v2[TB_inds[ii],7] ) 
+	
+    ##for ii in range(len(TB_inds)): 	
+    ## 	GMI_tbs1_37.append( tb_s1_gmi_inside[TB_inds[ii],5] ) 
+    ## 	GMI_tbs1_85.append( tb_s1_gmi_inside[TB_inds[ii],7] ) 
+    #for ii in range(len(TB_inds)): 	
+    # 	GMI_tbs1_37.append( tb_s1_gmi[TB_inds[ii],5] ) 
+    # 	GMI_tbs1_85.append( tb_s1_gmi[TB_inds[ii],7] ) 
+	
+    if len(icois)==1:
+        colors_plot = ['k']
+        labels_plot = [str('icoi=')+str(icois[0])] 	
+	
+    if len(icois)==2:
+        colors_plot = ['k', 'darkblue']
+        labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1])] 
+	
+    if len(icois)==3:
+        colors_plot = ['k', 'darkblue', 'darkred']
+        labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
+
+    if len(icois)==4:
+        colors_plot = ['k', 'darkblue', 'darkred', 'darkgreen']
+        labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
+	
+	
+	
+    # Filters
+    ni = radarTH.shape[0]
+    nj = radarTH.shape[1]
+    for i in range(ni):
+        rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
+        zh_h  = radarTH[i,:].copy()
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                radarZDR[i,j]  = np.nan
+                radarTH[i,j]  = np.nan
+
+    #------------------------------------------------------
+    # FIGURE CHECK CONTORNOS
+    fig = plt.figure(figsize=(20,7)) 
+    plt.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+    for ic in range(len(GMI_tbs1_37)):
+        plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
+        plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
+    plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+    plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    plt.xlim([options['xlim_min'], options['xlim_max']]) 
+    plt.ylim([options['ylim_min'], options['ylim_max']])
+
+    #------------------------------------------------------
+    # FIGURE scatter plot check
+    # scatter plots the tbs y de Zh a ver si esta ok 
+    fig = plt.figure(figsize=(20,7)) 
+    gs1 = gridspec.GridSpec(1, 2)
+    #------------------------------------------------------
+    ax1 = plt.subplot(gs1[0,0])
+    print('CALCULATED PF(MINBTs) FROM CONTOURS: ')
+    for ic in range(len(GMI_tbs1_37)):
+        print('------- Nr. icoi: '+str(icois[ic])+' -------')
+        plt.scatter(GMI_tbs1_37[ic], GMI_tbs1_85[ic], s=40, marker='*', color=colors_plot[ic], label=labels_plot[ic])
+        TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]         
+	##TB_s1 = tb_s1_gmi_inside[TB_inds[ic],:]
+        #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
+        print('MIN10PCTs: '  +str(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1])) ) 
+        print('MIN19PCTs: '  +str(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3])) ) 
+        print('MIN37PCTs: '  +str(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6])) ) 
+        print('MIN85PCTs: '  +str(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8])) ) 
+    plt.grid(True)
+    plt.legend()
+    #plt.xlim([140,260])
+    #plt.ylim([100,240])
+    plt.xlabel('TBV(37)')
+    plt.ylabel('TBV(85)')
+
+    #------------------------------------------------------	
+    ax1 = plt.subplot(gs1[0,1])
+    for ic in range(len(RN_inds_parallax)):
+        plt.scatter(np.ravel(radarTH)[RN_inds_parallax[ic]], np.ravel(radarZDR)[RN_inds_parallax[ic]]-options['ZDRoffset'], s=20, marker='x', color=colors_plot[ic], label=labels_plot[ic])
+    plt.xlabel('ZH')
+    plt.ylabel('ZDR')	
+    plt.ylim([-15, 10])
+    plt.xlim([30, 65])
+    plt.grid(True)
+    fig.savefig(options['fig_dir']+'variable_scatter_plots.png', dpi=300,transparent=False)   
+    #plt.close()
+
+    #- HISTOGRAMA hist2d con ZH y ZDR con algunas stats (areas, minTBs) 	
+    from matplotlib.colors import LogNorm
+    props = dict(boxstyle='round', facecolor='white')
+    fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,
+                            figsize=[14,12])
+    vmax_sample = [] 
+    for ic in range(len(RN_inds_parallax)):
+        a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
+        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-options['ZDRoffset']).copy()
+        a_x = a_x[~np.isnan(a_x)]   
+        a_y = a_y[~np.isnan(a_y)]   
+        xbin = np.arange(0,80,4)
+        ybin = np.arange(-15,10,1)
+        H, xedges, yedges = np.histogram2d(a_x, a_y, bins=(xbin, ybin), density=True )
+        H = np.rot90(H)
+        H = np.flipud(H)
+        vmax_sample.append( np.nanmax(np.reshape(H, [-1,1] ))) 
+    for ic in range(len(RN_inds_parallax)):
+        a_x = (np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
+        a_y = (np.ravel(radarZDR)[RN_inds_parallax[ic]]-options['ZDRoffset']).copy()
+        a_x = a_x[~np.isnan(a_x)]   
+        a_y = a_y[~np.isnan(a_y)]   
+        xbin = np.arange(0,80,4)
+        ybin = np.arange(-15,10,1)
+        H, xedges, yedges = np.histogram2d(a_x, a_y, bins=(xbin, ybin), density=True )
+        H = np.rot90(H)
+        H = np.flipud(H)    
+        Hmasked = np.ma.masked_where(H==0,H) # Mask pixels with a value of zero
+        pcm1 = axes[ic].pcolormesh(xedges, yedges, Hmasked, vmin=0, vmax=np.nanmax(vmax_sample))
+        plt.colorbar(pcm1, ax=axes[ic])
+        axes[ic].set_title(labels_plot[ic])
+        axes[ic].grid(True)
+        axes[ic].set_xlim([30, 65])
+        axes[ic].set_ylim([-15, 10]); axes[ic].set_ylabel('ZDR')
+        TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]  
+        #TB_s1 = tb_s1_gmi[TB_inds[ic],:]
+        pix89  = len(TB_s1[:,7])
+        area_ellipse89 = 3.141592 * 7 * 4 # ellise has area 7x4 km
+        area89 = pix89*(area_ellipse89)
+        gates45dbz = np.ravel(radarTH)[RN_inds_parallax[ic]]
+        gates45dbz = gates45dbz[~np.isnan(gates45dbz)]
+        gates45dbz = len(gates45dbz)
+        #area45 = len(zh45)(240*240)/1000
+        if icois[ic] == options['icoi_PHAIL']:
+            axes[ic].set_title(labels_plot[ic]+', Phail: '+str(options['phail']))
+        s = 'PF(MINPCTs)'
+        s = s + '\n' + 'MIN10PCTs: ' + str(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1)) + ' K'
+        s = s + '\n' + 'MIN19PCTs: ' + str(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1)) + ' K'
+        s = s + '\n' + 'MIN37PCTs: ' + str(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1)) + ' K'
+        s = s + '\n' + 'MIN85PCTs: ' + str(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1)) + ' K'
+        s = s + '\n' '----------'
+        s = s + '\n' + '89PCT approx. area: ' + str(np.round(area89,1)) + ' km'
+        s = s + '\n' + '89PCT total footprints: ' + str(pix89)	
+        s = s + '\n' + '45dBZ radar gates: ' + str(np.round(gates45dbz,1)) 
+   	 #for ii in range(len( options['MINPCTs_labels'] )):  
+        #    s = s+'\n'+options['MINPCTs_labels'][ii]+': '+str(options['MINPCTs'][ii])
+        axes[ic].text(62,-10, s, bbox=props, fontsize=10)
+        del s, TB_s1
+        axes[ic].set_xlabel('Zh (dBZ)')
+
+    #------------------------------------------------------
+    # FIGURE histogram de los TBs. 
+    MINPCTS_icois = np.zeros((len(RN_inds_parallax), 4)); MINPCTS_icois[:]=np.nan
+    for ic in range(len(RN_inds_parallax)):
+        TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]         
+        #TB_s1   = tb_s1_gmi[TB_inds[ic],:]
+        MINPCTs = []
+        MINPCTs.append(np.round(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1]),1))
+        MINPCTs.append(np.round(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3]),1))
+        MINPCTs.append(np.round(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6]),1))
+        MINPCTs.append(np.round(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8]),1))
+        MINPCTS_icois[ic,:] = MINPCTs
+        del MINPCTs
+
+    #MINPCTS_icois = MINPCTS_icois.T
+    fig = plt.figure(figsize=(20,7)) 
+    #-
+    barlabels = []
+    for ic in range(len(RN_inds_parallax)): 
+        if icois[ic] == options['icoi_PHAIL']:
+            barlabels.append(labels_plot[ic]+', Phail: '+str(options['phail']))
+        else:
+            barlabels.append(labels_plot[ic])
+    #-
+    name = ['MINPCT10','MINPCT19','MINPCT37','MIN89PCT']
+    barWidth = 0.15 
+    # Set position of bar on X axis   
+    br1 = np.arange(len(name)) #---- adjutst!
+    plt.bar(br1, MINPCTS_icois[0,:], color='darkblue',  width = barWidth, label=barlabels[0])
+    if len(RN_inds_parallax) == 2:
+        br2 = [x + barWidth for x in br1] 
+        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+    if len(RN_inds_parallax) == 3:
+        br2 = [x + barWidth for x in br1] 
+        br3 = [x + barWidth for x in br2]
+        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+        plt.bar(br3, MINPCTS_icois[2,:], color='darkgreen', width = barWidth, label=barlabels[2])
+    if len(RN_inds_parallax) == 4:
+        br2 = [x + barWidth for x in br1] 
+        br3 = [x + barWidth for x in br2]
+        br4 = [x + barWidth for x in br3]
+        plt.bar(br2, MINPCTS_icois[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+        plt.bar(br3, MINPCTS_icois[2,:], color='darkgreen', width = barWidth, label=barlabels[2])	
+        plt.bar(br4, MINPCTS_icois[3,:], color='black', width = barWidth, label=barlabels[3])	
+    plt.ylabel('MINPCT (K)')  
+    plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
+    plt.legend()
+    plt.title('Min. observed PCTs for COI')
+    plt.grid(True)
+
+    del radar 
+
+    return
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -6144,6 +6458,8 @@ def plot_scatter(options, radar, icois, fname):
     if len(icois)==4:
         colors_plot = ['k', 'darkblue', 'darkred', 'darkgreen']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
+	print('OK')
+	
 	
     # Filters
     ni = radarTH.shape[0]
@@ -6169,7 +6485,6 @@ def plot_scatter(options, radar, icois, fname):
     plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
     plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
 
-	
     #------------------------------------------------------
     # FIGURE scatter plot check
     # scatter plots the tbs y de Zh a ver si esta ok 
@@ -6682,7 +6997,7 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
     summary_radar_obs(radar, gmi_dir+options['gfile'], options)
     gc.collect()
 
-    plot_scatter(options, radar, icois, gmi_dir+options['gfile'])
+    plot_scatter_4icois(options, radar, icois, gmi_dir+options['gfile'])
     gc.collect()
 
     return
@@ -7162,10 +7477,15 @@ def main_RMA4_20181031():
 
     lon_pfs  = [-58.71, -58.10, -57.16, -58.37, -54.76, -60.70, -52.36, -57.33 ]
     lat_pfs  = [-29.74, -29.33, -29.21, -28.71, -29.25, -28.70, -29.65, -26.52 ]
-    time_pfs = ['0110UTC', '0110UTC', '0110UTC', '0110UTC', '0110UTC', '0110UTC', '0110UTC', '0110UTC']
-    phail    = [0.958, 0.984, 0.897, 0.931, 0.990, 0.738, 0.987, 0.993]
-    MIN85PCT = [87.64, 53.21, 63.99, 67.12, 69.98, 99.49, 80.93, 56.32]
-    MIN37PCT = [148.53, 122.92, 150.48, 151.66, 120.99, 174.13, 133.78, 111.72]
+	
+    # aca solo voy a poner las 3 que me interesan dentro de rango razonable del radar ... 
+    #icoi=58//	2018	10	31	01	11	 -26.52	 -57.33	 0.993	267.5031	307.3651	198.3740	111.7183	 56.3188	193.9708	219.0600	1
+    #icoi=20//	2018	10	31	01	10	 -28.71	 -58.37	 0.931	276.8601	302.9811	237.4247	151.6656	 67.1172	198.5928	160.6000	1
+    #icoi=1//	2018	10	31	01	10	 -28.70	 -60.70	 0.738	274.8905	303.1061	244.4909	174.1353	 99.4944	199.8251	163.2800	1
+    time_pfs = ['0110UTC','0110UTC','0110UTC','0110UTC']
+    phail    = [0.993, 0.931, np.nan ,0.738]
+    MIN85PCT = [56.31, 67.1172, np.nan,  99.4944 ]
+    MIN37PCT = [111.71, 151.66, np.nan, 174.13 ]
     MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
     MINPCTs  = []
     rfile    = 'cfrad.20181031_010936.0000_to_20181031_011525.0000_RMA4_0200_01.nc' 
