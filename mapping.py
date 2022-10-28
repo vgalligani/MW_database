@@ -7566,8 +7566,8 @@ def main_RMA4_20181215():
     icois_input  = [14, 11] 
     azimuths_oi  = [180, 238]
     labels_PHAIL = ['[Phail = 0.747]', '[Phail = 0.930]'] 
-    xlims_xlims_input  = [250, 250 ] 
-    xlims_mins_input  = [0,0]		
+    xlims_xlims_input  = [200, 250 ] 
+    xlims_mins_input  = [50,150]			
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
     return
@@ -7583,7 +7583,7 @@ def main_RMA4_20181218():
     #	2018	12	18	01	15	 -27.98	 -60.31	 0.964		272.7367	302.8321	207.8556	134.2751	 56.7125	199.3806	  0.0000	1
     #	2018	12	18	01	15	 -28.40	 -59.63	 0.595		278.6798	301.9494	253.9066	183.1721	 84.2171	198.2189	195.6900	1
 	
-    lon_pfs  = [ -60.31	, -59.63]
+    lon_pfs  = [ ]
     lat_pfs  = [-27.98, -28.40]
     time_pfs = ['0115UTC','0115UTC']
     phail    = ['0.964','0.595']
