@@ -6141,6 +6141,10 @@ def plot_scatter(options, radar, icois, fname):
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
 
+    if len(icois)==4:
+        colors_plot = ['k', 'darkblue', 'darkred', 'darkgreen']
+        labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
+	
     # Filters
     ni = radarTH.shape[0]
     nj = radarTH.shape[1]
@@ -7182,9 +7186,9 @@ def main_RMA4_20181031():
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
 	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[65, 157, 199, 230]}
-    icois_input  = [10,10,10,10] 
+    icois_input  = [58,20,26,1] 
     azimuths_oi  = [65, 157, 199, 230]
-    labels_PHAIL = ['[Phail = ]','[Phail = ]','[Phail = ]','[Phail = ]'] 
+    labels_PHAIL = ['[Phail = 0.993]','[Phail = 0.931]',' ','[Phail = 0.958 ]'] 
     xlims_xlims_input  = [250, 250, 250, 250] 
     xlims_mins_input  = [150,150,100,150]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
