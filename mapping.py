@@ -5953,9 +5953,16 @@ def visual_coi_identification(options, radar, fname):
         
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
         plt.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-50]); plt.ylim([-40,-20]); 
-        plt.plot(lon_gmi[:,:][idx1][inds], lat_gmi[:,:][idx1][inds],'xm','markersize'=20 ); 
+        plt.plot(lon_gmi[:,:][idx1][inds], lat_gmi[:,:][idx1][inds],'xm',markersize=20 ); 
         plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
         plt.title(str(item))
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10) 
+        plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+
     return
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -7517,8 +7524,58 @@ def main_RMA4_20181031():
 
 
 
+
+def main_RMA4_20181215(): 
+	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20181215: P(hail) = 0.747
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
+    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+    #	2018	12	15	02	16	 -27.69	 -63.39	0.954		260.4609	293.6420	206.6171	134.2374	 68.7006	196.9885	209.0400	1
+    #	2018	12	15	02	17	 -28.38	 -60.79	0.930		271.3788	294.4304	228.0244	152.0373	 66.0418	198.1177	200.2600	1
+    #	2018	12	15	02	17	 -28.38	 -59.01	0.747		274.6380	303.4859	247.0776	172.3779	 64.0453	199.8376	203.9300	1
+
+    lon_pfs  = [-60.7, -59.01]
+    lat_pfs  = [-28.38, -28.38]
+    time_pfs = ['0216UTC','0216UTC' ]
+    phail    = ['0.930','0.747']
+    MIN85PCT = [66.04, 64.04]
+    MIN37PCT = [152.03, 172.38]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = []
+    rfile    = 'cfrad.20181215_021522.0000_to_20181215_022113.0000_RMA4_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20181215-S005848-E023122.027246.V05A.HDF5'
+    era5_file = '201811215_02_RMA4.grib' 
+    # REPORTES TWITTER ... 
+    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
+    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
+    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+	    'ZDRoffset': 3,   
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 180, 
+	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181215_RMA4/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[180,238]}
+    icois_input  = [10, 12] 
+    azimuths_oi  = [180, 238]
+    labels_PHAIL = ['[Phail = 0.747]', '[Phail = 0.930]'] 
+    xlims_xlims_input  = [250, 250 ] 
+    xlims_mins_input  = [0,0]		
+    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+	
+    return
+
+
+
+
+								
+    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+    # CASO RMA4 - 20181218: P(hail) = 0.964, 0.596
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
     lon_pfs  = []
@@ -7553,13 +7610,8 @@ def main_RMA4_20181031():
     xlims_xlims_input  = [150] 
     xlims_mins_input  = [0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-    return
-								
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181218: P(hail) = 0.964, 0.596
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
+	    return
+
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20190209: P(hail) = 0.989
