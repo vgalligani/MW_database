@@ -5962,6 +5962,8 @@ def visual_coi_identification(options, radar, fname):
         plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
         plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
+        plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
 
     return
 #------------------------------------------------------------------------------
@@ -7561,7 +7563,7 @@ def main_RMA4_20181215():
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
 	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[180,238]}
-    icois_input  = [10, 12] 
+    icois_input  = [14, 11] 
     azimuths_oi  = [180, 238]
     labels_PHAIL = ['[Phail = 0.747]', '[Phail = 0.930]'] 
     xlims_xlims_input  = [250, 250 ] 
