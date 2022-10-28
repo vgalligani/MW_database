@@ -7525,10 +7525,8 @@ def main_RMA4_20181031():
     return
 
 
-
-
 def main_RMA4_20181215(): 
-	
+
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20181215: P(hail) = 0.747
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
@@ -7566,34 +7564,42 @@ def main_RMA4_20181215():
     icois_input  = [14, 11] 
     azimuths_oi  = [180, 238]
     labels_PHAIL = ['[Phail = 0.747]', '[Phail = 0.930]'] 
-    xlims_xlims_input  = [250, 250 ] 
-    xlims_mins_input  = [0,0]		
+    xlims_xlims_input  = [200, 250 ] 
+    xlims_mins_input  = [50,150]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
+
     return
+	
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
-
-def main_RMA4_20181218(): 
-								
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181218: P(hail) = 0.964, 0.596
+    # CASO RMA4 - 20181218: 
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2018	12	18	01	15	 -27.98	 -60.31	 0.964		272.7367	302.8321	207.8556	134.2751	 56.7125	199.3806	  0.0000	1
-    #	2018	12	18	01	15	 -28.40	 -59.63	 0.595		278.6798	301.9494	253.9066	183.1721	 84.2171	198.2189	195.6900	1
-	
-    lon_pfs  = [ -60.31	, -59.63]
-    lat_pfs  = [-27.98, -28.40]
-    time_pfs = ['0115UTC','0115UTC']
-    phail    = ['0.964','0.595']
-    MIN85PCT = [56.71, 84.22]
-    MIN37PCT = [134.28, 183.17]
+
+    lon_pfs  = [-60.7, -59.01]
+    lat_pfs  = [-28.38, -28.38]
+    time_pfs = ['0216UTC','0216UTC' ]
+    phail    = ['0.930','0.747']
+    MIN85PCT = [66.04, 64.04]
+    MIN37PCT = [152.03, 172.38]
     MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
     MINPCTs  = []
-    rfile    = 'cfrad.20181218_014441.0000_to_20181218_015039.0000_RMA4_0200_01.nc' 
-    gfile    =  '1B.GPM.GMI.TB2016.20181217-S235720-E012953.027292.V05A.HDF5'
-    era5_file = '20181218_01_RMA4.grib' 
+    rfile    = 'cfrad.20181215_021522.0000_to_20181215_022113.0000_RMA4_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20181215-S005848-E023122.027246.V05A.HDF5'
+    era5_file = '20181215_02_RMA4.grib' 
     # REPORTES TWITTER ... 
     # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
     # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
@@ -7603,21 +7609,25 @@ def main_RMA4_20181218():
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 3,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 150, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 180, 
 	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181215_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[100,]}
-    icois_input  = [10,10] 
-    azimuths_oi  = [100]
-    labels_PHAIL = ['[Phail = ]','[Phail = ]'] 
-    xlims_xlims_input  = [200, 200] 
-    xlims_mins_input  = [0,0]		
+	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[180,238]}
+    icois_input  = [14, 11] 
+    azimuths_oi  = [180, 238]
+    labels_PHAIL = ['[Phail = 0.747]', '[Phail = 0.930]'] 
+    xlims_xlims_input  = [200, 250 ] 
+    xlims_mins_input  = [50,150]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-    return
 
+    return
+	
+	
+	
+	
+	
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20190209: P(hail) = 0.989
@@ -7656,7 +7666,8 @@ def main_RMA4_20181218():
     xlims_xlims_input  = [150] 
     xlims_mins_input  = [0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-    return
+
+return
 	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA8 - 20181112: P(hail) = 0.740
