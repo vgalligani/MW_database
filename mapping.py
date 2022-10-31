@@ -2477,14 +2477,16 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     azimuths    = radar.azimuth['data'][start_index:end_index]
 
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[13,12])
+    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
 
     for iz in range(len(azi_oi)):
         target_azimuth = azimuths[options['alternate_azi'][iz]]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
         if options['radar_name'] == 'CSPR2':
             del filas
-            target_azimuth = azimuths[options['alternate_azi'][iz]]
-            filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()			
+            target_azimuth = azimuths[options['alternate_azi'][iz]]		
+            filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+            axescheck.plot(lons[filas,:], lats[filas,:],'-k')
         grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
         grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
         grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
@@ -7092,12 +7094,12 @@ def main_20181111():
     	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-     	   'icoi_PHAIL': 3, 'radar_name':'CSPR2', 'alternate_azi':[210, 220]}
-    icois_input  = [6,6] 
-    azimuths_oi  = [30,19]
-    labels_PHAIL = ['6[Phail = 0.653]','6[Phail = 0.653]'] 
-    xlims_xlims_input  = [80, 80] 
-    xlims_mins_input  = [0, 0]		
+     	   'icoi_PHAIL': 3, 'radar_name':'CSPR2', 'alternate_azi':[210, 220,5]}
+    icois_input  = [6,6,5] 
+    azimuths_oi  = [30,19,180]
+    labels_PHAIL = ['6[Phail = 0.653]','6[Phail = 0.653]',''] 
+    xlims_xlims_input  = [80, 80,120] 
+    xlims_mins_input  = [0, 0,0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 			
     return
