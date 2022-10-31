@@ -7242,8 +7242,8 @@ def old_main():
     gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
     era5_file = '20181214_03_RMA1.grib'
     # REPORTES TWITTER ... 
-    reportes_granizo_twitterAPI_geo = [[-32.19, -64.57]]
-    reportes_granizo_twitterAPI_meta = [['0320UTC']]
+    reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
+    reportes_granizo_twitterAPI_meta = [['0320UTC','0100']]
     opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 
 	    'ZDRoffset': 0, 'ylim_max_zoom':-31, 'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
 	    'window_calc_KDP': 7, 'azimuth_ray': 60, 'x_supermin': -65.3, 'x_supermax':-63.3,
