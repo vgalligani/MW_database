@@ -1367,6 +1367,15 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         lats        = radar.gate_latitude['data'][start_index:end_index]
         lons        = radar.gate_longitude['data'][start_index:end_index]
         ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'RMA8':
+        reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
 	
     s_sizes=450
     user = platform.system()
@@ -7694,7 +7703,7 @@ def main_RMA8_20181112_11UTC():
     lon_pfs  = [-59.01]
     lat_pfs  = [-30.21]
     time_pfs = ['12UTC']
-    phail    = ['0.7']
+    phail    = ['0.739']
     MIN85PCT = [93.65]
     MIN37PCT = [181.51]
     MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
@@ -7711,26 +7720,33 @@ def main_RMA8_20181112_11UTC():
     opts = {'xlim_min': -60.5, 'xlim_max': -55.5, 'ylim_min': -31.5, 'ylim_max': -26, 
 	    'ZDRoffset': 0,   
 	    'rfile': 'RMA8/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 150, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
 	    'x_supermin':-60.5, 'x_supermax':-55.5, 'y_supermin':-31.5, 'y_supermax':-26, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181112_12UTC_RMA8/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA8','alternate_azi':[100,]}
-    icois_input  = [10] 
-    azimuths_oi  = [100]
-    labels_PHAIL = ['[Phail = ]'] 
-    xlims_xlims_input  = [150] 
-    xlims_mins_input  = [0]		
+	   'icoi_PHAIL': 3, 'radar_name':'RMA8','alternate_azi':[210,220]}
+    icois_input  = [3,3] 
+    azimuths_oi  = [210,220]
+    labels_PHAIL = ['[Phail = 0.739]','[Phail = 0.739'] 
+    xlims_xlims_input  = [250,250] 
+    xlims_mins_input  = [0,0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
     return	
+	
+	
+def main_RMA8_20181112_21UTC(): 
+
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
 	
     # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA8 - 20181112: P(hail) = 0.758
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
     #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-	2018	11	12	21	42	 -29.34	 -59.25	0.759		279.2002	304.3894	251.8228	165.5906	 64.3514	199.4189	186.6500	1
+    #	2018	11	12	21	42	 -29.34	 -59.25	0.759		279.2002	304.3894	251.8228	165.5906	 64.3514	199.4189	186.6500	1
 
     lon_pfs  = [-59.25]
     lat_pfs  = [-29.34]
@@ -7751,18 +7767,18 @@ def main_RMA8_20181112_11UTC():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -60.5, 'xlim_max': -55.5, 'ylim_min': -31.5, 'ylim_max': -26, 
 	    'ZDRoffset': 0,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 150, 
+	    'rfile': 'RMA8/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 267, 
 	    'x_supermin':-60.5, 'x_supermax':-55.5, 'y_supermin':-31.5, 'y_supermax':-26, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181112_21UTC_RMA8/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA8','alternate_azi':[100,]}
-    icois_input  = [10] 
-    azimuths_oi  = [100]
-    labels_PHAIL = ['[Phail = ]'] 
-    xlims_xlims_input  = [150] 
-    xlims_mins_input  = [0]		
+	   'icoi_PHAIL': 3, 'radar_name':'RMA8','alternate_azi':[260,267]}
+    icois_input  = [10,10] 
+    azimuths_oi  = [260,267]
+    labels_PHAIL = ['[Phail = ]',''] 
+    xlims_xlims_input  = [250,250] 
+    xlims_mins_input  = [0,0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
     return	
