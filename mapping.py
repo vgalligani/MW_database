@@ -7554,7 +7554,7 @@ def main_RMA4_20181215():
     reportes_granizo_twitterAPI_geo = []
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
-	    'ZDRoffset': 3,   
+	    'ZDRoffset': 1.5,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
 	    'window_calc_KDP': 7, 'azimuth_ray': 180, 
 	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
