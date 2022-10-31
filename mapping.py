@@ -4938,8 +4938,8 @@ def get_sys_phase_simple(radar):
             PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
             PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan	
         rhv = RHOHV.copy()
-	z_h = TH.copy()
-        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+        z_h = TH.copy()
+	PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
         # por cada radial encontrar first non nan value: 
         phases = []
         for radial in range(radar.sweep_end_ray_index['data'][0]):
@@ -6467,7 +6467,6 @@ def plot_scatter(options, radar, icois, fname):
     if len(icois)==4:
         colors_plot = ['k', 'darkblue', 'darkred', 'darkgreen']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
-	print('OK')
 	
 	
     # Filters
@@ -7575,6 +7574,11 @@ def main_RMA4_20181215():
 
 
 def main_RMA4_20181218(): 
+
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+
 								
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA4 - 20181218: P(hail) = 0.964, 0.596
@@ -7583,7 +7587,7 @@ def main_RMA4_20181218():
     #	2018	12	18	01	15	 -27.98	 -60.31	 0.964		272.7367	302.8321	207.8556	134.2751	 56.7125	199.3806	  0.0000	1
     #	2018	12	18	01	15	 -28.40	 -59.63	 0.595		278.6798	301.9494	253.9066	183.1721	 84.2171	198.2189	195.6900	1
 	
-    lon_pfs  = [ ]
+    lon_pfs  = [ -60.31, -59.63]
     lat_pfs  = [-27.98, -28.40]
     time_pfs = ['0115UTC','0115UTC']
     phail    = ['0.964','0.595']
@@ -7603,17 +7607,17 @@ def main_RMA4_20181218():
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 3,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 150, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
 	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[100,]}
-    icois_input  = [10,10] 
-    azimuths_oi  = [100]
-    labels_PHAIL = ['[Phail = ]','[Phail = ]'] 
-    xlims_xlims_input  = [200, 200] 
-    xlims_mins_input  = [0,0]		
+	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[158,210,230]}
+    icois_input  = [8, 7, 6]
+    azimuths_oi  = [158,210,230]
+    labels_PHAIL = ['','[Phail = 0.595]','[Phail = 0.964]'] 
+    xlims_xlims_input  = [150, 150, 150] 
+    xlims_mins_input  = [0,0,0]		
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
     return
