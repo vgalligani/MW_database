@@ -7697,7 +7697,7 @@ def main_RMA4_20190209():
     reportes_granizo_twitterAPI_geo = []
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -60.5, 'xlim_max': -55.5, 'ylim_min': -31.5, 'ylim_max': -26, 
-	    'ZDRoffset': 1.5,   
+	    'ZDRoffset': 0,   
 	    'rfile': 'RMA8/'+rfile, 'gfile': gfile, 
 	    'window_calc_KDP': 7, 'azimuth_ray': 150, 
 	    'x_supermin':-60.5, 'x_supermax':-55.5, 'y_supermin':-31.5, 'y_supermax':-26, 
@@ -7738,7 +7738,7 @@ def main_RMA4_20190209():
     reportes_granizo_twitterAPI_geo = []
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -60.5, 'xlim_max': -55.5, 'ylim_min': -31.5, 'ylim_max': -26, 
-	    'ZDRoffset': 1.5,   
+	    'ZDRoffset': 0,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
 	    'window_calc_KDP': 7, 'azimuth_ray': 150, 
 	    'x_supermin':-60.5, 'x_supermax':-55.5, 'y_supermin':-31.5, 'y_supermax':-26, 
