@@ -11,7 +11,7 @@ import numpy as np
 from shapely.geometry import Polygon
 import matplotlib
 import imageio
-
+import h5py
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -644,28 +644,31 @@ def plot_rhi_RMA(file, dat_dir, radar_name, xlim_range1, xlim_range2, test_trans
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
 
-rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA4_BB_20180209/'
-rfile = 'cfrad.20180210_144232.0000_to_20180210_144831.0000_RMA4_0200_01.nc'
-check_transec_rma_campos(rdir, rfile, 240, 'ZDR', 1)
-plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 240, -1, np.nan)
+def buscar_BBs(): 
 
-rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA4_BB_20181001/'
-rfile='cfrad.20181022_193505.0000_to_20181022_194051.0000_RMA4_0200_01.nc'
-check_transec_rma_campos(rdir, rfile, 240, 'ZH', 1)
-plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 240, 1.5, np.nan)
+  rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA4_BB_20180209/'
+  rfile = 'cfrad.20180210_144232.0000_to_20180210_144831.0000_RMA4_0200_01.nc'
+  check_transec_rma_campos(rdir, rfile, 240, 'ZDR', 1)
+  plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 240, -1, np.nan)
 
-rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA4_BB_20181215/'
-rfile = 'cfrad.20181215_132300.0000_to_20181215_132849.0000_RMA4_0200_01.nc'
+  rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA4_BB_20181001/'  
+  rfile='cfrad.20181022_193505.0000_to_20181022_194051.0000_RMA4_0200_01.nc'
+  check_transec_rma_campos(rdir, rfile, 240, 'ZH', 1)
+  plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 240, 1.5, np.nan)
 
-rfile = 'cfrad.20181215_132300.0000_to_20181215_132849.0000_RMA4_0200_01.nc'
-check_transec_rma_campos(rdir, rfile, 10, 'ZH', 1)
-plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 10, 0, np.nan)
+  rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA4_BB_20181215/'
+  rfile = 'cfrad.20181215_132300.0000_to_20181215_132849.0000_RMA4_0200_01.nc'
 
-rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA420190209/'
-rfile = 'cfrad.20190104_193756.0000_to_20190104_194345.0000_RMA4_0200_01.nc'
-check_transec_rma_campos(rdir, rfile, 280, 'ZH', 1)
-plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 280, 0, np.nan)
+  rfile = 'cfrad.20181215_132300.0000_to_20181215_132849.0000_RMA4_0200_01.nc'
+  check_transec_rma_campos(rdir, rfile, 10, 'ZH', 1)
+  plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 10, 0, np.nan)
 
+  rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/datos_radar/RMA420190209/'
+  rfile = 'cfrad.20190104_193756.0000_to_20190104_194345.0000_RMA4_0200_01.nc'
+  check_transec_rma_campos(rdir, rfile, 280, 'ZH', 1)
+  plot_rhi_RMA(rfile, rdir, 'RMA4', 0, 250, 280, 0, np.nan)
+
+  return
 
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
@@ -729,8 +732,8 @@ def make_gifs(rdir, fig_dir, nlev, THfieldname, options):
                 axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
         plt.legend() 
         axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['black']), linewidths=1.5)
-        for iPF in range(len(opts['lat_pfs'])):
-            plt.plot(opts['lon_pfs'][iPF], opts['lat_pfs'][iPF], marker='*', markersize=40, markerfacecolor="None",
+        for iPF in range(len(options['lat_pfs'])):
+            plt.plot(options['lon_pfs'][iPF], options['lat_pfs'][iPF], marker='*', markersize=40, markerfacecolor="None",
             markeredgecolor='black', markeredgewidth=2, label='GMI(PF) center')
         axes.set_xlim([options['xlim_min'], options['xlim_max']])
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
@@ -742,7 +745,8 @@ def make_gifs(rdir, fig_dir, nlev, THfieldname, options):
 
     return
 
-
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
 def animate_pngs(frame_folder):
     
     lst_files = listdir( frame_folder )
@@ -757,10 +761,12 @@ def animate_pngs(frame_folder):
 
     
     return 
-  
-def main(frame_folder, rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo, 
-         reportes_granizo_twitterAPI_meta, lon_pfs, lat_pfs, gfile, radar_name ):
 
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
+def main(rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo, 
+         reportes_granizo_twitterAPI_meta, lon_pfs, lat_pfs, gfile, radar_name ):
+  
   if radar_name == 'RMA1' : 
     opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
         'gfile': gfile, 
@@ -768,34 +774,55 @@ def main(frame_folder, rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo,
         'REPORTES_meta': reportes_granizo_twitterAPI_meta,
         'gmi_dir':gmi_dir, 
         'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs}
-  elif 
-     opts = {'xlim_min': , 'xlim_max': , 'ylim_min': , 'ylim_max': , 
+  elif radar_name == 'RMA3': 
+     opts = {'xlim_min':-63.0, 'xlim_max':-58.0, 'ylim_min':-27.0 , 'ylim_max':-23.0, 
         'gfile': gfile, 
         'REPORTES_geo': reportes_granizo_twitterAPI_geo,
         'REPORTES_meta': reportes_granizo_twitterAPI_meta,
         'gmi_dir':gmi_dir, 
         'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs} 
-    
-  make_gifs(rdir, fig_dir, 0, 'TH')  
+      
+  make_gifs(rdir, fig_dir, 0, 'TH', opts)  
   animate_pngs(fig_dir)
    
   return
 
-def run_main_case()
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
+def run_main_case(caso, radar_name, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta):
 
-  rdir = '/Users/victoria.galligani/Dropbox/Hail_MW/GIF_datos/RMA1_20180208/'
-  fig_dir = '/Users/victoria.galligani/Dropbox/Hail_MW/GIF_datos/RMA1_20180208_FIG/'
-  gmi_dir = '/Users/victoria.galligani/Dropbox/Hail_MW/GIF_datos/RMA1_20180208_FIG/'
-  reportes_granizo_twitterAPI_geo = [[-31.49, -64.54], [-31.42, -64.50], [-31.42, -64.19]]
-  reportes_granizo_twitterAPI_meta = ['SAA (1930UTC)', 'VCP (1942UTC)', 'CDB (24UTC)']
+  rdir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/GIF_datos/'+caso+'/'
+  fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/Figure_caseGifs/'+caso+'/FIG/'
+  gmi_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
   lon_pfs  = [-64.80]
   lat_pfs  = [-31.83]
   gfile    = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
-  main(frame_folder, rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo, 
+  main(rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo, 
          reportes_granizo_twitterAPI_meta, lon_pfs, lat_pfs, gfile, radar_name )
   return
 
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
+
+# REPORTES TWITTER ... 
+# CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
+# VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
+# San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
+reportes_granizo_twitterAPI_geo = [[-31.49, -64.54], [-31.42, -64.50], [-31.42, -64.19]]
+reportes_granizo_twitterAPI_meta = ['SAA (1930UTC)', 'VCP (1942UTC)', 'CDB (24UTC)']
    
+run_main_case('RMA1_20180208','RMA1')
+
+
+
+
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
+# RMA1 20180208
+3 ico
+
+
+
 
 
 
