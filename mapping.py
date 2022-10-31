@@ -6948,6 +6948,12 @@ def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azim
         PHIORIG.mask = mask
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
 	
+    if options['radar_name'] == 'RMA8':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
@@ -7673,6 +7679,12 @@ def main_RMA4_20190209():
 
     return
 	
+def main_RMA8_20181112_11UTC(): 
+
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+	
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO RMA8 - 20181112: P(hail) = 0.740
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
@@ -7687,8 +7699,8 @@ def main_RMA4_20190209():
     MIN37PCT = [181.51]
     MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
     MINPCTs  = [270.85, 247.09, 181.50, 93.65, 199.95, 189.06] 
-    rfile    = 'cfrad.20181112_115631.0000_to_20181112_120225.0000_RMA8_0200_01.nc', 
-    gfile    = '1B.GPM.GMI.TB2016.20181112-S104031-E121303.026739.V05A.HDF5'
+    rfile    = 'cfrad.20181112_115631.0000_to_20181112_120225.0000_RMA8_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20181112-S104031-E121303.0f26739.V05A.HDF5'
     era5_file = '20181112_12_RMA8.grib' 
     # REPORTES TWITTER ... 
     # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
