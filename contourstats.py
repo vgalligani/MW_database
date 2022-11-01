@@ -908,11 +908,12 @@ def run_general_case(options, lat_pfs, lon_pfs, time_pfs, icois):
         
     plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
     
-    [PCT_array, ZH_array, AREA_array, PIXELS_array, GATES_array] = plot_scatter_4icois(options, radar, icois, gmi_dir+options['gfile'])
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = plot_scatter_4icois(options, radar, icois, gmi_dir+options['gfile'])
     
     gc.collect()
 
-    return PCT_array, ZH_array, AREA_array, PIXELS_array, GATES_array
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, 
+	    GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
   
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -971,9 +972,9 @@ def main():
 	    'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
 
-    PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
 	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAI = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
     
     return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
