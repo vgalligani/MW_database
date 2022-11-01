@@ -837,17 +837,15 @@ def plot_scatter_4icois(options, radar, icois, fname):
             AREA_PHAIL.append( save_area[ic] )
             PIXELS_PHAIL.append( save_pixels[ic] )
             GATES_PHAIL.append( save_gates[ic] )
-	
+
         else:
-          PCTarray_NOPHAIL.append( [MINPCTS_icois[ic,:]])
-          ZHarray_NOPHAIL.append( np.ravel(radarTH)[RN_inds_parallax[ic]] )
-          ZDRarray_NOPHAIL.append( np.ravel(radarTH)[RN_inds_parallax[ic]] )
-          AREA_NOPHAIL.append(   save_area[ic] )
-          PIXELS_NOPHAIL.append( save_pixels[ic] )
-          GATES_NOPHAIL.append(  save_gates[ic] )
-
-    del radar 
-
+            PCTarray_NOPHAIL.append( [MINPCTS_icois[ic,:]])
+            ZHarray_NOPHAIL.append( np.ravel(radarTH)[RN_inds_parallax[ic]].data )
+            ZDRarray_NOPHAIL.append( np.ravel(radarTH)[RN_inds_parallax[ic]].data )
+            AREA_NOPHAIL.append(   save_area[ic] )
+            PIXELS_NOPHAIL.append( save_pixels[ic] )
+            GATES_NOPHAIL.append(  save_gates[ic] )
+		
     # NOPHAIL
     PCTarray_NOPHAIL_out = np.zeros([len(PCTarray_NOPHAIL),4]); PCTarray_NOPHAIL_out[:] = np.nan
     for ilist in range(len(PCTarray_NOPHAIL)): 
@@ -856,13 +854,10 @@ def plot_scatter_4icois(options, radar, icois, fname):
     PCTarray_PHAIL_out = np.zeros([len(PCTarray_PHAIL),4]); PCTarray_PHAIL_out[:] = np.nan
     for ilist in range(len(PCTarray_PHAIL)): 
        PCTarray_PHAIL_out[ilist,:] = PCTarray_PHAIL[ilist][0]  
-	
-	
-	
-    ZH_array = [ZHarray_PHAIL, ZHarray_NOPHAIL]
 
+    del radar 
 
-    return  PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL
+    return  PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
   
 #----------------------------------------------------------------------------------------------
@@ -976,14 +971,16 @@ def main():
 	    'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
 
-    PCT_array, ZH_array, AREA_array, PIXELS_array, GATES_array = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAI = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
     
-    return PCT_array, ZH_array, AREA_array, PIXELS_array, GATES_array
-  
-	
-	
-	
-[PCT_array, ZH_array, AREA_array, PIXELS_array, GATES_array] = main()
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+		
+
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = main()
 
 
   
