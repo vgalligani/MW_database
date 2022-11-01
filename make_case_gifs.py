@@ -692,12 +692,12 @@ def make_gifs(rdir, fig_dir, nlev, THfieldname, options):
     lat_s2_gmi = f[u'/S2/Latitude'][:,:]
     f.close()
     for j in range(lon_gmi.shape[1]):
-        tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-        tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan   
-        lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-        lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  
-        lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+5),:] = np.nan
-        lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-5),:] = np.nan  	
+        tb_s1_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
+        tb_s1_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan   
+        lat_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
+        lat_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan  
+        lon_gmi[np.where(lat_gmi[:,j] >=  options['ylim_max']+15),:] = np.nan
+        lon_gmi[np.where(lat_gmi[:,j] <=  options['ylim_min']-15),:] = np.nan  	
     PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
         
     dirs = sorted(listdir( rdir ))
