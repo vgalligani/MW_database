@@ -792,8 +792,17 @@ def main(rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo,
         'REPORTES_meta': reportes_granizo_twitterAPI_meta,
         'gmi_dir':gmi_dir, 
         'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs} 
-    make_gifs(rdir, fig_dir, 0, 'DBZHCC', opts)  
- 
+    make_gifs(rdir, fig_dir, 0, 'DBZHCC', opts)
+    
+   elif radar_name == 'RMA5': 
+    opts = {'xlim_min': -55.0, 'xlim_max': -52.0, 'ylim_min': -27.5, 'ylim_max': -25.0, 
+        'gfile': gfile, 
+        'REPORTES_geo': reportes_granizo_twitterAPI_geo,
+        'REPORTES_meta': reportes_granizo_twitterAPI_meta,
+        'gmi_dir':gmi_dir, 
+        'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs} 
+    make_gifs(rdir, fig_dir, 0, 'DBZH', opts)  
+    
   animate_pngs(fig_dir)
    
   return
@@ -832,3 +841,10 @@ reportes_granizo_twitterAPI_meta =  [['0255 y 0320UTC','0100']]
 gfile = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
 run_main_case('DOW7_20181214','DOW7', reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta, gfile, [-63.11], [-31.90])
 
+
+#------ RMA5
+# REPORTES TWITTER ... 
+reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24]] 
+reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America']
+gfile =  '1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
+run_main_case('RMA5_20200815','RMA5', reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta, gfile, [-54.11], [-25.28])
