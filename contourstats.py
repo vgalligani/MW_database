@@ -1495,7 +1495,7 @@ RMA5_20200815.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outp
 
 
 #----------------------------------------------------------------------------------------------
-# RMA3_20190305  ACA
+# RMA3_20190305  OK
 #----------------------------------------------------------------------------------------------  
 [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA3_20190305()
@@ -1505,18 +1505,36 @@ if len(PCTarray_PHAIL_out) == 1:
 	PCTarray_PHAIL_out_ = []
 	for ifreq in range(PCTarray_PHAIL_out.shape[1]):
 		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
+
+if len(PCTarray_NOPHAIL_out) == 1:
+	PCTarray_NOPHAIL_out_ = []
+	for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+		PCTarray_NOPHAIL_out_.append( PCTarray_NOPHAIL_out[0][ifreq])
 		
 # And create a netcdf file
-RMA3_20190305 = 
+RMA3_20190305 = xr.Dataset( {
+                    "PCTarray_PHAIL_out":   (('PCTs'),  PCTarray_PHAIL_out_),
+                    "PCTarray_NOPHAIL_out": (('PCTs'),  PCTarray_NOPHAIL_out_),
+                    "AREA_PHAIL":            (('Nr'),   [np.nanmean(AREA_PHAIL)]),
+                    "AREA_NOPHAIL":          (('Nr'),   [np.nanmean(AREA_NOPHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),   [np.nanmean(PIXELS_PHAIL)]), 
+                    "PIXELS_NOPHAIL":        (('Nr'),   [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),   [np.nanmean(GATES_PHAIL)]), 
+                    "GATES_NOPHAIL":         (('Nr'),   [np.nanmean(GATES_NOPHAIL)]),
+                    "ZHarray_PHAIL":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0]),
+                    "ZHarray_NOPHAIL_1":   (('gates2'), ZHarray_NOPHAIL[0]),
+                    "ZDRarray_NOPHAIL_1":  (('gates2'), ZDRarray_NOPHAIL[0])
+                    }   )
 
 RMA3_20190305.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA3_20190305.nc', 'w')
 
 
-
 #----------------------------------------------------------------------------------------------
-# RMA4_20180209
+# RMA4_20180209 
 #----------------------------------------------------------------------------------------------  
-
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20180209()
 
 #----------------------------------------------------------------------------------------------
 # RMA4_20181001
