@@ -774,31 +774,39 @@ def main(rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo,
         'REPORTES_meta': reportes_granizo_twitterAPI_meta,
         'gmi_dir':gmi_dir, 
         'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs}
+    make_gifs(rdir, fig_dir, 0, 'TH', opts)  
+
   elif radar_name == 'RMA3': 
-     opts = {'xlim_min':-63.0, 'xlim_max':-58.0, 'ylim_min':-27.0 , 'ylim_max':-23.0, 
+    opts = {'xlim_min':-63.0, 'xlim_max':-58.0, 'ylim_min':-27.0 , 'ylim_max':-23.0, 
         'gfile': gfile, 
         'REPORTES_geo': reportes_granizo_twitterAPI_geo,
         'REPORTES_meta': reportes_granizo_twitterAPI_meta,
         'gmi_dir':gmi_dir, 
         'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs} 
-      
-  make_gifs(rdir, fig_dir, 0, 'TH', opts)  
+    make_gifs(rdir, fig_dir, 0, 'TH', opts)  
+
+  elif radar_name == 'DOW7': 
+    opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31,     
+        'gfile': gfile, 
+        'REPORTES_geo': reportes_granizo_twitterAPI_geo,
+        'REPORTES_meta': reportes_granizo_twitterAPI_meta,
+        'gmi_dir':gmi_dir, 
+        'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs} 
+    make_gifs(rdir, fig_dir, 0, 'DBZHCC', opts)  
+ 
   animate_pngs(fig_dir)
    
   return
 
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
-def run_main_case(caso, radar_name, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta):
+def run_main_case(caso, radar_name, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta, gfile, lon_pfs, lat_pfs):
 
   rdir = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/GIF_datos/'+caso+'/'
   fig_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/Figure_caseGifs/'+caso+'/FIG/'
   gmi_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-  lon_pfs  = [-64.80]
-  lat_pfs  = [-31.83]
-  gfile    = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
   main(rdir, fig_dir, gmi_dir, reportes_granizo_twitterAPI_geo, 
-         reportes_granizo_twitterAPI_meta, lon_pfs, lat_pfs, gfile, radar_name )
+         reportes_granizo_twitterAPI_meta, lon_pfs, lat_pfs, gfile, radar_name)
   return
 
 #------------------------------------------------------------------------------------
@@ -809,20 +817,18 @@ def run_main_case(caso, radar_name, reportes_granizo_twitterAPI_geo, reportes_gr
 # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
 # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
 reportes_granizo_twitterAPI_geo = [[-31.49, -64.54], [-31.42, -64.50], [-31.42, -64.19]]
-reportes_granizo_twitterAPI_meta = ['SAA (1930UTC)', 'VCP (1942UTC)', 'CDB (24UTC)']
-   
-run_main_case('RMA1_20180208','RMA1')
+reportes_granizo_twitterAPI_meta = ['SAA (1930UTC)', 'VCP (1942UTC)', 'CDB (24UTC)'] 
+gfile    = '1B.GPM.GMI.TB2016.20180208-S193936-E211210.022436.V05A.HDF5'
+run_main_case('RMA1_20180208','RMA1', gfile, [-64.80], [-31.83])
 
 
-
-
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
-# RMA1 20180208
-3 ico
-
-
-
-
-
+#------ DOW7
+# REPORTES TWITTER ... 
+# CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
+# VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
+# San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
+reportes_granizo_twitterAPI_geo =  [[-32.19, -64.57],[-32.07, -64.54]]
+reportes_granizo_twitterAPI_meta =  [['0255 y 0320UTC','0100']]
+gfile = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
+run_main_case('DOW7_20181214','DOW7', reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta, gfile, [-63.11], [-31.90])
 
