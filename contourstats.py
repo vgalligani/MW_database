@@ -2006,22 +2006,108 @@ del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_
 
 
 #----------------------------------------------------------------------------------------------
-# RMA4_20181031 (plot_scatter_4icois_morethan1OFINTEREST)
+# RMA4_20181031 (plot_scatter_4icois_morethan1OFINTEREST) OK
 #---------------------------------------------------------------------------------------------- 
 [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20181031()
 
+if len(PCTarray_NOPHAIL_out) == 1:
+	PCTarray_NOPHAIL_out_ = []
+	for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+		PCTarray_NOPHAIL_out_.append( PCTarray_NOPHAIL_out[0][ifreq])
+				
+PCTarray_PHAIL_out_mean = []
+PCTarray_NOPHAIL_out_mean = []
+for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+	PCTarray_PHAIL_out_mean.append(np.nanmean(PCTarray_PHAIL_out[:,ifreq]))
+	PCTarray_NOPHAIL_out_mean.append(np.nanmean(PCTarray_NOPHAIL_out[:,ifreq]))
 
-
-
-
+# And create a netcdf file
+RMA4_20181031 = xr.Dataset( {
+                    "PCTarray_PHAIL_out": (('icois','PCTs'), PCTarray_PHAIL_out),
+                    "PCTarray_NOPHAIL_out": (('PCTs'), PCTarray_NOPHAIL_out_),
+                    "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
+                    "PCTarray_NOPHAIL_mean": (('PCTs'),    PCTarray_NOPHAIL_out_mean),	
+                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "AREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "PIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "GATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "ZHarray_PHAIL_1":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL_1":      (('gates1'), ZDRarray_PHAIL[0]),
+                    "ZHarray_PHAIL_2":   (('gates2'), ZHarray_PHAIL[1]),
+                    "ZDRarray_PHAIL_2":  (('gates2'), ZDRarray_PHAIL[1]),
+                    "ZHarray_PHAIL_3":   (('gates3'), ZHarray_PHAIL[2]),
+                    "ZDRarray_PHAIL_3":  (('gates3'), ZDRarray_PHAIL[2]),
+                    "ZHarray_NOPHAIL":   (('gates4'), ZHarray_NOPHAIL[0]),
+                    "ZDRarray_NOPHAIL":  (('gates4'), ZDRarray_NOPHAIL[0]),	
+                    }   )
+RMA4_20181031.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA4_20181031.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
 #----------------------------------------------------------------------------------------------
 # RMA4_20181215 (plot_scatter_4icois_morethan1OFINTEREST)
 #---------------------------------------------------------------------------------------------- 
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20181215()
 
+				
+PCTarray_PHAIL_out_mean = []
+for ifreq in range(PCTarray_PHAIL_out.shape[1]):
+	PCTarray_PHAIL_out_mean.append(np.nanmean(PCTarray_PHAIL_out[:,ifreq]))	
+	
+# And create a netcdf file
+RMA4_20181215 = xr.Dataset( {
+                    "PCTarray_PHAIL_out": (('icois','PCTs'), PCTarray_PHAIL_out),
+                    "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
+                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "ZHarray_PHAIL_1":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL_1":      (('gates1'), ZDRarray_PHAIL[0]),
+                    "ZHarray_PHAIL_2":   (('gates2'), ZHarray_PHAIL[1]),
+                    "ZDRarray_PHAIL_2":  (('gates2'), ZDRarray_PHAIL[1])
+                    }   )
+
+RMA4_20181215.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA4_20181215.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
 
 #----------------------------------------------------------------------------------------------
 # RMA4_20181218 (plot_scatter_4icois_morethan1OFINTEREST)
 #----------------------------------------------------------------------------------------------
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20181218()
+				
+PCTarray_PHAIL_out_mean = []
+for ifreq in range(PCTarray_PHAIL_out.shape[1]):
+	PCTarray_PHAIL_out_mean.append(np.nanmean(PCTarray_PHAIL_out[:,ifreq]))	
+
+	
+# And create a netcdf file
+RMA4_20181218 = xr.Dataset( {
+                    "PCTarray_PHAIL_out": (('icois','PCTs'), PCTarray_PHAIL_out),
+                    "PCTarray_NOPHAIL_out": (('PCTs'), PCTarray_NOPHAIL_out_),
+                    "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
+                    "PCTarray_NOPHAIL_mean": (('PCTs'),    PCTarray_NOPHAIL_out_mean),	
+                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "AREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "PIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "GATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "ZHarray_PHAIL_1":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL_1":      (('gates1'), ZDRarray_PHAIL[0]),
+                    "ZHarray_PHAIL_2":   (('gates2'), ZHarray_PHAIL[1]),
+                    "ZDRarray_PHAIL_2":  (('gates2'), ZDRarray_PHAIL[1]),
+                    "ZHarray_PHAIL_3":   (('gates3'), ZHarray_PHAIL[2]),
+                    "ZDRarray_PHAIL_3":  (('gates3'), ZDRarray_PHAIL[2]),
+                    "ZHarray_NOPHAIL":   (('gates4'), ZHarray_NOPHAIL[0]),
+                    "ZDRarray_NOPHAIL":  (('gates4'), ZDRarray_NOPHAIL[0]),	
+                    }   )
+
+RMA4_20181218.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA4_20181218.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
+
+
