@@ -1410,7 +1410,8 @@ DOW7_20181214 = xr.Dataset( {
                     "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0]),
                     }   )
 DOW7_20181214.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_DOW7_20181214.nc', 'w')
-	
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
+
 #----------------------------------------------------------------------------------------------
 # main_CSPR2_20181111 OK 
 #----------------------------------------------------------------------------------------------  
@@ -1444,6 +1445,7 @@ CSPR2_20181111 = xr.Dataset( {
                     }   )
 
 CSPR2_20181111.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_CSPR2_20181111.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
 #----------------------------------------------------------------------------------------------
 # RMA1_20190308 OK 
@@ -1468,6 +1470,7 @@ RMA1_20190308 = xr.Dataset( {
                     }   )
 
 RMA1_20190308.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA1_20190308.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
 #----------------------------------------------------------------------------------------------
 # RMA5_20200815 OK
@@ -1492,6 +1495,7 @@ RMA5_20200815 = xr.Dataset( {
                     }   )
 
 RMA5_20200815.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA5_20200815.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
 
 #----------------------------------------------------------------------------------------------
@@ -1528,6 +1532,7 @@ RMA3_20190305 = xr.Dataset( {
                     }   )
 
 RMA3_20190305.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA3_20190305.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
 
 #----------------------------------------------------------------------------------------------
@@ -1536,15 +1541,54 @@ RMA3_20190305.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outp
 [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20180209()
 
+if len(PCTarray_PHAIL_out) == 1:
+	PCTarray_PHAIL_out_ = []
+	for ifreq in range(PCTarray_PHAIL_out.shape[1]):
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
+				
+PCTarray_PHAIL_out_mean = []
+PCTarray_NOPHAIL_out_mean = []
+for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+	PCTarray_PHAIL_out_mean.append(np.nanmean(PCTarray_PHAIL_out[:,ifreq]))
+	PCTarray_NOPHAIL_out_mean.append(np.nanmean(PCTarray_NOPHAIL_out[:,ifreq]))
+
+# And create a netcdf file
+RMA4_20180209 = xr.Dataset( {
+                    "PCTarray_PHAIL_out": (('PCTs'), PCTarray_PHAIL_out_),
+                    "PCTarray_NOPHAIL_out": (('icois','PCTs'), PCTarray_NOPHAIL_out),
+                    "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
+                    "PCTarray_NOPHAIL_mean": (('PCTs'),    PCTarray_NOPHAIL_out_mean),	
+                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "AREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "PIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "GATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "ZHarray_PHAIL":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0]),
+                    "ZHarray_NOPHAIL_1":   (('gates2'), ZHarray_NOPHAIL[0]),
+                    "ZDRarray_NOPHAIL_1":  (('gates2'), ZDRarray_NOPHAIL[0]),
+                    "ZHarray_NOPHAIL_2":   (('gates3'), ZHarray_NOPHAIL[1]),
+                    "ZDRarray_NOPHAIL_2":  (('gates3'), ZDRarray_NOPHAIL[1]),
+                    }   )
+RMA4_20180209.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA4_20180209.nc', 'w')
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
+
+
+
 #----------------------------------------------------------------------------------------------
 # RMA4_20181001
 #----------------------------------------------------------------------------------------------  
-	
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20181001()	
 
 
 #----------------------------------------------------------------------------------------------
 # RMA4_20190209
 #----------------------------------------------------------------------------------------------
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20190209()
+
 
 
 
