@@ -395,54 +395,25 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     # -----
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
-
-    # ---- GET COIs:
-    for item in contorno89.collections:
-        for i in item.get_paths():
-            v = i.vertices
-            x = v[:, 0]
-            y = v[:, 1]            
-    # Get vertices of these polygon type shapes
+	
+    datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
+    TB_inds = get_contour_info(contorno89, icoi, datapts)	
     for ii in range(len(icoi)): 
-        X1 = []; Y1 = []; vertices = []
-        for ik in range(len(contorno89.collections[0].get_paths()[int(icoi[ii])].vertices)): 
-            X1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0])
-            Y1.append(contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1])
-            vertices.append([contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][0], 
-                                        contorno89.collections[0].get_paths()[icoi[ii]].vertices[ik][1]])
-        #convexhull = ConvexHull(vertices)
-        array_points = np.array(vertices)
-        #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
-        alpha = 0.95 * alphashape.optimizealpha(array_points)
-        hull_pts_CONCAVE = alphashape.alphashape(array_points, alpha)
-        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
-        check_points = np.vstack((hull_coors_CONCAVE)).T
-        concave_path = Path(check_points)
-        #-------
-        ##datapts = np.column_stack((S1_sub_lon,S1_sub_lat))
-        datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] ))
-        # Ahora como agarro los Zh, ZDR, etc inside the contour ... 
-        datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
-        #
-        #fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
-        #axes.pcolormesh(lon_gmi, lat_gmi, PCT89, cmap = cmaps['turbo_r'] ); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
-        #axes.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
-        #axes.title(str(item))
-        
+    
         if ii==0:
             inds_1  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_1], S1_sub_lat[inds_1], 'o', markersize=10, markerfacecolor='black')
-            axes.plot(lon_gmi[:,:][idx1][inds_1], lat_gmi[:,:][idx1][inds_1], 'o', markersize=10, markerfacecolor='black')
+            axes.plot(lon_gmi[:,:][TB_inds[ii]], lat_gmi[:,:][TB_inds[ii]], 'o', markersize=10, markerfacecolor='black')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='black', label='icoi:'+str(icoi[0]))
         if ii==1:
             inds_2  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_2], S1_sub_lat[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
-            axes.plot(lon_gmi[:,:][idx1][inds_2], lat_gmi[:,:][idx1][inds_2], 'o', markersize=10, markerfacecolor='darkblue')
+            axes.plot(lon_gmi[:,:][TB_inds[ii]], lat_gmi[:,:][TB_inds[ii]], 'o', markersize=10, markerfacecolor='darkblue')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkblue', label='icoi:'+str(icoi[1]))
         if ii==2:
             inds_3  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_3], S1_sub_lat[inds_3], 'o', markersize=10, markerfacecolor='darkred')
-            axes.plot(lon_gmi[:,:][idx1][inds_3], lat_gmi[:,:][idx1][inds_3], 'o', markersize=10, markerfacecolor='darkred')
+            axes.plot(lon_gmi[:,:][TB_inds[ii]], lat_gmi[:,:][TB_inds[ii]], 'o', markersize=10, markerfacecolor='darkred')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkred', label='icoi:'+str(icoi[2]))
 
     print(ii)
@@ -862,7 +833,7 @@ def plot_scatter_4icois(options, radar, icois, fname):
   
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def run_general_case(options, lat_pfs, lon_pfs, time_pfs, icois):
+def run_general_case(options, lat_pfs, lon_pfs, icois):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
@@ -942,17 +913,12 @@ def calc_PCTs(TB_s1):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------      
-def main(): 
+def main_20180208(): 
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO SUPERCELDA: 20180208
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     lon_pfs  = [-64.80]
     lat_pfs  = [-31.83]
-    time_pfs = ['2058UTC']
     phail    = [0.534]
     MIN85PCT = [131.1081]
     MIN37PCT = [207.4052]
@@ -978,17 +944,109 @@ def main():
     
     return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+
+def main_DOW7_20181214():
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+    lon_pfs  = [-63.11] # [-61.40] [-59.65]
+    lat_pfs  = [-31.90] # [-32.30] [-33.90]
+    phail    = [0.967] # [0.998] [0.863]
+    #MIN85PCT = [71.08] # [45.91] [67.82] 
+    #MIN37PCT = [133.99] # [80.12] [151.73] 
+    #MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    #MINPCTs  = [268.73, 224.68, 169.37, 89.09, 199.99, 	194.18] 
+    #MINPCTs  = [260.02, 201.87, 133.99, 71.08, 199.84, 212.55]
+    #MINPCTs  = [235.52, 130.79, 80.12, 45.91, 199.95, 205.97]
+    #MINPCTs  = [274.45, 239.07, 151.73, 67.82, 195.69, 196.58]
+    # USE DOW7 for lowest level
+    rfile = 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc' 
+    gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
+    era5_file = '20181214_03_RMA1.grib'
+    reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
+    reportes_granizo_twitterAPI_meta = [['0320UTC','0100']]
+    opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0,
+	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
+	     'radar_name':'DOW7', 
+	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	   'icoi_PHAIL': [15]}
+    icois_input  = [15] 
 		
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+	
+	
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  	
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  	
+import xarray as xr
 
 [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = main()
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = main_20180208()
 
+PCTarray_PHAIL_out_mean = []
+PCTarray_NOPHAIL_out_mean = []
+for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+	PCTarray_PHAIL_out_mean.append(np.nanmean(PCTarray_PHAIL_out[:,ifreq]))
+	PCTarray_NOPHAIL_out_mean.append(np.nanmean(PCTarray_NOPHAIL_out[:,ifreq]))
 
+if len(PCTarray_PHAIL_out) == 1:
+	PCTarray_PHAIL_out_ = []
+	for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[ifreq])
+		
+# And create a netcdf file
+RMA1_20180208 = xr.Dataset( {
+                    "PCTarray_PHAIL_out": (('PCTs'), PCTarray_PHAIL_out_),
+                    "PCTarray_NOPHAIL_out": (('icois','PCTs'), PCTarray_NOPHAIL_out),
+                    "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
+                    "PCTarray_NOPHAIL_mean": (('PCTs'),    PCTarray_NOPHAIL_out_mean),	
+                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "AREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "PIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "GATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "ZHarray_PHAIL":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0]),
+                    "ZHarray_NOPHAIL_1":   (('gates2'), ZHarray_NOPHAIL[0]),
+                    "ZDRarray_NOPHAIL_1":  (('gates2'), ZDRarray_NOPHAIL[0]),
+                    "ZHarray_NOPHAIL_2":   (('gates3'), ZHarray_NOPHAIL[1]),
+                    "ZDRarray_NOPHAIL_2":  (('gates3'), ZDRarray_NOPHAIL[1]),
+                    }   )
+RMA1_20180208.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA1_20180208.nc', 'w')
+
+del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = main_DOW7_20181214()
   
   
   
-  
-  
+
+	
+	
+	
+	
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+
   
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
     # CASO MSC RMA3 - 20190305: P(hail) = 0.737 
@@ -1029,80 +1087,13 @@ def main():
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
 	
+rttov_tb_as = np.concatenate((p1['rttov_tb_as'][:].data,      p2['rttov_tb_as'][:].data,       p3['rttov_tb_as'][:].data,       p4['rttov_tb_as'][:].data))
+rttov_tb_cs_half = np.concatenate((p1['rttov_tb_cs_half'][:].data, p2['rttov_tb_cs_half'][:].data,  p3['rttov_tb_cs_half'][:].data,  p4['rttov_tb_cs_half'][:].data))
+arts_tb_as  = np.concatenate((p1['arts_tb_as'][:].data,       p2['arts_tb_as'][:].data,        p3['arts_tb_as'][:].data,        p4['arts_tb_as'][:].data))
+arts_tb_cs  = np.concatenate((p1['arts_tb_cs'][:].data,       p2['arts_tb_cs'][:].data,        p3['arts_tb_cs'][:].data,        p4['arts_tb_cs'][:].data))
+rttov_tb_cs = np.concatenate((p1['rttov_tb_cs'][:].data, p2['rttov_tb_cs'][:].data,  p3['rttov_tb_cs'][:].data,  p4['rttov_tb_cs'][:].data))
 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20181214: P(hail) = 0.967 ... USAR DOW7!
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #  	ESTE FUERA DEL RANGO: 2018	12	14	03	09	 -31.30	 -65.99	0.839		268.7292	296.7003	224.6779	169.3689	 89.0871	199.9863	194.1800	1
-    # 	2018	12	14	03	09	 -31.90	 -63.11	0.967		260.0201	306.4535	201.8675	133.9975	 71.0844	199.8376	212.5500	1
-    # 	ESTE FUERA DEL RANGO: 2018	12	14	03	09	 -32.30	 -61.40	0.998		235.5193	307.7839	130.7862	 80.1157	 45.9117	199.9547	205.9700	1
-    # 	ESTE FUERA DEL RANGO: 2018	12	14	03	10	 -33.90	 -59.65	0.863		274.4490	288.9589	239.0672	151.7338	 67.8216	195.6911	196.5800	1
-    lon_pfs  = [-63.11] # [-61.40] [-59.65]
-    lat_pfs  = [-31.90] # [-32.30] [-33.90]
-    time_pfs = ['0310UTC']
-    phail    = [0.967] # [0.998] [0.863]
-    MIN85PCT = [71.08] # [45.91] [67.82] 
-    MIN37PCT = [133.99] # [80.12] [151.73] 
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    #MINPCTs  = [268.73, 224.68, 169.37, 89.09, 199.99, 	194.18] 
-    MINPCTs  = [260.02, 201.87, 133.99, 71.08, 199.84, 212.55]
-    #MINPCTs  = [235.52, 130.79, 80.12, 45.91, 199.95, 205.97]
-    #MINPCTs  = [274.45, 239.07, 151.73, 67.82, 195.69, 196.58]
-    # 0304 is raining on top ... 'cfrad.20181214_030436.0000_to_20181214_031117.0000_RMA1_0301_01.nc'
-    # rfile =  'cfrad.20181214_024550.0000_to_20181214_024714.0000_RMA1_0301_02.nc' 
-    # rfile = 'cfrad.20181214_025529.0000_to_20181214_030210.0000_RMA1_0301_01.nc' 
-    # USE DOW7 for lowest level
-    rfile = 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc' 
-    # mimic RMA1 file system: 
-    counter = 0	    
-    radar0      = pyart.io.read_cfradial('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/' + 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc')
-    start_index = radar0.sweep_start_ray_index['data'][0]
-    end_index   = radar0.sweep_end_ray_index['data'][0]
-    lats0       = radar0.gate_latitude['data'][start_index:end_index]
-    files_list = ['cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc',
-		  'cfrad.20181214_022019_DOW7low_v176_s02_el1.98_SUR.nc',
-		  'cfrad.20181214_022031_DOW7low_v176_s03_el3.97_SUR.nc',
-		  'cfrad.20181214_022043_DOW7low_v176_s04_el5.98_SUR.nc',
-		  'cfrad.20181214_022055_DOW7low_v176_s05_el7.98_SUR.nc',
-		  'cfrad.20181214_022106_DOW7low_v176_s06_el9.98_SUR.nc',
-		  'cfrad.20181214_022118_DOW7low_v176_s07_el11.98_SUR.nc',
-		  'cfrad.20181214_022130_DOW7low_v176_s08_el13.99_SUR.nc',
-		  'cfrad.20181214_022142_DOW7low_v176_s09_el15.97_SUR.nc',
-		  'cfrad.20181214_022154_DOW7low_v176_s10_el17.97_SUR.nc',
-		  'cfrad.20181214_022206_DOW7low_v176_s11_el19.98_SUR.nc',	  
-		  'cfrad.20181214_022218_DOW7low_v176_s12_el21.98_SUR.nc',
-		  'cfrad.20181214_022230_DOW7low_v176_s13_el23.99_SUR.nc',
-		  'cfrad.20181214_022241_DOW7low_v176_s14_el25.98_SUR.nc',	  
-		  'cfrad.20181214_022253_DOW7low_v176_s15_el27.98_SUR.nc',
-		  'cfrad.20181214_022305_DOW7low_v176_s16_el29.98_SUR.nc',
-		  'cfrad.20181214_022317_DOW7low_v176_s17_el31.98_SUR.nc',
-		  'cfrad.20181214_022329_DOW7low_v176_s18_el33.98_SUR.nc',	    
-		  'cfrad.20181214_022341_DOW7low_v176_s19_el36.98_SUR.nc',
-		  'cfrad.20181214_022353_DOW7low_v176_s20_el40.97_SUR.nc',
-		  'cfrad.20181214_022405_DOW7low_v176_s21_el44.98_SUR.nc',
-		  'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']	
-    #	
-    gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
-    era5_file = '20181214_03_RMA1.grib'
-    # REPORTES TWITTER ... 
-    reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
-    reportes_granizo_twitterAPI_meta = [['0320UTC','0100']]
-    opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 
-	    'ZDRoffset': 0, 'ylim_max_zoom':-31, 'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 60, 'x_supermin': -65.3, 'x_supermax':-63.3,
-	    'y_supermin':-32.4, 'y_supermax':-31, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 16, 'radar_name':'DOW7', 'files_list':files_list}
-    icois_input  = [15] 
-    azimuths_oi  = [300, 273, 450]
-    labels_PHAIL = ['', '', ''] 
-    xlims_xlims_input  = [80, 80, 80] 
-    xlims_mins_input  = [0, 0, 0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-	
+
     # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- -de--- ---- ---- ---- ----- ---- ---- ---- 
     # ESTE CASO ELIMINADO - DETRAS DE LAS SIERRAS ... 
     # CASO RMA1 - 20181111 at 1250: P(hail) = 0.653 
