@@ -243,8 +243,8 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     ax_cbar = fig.add_axes([p1[0], 0.05, p2[2]-p1[0], 0.03])   # [left, bottom, width, height] or Bbox 
     cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.8, ticks=np.arange(50,300,50), extend='both', orientation="horizontal", label='TBV (K)')   
 
-    fig.savefig(options['fig_dir']+'GMI_basicTBs.png', dpi=300, transparent=False)  
-
+    #fig.savefig(options['fig_dir']+'GMI_basicTBs.png', dpi=300, transparent=False)  
+    
     #----------------------------------------------------------------------------------------
     # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
     #----------------------------------------------------------------------------------------
@@ -252,11 +252,11 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     axes.pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
     axes.set_title('Ground Level')
-    axes.set_xlim([options['xlim_min']-5, options['xlim_max']+5])
-    axes.set_ylim([options['ylim_min']-5, options['ylim_max']+5])
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
     # -----
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
-    #contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200, 225], colors=(['k']), linewidths=1.5);
+    contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
 
     # ---- GET COIs:
     for item in contorno89.collections:
@@ -286,12 +286,11 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         # Ahora como agarro los Zh, ZDR, etc inside the contour ... 
         datapts_RADAR_NATIVE = np.column_stack((np.ravel(lons),np.ravel(lats)))
         #
-        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
-        axes.pcolormesh(lon_gmi, lat_gmi, PCT89, cmap = cmaps['turbo_r'] ); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
-        axes.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
+        #fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[14,12])   
+        #axes.pcolormesh(lon_gmi, lat_gmi, PCT89, cmap = cmaps['turbo_r'] ); plt.xlim([-70,-60]); plt.ylim([-40,-20]); 
+        #axes.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200])
         #axes.title(str(item))
-
-
+        
         if ii==0:
             inds_1  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_1], S1_sub_lat[inds_1], 'o', markersize=10, markerfacecolor='black')
@@ -300,12 +299,12 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         if ii==1:
             inds_2  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_2], S1_sub_lat[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
-            axes.plot(lon_gmi[:,:][idx1][inds_2], lat_gmi[:,:][idx1][inds_2], 'o', markersize=10, markerfacecolor='black')
+            axes.plot(lon_gmi[:,:][idx1][inds_2], lat_gmi[:,:][idx1][inds_2], 'o', markersize=10, markerfacecolor='darkblue')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkblue', label='icoi:'+str(icoi[1]))
         if ii==2:
             inds_3  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_3], S1_sub_lat[inds_3], 'o', markersize=10, markerfacecolor='darkred')
-            axes.plot(lon_gmi[:,:][idx1][inds_3], lat_gmi[:,:][idx1][inds_3], 'o', markersize=10, markerfacecolor='black')
+            axes.plot(lon_gmi[:,:][idx1][inds_3], lat_gmi[:,:][idx1][inds_3], 'o', markersize=10, markerfacecolor='darkred')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkred', label='icoi:'+str(icoi[2]))
 
     print(ii)
@@ -333,6 +332,53 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     fig.savefig(options['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
     #plt.close()
     return
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_contour_info(contorno, icois, datapts_in): 
+
+    # Get verticies: 
+    for item in contorno.collections:
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1] 
+
+    # Get vertices of these polygon type shapes
+    for ii in range(len(icois)): 
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno.collections[0].get_paths()[int(icois[ii])].vertices)): 
+            X1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0])
+            Y1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1])
+            vertices.append([contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
+                                        contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
+        #convexhull = ConvexHull(vertices)
+        array_points = np.array(vertices)
+
+        #hull_path   = Path( array_points[convexhull.vertices] )
+        #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
+        alpha = 0.95 * alphashape.optimizealpha(array_points)
+        hull_pts_CONCAVE   = alphashape.alphashape(array_points, alpha)
+        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
+        check_points = np.vstack((hull_coors_CONCAVE)).T
+        concave_path = Path(check_points)
+        
+        if ii == 0:
+            inds_1   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1]
+       	if ii == 1:
+            inds_2   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1, inds_2]
+        if ii == 2:
+            inds_3   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1, inds_2, inds_3]
+        if ii == 3:
+            inds_4   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1, inds_2, inds_3, inds_4]   
+
+    return TB_inds
+
+
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -391,44 +437,37 @@ def plot_scatter_4icois(options, radar, icois, fname):
     # Test plot figure: General figure with Zh and the countours identified 
     #----------------------------------------------------------------------------------------
     test_this = 1
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
-                        figsize=[14,12])
-    #-- Zh: 
-    if 'TH' in radar.fields.keys():  
-        radarTH = radar.fields['TH']['data'][start_index:end_index]
-        radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-options['ZDRoffset']
-    elif 'DBZH' in radar.fields.keys():
-        radarTH = radar.fields['DBZH']['data'][start_index:end_index]
-        radarZDR = radar.fields['DBZH']['data'][start_index:end_index]-radar.fields['DBZV']['data'][start_index:end_index]
-	#elif 'reflectivity' in radar.fields.keys(): 
-    #    radarTH = radar.fields['DBZH']['data'][start_index:end_index]
-    elif 'DBZHCC' in radar.fields.keys(): 
-        radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
-        radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
-    elif 'corrected_reflectivity' in radar.fields.keys(): 
-        radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
-        radarZDR = radar.fields[ZDRname]['data'][start_index:end_index]
-
-    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
-    cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
-    cbar.cmap.set_under(under)
-    cbar.cmap.set_over(over)
-    axes.grid(True)
-    axes.legend(loc='upper left')
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200] , colors=(['r']), linewidths=1.5);
-    contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [200], colors=(['k']), linewidths=1.5);
-    
-    axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
-    axes.set_ylim([options['ylim_min'], options['ylim_max']])
-
-    if test_this == 0:
+    if test_this == 1: 
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,12])
+        if 'TH' in radar.fields.keys():  
+            radarTH = radar.fields['TH']['data'][start_index:end_index]
+            radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-options['ZDRoffset']
+        elif 'DBZH' in radar.fields.keys():
+            radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+            radarZDR = radar.fields['DBZH']['data'][start_index:end_index]-radar.fields['DBZV']['data'][start_index:end_index]
+        elif 'DBZHCC' in radar.fields.keys(): 
+            radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
+            radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
+        elif 'corrected_reflectivity' in radar.fields.keys(): 
+            radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+            radarZDR = radar.fields[ZDRname]['data'][start_index:end_index]
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        axes.grid(True)
+        axes.legend(loc='upper left')
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200] , colors=(['r']), linewidths=1.5);
+        contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [200], colors=(['k']), linewidths=1.5);
+        axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
+        axes.set_ylim([options['ylim_min'], options['ylim_max']])
         plt.close()
 	
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
@@ -477,15 +516,16 @@ def plot_scatter_4icois(options, radar, icois, fname):
 
     #------------------------------------------------------
     # FIGURE CHECK CONTORNOS
-    fig = plt.figure(figsize=(20,7)) 
-    plt.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
-    for ic in range(len(GMI_tbs1_37)):
-        plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
-        plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
-    plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
-    plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
-    plt.xlim([options['xlim_min'], options['xlim_max']]) 
-    plt.ylim([options['ylim_min'], options['ylim_max']])
+    if test_this == 1: 	
+    	fig = plt.figure(figsize=(20,7)) 
+    	plt.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+    	for ic in range(len(GMI_tbs1_37)):
+        	plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
+        	plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
+    	plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+    	plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    	plt.xlim([options['xlim_min'], options['xlim_max']]) 
+    	plt.ylim([options['ylim_min'], options['ylim_max']])
 
     #------------------------------------------------------
     # FIGURE scatter plot check
@@ -875,11 +915,13 @@ def main():
     era5_file = '20180208_21_RMA1.grib'
     reportes_granizo_twitterAPI_geo = [[-31.49, -64.54], [-31.42, -64.50], [-31.42, -64.19]]
     reportes_granizo_twitterAPI_meta = ['SAA (1930UTC)', 'VCP (1942UTC)', 'CDB (24UTC)']
-    opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
-	     'rfile': 'RMA1/'+rfile, 'gfile': gfile, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail,  'radar_name':'RMA1'}
-    icois_input  = [1,3,4] 
+    opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5,  'ZDRoffset': 4,
+	     'rfile': 'RMA1/'+rfile, 
+	    'radar_name':'RMA1',
+	    'gfile': gfile, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/', 
+	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	    'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
+    icois_input  = [2,4,5] 
 
     run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
     
