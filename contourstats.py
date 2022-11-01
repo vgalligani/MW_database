@@ -403,17 +403,17 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         if ii==0:
             #inds_1  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_1], S1_sub_lat[inds_1], 'o', markersize=10, markerfacecolor='black')
-            axes.plot(lon_gmi[:,:][idx1][TB_inds[0]], lat_gmi[:,:][idx1][TB_inds[0]], 'o', markersize=10, markerfacecolor='black')
+            axes.plot(lon_gmi[:,:][idx1][TB_inds[ii]], lat_gmi[:,:][idx1][TB_inds[ii]], 'o', markersize=10, markerfacecolor='black')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='black', label='icoi:'+str(icoi[0]))
         if ii==1:
             #inds_2  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_2], S1_sub_lat[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
-            axes.plot(lon_gmi[:,:][idx1][TB_inds[0]], lat_gmi[:,:][idx1][TB_inds[0]], 'o', markersize=10, markerfacecolor='darkblue')
+            axes.plot(lon_gmi[:,:][idx1][TB_inds[ii]], lat_gmi[:,:][idx1][TB_inds[ii]], 'o', markersize=10, markerfacecolor='darkblue')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkblue', label='icoi:'+str(icoi[1]))
         if ii==2:
             #inds_3  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_3], S1_sub_lat[inds_3], 'o', markersize=10, markerfacecolor='darkred')
-            axes.plot(lon_gmi[:,:][idx1][TB_inds[0]], lat_gmi[:,:][idx1][TB_inds[0]], 'o', markersize=10, markerfacecolor='darkred')
+            axes.plot(lon_gmi[:,:][idx1][TB_inds[ii]], lat_gmi[:,:][idx1][TB_inds[ii]], 'o', markersize=10, markerfacecolor='darkred')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkred', label='icoi:'+str(icoi[2]))
 
     print(ii)
@@ -984,10 +984,261 @@ def main_DOW7_20181214():
     return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
 	
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+def main_CSPR2_20181111(): 
+
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+    lon_pfs  = [-64.53]
+    lat_pfs  = [-31.83]
+    time_pfs = ['1250UTC']
+    phail    = [0.653]
+    rfile     = 'corcsapr2cmacppiM1.c1.20181111.130003.nc' #'corcsapr2cfrppiM1.a1.20181111.130003.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
+    era5_file = '20181111_13_RMA1.grib'
+    reportes_granizo_twitterAPI_geo = [[]]
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -65.5, 'xlim_max': -63.6, 'ylim_min': -33, 'ylim_max': -31.5, 
+    	    'ZDRoffset': 0, 
+	    'rfile': 'CSPR2_data/'+rfile, 'gfile': gfile, 
+    	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
+    	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+    	    'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+     	   'icoi_PHAIL': [3], 'radar_name':'CSPR2'}
+    icois_input  = [6,5] 
 	
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+
+
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------  	
+def RMA1_20190308(): 
+
+    lon_pfs  = [-63.74]
+    lat_pfs  = [-30.75]
+    time_pfs = ['0204UTC']
+    phail    = [0.895]
+    rfile    = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
+    era5_file = '20190308_02_RMA1.grib'
+    reportes_granizo_twitterAPI_geo = [[]]
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
+    	    'ZDRoffset': 0.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+    	    'window_calc_KDP': 7, 
+    	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 
+    	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+    	    'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+     	   'icoi_PHAIL': [3], 'radar_name':'RMA1'}
+    icois_input  = [3]
+
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+
 #----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+def RMA5_20200815(): 
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+    lon_pfs  = [ -54.11 ]
+    lat_pfs  = [ -25.28 ]
+    time_pfs = ['0215UTC']
+    phail    = [ 0.725 ]
+    rfile    = 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
+    era5_file = '20200815_02.grib'
+    reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24]] 
+    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America']
+    opts = {'xlim_min': -55.0, 'xlim_max': -52.0, 'ylim_min': -27.5, 'ylim_max': -25.0, 
+	    'ZDRoffset': 2, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	   'icoi_PHAIL': [7], 'radar_name':'RMA5'}
+    icois_input  = [7] 
+   
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]		
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------  
+def RMA3_20190305():
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
+    lat_pfs  = [-25.95] 
+    lon_pfs  = [-60.57]
+    time_pfs = ['1252'] 
+    phail    = [0.737]
+    rfile     = 'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190305-S123614-E140847.028498.V05A.HDF5'
+    era5_file = '20190305_13.grib'
+    #
+    # REPORTES TWITTER ... 
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -63, 'xlim_max': -58, 'ylim_min': -27, 'ylim_max': -23, 'ZDRoffset': 3, 
+	    'rfile': 'RMA3/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190305_RMA3/', 
+	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	   'icoi_PHAIL':[6], 'radar_name':'RMA3'}
+    icois_input  = [6,7] 
+
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+
+#----------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------- 
+def RMA4_20180209():
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    lon_pfs  = [-60.18]
+    lat_pfs  = [-27.92]
+    time_pfs = ['2005UTC']
+    phail    = [0.762]
+    rfile    = 'cfrad.20180209_200449.0000_to_20180209_201043.0000_RMA4_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20180209-S184820-E202054.022451.V05A.HDF5' 
+    era5_file = '20180209_20_RMA4.grib' 
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+	    'ZDRoffset': -1,   
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180209_RMA4/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	   'icoi_PHAIL': [17], 'radar_name':'RMA4'}
+    icois_input  = [10,17,19] 
+
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+
+#----------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------- 
+def RMA4_20181001(): 
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    lon_pfs  = [-57.16]
+    lat_pfs  = [-29.61]
+    time_pfs = ['0953UTC']
+    phail    = [0.521]
+    rfile    = 'cfrad.20181001_095450.0000_to_20181001_100038.0000_RMA4_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20181001-S093732-E111006.026085.V05A.HDF5' 
+    era5_file = '20181001_09_RMA4.grib' 
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+	    'ZDRoffset': 1.5,   
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7,
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181001_RMA4/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	   'icoi_PHAIL': [37], 'radar_name':'RMA4'}
+    icois_input  = [26,36,37] 
+
+    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    
+    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+
+
+#----------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------- 
+
+
+
+
+
+
+
+
+#----------------------------------------------------------------------------------------------
+# EN ESTE VER QUE HAGO? HAY MUCHOS CONTORNOS FUERA DEL RANGO DEL RADAR ... AGREGO LOS TBS? 
+# APARTE MODIFICAR EL CODIGO PORQUE HAY MAS DE UN CONTORNOS CON PHAIL>50% QUE CONTAR! 
+#---------------------------------------------------------------------------------------------- 
+def RMA4_20181031(): 
+	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    # aca solo voy a poner las 3 que me interesan dentro de rango razonable del radar ... 
+    #icoi=58//	2018	10	31	01	11	 -26.52	 -57.33	 0.993	267.5031	307.3651	198.3740	111.7183	 56.3188	193.9708	219.0600	1
+    #icoi=20//	2018	10	31	01	10	 -28.71	 -58.37	 0.931	276.8601	302.9811	237.4247	151.6656	 67.1172	198.5928	160.6000	1
+    #icoi=1//	2018	10	31	01	10	 -28.70	 -60.70	 0.738	274.8905	303.1061	244.4909	174.1353	 99.4944	199.8251	163.2800	1
+    time_pfs = ['0110UTC','0110UTC','0110UTC']
+    phail    = [0.993, 0.931, 0.738]
+    lon_pfs  = [-57.33, -58.37, -60.70]
+    lat_pfs  = [-26.52, -28.71, -28.70]
+    rfile    = 'cfrad.20181031_010936.0000_to_20181031_011525.0000_RMA4_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20181031-S005717-E022950.026546.V05A.HDF5' 
+    era5_file = '20181031_01_RMA4.grib' 
+    # REPORTES TWITTER ... 
+    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
+    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
+    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+	    'ZDRoffset': 1.5,   
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4'}
+    icois_input  = [1,26,20,58] 
+
+
+#----------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#----------------------------------------------------------------------------------------------
+# main_20180208 OK 
 #----------------------------------------------------------------------------------------------  	
 import xarray as xr
 
@@ -1029,351 +1280,158 @@ RMA1_20180208.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outp
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 
 #----------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------  
-#----------------------------------------------------------------------------------------------
+# main_DOW7_20181214 OK 
 #----------------------------------------------------------------------------------------------  
 [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = main_DOW7_20181214()
-  
-  
-  
 
-	
-	
-	
-	
-#----------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------  
-#----------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------  
-
-  
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO MSC RMA3 - 20190305: P(hail) = 0.737 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #   MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		
-    # 	278.0306	297.0986	249.9366	164.4755	 75.0826	199.9341	223.8100
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    lat_pfs  = [-25.95] 
-    lon_pfs  = [-60.57]
-    time_pfs = ['1252'] 
-    phail    = [0.737]
-    MIN85PCT = [75.0826]
-    MIN37PCT = [164.4755] 
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [278.03, 249.94, 164.48, 75.08, 223.81] 
-    #
-    rfile     = 'cfrad.20190305_124638.0000_to_20190305_125231.0000_RMA3_0200_01.nc'
-    gfile     = '1B.GPM.GMI.TB2016.20190305-S123614-E140847.028498.V05A.HDF5'
-    era5_file = '20190305_13.grib'
-    #
-    # REPORTES TWITTER ... 
-    reportes_granizo_twitterAPI_geo = []
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -63, 'xlim_max': -58, 'ylim_min': -27, 'ylim_max': -23, 'ylim_max_zoom': -24.5, 'ZDRoffset': 3, 
-	    'rfile': 'RMA3/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
-	    'x_supermin':-63, 'x_supermax':-58, 'y_supermin':-27, 'y_supermax':-23, 
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190305_RMA3/', 
-	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL':6, 'radar_name':'RMA3'}
-    icois_input  = [6,7] 
-    azimuths_oi  = [176,210,30]
-    labels_PHAIL = ['6[Phail = 0.737]','7', ''] 
-    xlims_xlims_input  = [150, 200, 150] 
-    xlims_mins_input  = [0, 0, 0]	
-    # OJO. sys_phase no le sirve que haya -9999. no toma masked array! 
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-	
-rttov_tb_as = np.concatenate((p1['rttov_tb_as'][:].data,      p2['rttov_tb_as'][:].data,       p3['rttov_tb_as'][:].data,       p4['rttov_tb_as'][:].data))
-rttov_tb_cs_half = np.concatenate((p1['rttov_tb_cs_half'][:].data, p2['rttov_tb_cs_half'][:].data,  p3['rttov_tb_cs_half'][:].data,  p4['rttov_tb_cs_half'][:].data))
-arts_tb_as  = np.concatenate((p1['arts_tb_as'][:].data,       p2['arts_tb_as'][:].data,        p3['arts_tb_as'][:].data,        p4['arts_tb_as'][:].data))
-arts_tb_cs  = np.concatenate((p1['arts_tb_cs'][:].data,       p2['arts_tb_cs'][:].data,        p3['arts_tb_cs'][:].data,        p4['arts_tb_cs'][:].data))
-rttov_tb_cs = np.concatenate((p1['rttov_tb_cs'][:].data, p2['rttov_tb_cs'][:].data,  p3['rttov_tb_cs'][:].data,  p4['rttov_tb_cs'][:].data))
-
-
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- -de--- ---- ---- ---- ----- ---- ---- ---- 
-    # ESTE CASO ELIMINADO - DETRAS DE LAS SIERRAS ... 
-    # CASO RMA1 - 20181111 at 1250: P(hail) = 0.653 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #   2018	11	11	12	50	 -31.83	 -64.53	0.653		274.5656	302.1060	249.4227	190.0948	100.5397	197.7117	209.4600	1
-    # lon_pfs  = [-64.53]
-    # lat_pfs  = [-31.83]
-    # time_pfs = ['1250UTC']
-    # phail    = [0.653]
-    # MIN85PCT = [100.5397]
-    # MIN37PCT = [190.0948]
-    # MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    # MINPCTs  = [274.57, 249.42, 190.09, 100.54, 197.71, 209.46]
-    #
-    # rfile     = 'cfrad.20181111_124509.0000_to_20181111_125150.0000_RMA1_0301_01.nc'
-    # gfile     = '1B.GPM.GMI.TB2016.20181111-S113214-E130446.026724.V05A.HDF5'
-    # era5_file = '20181111_13_RMA1.grib'
-    # REPORTES TWITTER ...  (de la base de datos de relampago
-    #reportes_granizo_twitterAPI_geo = [[-31.84, -64.98], [-30.73, -64.82], [-31.66, -64.43], [-30.67, -64.07], [-32.44, -64.40]]
-    #reportes_granizo_twitterAPI_meta = ['19UCT', '21UTC', '2340UTC', '0035UTC', '0220UTC']
-    # opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5, 
-    # 	    'ZDRoffset': 1, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
-    #	    'window_calc_KDP': 7, 'azimuth_ray': 220, 'x_supermin':-65, 'x_supermax':-64,
-    #	    'y_supermin':-33, 'y_supermax':-31.5, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am_RMA1/', 
-    #	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-    #	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-    # 	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
-    #icois_input  = [2,3] 
-    #azimuths_oi  = [215,110]
-    #labels_PHAIL = ['2 []','3[Phail = ]'] 
-    #xlims_xlims_input  = [150, 150] 
-    #xlims_mins_input  = [0, 0]		
-    #run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA1 - 20190308: P(hail) = 0.895
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2019	03	08	02	04	 -30.75	 -63.74	0.895		271.6930	298.6910	241.9306	147.7273	 62.1525	199.0994	226.0100	1
-    lon_pfs  = [-63.74]
-    lat_pfs  = [-30.75]
-    time_pfs = ['0204UTC']
-    phail    = [0.895]
-    MIN85PCT = [62.15]
-    MIN37PCT = [147.72]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [271.69, 241.93, 147.72, 62.15, 199.09, 226.01]
-    #
-    rfile    = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
-    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
-    era5_file = '20190308_02_RMA1.grib'
-    # REPORTES TWITTER ...  (de la base de datos de relampago solo a las 2340 en la zona, y en tweets en la madrugada 1216am) 
-    reportes_granizo_twitterAPI_geo = [[]]
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
-    	    'ZDRoffset': 0.5, 'ylim_max_zoom':-30.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
-    	    'window_calc_KDP': 7, 'azimuth_ray': 50, 'x_supermin':-65, 'x_supermax':-62,
-    	    'y_supermin':-32, 'y_supermax':-30, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 
-    	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-    	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-     	   'icoi_PHAIL': 3, 'radar_name':'RMA1'}
-    icois_input  = [3,3] 
-    azimuths_oi  = [50,30]
-    labels_PHAIL = ['3 []','3 []'] 
-    xlims_xlims_input  = [160, 160] 
-    xlims_mins_input  = [0,0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+if len(PCTarray_PHAIL_out) == 1:
+	PCTarray_PHAIL_out_ = []
+	for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
 		
+# And create a netcdf file
+DOW7_20181214 = xr.Dataset( {
+                    "PCTarray_PHAIL_out": (('PCTs'), PCTarray_PHAIL_out_),
+                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "ZHarray_PHAIL":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0]),
+                    }   )
+DOW7_20181214.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_DOW7_20181214.nc', 'w')
 	
-    return
-	
+#----------------------------------------------------------------------------------------------
+# main_CSPR2_20181111 OK 
+#----------------------------------------------------------------------------------------------  
+
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = main_CSPR2_20181111()
+
+if len(PCTarray_PHAIL_out) == 1:
+	PCTarray_PHAIL_out_ = []
+	for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
+if len(PCTarray_NOPHAIL_out) == 1:
+	PCTarray_NOPHAIL_out_ = []
+	for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
+		PCTarray_NOPHAIL_out_.append( PCTarray_NOPHAIL_out[0][ifreq])
+		
+# And create a netcdf file
+CSPR2_20181111 = xr.Dataset( {
+                    "PCTarray_PHAIL_out":   (('PCTs'),  PCTarray_PHAIL_out_),
+                    "PCTarray_NOPHAIL_out": (('PCTs'),  PCTarray_NOPHAIL_out_),
+                    "AREA_PHAIL":            (('Nr'),   [np.nanmean(AREA_PHAIL)]),
+                    "AREA_NOPHAIL":          (('Nr'),   [np.nanmean(AREA_NOPHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),   [np.nanmean(PIXELS_PHAIL)]), 
+                    "PIXELS_NOPHAIL":        (('Nr'),   [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),   [np.nanmean(GATES_PHAIL)]), 
+                    "GATES_NOPHAIL":         (('Nr'),   [np.nanmean(GATES_NOPHAIL)]),
+                    "ZHarray_PHAIL":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0]),
+                    "ZHarray_NOPHAIL_1":   (('gates2'), ZHarray_NOPHAIL[0]),
+                    "ZDRarray_NOPHAIL_1":  (('gates2'), ZDRarray_NOPHAIL[0])
+                    }   )
+
+CSPR2_20181111.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_CSPR2_20181111.nc', 'w')
+
+#----------------------------------------------------------------------------------------------
+# RMA1_20190308 OK 
+#----------------------------------------------------------------------------------------------  
+
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA1_20190308()
+
+if len(PCTarray_PHAIL_out) == 1:
+	PCTarray_PHAIL_out_ = []
+	for ifreq in range(PCTarray_PHAIL_out.shape[1]):
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
+		
+# And create a netcdf file
+RMA1_20190308 = xr.Dataset( {
+                    "PCTarray_PHAIL_out":   (('PCTs'),  PCTarray_PHAIL_out_),
+                    "AREA_PHAIL":            (('Nr'),   [np.nanmean(AREA_PHAIL)]),
+                    "PIXELS_PHAIL":          (('Nr'),   [np.nanmean(PIXELS_PHAIL)]), 
+                    "GATES_PHAIL":           (('Nr'),   [np.nanmean(GATES_PHAIL)]), 
+                    "ZHarray_PHAIL":       (('gates1'), ZHarray_PHAIL[0]),
+                    "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0])
+                    }   )
+
+RMA1_20190308.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA1_20190308.nc', 'w')
+
+#----------------------------------------------------------------------------------------------
+# RMA5_20200815 ACA
+#----------------------------------------------------------------------------------------------  
+
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA5_20200815()
+
+if len(PCTarray_PHAIL_out) == 1:
+	PCTarray_PHAIL_out_ = []
+	for ifreq in range(PCTarray_PHAIL_out.shape[1]):
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
+		
+# And create a netcdf file
+RMA5_20200815 =
 
 
-def main_RMA5_20200815(): 
-	
-    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
-	
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA5 - 20200815: P(hail) = 0.727
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2020	08	15	02	15	 -24.17	 -55.94	0.547		276.0569	284.5401	247.3784	192.5272	110.7962	196.9116	144.4400	1
-    #	2020	08	15	02	15	 -25.28	 -54.11	0.725		273.2686	290.1380	241.5902	181.1631	101.1417	199.9028	108.2200	1
-    lon_pfs  = [ -54.11 ]
-    lat_pfs  = [ -25.28 ]
-    time_pfs = ['0215UTC']
-    phail    = [ 0.725 ]
-    MIN85PCT = [ 101.14]
-    MIN37PCT = [ 181.16]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [273.23, 241.59, 181.16, 101.14, 199.90, 108.22] 
-    rfile    = 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc' 
-    gfile    = '1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
-    era5_file = '20200815_02.grib'
-    # REPORTES TWITTER ... el 0814 aprox. 23HL
-    # https://www.facebook.com/watch/?v=966163750473561 
-    # https://revistacodigos.com/fuerte-temporal-de-lluvias-y-granizo-azoto-a-distintas-localidades-de-misiones/ 
-    # https://www.elterritorio.com.ar/noticias/2020/08/14/672043-la-tormenta-con-granizo-afecto-a-varios-barrios-de-jardin-america
-    # WANDA (-25.93, -54.57)
-    # Jardin de america (-27.03, -55.24)
-    # San vicente (-35.03, -58.43)
-    # Salto Encantado (-27.06, -54.83)
-    # Posadas (-27.39, -55.93)
-    # Puerto Leoni (-26.98, -55.16)
-    # Colonia Polana (-26.98, -55.32)
-    # El Dorado (-26.41, -54.66)
-    #reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24], [-35.03, -58.43], [-27.06, -54.83], [-27.39, -55.93], [-26.98, -55.16], 
-    #				      [-26.98, -55.32], [-26.41, -54.66]]
-    #    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America', 'San Vicente', 'Salto Encantado','Posadas','Puerto Leoni',
-    #					'Colonia Polana','El Dorado']
-    # En horas de la tarde/noche: Jardin de america. 
-    # https://www.primeraedicion.com.ar/nota/100320388/temporal-de-granizo-afecto-a-la-zona-centro-de-misiones/: 
-    # El evento climático tuvo a su vez, gran actividad eléctrica. En Jardín América contaron que en los barrios 162 Viviendas, 
-    # El Ceibo y Lomas de Jardín los hielos eran del tamaño de una pelota de tenis. 
-    # En las localidades aledañas como Leoni e Hipólito Yrigoyen también hubo reportes de daños.
-    reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24]] 
-    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America']
-    opts = {'xlim_min': -55.0, 'xlim_max': -52.0, 'ylim_min': -27.5, 'ylim_max': -25.0, 
-	    'ZDRoffset': 2, 'ylim_max_zoom':-25.0, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 50, 'x_supermin':-55, 'x_supermax':-52,
-	    'y_supermin':-27, 'y_supermax':-25, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA5','alternate_azi':[331, 335, 50]}
-    icois_input  = [7,7,7] 
-    azimuths_oi  = [331,335, 50]
-    labels_PHAIL = ['[Phail = 0.725]','[Phail = 0.725]', '[]'] 
-    xlims_xlims_input  = [190, 190, 150] 
-    xlims_mins_input  = [0, 0, 0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-    return
-
-	
-def main_RMA4_20180209(): 
-
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20180209: P(hail) = 0.762
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2018	02	09	20	05	 -27.92	 -60.18	0.762		281.3578	304.4615	234.4998	165.5130	 71.3825	199.8727	199.5800	1
-
-    lon_pfs  = [-60.18]
-    lat_pfs  = [-27.92]
-    time_pfs = ['2005UTC']
-    phail    = [0.762]
-    MIN85PCT = [71.38]
-    MIN37PCT = [165.51]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [281.36, 234.49, 165.51, 71.38, 199.87, 199.58]
-    rfile    = 'cfrad.20180209_200449.0000_to_20180209_201043.0000_RMA4_0200_01.nc' 
-    gfile    = '1B.GPM.GMI.TB2016.20180209-S184820-E202054.022451.V05A.HDF5' 
-    era5_file = '20180209_20_RMA4.grib' 
-    # REPORTES TWITTER ... 
-    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
-    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
-    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
-    reportes_granizo_twitterAPI_geo = []
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
-	    'ZDRoffset': -1,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
-	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180209_RMA4/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[190, 225, 245]}
-    icois_input  = [10,17,19] 
-    azimuths_oi  = [190,225,245]
-    labels_PHAIL = ['','[Phail = 0.762]','[Phail = 0.762]'] 
-    xlims_xlims_input  = [150,150,150] 
-    xlims_mins_input  = [0,0,0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-    return
-	
-def main_RMA4_20181001(): 
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181001: P(hail) = 0.965
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2018	10	01	09	53	 -29.61	 -57.16	0.521		280.5028	298.9543	252.9822	192.1327	 99.2545	199.7923	151.8300	1
-
-    lon_pfs  = [-57.16]
-    lat_pfs  = [-29.61]
-    time_pfs = ['0953UTC']
-    phail    = [0.521]
-    MIN85PCT = [99.25]
-    MIN37PCT = [192.13]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [280.50, 281.36, 252.98, 192.1327, 99.25, 199.79, 151.83]
-    rfile    = 'cfrad.20181001_095450.0000_to_20181001_100038.0000_RMA4_0200_01.nc' 
-    gfile    = '1B.GPM.GMI.TB2016.20181001-S093732-E111006.026085.V05A.HDF5' 
-    era5_file = '20181001_09_RMA4.grib' 
-    # REPORTES TWITTER ... 
-    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
-    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
-    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
-    reportes_granizo_twitterAPI_geo = []
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
-	    'ZDRoffset': 1.5,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 150, 
-	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181001_RMA4/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[150, 190]}
-    icois_input  = [10,17,19] 
-    azimuths_oi  = [150,190]
-    labels_PHAIL = ['','[Phail = 0.762]'] 
-    xlims_xlims_input  = [250,250] 
-    xlims_mins_input  = [0,0,0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-    return
+RMA5_20200815.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA5_20200815.nc', 'w')
 
 
-def main_RMA4_20181031(): 
+#----------------------------------------------------------------------------------------------
+# RMA3_20190305 
+#----------------------------------------------------------------------------------------------  
+[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA3_20190305()
 
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA4 - 20181031: P(hail) = 0.931
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #1	2018	10	31	01	10	 -29.74	 -58.71	0.958		248.3270	299.2412	194.2590	148.5390	 87.6426	199.6678	144.6800	1
-    #2	2018	10	31	01	10	 -29.33	 -58.10	0.984		273.2433	302.9234	224.3287	122.9261	 53.2161	196.9830	165.1100	1
-    #3	2018	10	31	01	10	 -29.21	 -57.16	0.897		282.7623	300.6883	242.5564	150.4845	 63.9960	190.8150	125.5200	1
-    #4	2018	10	31	01	10	 -28.71	 -58.37	0.931		276.8601	302.9811	237.4247	151.6656	 67.1172	198.5928	160.6000	1
-    #5	2018	10	31	01	10	 -29.25	 -54.76	0.990		256.8537	298.8545	181.2223	120.9993	 69.9781	199.8059	165.4600	1
-    #6	2018	10	31	01	10	 -28.70	 -60.70	0.738		274.8905	303.1061	244.4909	174.1353	 99.4944	199.8251	163.2800	1
-    #7	2018	10	31	01	11	 -29.65	 -52.36	0.987		255.7188	298.4196	179.1801	133.7834	 80.9308	199.5222	227.7500	1
-    #8	2018	10	31	01	11	 -26.52	 -57.33	0.993		267.5031	307.3651	198.3740	111.7183	 56.3188	193.9708	219.0600	1
 
-    lon_pfs  = [-58.71, -58.10, -57.16, -58.37, -54.76, -60.70, -52.36, -57.33 ]
-    lat_pfs  = [-29.74, -29.33, -29.21, -28.71, -29.25, -28.70, -29.65, -26.52 ]
+if len(PCTarray_PHAIL_out) == 1:
+	PCTarray_PHAIL_out_ = []
+	for ifreq in range(PCTarray_PHAIL_out.shape[1]):
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
+		
+# And create a netcdf file
+RMA3_20190305 = 
+
+RMA3_20190305.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA3_20190305.nc', 'w')
+
+#----------------------------------------------------------------------------------------------
+# RMA4_20180209
+#----------------------------------------------------------------------------------------------  
+
+
+#----------------------------------------------------------------------------------------------
+# RMA4_20181001
+#----------------------------------------------------------------------------------------------  
 	
-    # aca solo voy a poner las 3 que me interesan dentro de rango razonable del radar ... 
-    #icoi=58//	2018	10	31	01	11	 -26.52	 -57.33	 0.993	267.5031	307.3651	198.3740	111.7183	 56.3188	193.9708	219.0600	1
-    #icoi=20//	2018	10	31	01	10	 -28.71	 -58.37	 0.931	276.8601	302.9811	237.4247	151.6656	 67.1172	198.5928	160.6000	1
-    #icoi=1//	2018	10	31	01	10	 -28.70	 -60.70	 0.738	274.8905	303.1061	244.4909	174.1353	 99.4944	199.8251	163.2800	1
-    time_pfs = ['0110UTC','0110UTC','0110UTC','0110UTC']
-    phail    = [0.993, 0.931, np.nan ,0.738]
-    MIN85PCT = [56.31, 67.1172, np.nan,  99.4944 ]
-    MIN37PCT = [111.71, 151.66, np.nan, 174.13 ]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = []
-    rfile    = 'cfrad.20181031_010936.0000_to_20181031_011525.0000_RMA4_0200_01.nc' 
-    gfile    = '1B.GPM.GMI.TB2016.20181031-S005717-E022950.026546.V05A.HDF5' 
-    era5_file = '20181031_01_RMA4.grib' 
-    # REPORTES TWITTER ... 
-    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
-    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
-    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
-    reportes_granizo_twitterAPI_geo = []
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
-	    'ZDRoffset': 1.5,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 157, 
-	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[65, 157, 199, 230]}
-    icois_input  = [58,20,26,1] 
-    azimuths_oi  = [65, 157, 199, 230]
-    labels_PHAIL = ['[Phail = 0.993]','[Phail = 0.931]',' ','[Phail = 0.958 ]'] 
-    xlims_xlims_input  = [250, 250, 250, 250] 
-    xlims_mins_input  = [150,150,100,150]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-    return
+
+#----------------------------------------------------------------------------------------------
+# RMA4_20181031
+#---------------------------------------------------------------------------------------------- 
+
+
+
+#----------------------------------------------------------------------------------------------
+# RMA4_20181215
+#---------------------------------------------------------------------------------------------- 
+
+
+
+#----------------------------------------------------------------------------------------------
+# RMA4_20181218
+#----------------------------------------------------------------------------------------------
+
+
+#----------------------------------------------------------------------------------------------
+# RMA4_20190209
+#----------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
 
 
 
@@ -1524,100 +1582,4 @@ def main_RMA4_20190209():
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 
     return
-	
-def main_RMA8_20181112_11UTC(): 
 
-	
-    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
-	
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA8 - 20181112: P(hail) = 0.740
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2018	11	12	11	57	 -30.21	 -59.01	0.739		270.8571	300.3237	247.0996	181.5047	 93.6525	199.9507	189.0600	1
-
-    lon_pfs  = [-59.01]
-    lat_pfs  = [-30.21]
-    time_pfs = ['12UTC']
-    phail    = ['0.739']
-    MIN85PCT = [93.65]
-    MIN37PCT = [181.51]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [270.85, 247.09, 181.50, 93.65, 199.95, 189.06] 
-    rfile    = 'cfrad.20181112_115631.0000_to_20181112_120225.0000_RMA8_0200_01.nc' 
-    gfile    = '1B.GPM.GMI.TB2016.20181112-S104031-E121303.0f26739.V05A.HDF5'
-    era5_file = '20181112_12_RMA8.grib' 
-    # REPORTES TWITTER ... 
-    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
-    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
-    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
-    reportes_granizo_twitterAPI_geo = []
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -60.5, 'xlim_max': -55.5, 'ylim_min': -31.5, 'ylim_max': -26, 
-	    'ZDRoffset': 0,   
-	    'rfile': 'RMA8/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 210, 
-	    'x_supermin':-60.5, 'x_supermax':-55.5, 'y_supermin':-31.5, 'y_supermax':-26, 
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181112_12UTC_RMA8/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA8','alternate_azi':[210,220]}
-    icois_input  = [3,3] 
-    azimuths_oi  = [210,220]
-    labels_PHAIL = ['[Phail = 0.739]','[Phail = 0.739'] 
-    xlims_xlims_input  = [250,250] 
-    xlims_mins_input  = [0,0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-
-    return	
-	
-	
-def main_RMA8_20181112_21UTC(): 
-
-	
-    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
-    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
-	
-    # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
-    # CASO RMA8 - 20181112: P(hail) = 0.758
-    # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
-    #	YEAR	MONTH	DAY	HOUR	MIN	  LAT	LON	P_hail_BC2019	MIN10PCT	MAX10PCT	MIN19PCT	MIN37PCT	MIN85PCT	MAX85PCT	MIN165V		FLAG
-    #	2018	11	12	21	42	 -29.34	 -59.25	0.759		279.2002	304.3894	251.8228	165.5906	 64.3514	199.4189	186.6500	1
-
-    lon_pfs  = [-59.25]
-    lat_pfs  = [-29.34]
-    time_pfs = ['2142UTC']
-    phail    = ['0.759']
-    MIN85PCT = [64.35]
-    MIN37PCT = [165.59]
-    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
-    MINPCTs  = [279.20, 251.82, 165.59, 64.35, 199.42, 186.65]
-    rfile    = 'cfrad.20181112_214301.0000_to_20181112_214855.0000_RMA8_0200_01.nc' 
-    gfile    = '1B.GPM.GMI.TB2016.20181112-S212823-E230055.026746.V05A.HDF5'
-    era5_file = '20181112_21_RMA8.grib' 
-    # REPORTES TWITTER ... 
-    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
-    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
-    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
-    reportes_granizo_twitterAPI_geo = []
-    reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -60.5, 'xlim_max': -55.5, 'ylim_min': -31.5, 'ylim_max': -26, 
-	    'ZDRoffset': 0,   
-	    'rfile': 'RMA8/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'azimuth_ray': 267, 
-	    'x_supermin':-60.5, 'x_supermax':-55.5, 'y_supermin':-31.5, 'y_supermax':-26, 
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181112_21UTC_RMA8/', 
-	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
-	   'icoi_PHAIL': 3, 'radar_name':'RMA8','alternate_azi':[260,267]}
-    icois_input  = [10,10] 
-    azimuths_oi  = [260,267]
-    labels_PHAIL = ['[Phail = ]',''] 
-    xlims_xlims_input  = [250,250] 
-    xlims_mins_input  = [0,0]		
-    run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
-	
-    return	
-
-	
