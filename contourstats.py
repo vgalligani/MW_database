@@ -401,17 +401,17 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     for ii in range(len(icoi)): 
     
         if ii==0:
-            inds_1  = concave_path.contains_points(datapts)
+            #inds_1  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_1], S1_sub_lat[inds_1], 'o', markersize=10, markerfacecolor='black')
             axes.plot(lon_gmi[:,:][TB_inds[ii]], lat_gmi[:,:][TB_inds[ii]], 'o', markersize=10, markerfacecolor='black')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='black', label='icoi:'+str(icoi[0]))
         if ii==1:
-            inds_2  = concave_path.contains_points(datapts)
+            #inds_2  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_2], S1_sub_lat[inds_2], 'o', markersize=10, markerfacecolor='darkblue')
             axes.plot(lon_gmi[:,:][TB_inds[ii]], lat_gmi[:,:][TB_inds[ii]], 'o', markersize=10, markerfacecolor='darkblue')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkblue', label='icoi:'+str(icoi[1]))
         if ii==2:
-            inds_3  = concave_path.contains_points(datapts)
+            #inds_3  = concave_path.contains_points(datapts)
             #axes.plot(S1_sub_lon[inds_3], S1_sub_lat[inds_3], 'o', markersize=10, markerfacecolor='darkred')
             axes.plot(lon_gmi[:,:][TB_inds[ii]], lat_gmi[:,:][TB_inds[ii]], 'o', markersize=10, markerfacecolor='darkred')
             dummy = axes.plot(np.nan, np.nan, 'o', markersize=20, markerfacecolor='darkred', label='icoi:'+str(icoi[2]))
