@@ -7784,9 +7784,7 @@ def main_RMA8_20181112_21UTC():
     run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
 	
     return	
-	
-	
-	
+
 	
 	
 	
