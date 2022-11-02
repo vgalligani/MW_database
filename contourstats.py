@@ -2335,6 +2335,73 @@ def make_scatterplots_sector2_with3Dvalue(var4title, varTitle, novarTitle, vminn
 	return
 
 
+#---------------------------------------------------------------------------------------------
+def make_scatterplots_sector1_with3Dvalue(var4title, varTitle, novarTitle, vminn, vmaxx ): 
+	
+	fig = plt.figure(figsize=(10,10)) 
+	gs1 = gridspec.GridSpec(2, 2)
+	ax1 = plt.subplot(gs1[0,0])
+	plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[1],  RMA1_20180208['PCTarray_PHAIL_out'].data[2], 
+		    c=RMA1_20180208[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[1],  DOW7_20181214['PCTarray_PHAIL_out'].data[2], 
+		    c=DOW7_20181214[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[1],  CSPR2_20181111['PCTarray_PHAIL_out'].data[2], 
+		    c=CSPR2_20181111[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())	
+	pcm = plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[1],  RMA1_20190308['PCTarray_PHAIL_out'].data[2], 
+		    c=RMA1_20190308[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())		
+	
+	plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2],
+		    c=RMA1_20180208[novarTitle].data[0], 
+		    s=40, marker='s',edgecolor='k', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2],
+		    c=RMA1_20180208[novarTitle].data[1], 
+		    s=40, marker='s',edgecolor='k', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())	
+
+	plt.colorbar(pcm)
+
+	plt.legend(fontsize=10)
+	plt.grid(True)
+	plt.xlabel('MINPCT(19)')
+	plt.ylabel('MINPCTT(37)')
+	plt.xlim([170,300])
+	plt.ylim([80,240])
+
+	ax1 = plt.subplot(gs1[0,1])
+	plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[2],  RMA1_20180208['PCTarray_PHAIL_out'].data[3], 
+		    c=RMA1_20180208[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[2],  DOW7_20181214['PCTarray_PHAIL_out'].data[3], 
+		    c=DOW7_20181214[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[2],  CSPR2_20181111['PCTarray_PHAIL_out'].data[3], 
+		    c=CSPR2_20181111[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())	
+	pcm = plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[2],  RMA1_20190308['PCTarray_PHAIL_out'].data[3], 
+		    c=RMA1_20190308[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())		
+	
+	plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,3],
+		    c=RMA1_20180208[novarTitle].data[0], 
+		    s=40, marker='s',edgecolor='k', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,3],
+		    c=RMA1_20180208[novarTitle].data[1], 
+		    s=40, marker='s',edgecolor='k', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())	
+
+
+	plt.scatter(np.nan, np.nan, marker='o',color='w', edgecolor='k', label='Phail')
+	plt.scatter(np.nan, np.nan, marker='s',color='w', edgecolor='k', label='noPhail')
+	plt.legend()
+	
+	plt.grid(True)
+	plt.xlabel('MINPCT(37)')
+	plt.ylabel('MINPCTT(85)')
+	plt.xlim([80,230])
+	plt.ylim([50,170])
+	plt.suptitle('COR.(RMA1+CSPR2+DOW7) '+ var4title,y=0.9)
+
+	return
+
+
+
+
+
+
 
 
 
@@ -2586,7 +2653,7 @@ make_scatterplots_sector2_with3Dvalue('AREA_PHAIL', 'AREA_PHAIL','AREA_NOPHAIL',
 make_scatterplots_sector2_with3Dvalue('PIXELS_PHAIL', 'PIXELS_PHAIL','PIXELS_NOPHAIL', 10, 1e4 )
 make_scatterplots_sector2_with3Dvalue('GATES_PHAIL', 'GATES_PHAIL','GATES_NOPHAIL', 10, 1e4 )
 
-
+make_scatterplots_sector1_with3Dvalue('AREA_PHAIL', 'AREA_PHAIL','AREA_NOPHAIL', 10, 1e4 )
 
 
 
