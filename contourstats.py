@@ -2279,6 +2279,10 @@ def make_scatterplots_sector3_with3Dvalue(var4title, varTitle, novarTitle, vminn
 		    s=40, marker='s',edgecolor='k', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 
 
+	plt.scatter(np.nan, np.nan, marker='o',color='w', edgecolor='k', label='Phail')
+	plt.scatter(np.nan, np.nan, marker='s',color='w', edgecolor='k', label='noPhail')
+	plt.legend()
+	
 	plt.grid(True)
 	plt.xlabel('MINPCT(37)')
 	plt.ylabel('MINPCTT(85)')
@@ -2290,7 +2294,47 @@ def make_scatterplots_sector3_with3Dvalue(var4title, varTitle, novarTitle, vminn
 
 
 
-make_scatterplots_sector3_with3Dvalue('AREA_PHAIL', 'AREA_PHAIL', 0, 1e4 ) 
+#----------------------------------------------------------------------------------------------
+# scatter plots 37/19 AND 37/85 w/ further info
+#----------------------------------------------------------------------------------------------
+
+def make_scatterplots_sector2_with3Dvalue(var4title, varTitle, novarTitle, vminn, vmaxx ): 
+	
+	fig = plt.figure(figsize=(10,10)) 
+	gs1 = gridspec.GridSpec(2, 2)
+	ax1 = plt.subplot(gs1[0,0])
+
+	pcm = plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data[1],  RMA5_20200815['PCTarray_PHAIL_out'].data[2], 
+			  c=RMA5_20200815[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())	
+	plt.colorbar(pcm)
+
+	plt.legend(fontsize=10)
+	plt.grid(True)
+	plt.xlabel('MINPCT(19)')
+	plt.ylabel('MINPCTT(37)')
+	plt.xlim([170,300])
+	plt.ylim([80,240])
+
+	ax1 = plt.subplot(gs1[0,1])
+	
+	pcm = plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data[2],  RMA5_20200815['PCTarray_PHAIL_out'].data[3], 
+			  c=RMA5_20200815[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.colorbar(pcm)
+
+
+	plt.scatter(np.nan, np.nan, marker='o',color='w', edgecolor='k', label='Phail')
+	plt.legend()
+	
+	plt.grid(True)
+	plt.xlabel('MINPCT(37)')
+	plt.ylabel('MINPCTT(85)')
+	plt.xlim([80,230])
+	plt.ylim([50,170])
+	plt.suptitle('RMA5 '+ var4title,y=0.9)
+
+	return
+
+
 
 
 
@@ -2533,9 +2577,14 @@ plt.ylim([50,170])
 plt.suptitle('RMA3+RMA4',y=0.9)
 
 
+#===================================================================================================================
+make_scatterplots_sector3_with3Dvalue('AREA_PHAIL', 'AREA_PHAIL','AREA_NOPHAIL', 10, 1e4 )
+make_scatterplots_sector3_with3Dvalue('PIXELS_PHAIL', 'PIXELS_PHAIL','PIXELS_NOPHAIL', 10, 1e4 )
+make_scatterplots_sector3_with3Dvalue('GATES_PHAIL', 'GATES_PHAIL','GATES_NOPHAIL', 10, 1e4 )
 
-
-
+make_scatterplots_sector2_with3Dvalue('AREA_PHAIL', 'AREA_PHAIL','AREA_NOPHAIL', 10, 1e4 )
+make_scatterplots_sector2_with3Dvalue('PIXELS_PHAIL', 'PIXELS_PHAIL','PIXELS_NOPHAIL', 10, 1e4 )
+make_scatterplots_sector2_with3Dvalue('GATES_PHAIL', 'GATES_PHAIL','GATES_NOPHAIL', 10, 1e4 )
 
 
 
