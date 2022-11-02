@@ -1736,6 +1736,7 @@ RMA1_20180208.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outp
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_, PCTarray_PHAIL_out_mean
 
+
 #----------------------------------------------------------------------------------------------
 # main_DOW7_20181214 OK 
 #----------------------------------------------------------------------------------------------  
@@ -1759,6 +1760,7 @@ DOW7_20181214 = xr.Dataset( {
 DOW7_20181214.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_DOW7_20181214.nc', 'w')
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_
+
 
 #----------------------------------------------------------------------------------------------
 # main_CSPR2_20181111 OK 
@@ -1796,7 +1798,6 @@ CSPR2_20181111.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_out
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_, PCTarray_NOPHAIL_out_
 
-
 #----------------------------------------------------------------------------------------------
 # RMA1_20190308 OK 
 #----------------------------------------------------------------------------------------------  
@@ -1823,6 +1824,7 @@ RMA1_20190308.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outp
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_
 
+
 #----------------------------------------------------------------------------------------------
 # RMA5_20200815 OK
 #----------------------------------------------------------------------------------------------  
@@ -1848,6 +1850,7 @@ RMA5_20200815 = xr.Dataset( {
 RMA5_20200815.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA5_20200815.nc', 'w')
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_
+
 
 #----------------------------------------------------------------------------------------------
 # RMA3_20190305  OK
@@ -1885,6 +1888,7 @@ RMA3_20190305 = xr.Dataset( {
 RMA3_20190305.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA3_20190305.nc', 'w')
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_, PCTarray_NOPHAIL_out_
+
 
 #----------------------------------------------------------------------------------------------
 # RMA4_20180209 OK
@@ -1968,8 +1972,6 @@ RMA4_20181001.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outp
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_mean, PCTarray_NOPHAIL_out_mean, PCTarray_PHAIL_out_
 
-
-
 #----------------------------------------------------------------------------------------------
 # RMA4_20190209 OK
 #----------------------------------------------------------------------------------------------
@@ -2010,9 +2012,7 @@ RMA4_20190209.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outp
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_mean, PCTarray_NOPHAIL_out_mean, PCTarray_PHAIL_out_
 
-
 #----------------------------------------------------------------------------------------------
-# RMA4_20181031 (plot_scatter_4icois_morethan1OFINTEREST) OK
 #---------------------------------------------------------------------------------------------- 
 [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
 	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = RMA4_20181031()
@@ -2122,3 +2122,90 @@ RMA4_20181218 = xr.Dataset( {
 RMA4_20181218.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA4_20181218.nc', 'w')
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_NOPHAIL_out_, PCTarray_PHAIL_out_mean
+
+
+
+#----------------------------------------------------------------------------------------------
+# General Stats: 
+# 12 cases 
+#----------------------------------------------------------------------------------------------
+#----- > colores para CORDOBA, MISIONES, RMA3+RMA4 ... 
+colors_plot = ['darkred', 'darkgreen', 'darkblue']
+	
+fig = plt.figure(figsize=(20,7)) 
+gs1 = gridspec.GridSpec(1, 2)
+ax1 = plt.subplot(gs1[0,0])
+plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[1],  RMA1_20180208['PCTarray_PHAIL_out'].data[2], s=20, marker='*', color=colors_plot[0], label='RMA1_20180208') 
+plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[1],  DOW7_20181214['PCTarray_PHAIL_out'].data[2], s=20, marker='>', color=colors_plot[0], label='DOW7_20181214') 
+plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[1], CSPR2_20181111['PCTarray_PHAIL_out'].data[2],s=20, marker='<', color=colors_plot[0], label='CSPR2_20181111') 
+plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[1],  RMA1_20190308['PCTarray_PHAIL_out'].data[2], s=20, marker='s', color=colors_plot[0], label='RMA1_20190308') 
+
+plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data[1],  RMA5_20200815['PCTarray_PHAIL_out'].data[2], s=20, marker='*', color=colors_plot[1], label='RMA5_20200815') 
+
+plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[1],  RMA3_20190305['PCTarray_PHAIL_out'].data[2], s=20, marker='*', color='blue', label='RMA5_20200815') 
+
+plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[1],  RMA4_20180209['PCTarray_PHAIL_out'].data[2], s=20, marker='>', color=colors_plot[2], label='RMA4_20180209') 
+plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[1],  RMA4_20181001['PCTarray_PHAIL_out'].data[2], s=20, marker='<', color=colors_plot[2], label='RMA4_20181001') 
+plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[1],  RMA4_20190209['PCTarray_PHAIL_out'].data[2], s=20, marker='s', color=colors_plot[2], label='RMA4_20190209') 
+
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,2], s=20, marker='*', color=colors_plot[2], label='RMA4_20181031') 
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,2], s=60, marker='*', color=colors_plot[2], label='RMA4_20181031') 
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,2], s=100, marker='*', color=colors_plot[2], label='RMA4_20181031') 
+
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,2], s=20, marker='>', color=colors_plot[2], label='RMA4_20181215') 
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,2], s=80, marker='>', color=colors_plot[2], label='RMA4_20181215') 
+
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,2], s=20, marker='o', color=colors_plot[2], label='RMA4_20181218') 
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,2], s=80, marker='o', color=colors_plot[2], label='RMA4_20181218') 
+
+plt.plot(np.nan, np.nan, '-', color='darkred', label='Cordoba region')
+plt.plot(np.nan, np.nan, '-', color='darkgreen', label='Misiones')
+plt.plot(np.nan, np.nan, '-', color='darkblue', label='RMA4+RMA3')
+
+plt.legend()
+plt.grid(True)
+plt.xlabel('MINPCT(19)')
+plt.ylabel('MINPCTT(37)')
+plt.title('Contours from case studies w/ Phail>0.5')
+
+
+
+TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]         
+        print('MIN10PCTs: '  +str(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1])) ) 
+        print('MIN19PCTs: '  +str(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3])) ) 
+        print('MIN37PCTs: '  +str(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6])) ) 
+        print('MIN85PCTs: '  +str(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8])) ) 
+    plt.grid(True)
+    plt.legend()
+    plt.xlabel('TBV(37)')
+    plt.ylabel('TBV(85)')
+
+
+plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data)
+plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data)
+plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data)
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data)
+
+
+
+
+print(RMA1_20180208['PCTarray_NOPHAIL_out'].data)
+#print(DOW7_20181214['PCTarray_NOPHAIL_out'].data)
+print(CSPR2_20181111['PCTarray_NOPHAIL_out'].data)
+#print(RMA1_20190308['PCTarray_NOPHAIL_out'].data)
+#print(RMA5_20200815['PCTarray_NOPHAIL_out'].data)
+print(RMA3_20190305['PCTarray_NOPHAIL_out'].data)
+print(RMA4_20180209['PCTarray_NOPHAIL_out'].data)
+#print(RMA4_20181001['PCTarray_NOPPHAIL_out'].data)
+print(RMA4_20190209['PCTarray_NOPHAIL_out'].data)
+print(RMA4_20181031['PCTarray_NOPHAIL_out'].data)
+#print(RMA4_20181215['PCTarray_NOPHAIL_out'].data)
+print(RMA4_20181218['PCTarray_NOPHAIL_out'].data)
