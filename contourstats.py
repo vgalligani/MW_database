@@ -2122,6 +2122,12 @@ RMA4_20181218 = xr.Dataset( {
                     "PIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
                     "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
                     "GATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "AREA_PHAIL":            (('icois'),    AREA_PHAIL),
+                    "AREA_NOPHAIL":          (('noicois'),    AREA_NOPHAIL),
+                    "PIXELS_PHAIL":          (('icois'),    PIXELS_PHAIL), 
+                    "PIXELS_NOPHAIL":        (('noicois'),    PIXELS_NOPHAIL), 
+                    "GATES_PHAIL":           (('icois'),    GATES_PHAIL), 
+                    "GATES_NOPHAIL":         (('noicois'),    GATES_NOPHAIL),	
                     "ZHarray_PHAIL_1":       (('gates1'), ZHarray_PHAIL[0]),
                     "ZDRarray_PHAIL_1":      (('gates1'), ZDRarray_PHAIL[0]),
                     "ZHarray_PHAIL_2":   (('gates2'), ZHarray_PHAIL[1]),
@@ -2140,47 +2146,59 @@ del PCTarray_NOPHAIL_out_, PCTarray_PHAIL_out_mean
 # scatter plots 37/19 AND 37/85 w/ further info
 #----------------------------------------------------------------------------------------------
 
-def make_scatterplots_sector3_with3Dvalue(var4title, varTitle, vminn, vmaxx ): 
+def make_scatterplots_sector3_with3Dvalue(var4title, varTitle, novarTitle, vminn, vmaxx ): 
 	
 	fig = plt.figure(figsize=(10,10)) 
 	gs1 = gridspec.GridSpec(2, 2)
 	ax1 = plt.subplot(gs1[0,0])
-	plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[1],  RMA3_20190305['PCTarray_PHAIL_out'].data[2], c=RMA3_20190305[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[1],  RMA4_20180209['PCTarray_PHAIL_out'].data[2], c=RMA4_20180209[varTitle].data[0], s=30, marker='s', vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[1], RMA4_20181001['PCTarray_PHAIL_out'].data[2],  c=RMA4_20181001[varTitle].data[0], s=30, marker='>', vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[1],  RMA4_20190209['PCTarray_PHAIL_out'].data[2], c=RMA4_20190209[varTitle].data[0], marker='<', s=30, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[1],  RMA3_20190305['PCTarray_PHAIL_out'].data[2], 
+		    c=RMA3_20190305[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[1],  RMA4_20180209['PCTarray_PHAIL_out'].data[2], 
+		    c=RMA4_20180209[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[1], RMA4_20181001['PCTarray_PHAIL_out'].data[2],  
+		    c=RMA4_20181001[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[1],  RMA4_20190209['PCTarray_PHAIL_out'].data[2], 
+		    c=RMA4_20190209[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 
-	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,2], c=RMA4_20181031[varTitle].data[0], marker='p',  s=20, vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,2], c=RMA4_20181031[varTitle].data[1], marker='p',  s=40, vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,2], c=RMA4_20181031[varTitle].data[2], marker='p', s=50, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,2], 
+		    c=RMA4_20181031[varTitle].data[0], marker='o',  s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,2], 
+		    c=RMA4_20181031[varTitle].data[1], marker='o',  s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,1], RMA4_20181031['PCTarray_PHAIL_out'].data[2,2], 
+		    c=RMA4_20181031[varTitle].data[2], marker='o', s=30, vmin=vminn, vmax=vmaxx,norm=matplotlib.colors.LogNorm())
 
-	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,2], c=RMA4_20181215[varTitle].data[0], marker='v', s=20, vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,2], c=RMA4_20181215[varTitle].data[1], marker='v', s=20, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,2], 
+		    c=RMA4_20181215[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx,norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,2], 
+		    c=RMA4_20181215[varTitle].data[1], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 
-	plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,2], c=RMA4_20181218[varTitle].data[0], marker='^', s=20, vmin=vminn, vmax=vmaxx)
-	pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,2], c=RMA4_20181218[varTitle].data[1], marker='^', s=vminn, vmin=0.5, vmax=vmaxx)
+	plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,2], 
+		    c=RMA4_20181218[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,2], 
+			  c=RMA4_20181218[varTitle].data[1], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 	
-	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
-	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')	
-	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],c=RMA3_20190305[novarTitle].data[0], 
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2], c=RMA3_20190305[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2], c=RMA4_20180209[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2], c=RMA4_20180209[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2], c=RMA4_20181001[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2], c=RMA4_20181001[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2], c=RMA4_20190209[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2], c=RMA4_20190209[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[2], c=RMA4_20181031[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[2], c=RMA4_20181218[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 
 	plt.colorbar(pcm)
-
-	plt.scatter(np.nan, np.nan, marker='o', color='w', edgecolor='k', label='20190305')
-	plt.scatter(np.nan, np.nan, marker='s',color='w', edgecolor='k', label='20180209')
-	plt.scatter(np.nan, np.nan, marker='>',color='w', edgecolor='k',  label='20181001')
-	plt.scatter(np.nan, np.nan, marker='<',color='w', edgecolor='k',  label='20190209')
-
-	plt.scatter(np.nan, np.nan, marker='p',color='w', edgecolor='k',  label='20181031')
-	plt.scatter(np.nan, np.nan, marker='v',color='w', edgecolor='k',  label='20181215')
-	plt.scatter(np.nan, np.nan, marker='^',color='w', edgecolor='k',  label='20181218')
 
 	plt.legend(fontsize=10)
 	plt.grid(True)
@@ -2190,34 +2208,56 @@ def make_scatterplots_sector3_with3Dvalue(var4title, varTitle, vminn, vmaxx ):
 	plt.ylim([80,240])
 
 	ax1 = plt.subplot(gs1[0,1])
-	plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[2],  RMA3_20190305['PCTarray_PHAIL_out'].data[3], c=RMA3_20190305[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[2],  RMA4_20180209['PCTarray_PHAIL_out'].data[3], c=RMA4_20180209[varTitle].data[0], s=30, marker='s', vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[2], RMA4_20181001['PCTarray_PHAIL_out'].data[3],  c=RMA4_20181001[varTitle].data[0], s=30, marker='>', vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[2],  RMA4_20190209['PCTarray_PHAIL_out'].data[3], c=RMA4_20190209[varTitle].data[0], marker='<', s=30, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[2],  RMA3_20190305['PCTarray_PHAIL_out'].data[3], 
+		    c=RMA3_20190305[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[2],  RMA4_20180209['PCTarray_PHAIL_out'].data[3], 
+		    c=RMA4_20180209[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[2], RMA4_20181001['PCTarray_PHAIL_out'].data[3],  
+		    c=RMA4_20181001[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[2],  RMA4_20190209['PCTarray_PHAIL_out'].data[3],
+		    c=RMA4_20190209[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 
-	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,3], c=RMA4_20181031[varTitle].data[0], marker='p',  s=20, vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,3], c=RMA4_20181031[varTitle].data[1], marker='p',  s=40, vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,3], c=RMA4_20181031[varTitle].data[2], marker='p', s=50, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,3], 
+		    c=RMA4_20181031[varTitle].data[0], marker='o',  s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,3], 
+		    c=RMA4_20181031[varTitle].data[1], marker='o',  s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,3], 
+		    c=RMA4_20181031[varTitle].data[2], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 
-	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,3], c=RMA4_20181215[varTitle].data[0], marker='v', s=20, vmin=vminn, vmax=vmaxx)
-	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,3], c=RMA4_20181215[varTitle].data[1], marker='v', s=20, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,3], 
+		    c=RMA4_20181215[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,3], 
+		    c=RMA4_20181215[varTitle].data[1], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 
-	plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,3], c=RMA4_20181218[varTitle].data[0], marker='^', s=20, vmin=vminn, vmax=vmaxx)
-	pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,3], c=RMA4_20181218[varTitle].data[1], marker='^', s=vminn, vmin=0.5, vmax=vmaxx)
+	plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,3], 
+		    c=RMA4_20181218[varTitle].data[0], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,3], 
+			  c=RMA4_20181218[varTitle].data[1], marker='o', s=30, vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
 	
 	plt.colorbar(pcm)
 
 
-	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
-	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
-	plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3],c=RMA3_20190305[novarTitle].data[0], 
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3], c=RMA3_20190305[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,3], c=RMA4_20180209[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,3], c=RMA4_20180209[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,3], c=RMA4_20181001[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,3], c=RMA4_20181001[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,3], c=RMA4_20190209[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,3], c=RMA4_20190209[novarTitle].data[1],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[3], c=RMA4_20181031[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+	plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[3], c=RMA4_20181218[novarTitle].data[0],
+		    s=40, marker='s', vmin=vminn, vmax=vmaxx, norm=matplotlib.colors.LogNorm())
+
 
 	plt.grid(True)
 	plt.xlabel('MINPCT(37)')
