@@ -2152,21 +2152,266 @@ plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181031['PCTar
 plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,2], s=60, marker='*', color=colors_plot[2], label='RMA4_20181031') 
 plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,2], s=100, marker='*', color=colors_plot[2], label='RMA4_20181031') 
 
-plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,2], s=20, marker='>', color=colors_plot[2], label='RMA4_20181215') 
-plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,2], s=80, marker='>', color=colors_plot[2], label='RMA4_20181215') 
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,2], s=20, marker='x', color=colors_plot[2], label='RMA4_20181215') 
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,2], s=80, marker='x', color=colors_plot[2], label='RMA4_20181215') 
 
-plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,2], s=20, marker='o', color=colors_plot[2], label='RMA4_20181218') 
-plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,2], s=80, marker='o', color=colors_plot[2], label='RMA4_20181218') 
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,2], s=20, marker='X', color=colors_plot[2], label='RMA4_20181218') 
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,2], s=80, marker='X', color=colors_plot[2], label='RMA4_20181218') 
 
 plt.plot(np.nan, np.nan, '-', color='darkred', label='Cordoba region')
 plt.plot(np.nan, np.nan, '-', color='darkgreen', label='Misiones')
-plt.plot(np.nan, np.nan, '-', color='darkblue', label='RMA4+RMA3')
+plt.plot(np.nan, np.nan, '-', color='darkblue',  label='RMA4+RMA3')
 
 plt.legend()
 plt.grid(True)
 plt.xlabel('MINPCT(19)')
 plt.ylabel('MINPCTT(37)')
 plt.title('Contours from case studies w/ Phail>0.5')
+
+ax1 = plt.subplot(gs1[0,1])
+plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[2],  RMA1_20180208['PCTarray_PHAIL_out'].data[3], s=20, marker='*', color=colors_plot[0], label='RMA1_20180208') 
+plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[2],  DOW7_20181214['PCTarray_PHAIL_out'].data[3], s=20, marker='>', color=colors_plot[0], label='DOW7_20181214') 
+plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[2], CSPR2_20181111['PCTarray_PHAIL_out'].data[3],s=20, marker='<', color=colors_plot[0], label='CSPR2_20181111') 
+plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[2],  RMA1_20190308['PCTarray_PHAIL_out'].data[3], s=20, marker='s', color=colors_plot[0], label='RMA1_20190308') 
+
+plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data[2],  RMA5_20200815['PCTarray_PHAIL_out'].data[3], s=20, marker='*', color=colors_plot[1], label='RMA5_20200815') 
+
+plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[2],  RMA3_20190305['PCTarray_PHAIL_out'].data[3], s=20, marker='*', color='blue', label='RMA5_20200815') 
+
+plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[2],  RMA4_20180209['PCTarray_PHAIL_out'].data[3], s=20, marker='>', color=colors_plot[2], label='RMA4_20180209') 
+plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[2],  RMA4_20181001['PCTarray_PHAIL_out'].data[3], s=20, marker='<', color=colors_plot[2], label='RMA4_20181001') 
+plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[2],  RMA4_20190209['PCTarray_PHAIL_out'].data[3], s=20, marker='s', color=colors_plot[2], label='RMA4_20190209') 
+
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,3], s=20, marker='*', color=colors_plot[2], label='RMA4_20181031') 
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,3], s=60, marker='*', color=colors_plot[2], label='RMA4_20181031') 
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,3], s=100, marker='*', color=colors_plot[2], label='RMA4_20181031') 
+
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,3], s=20, marker='x', color=colors_plot[2], label='RMA4_20181215') 
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,3], s=80, marker='x', color=colors_plot[2], label='RMA4_20181215') 
+
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,3], s=20, marker='X', color=colors_plot[2], label='RMA4_20181218') 
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,3], s=80, marker='X', color=colors_plot[2], label='RMA4_20181218') 
+
+plt.grid(True)
+plt.xlabel('MINPCT(37)')
+plt.ylabel('MINPCTT(85)')
+plt.title('Contours from case studies w/ Phail>0.5')
+
+#----------------------------------------------------------------------------------------------
+# Same as above but colormap w/ Phail ... RMA1
+#----------------------------------------------------------------------------------------------
+fig = plt.figure(figsize=(10,10)) 
+gs1 = gridspec.GridSpec(2, 2)
+
+ax1 = plt.subplot(gs1[0,0])
+plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[1],  RMA1_20180208['PCTarray_PHAIL_out'].data[2], c=0.534, s=30, marker='o', vmin=0.5, vmax=1.0)
+plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[1],  DOW7_20181214['PCTarray_PHAIL_out'].data[2], c=0.967, s=30, marker='s', vmin=0.5, vmax=1.0)
+plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[1], CSPR2_20181111['PCTarray_PHAIL_out'].data[2], c=0.653, s=30, marker='>', vmin=0.5, vmax=1.0)
+pcm = plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[1],  RMA1_20190308['PCTarray_PHAIL_out'].data[2], c=0.895, marker='<', s=30, vmin=0.5, vmax=1.0)
+plt.colorbar(pcm)
+
+plt.scatter(np.nan, np.nan, marker='o', color='w', edgecolor='k', label='20180208')
+plt.scatter(np.nan, np.nan, marker='s',color='w', edgecolor='k', label='20181214')
+plt.scatter(np.nan, np.nan, marker='>',color='w', edgecolor='k',  label='20181111')
+plt.scatter(np.nan, np.nan, marker='<',color='w', edgecolor='k',  label='20190308')
+
+# como se compara con los contornos que no tienen Phail? 
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+
+plt.scatter(np.nan, np.nan, marker='x', color='k', label='20180208')
+
+plt.legend(fontsize=10)
+plt.grid(True)
+plt.xlabel('MINPCT(19)')
+plt.ylabel('MINPCTT(37)')
+plt.xlim([170,300])
+plt.ylim([80,240])
+
+ax1 = plt.subplot(gs1[0,1])
+plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[2],  RMA1_20180208['PCTarray_PHAIL_out'].data[3], c=0.534, s=30, marker='o', vmin=0.5, vmax=1.0)
+plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[2],  DOW7_20181214['PCTarray_PHAIL_out'].data[3], c=0.967, s=30, marker='s', vmin=0.5, vmax=1.0)
+plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[2], CSPR2_20181111['PCTarray_PHAIL_out'].data[3], c=0.653, s=30, marker='>', vmin=0.5, vmax=1.0)
+pcm = plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[2],  RMA1_20190308['PCTarray_PHAIL_out'].data[3], c=0.895, marker='<', s=30, vmin=0.5, vmax=1.0)
+plt.colorbar(pcm)
+# como se compara con los contornos que no tienen Phail? 
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+
+plt.grid(True)
+plt.xlabel('MINPCT(37)')
+plt.ylabel('MINPCTT(85)')
+plt.xlim([80,230])
+plt.ylim([50,170])
+
+plt.suptitle('CORDOBA',y=0.9)
+
+#----------------------------------------------------------------------------------------------
+# Same as above but colormap w/ Phail ... RMA5
+#----------------------------------------------------------------------------------------------
+fig = plt.figure(figsize=(10,10)) 
+gs1 = gridspec.GridSpec(2, 2)
+
+ax1 = plt.subplot(gs1[0,0])
+pcm = plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data[1],  RMA5_20200815['PCTarray_PHAIL_out'].data[2], c=0.727, marker='o', s=30, vmin=0.5, vmax=1.0)
+plt.colorbar(pcm)
+plt.scatter(np.nan, np.nan, marker='o', color='w', edgecolor='k', label='20200815')
+
+plt.legend(fontsize=10)
+plt.grid(True)
+plt.xlabel('MINPCT(19)')
+plt.ylabel('MINPCTT(37)')
+plt.xlim([170,300])
+plt.ylim([80,240])
+
+ax1 = plt.subplot(gs1[0,1])
+pcm = plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data[2],  RMA5_20200815['PCTarray_PHAIL_out'].data[3], c=0.727, marker='o', s=30, vmin=0.5, vmax=1.0)
+plt.colorbar(pcm)
+
+plt.grid(True)
+plt.xlabel('MINPCT(37)')
+plt.ylabel('MINPCTT(85)')
+plt.xlim([80,230])
+plt.ylim([50,170])
+plt.suptitle('RMA5',y=0.9)
+
+#----------------------------------------------------------------------------------------------
+# Same as above but colormap w/ Phail ... RMA3+RMA4
+#----------------------------------------------------------------------------------------------
+fig = plt.figure(figsize=(10,10)) 
+gs1 = gridspec.GridSpec(2, 2)
+
+ax1 = plt.subplot(gs1[0,0])
+plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[1],  RMA3_20190305['PCTarray_PHAIL_out'].data[2], c=0.737, s=30, marker='o', vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[1],  RMA4_20180209['PCTarray_PHAIL_out'].data[2], c=0.762, s=30, marker='s', vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[1], RMA4_20181001['PCTarray_PHAIL_out'].data[2],  c=0.965, s=30, marker='>', vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[1],  RMA4_20190209['PCTarray_PHAIL_out'].data[2], c=0.989, marker='<', s=30, vmin=0.5, vmax=1.0)
+
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,2], c=0.738, marker='p',  s=20, vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,2], c=0.931, marker='p',  s=40, vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,2], c=0.993, marker='p', s=50, vmin=0.5, vmax=1.0)
+
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,2], c=0.930, marker='v', s=20, vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,2], c=0.747, marker='v', s=20, vmin=0.5, vmax=1.0)
+
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,2], c=0.599, marker='^', s=20, vmin=0.5, vmax=1.0)
+pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,2], c=0.964, marker='^', s=20, vmin=0.5, vmax=1.0)
+
+plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+
+plt.colorbar(pcm)
+
+plt.scatter(np.nan, np.nan, marker='o', color='w', edgecolor='k', label='20190305')
+plt.scatter(np.nan, np.nan, marker='s',color='w', edgecolor='k', label='20180209')
+plt.scatter(np.nan, np.nan, marker='>',color='w', edgecolor='k',  label='20181001')
+plt.scatter(np.nan, np.nan, marker='<',color='w', edgecolor='k',  label='20190209')
+
+plt.scatter(np.nan, np.nan, marker='p',color='w', edgecolor='k',  label='20181031')
+plt.scatter(np.nan, np.nan, marker='v',color='w', edgecolor='k',  label='20181215')
+plt.scatter(np.nan, np.nan, marker='^',color='w', edgecolor='k',  label='20181218')
+
+plt.legend(fontsize=10)
+plt.grid(True)
+plt.xlabel('MINPCT(19)')
+plt.ylabel('MINPCTT(37)')
+plt.xlim([170,300])
+plt.ylim([80,240])
+
+ax1 = plt.subplot(gs1[0,1])
+plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[2],  RMA3_20190305['PCTarray_PHAIL_out'].data[3], c=0.737, s=30, marker='o', vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[2],  RMA4_20180209['PCTarray_PHAIL_out'].data[3], c=0.762, s=30, marker='s', vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[2], RMA4_20181001['PCTarray_PHAIL_out'].data[3],  c=0.965, s=30, marker='>', vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[2],  RMA4_20190209['PCTarray_PHAIL_out'].data[3], c=0.989, marker='<', s=30, vmin=0.5, vmax=1.0)
+
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,3], c=0.738, marker='p',  s=20, vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,3], c=0.931, marker='p',  s=40, vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,3], c=0.993, marker='p', s=50, vmin=0.5, vmax=1.0)
+
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,3], c=0.930, marker='v', s=20, vmin=0.5, vmax=1.0)
+plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,3], c=0.747, marker='v', s=20, vmin=0.5, vmax=1.0)
+
+plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,3], c=0.599, marker='^', s=20, vmin=0.5, vmax=1.0)
+pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,3], c=0.964, marker='^', s=20, vmin=0.5, vmax=1.0)
+plt.colorbar(pcm)
+
+
+plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+
+plt.grid(True)
+plt.xlabel('MINPCT(37)')
+plt.ylabel('MINPCTT(85)')
+plt.xlim([80,230])
+plt.ylim([50,170])
+plt.suptitle('RMA3+RMA4',y=0.9)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# como se compara con los contornos que no tienen Phail? 
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+
+plt.scatter(np.nan, np.nan, marker='x', color='k', label='20180208')
+
+plt.legend(fontsize=10)
+plt.grid(True)
+plt.xlabel('MINPCT(19)')
+plt.ylabel('MINPCTT(37)')
+plt.xlim([170,300])
+plt.ylim([80,240])
+
+ax1 = plt.subplot(gs1[0,1])
+plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[2],  RMA1_20180208['PCTarray_PHAIL_out'].data[3], c=0.534, s=30, marker='o', vmin=0.5, vmax=1.0)
+plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[2],  DOW7_20181214['PCTarray_PHAIL_out'].data[3], c=0.967, s=30, marker='s', vmin=0.5, vmax=1.0)
+plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[2], CSPR2_20181111['PCTarray_PHAIL_out'].data[3], c=0.653, s=30, marker='>', vmin=0.5, vmax=1.0)
+pcm = plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[2],  RMA1_20190308['PCTarray_PHAIL_out'].data[3], c=0.895, marker='<', s=30, vmin=0.5, vmax=1.0)
+plt.colorbar(pcm)
+
+# como se compara con los contornos que no tienen Phail? 
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+
+plt.grid(True)
+plt.xlabel('MINPCT(37)')
+plt.ylabel('MINPCTT(85)')
+plt.xlim([80,230])
+plt.ylim([50,170])
+
+plt.suptitle('CORDOBA',y=0.9)
+
+
+
 
 
 
