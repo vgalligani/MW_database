@@ -1916,7 +1916,7 @@ for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
 # And create a netcdf file
 RMA4_20180209 = xr.Dataset( {
                     "PCTarray_PHAIL_out": (('PCTs'), PCTarray_PHAIL_out_),
-                    "PCTarray_NOPHAIL_out": (('icois','PCTs'), PCTarray_NOPHAIL_out),
+                    "PCTarray_NOPHAIL_out": (('noicois','PCTs'), PCTarray_NOPHAIL_out),
                     "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
                     "PCTarray_NOPHAIL_mean": (('PCTs'),    PCTarray_NOPHAIL_out_mean),	
                     "meanAREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
