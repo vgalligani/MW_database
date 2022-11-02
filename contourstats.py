@@ -1704,26 +1704,34 @@ import xarray as xr
 	 GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = main_20180208()
 
 PCTarray_PHAIL_out_mean = []
+PCTarray_NOPHAIL_out_mean = []
 for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
 	PCTarray_PHAIL_out_mean.append(np.nanmean(PCTarray_PHAIL_out[:,ifreq]))
+	PCTarray_NOPHAIL_out_mean.append(np.nanmean(PCTarray_NOPHAIL_out[:,ifreq]))
 
 if len(PCTarray_PHAIL_out) == 1:
 	PCTarray_PHAIL_out_ = []
 	for ifreq in range(PCTarray_NOPHAIL_out.shape[1]):
-		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[ifreq])
+		PCTarray_PHAIL_out_.append( PCTarray_PHAIL_out[0][ifreq])
 		
 # And create a netcdf file
 RMA1_20180208 = xr.Dataset( {
                     "PCTarray_PHAIL_out": (('PCTs'), PCTarray_PHAIL_out_),
-                    "PCTarray_NOPHAIL_out": (('icois','PCTs'), PCTarray_NOPHAIL_out),
+                    "PCTarray_NOPHAIL_out": (('noicois','PCTs'), PCTarray_NOPHAIL_out),
                     "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
                     "PCTarray_NOPHAIL_mean": (('PCTs'),    PCTarray_NOPHAIL_out_mean),	
-                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
-                    "AREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
-                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
-                    "PIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
-                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
-                    "GATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "meanAREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "meanAREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
+                    "meanPIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "meanPIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "meanGATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "meanGATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+	            "AREA_PHAIL":            (('icois'),    AREA_PHAIL),
+                    "AREA_NOPHAIL":          (('noicois'),    AREA_NOPHAIL),
+                    "PIXELS_PHAIL":          (('icois'),    PIXELS_PHAIL), 
+                    "PIXELS_NOPHAIL":        (('noicois'),    PIXELS_NOPHAIL), 
+                    "GATES_PHAIL":           (('icois'),    GATES_PHAIL), 
+                    "GATES_NOPHAIL":         (('noicois'),    GATES_NOPHAIL),	
                     "ZHarray_PHAIL":       (('gates1'), ZHarray_PHAIL[0]),
                     "ZDRarray_PHAIL":      (('gates1'), ZDRarray_PHAIL[0]),
                     "ZHarray_NOPHAIL_1":   (('gates2'), ZHarray_NOPHAIL[0]),
@@ -2359,7 +2367,6 @@ def make_scatterplots_sector1_with3Dvalue(var4title, varTitle, novarTitle, vminn
 
 	plt.colorbar(pcm)
 
-	plt.legend(fontsize=10)
 	plt.grid(True)
 	plt.xlabel('MINPCT(19)')
 	plt.ylabel('MINPCTT(37)')
