@@ -2034,12 +2034,18 @@ RMA4_20181031 = xr.Dataset( {
                     "PCTarray_NOPHAIL_out": (('PCTs'), PCTarray_NOPHAIL_out_),
                     "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
                     "PCTarray_NOPHAIL_mean": (('PCTs'),    PCTarray_NOPHAIL_out_mean),	
-                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
-                    "AREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
-                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
-                    "PIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
-                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
-                    "GATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "meanAREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "meanAREA_NOPHAIL":          (('Nr'),    [np.nanmean(AREA_NOPHAIL)]),
+                    "meanPIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "meanPIXELS_NOPHAIL":        (('Nr'),    [np.nanmean(PIXELS_NOPHAIL)]), 
+                    "meanGATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "meanGATES_NOPHAIL":         (('Nr'),    [np.nanmean(GATES_NOPHAIL)]),
+                    "AREA_PHAIL":            (('icois'),    AREA_PHAIL),
+                    "AREA_NOPHAIL":          (('noicois'),    AREA_NOPHAIL),
+                    "PIXELS_PHAIL":          (('icois'),    PIXELS_PHAIL), 
+                    "PIXELS_NOPHAIL":        (('noicois'),    PIXELS_NOPHAIL), 
+                    "GATES_PHAIL":           (('icois'),    GATES_PHAIL), 
+                    "GATES_NOPHAIL":         (('noicois'),    GATES_NOPHAIL),
                     "ZHarray_PHAIL_1":       (('gates1'), ZHarray_PHAIL[0]),
                     "ZDRarray_PHAIL_1":      (('gates1'), ZDRarray_PHAIL[0]),
                     "ZHarray_PHAIL_2":   (('gates2'), ZHarray_PHAIL[1]),
@@ -2047,8 +2053,10 @@ RMA4_20181031 = xr.Dataset( {
                     "ZHarray_PHAIL_3":   (('gates3'), ZHarray_PHAIL[2]),
                     "ZDRarray_PHAIL_3":  (('gates3'), ZDRarray_PHAIL[2]),
                     "ZHarray_NOPHAIL":   (('gates4'), ZHarray_NOPHAIL[0]),
-                    "ZDRarray_NOPHAIL":  (('gates4'), ZDRarray_NOPHAIL[0]),	
-                    }   )
+                    "ZDRarray_NOPHAIL":  (('gates4'), ZDRarray_NOPHAIL[0])  }   )
+
+
+
 RMA4_20181031.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA4_20181031.nc', 'w')
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_PHAIL_out_mean, PCTarray_NOPHAIL_out_, PCTarray_NOPHAIL_out_mean
@@ -2072,9 +2080,12 @@ if len(PCTarray_NOPHAIL_out) == 1:
 RMA4_20181215 = xr.Dataset( {
                     "PCTarray_PHAIL_out": (('icois','PCTs'), PCTarray_PHAIL_out),
                     "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
-                    "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
-                    "PIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
-                    "GATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "meanAREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)]),
+                    "meanPIXELS_PHAIL":          (('Nr'),    [np.nanmean(PIXELS_PHAIL)]), 
+                    "meanGATES_PHAIL":           (('Nr'),    [np.nanmean(GATES_PHAIL)]), 
+                    "AREA_PHAIL":            (('icois'),    AREA_PHAIL),
+                    "PIXELS_PHAIL":          (('icois'),    PIXELS_PHAIL), 
+                    "GATES_PHAIL":           (('icois'),    GATES_PHAIL), 
                     "ZHarray_PHAIL_1":       (('gates1'), ZHarray_PHAIL[0]),
                     "ZDRarray_PHAIL_1":      (('gates1'), ZDRarray_PHAIL[0]),
                     "ZHarray_PHAIL_2":   (('gates2'), ZHarray_PHAIL[1]),
@@ -2122,6 +2133,105 @@ RMA4_20181218 = xr.Dataset( {
 RMA4_20181218.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/full_RMA4_20181218.nc', 'w')
 del PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL
 del PCTarray_NOPHAIL_out_, PCTarray_PHAIL_out_mean
+
+
+
+#----------------------------------------------------------------------------------------------
+# scatter plots 37/19 AND 37/85 w/ further info
+#----------------------------------------------------------------------------------------------
+
+def make_scatterplots_sector3_with3Dvalue(var4title, varTitle, vminn, vmaxx ): 
+	
+	fig = plt.figure(figsize=(10,10)) 
+	gs1 = gridspec.GridSpec(2, 2)
+	ax1 = plt.subplot(gs1[0,0])
+	plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[1],  RMA3_20190305['PCTarray_PHAIL_out'].data[2], c=RMA3_20190305[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[1],  RMA4_20180209['PCTarray_PHAIL_out'].data[2], c=RMA4_20180209[varTitle].data[0], s=30, marker='s', vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[1], RMA4_20181001['PCTarray_PHAIL_out'].data[2],  c=RMA4_20181001[varTitle].data[0], s=30, marker='>', vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[1],  RMA4_20190209['PCTarray_PHAIL_out'].data[2], c=RMA4_20190209[varTitle].data[0], marker='<', s=30, vmin=vminn, vmax=vmaxx)
+
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,2], c=RMA4_20181031[varTitle].data[0], marker='p',  s=20, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,2], c=RMA4_20181031[varTitle].data[1], marker='p',  s=40, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,1],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,2], c=RMA4_20181031[varTitle].data[2], marker='p', s=50, vmin=vminn, vmax=vmaxx)
+
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,2], c=RMA4_20181215[varTitle].data[0], marker='v', s=20, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,2], c=RMA4_20181215[varTitle].data[1], marker='v', s=20, vmin=vminn, vmax=vmaxx)
+
+	plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,2], c=RMA4_20181218[varTitle].data[0], marker='^', s=20, vmin=vminn, vmax=vmaxx)
+	pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,1],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,2], c=RMA4_20181218[varTitle].data[1], marker='^', s=vminn, vmin=0.5, vmax=vmaxx)
+	
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[1],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')	
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,1],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[1],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[2], s=30, marker='x', color='k')
+
+	plt.colorbar(pcm)
+
+	plt.scatter(np.nan, np.nan, marker='o', color='w', edgecolor='k', label='20190305')
+	plt.scatter(np.nan, np.nan, marker='s',color='w', edgecolor='k', label='20180209')
+	plt.scatter(np.nan, np.nan, marker='>',color='w', edgecolor='k',  label='20181001')
+	plt.scatter(np.nan, np.nan, marker='<',color='w', edgecolor='k',  label='20190209')
+
+	plt.scatter(np.nan, np.nan, marker='p',color='w', edgecolor='k',  label='20181031')
+	plt.scatter(np.nan, np.nan, marker='v',color='w', edgecolor='k',  label='20181215')
+	plt.scatter(np.nan, np.nan, marker='^',color='w', edgecolor='k',  label='20181218')
+
+	plt.legend(fontsize=10)
+	plt.grid(True)
+	plt.xlabel('MINPCT(19)')
+	plt.ylabel('MINPCTT(37)')
+	plt.xlim([170,300])
+	plt.ylim([80,240])
+
+	ax1 = plt.subplot(gs1[0,1])
+	plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data[2],  RMA3_20190305['PCTarray_PHAIL_out'].data[3], c=RMA3_20190305[varTitle].data[0], s=30, marker='o', vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data[2],  RMA4_20180209['PCTarray_PHAIL_out'].data[3], c=RMA4_20180209[varTitle].data[0], s=30, marker='s', vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data[2], RMA4_20181001['PCTarray_PHAIL_out'].data[3],  c=RMA4_20181001[varTitle].data[0], s=30, marker='>', vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data[2],  RMA4_20190209['PCTarray_PHAIL_out'].data[3], c=RMA4_20190209[varTitle].data[0], marker='<', s=30, vmin=vminn, vmax=vmaxx)
+
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[0,3], c=RMA4_20181031[varTitle].data[0], marker='p',  s=20, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[1,3], c=RMA4_20181031[varTitle].data[1], marker='p',  s=40, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data[2,2],  RMA4_20181031['PCTarray_PHAIL_out'].data[2,3], c=RMA4_20181031[varTitle].data[2], marker='p', s=50, vmin=vminn, vmax=vmaxx)
+
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[0,3], c=RMA4_20181215[varTitle].data[0], marker='v', s=20, vmin=vminn, vmax=vmaxx)
+	plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181215['PCTarray_PHAIL_out'].data[1,3], c=RMA4_20181215[varTitle].data[1], marker='v', s=20, vmin=vminn, vmax=vmaxx)
+
+	plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[0,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[0,3], c=RMA4_20181218[varTitle].data[0], marker='^', s=20, vmin=vminn, vmax=vmaxx)
+	pcm = plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data[1,2],  RMA4_20181218['PCTarray_PHAIL_out'].data[1,3], c=RMA4_20181218[varTitle].data[1], marker='^', s=vminn, vmin=0.5, vmax=vmaxx)
+	
+	plt.colorbar(pcm)
+
+
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+	plt.scatter(RMA3_20190305['PCTarray_NOPHAIL_out'].data[2],  RMA3_20190305['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20180209['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20181001['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,2],  RMA4_20190209['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181031['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181031['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+	plt.scatter(RMA4_20181218['PCTarray_NOPHAIL_out'].data[2],  RMA4_20181218['PCTarray_NOPHAIL_out'].data[3], s=30, marker='x', color='k')
+
+	plt.grid(True)
+	plt.xlabel('MINPCT(37)')
+	plt.ylabel('MINPCTT(85)')
+	plt.xlim([80,230])
+	plt.ylim([50,170])
+	plt.suptitle('RMA3+RMA4 '+ var4title,y=0.9)
+
+	return
+
+
+
+make_scatterplots_sector3_with3Dvalue('AREA_PHAIL', 'AREA_PHAIL', 0, 1e4 ) 
+
 
 
 
@@ -2378,79 +2488,6 @@ plt.suptitle('RMA3+RMA4',y=0.9)
 
 
 
-# como se compara con los contornos que no tienen Phail? 
-plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2], s=30, marker='x', color='k')
-plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,1],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2], s=30, marker='x', color='k')
-
-plt.scatter(np.nan, np.nan, marker='x', color='k', label='20180208')
-
-plt.legend(fontsize=10)
-plt.grid(True)
-plt.xlabel('MINPCT(19)')
-plt.ylabel('MINPCTT(37)')
-plt.xlim([170,300])
-plt.ylim([80,240])
-
-ax1 = plt.subplot(gs1[0,1])
-plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data[2],  RMA1_20180208['PCTarray_PHAIL_out'].data[3], c=0.534, s=30, marker='o', vmin=0.5, vmax=1.0)
-plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data[2],  DOW7_20181214['PCTarray_PHAIL_out'].data[3], c=0.967, s=30, marker='s', vmin=0.5, vmax=1.0)
-plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data[2], CSPR2_20181111['PCTarray_PHAIL_out'].data[3], c=0.653, s=30, marker='>', vmin=0.5, vmax=1.0)
-pcm = plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data[2],  RMA1_20190308['PCTarray_PHAIL_out'].data[3], c=0.895, marker='<', s=30, vmin=0.5, vmax=1.0)
-plt.colorbar(pcm)
-
-# como se compara con los contornos que no tienen Phail? 
-plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[0,3], s=30, marker='x', color='k')
-plt.scatter(RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,2],  RMA1_20180208['PCTarray_NOPHAIL_out'].data[1,3], s=30, marker='x', color='k')
-
-plt.grid(True)
-plt.xlabel('MINPCT(37)')
-plt.ylabel('MINPCTT(85)')
-plt.xlim([80,230])
-plt.ylim([50,170])
-
-plt.suptitle('CORDOBA',y=0.9)
 
 
 
-
-
-
-TB_s1 = tb_s1_gmi[idx1][TB_inds[ic],:]         
-        print('MIN10PCTs: '  +str(np.min(2.5  * TB_s1[:,0] - 1.5  * TB_s1[:,1])) ) 
-        print('MIN19PCTs: '  +str(np.min(2.4  * TB_s1[:,2] - 1.4  * TB_s1[:,3])) ) 
-        print('MIN37PCTs: '  +str(np.min(2.15 * TB_s1[:,5] - 1.15 * TB_s1[:,6])) ) 
-        print('MIN85PCTs: '  +str(np.min(1.7  * TB_s1[:,7] - 0.7  * TB_s1[:,8])) ) 
-    plt.grid(True)
-    plt.legend()
-    plt.xlabel('TBV(37)')
-    plt.ylabel('TBV(85)')
-
-
-plt.scatter(RMA1_20180208['PCTarray_PHAIL_out'].data)
-plt.scatter(DOW7_20181214['PCTarray_PHAIL_out'].data)
-plt.scatter(CSPR2_20181111['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA1_20190308['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA5_20200815['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA3_20190305['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA4_20180209['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA4_20181001['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA4_20190209['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA4_20181031['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA4_20181215['PCTarray_PHAIL_out'].data)
-plt.scatter(RMA4_20181218['PCTarray_PHAIL_out'].data)
-
-
-
-
-print(RMA1_20180208['PCTarray_NOPHAIL_out'].data)
-#print(DOW7_20181214['PCTarray_NOPHAIL_out'].data)
-print(CSPR2_20181111['PCTarray_NOPHAIL_out'].data)
-#print(RMA1_20190308['PCTarray_NOPHAIL_out'].data)
-#print(RMA5_20200815['PCTarray_NOPHAIL_out'].data)
-print(RMA3_20190305['PCTarray_NOPHAIL_out'].data)
-print(RMA4_20180209['PCTarray_NOPHAIL_out'].data)
-#print(RMA4_20181001['PCTarray_NOPPHAIL_out'].data)
-print(RMA4_20190209['PCTarray_NOPHAIL_out'].data)
-print(RMA4_20181031['PCTarray_NOPHAIL_out'].data)
-#print(RMA4_20181215['PCTarray_NOPHAIL_out'].data)
-print(RMA4_20181218['PCTarray_NOPHAIL_out'].data)
