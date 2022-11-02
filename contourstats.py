@@ -2654,6 +2654,9 @@ make_scatterplots_sector2_with3Dvalue('PIXELS_PHAIL', 'PIXELS_PHAIL','PIXELS_NOP
 make_scatterplots_sector2_with3Dvalue('GATES_PHAIL', 'GATES_PHAIL','GATES_NOPHAIL', 10, 1e4 )
 
 make_scatterplots_sector1_with3Dvalue('AREA_PHAIL', 'AREA_PHAIL','AREA_NOPHAIL', 10, 1e4 )
+make_scatterplots_sector1_with3Dvalue('PIXELS_PHAIL', 'PIXELS_PHAIL','PIXELS_NOPHAIL', 10, 1e4 )
+make_scatterplots_sector1_with3Dvalue('GATES_PHAIL', 'GATES_PHAIL','GATES_NOPHAIL', 10, 1e4 )
+
 
 
 
