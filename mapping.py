@@ -4950,7 +4950,7 @@ def get_sys_phase_simple(radar):
             PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan	
         rhv = RHOHV.copy()
         z_h = TH.copy()
-	PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
         # por cada radial encontrar first non nan value: 
         phases = []
         for radial in range(radar.sweep_end_ray_index['data'][0]):
@@ -5850,6 +5850,50 @@ def get_contour_info(contorno, icois, datapts_in):
 
     return TB_inds
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_contour_info_gridded(contorno, icois, datapts_in): 
+
+    # Get verticies: 
+    for item in contorno.collections:
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1] 
+
+    # Get vertices of these polygon type shapes
+    for ii in range(len(icois)): 
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno.collections[0].get_paths()[int(icois[ii])].vertices)): 
+            X1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0])
+            Y1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1])
+            vertices.append([contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
+                                        contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
+        #convexhull = ConvexHull(vertices)
+        array_points = np.array(vertices)
+
+        #hull_path   = Path( array_points[convexhull.vertices] )
+        #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
+        alpha = 0.95 * alphashape.optimizealpha(array_points)
+        hull_pts_CONCAVE   = alphashape.alphashape(array_points, alpha)
+        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
+        check_points = np.vstack((hull_coors_CONCAVE)).T
+        concave_path = Path(check_points)
+        
+        if ii == 0:
+            inds_1   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1]
+       	if ii == 1:
+            inds_2   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1, inds_2]
+        if ii == 2:
+            inds_3   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1, inds_2, inds_3]
+        if ii == 3:
+            inds_4   = concave_path.contains_points(datapts_in)
+            TB_inds      = [inds_1, inds_2, inds_3, inds_4]   
+
+    return TB_inds
 
 
 #------------------------------------------------------------------------------
@@ -6832,7 +6876,133 @@ def summary_radar_obs(radar, fname, options):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def get_prioritymap(options, radar, grided):
+def get_prioritymap(options, radar, grided, icois):
+
+   	# HID priority:  hail (HL), high-density graupel (HG), low-density graupel (LG), aggregates (AG), 
+   	# ice crystals (CR) combined with vertically oriented crystals (VI), and a final group that 
+   	# combines all liquid-phase hydrometeors and wet snow (WS). 
+   	# HID types:           Species #:  
+   	# -------------------------------
+   	# ------ OJO QUE CERO NO VAS A TENER PQ FILTRASTE ESO ANTES? 
+   	# eso es lo que sale de scores, a esto se le suma +1
+        # Drizzle                  1  -> rank: 6
+        # Rain                     2  -> rank: 6    
+        # Ice Crystals             3  -> rank: 4
+        # Aggregates               4  -> rank: 3
+        # Wet Snow                 5  -> rank: 6
+        # Vertical Ice             6  -> rank: 5
+        # Low-Density Graupel      7  -> rank: 2
+        # High-Density Graupel     8  -> rank: 1
+        # Hail                     9  -> rank: 0
+        # Big Drops                10 -> rank: 6
+   	# -------------------------------
+   	# -------------------------------	
+   	# una forma puede ser asignando prioridades ... 
+       priority = {9: 0, 8: 1, 7: 2, 4: 3, 3: 4, 6: 5, 5: 6, 10: 7, 2: 8, 1: 9, 0: 10}
+       nz = grided.fields['HID']['data'].shape[0]
+       nx = grided.fields['HID']['data'].shape[1]
+       ny = grided.fields['HID']['data'].shape[2]
+       priority_map = np.zeros((nx,ny)); priority_map[:] = np.nan
+       for ix in range(nx):
+           for iy in range(ny):
+               #ix = 268
+               #iy = 430
+               HID_col = np.zeros((grided.fields['HID']['data'][:,ix,iy].shape[0]))
+               HID_col[:] = grided.fields['HID']['data'][:,ix,iy]	
+               HID_col = HID_col.round()
+               priority_map[ix,iy] = sorted(HID_col, key=priority.get)[0]			
+       #---- plot hid ppi  
+       hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+       cmaphid = colors.ListedColormap(hid_colors)
+       fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+       pcm1 = axes.pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], priority_map, cmap=cmaphid, vmin=0.2, vmax=10)
+       axes.set_title('HID priority projection')
+       axes.set_xlim([options['xlim_min'], options['xlim_max']])
+       axes.set_ylim([options['ylim_min'], options['ylim_max']])
+       [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+       axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+       [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+       axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+       [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+       axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+       cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
+       cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+	
+       # agregar: 	
+       # read 
+       f = h5py.File( options['gmi_dir']+options['gfile'], 'r')
+       tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+       lon_gmi = f[u'/S1/Longitude'][:,:] 
+       lat_gmi = f[u'/S1/Latitude'][:,:]
+       tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+       lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+       lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+       f.close()
+       idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+
+       PCT89 = 1.7  * tb_s1_gmi[:,:,7] - 0.7  * tb_s1_gmi[:,:,8] 	
+       #CS = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['black']), linewidths=1.5)
+       CS = axes.contour(lon_gmi, lat_gmi, PCT89, [200], colors=(['black']), linewidths=1.5)	
+       labels_cont = ['GMI 200K contour']
+       for i in range(len(labels_cont)):
+         CS.collections[i].set_label(labels_cont[i])
+       if len(options['REPORTES_meta'])>0:
+         for ireportes in range(len(options['REPORTES_geo'])):
+             axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+         plt.legend() 
+
+       #fig.savefig(options['fig_dir']+'PriorityHID.png', dpi=300, transparent=False)  
+       #plt.close()
+	
+	#-----------------
+        barlabels = [ 'Hail', 'HD graupel', 'LD graupel', 'Aggr.', 
+		     'IC', 'WS and Liq.']   
+        br1 = np.arange(1,1+len(barlabels),1) #---- adjutst!
+	barWidth = 0.15 
+	#----------------------------------
+	#-- simple histogram for the full map. 
+	#----------------------------------
+	Total_perID = np.zeros([1,len(barlabels)])
+	for i in range(len(barlabels)):
+		Total_perID[0,i] = len(priority_map[np.where(priority_map==i)]) 
+		
+	fig,ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[7,6])
+	plt.bar(br1, Total_perID[0,:], color='darkred', width = barWidth)
+	ax.set_xticks(np.arange(1,7,1))
+	ax.set_xticklabels(barlabels)
+       
+	#----------------------------------
+	#-- histogram per contour ...  
+	#----------------------------------
+	datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
+	datapts_RADAR_NATIVE = np.column_stack(( np.ravel(grided.point_longitude['data'][0,:,:]),np.ravel(grided.point_latitude['data'][0,:,:]) ))
+	RN_inds_parallax =  get_contour_info(CS, icois, datapts_RADAR_NATIVE)
+	ICOI_perID = np.zeros([len(RN_inds_parallax),len(barlabels)])
+	for ic in range(len(RN_inds_parallax)):
+		ICOI_P = priority_map[RN_inds_parallax[ic]]
+		ICOI_perID[ic,:] = len(ICOI_P[np.where(ICOI_P==i)]) 
+		del ICOI_P
+		
+	
+	(np.ravel(radarTH)[RN_inds_parallax[ic]]).copy()
+	
+    # FIGURE CHECK CONTORNOS
+    fig = plt.figure(figsize=(20,7)) 
+	pcm1 = axes.pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], priority_map, cmap=cmaphid, vmin=0.2, vmax=10)
+    for ic in range(len(RN_inds_parallax)):       
+        plt.plot( np.ravel(grided.point_longitude['data'][0,:,:])[RN_inds_parallax[ic]], np.ravel(grided.point_longitude['data'][0,:,:])[RN_inds_parallax[ic]], 'om')
+    plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+	
+
+
+	
+       return priority_map
+
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+def plot_grided_HID_elevmaps(options, radar, grided):
 
    	# HID priority:  hail (HL), high-density graupel (HG), low-density graupel (LG), aggregates (AG), 
    	# ice crystals (CR) combined with vertically oriented crystals (VI), and a final group that 
@@ -6921,6 +7091,9 @@ def get_prioritymap(options, radar, grided):
 
 
 #----------------------------------------------------------------------------------------------
+
+
+
 #----------------------------------------------------------------------------------------------
 def run_general_case(options, era5_file, lat_pfs, lon_pfs, time_pfs, icois, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input):
 
@@ -7541,6 +7714,44 @@ def main_RMA4_20181031():
     return
 
 
+def HIDpriority_lev_RMA4_20181031(): 
+
+    # aca solo voy a poner las 3 que me interesan dentro de rango razonable del radar ... 
+    #icoi=58//	2018	10	31	01	11	 -26.52	 -57.33	 0.993	267.5031	307.3651	198.3740	111.7183	 56.3188	193.9708	219.0600	1
+    #icoi=20//	2018	10	31	01	10	 -28.71	 -58.37	 0.931	276.8601	302.9811	237.4247	151.6656	 67.1172	198.5928	160.6000	1
+    #icoi=1//	2018	10	31	01	10	 -28.70	 -60.70	 0.738	274.8905	303.1061	244.4909	174.1353	 99.4944	199.8251	163.2800	1
+    time_pfs = ['0110UTC','0110UTC','0110UTC','0110UTC']
+    phail    = [0.993, 0.931, np.nan ,0.738]
+    MIN85PCT = [56.31, 67.1172, np.nan,  99.4944 ]
+    MIN37PCT = [111.71, 151.66, np.nan, 174.13 ]
+    MINPCTs_labels = ['MIN10PCT', 'MIN19PCT', 'MIN37PCT', 'MIN85PCT', 'MAX85PCT', 'MIN165V']
+    MINPCTs  = []
+    rfile    = 'cfrad.20181031_010936.0000_to_20181031_011525.0000_RMA4_0200_01.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20181031-S005717-E022950.026546.V05A.HDF5' 
+    era5_file = '20181031_01_RMA4.grib' 
+    # REPORTES TWITTER ... 
+    # CDB capital (varios en base, e.g. https://t.co/Z94Z4z17Ev)
+    # VCP (https://twitter.com/icebergdelsur/status/961717942714028032, https://t.co/RJakJjW8sl) gargatuan hail paper!
+    # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
+    reportes_granizo_twitterAPI_geo = []
+    reportes_granizo_twitterAPI_meta = []
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+	    'ZDRoffset': 1.5,   
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'window_calc_KDP': 7, 'azimuth_ray': 157, 
+	    'x_supermin':-61.5, 'x_supermax':-56.5, 'y_supermin':-29.5, 'y_supermax':-26, 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
+	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail, 
+	   'icoi_PHAIL': 3, 'radar_name':'RMA4','alternate_azi':[65, 157, 199, 230]}
+    icois_input  = [58,20,26,1] 
+    azimuths_oi  = [65, 157, 199, 230]
+    labels_PHAIL = ['[Phail = 0.993]','[Phail = 0.931]',' ','[Phail = 0.958 ]'] 
+    xlims_xlims_input  = [250, 250, 250, 250] 
+    xlims_mins_input  = [150,150,100,150]		
+    grided = run_general_case(opts, era5_file, lat_pfs, lon_pfs, time_pfs, icois_input, azimuths_oi, labels_PHAIL, xlims_xlims_input, xlims_mins_input)
+	
+    return
 
 
 def main_RMA4_20181215(): 
