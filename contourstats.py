@@ -501,6 +501,26 @@ def get_contour_info(contorno, icois, datapts_in):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+
+def discrete_cmap(N, base_cmap=None):
+    """Create an N-bin discrete colormap from the specified input map"""
+
+    # Note that if base_cmap is a string or None, you can simply do
+    #    return plt.cm.get_cmap(base_cmap, N)
+    # The following works for string, None, or a colormap instance:
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    base = plt.cm.get_cmap(base_cmap)
+    color_list = base(np.linspace(0, 1, N))
+    cmap_name = base.name + str(N)
+    
+    return base.from_list(cmap_name, color_list, N)
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
     #---------------------------------------------------------------------------------------------------------
@@ -538,7 +558,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
     radar.add_field_like('RHOHV','corrPHIDP', corr_phidp, replace_existing=True)
 
     # Y CALCULAR KDP! 
-    calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
+    calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=7, dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
 					   method='lanczos_conv', skipna=True)	
     radar.add_field_like('RHOHV','corrKDP', calculated_KDP, replace_existing=True)
 
@@ -1758,7 +1778,7 @@ def get_sys_phase_simple(radar):
         phases = []
         for radial in range(radar.sweep_end_ray_index['data'][0]):
             if firstNonNan(PHIDP[radial,30:]):
-                phases.append(firstNonNan(PHIDP[radial,30:]))
+                phases.append(firstNonNan(PHIDP[radial,50:])) #FOR RMA1:50, SINO 30?
         phases_nlev.append(np.median(phases))
     phases_out = np.nanmedian(phases_nlev) 
 
@@ -1919,6 +1939,33 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
         plt.close()
 	
+
+    # Filters
+    ni = radarTH.shape[0]
+    nj = radarTH.shape[1]
+    for i in range(ni):
+        rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
+        zh_h  = radarTH[i,:].copy()
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                radarZDR[i,j]  = np.nan
+                radarTH[i,j]  = np.nan
+
+
+    #------------------------------------------------------
+    # histogram de HID dentro de cada contorno
+    #------------------------------------------------------
+    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], 
+							    options['lat_pfs'], options['lon_pfs']) 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    radar = add_43prop_field(radar)     
+    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    #for ic in range(len(GMI_tbs1_37)):
+    breakpoint()
+	
+
+
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
     datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
 
@@ -1961,18 +2008,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     if len(icois)==4:
         colors_plot = ['k', 'darkblue', 'darkred', 'darkgreen']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
-		
-    # Filters
-    ni = radarTH.shape[0]
-    nj = radarTH.shape[1]
-    for i in range(ni):
-        rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
-        zh_h  = radarTH[i,:].copy()
-        for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
-                radarZDR[i,j]  = np.nan
-                radarTH[i,j]  = np.nan
-
+	
     #------------------------------------------------------
     # FIGURE CHECK CONTORNOS
     if test_this == 1: 	
@@ -1985,21 +2021,6 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     	plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     	plt.xlim([options['xlim_min'], options['xlim_max']]) 
     	plt.ylim([options['ylim_min'], options['ylim_max']])
-
-    #------------------------------------------------------
-    # histogram de HID dentro de cada contorno
-    #------------------------------------------------------
-    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], 
-							    options['lat_pfs'], options['lon_pfs']) 
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    radar = add_43prop_field(radar)     
-    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #for ic in range(len(GMI_tbs1_37)):
-    breakpoint()
-	
-
-
     return 
 
 #----------------------------------------------------------------------------------------------
