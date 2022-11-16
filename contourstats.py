@@ -296,7 +296,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
         ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
 
     elif options['radar_name'] == 'RMA3':
-	reflectivity_name = 'TH'   
+        reflectivity_name = 'TH' 
         nlev = 0 
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -576,7 +576,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
         rho_h = drho_[i,:]
         zh_h = dzh_[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
+            if (rho_h[j]<0.8) or (zh_h[j]<35):
                 dzh_[i,j]  = np.nan
                 dzv_[i,j]  = np.nan
                 drho_[i,j]  = np.nan
@@ -881,7 +881,7 @@ def plot_scatter_4icois(options, radar, icois, fname):
         rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
         zh_h  = radarTH[i,:].copy()
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
+            if (rho_h[j]<0.8) or (zh_h[j]<35):
                 radarZDR[i,j]  = np.nan
                 radarTH[i,j]  = np.nan
 
@@ -1225,7 +1225,7 @@ def plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, fname):
         rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
         zh_h  = radarTH[i,:].copy()
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
+            if (rho_h[j]<0.8) or (zh_h[j]<35):
                 radarZDR[i,j]  = np.nan
                 radarTH[i,j]  = np.nan
 
@@ -1563,13 +1563,13 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
+            if (rho_h[j]<0.8) or (zh_h[j]<35):  # 0.7 y 0.3
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan
 
 		
-    #phiphi[:,0:20]  = np.nan 
-    #rho[:,0:20]    = np.nan 
+    phiphi[:,0:30]  = np.nan 
+    rho[:,0:30]    = np.nan 
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
@@ -1584,13 +1584,13 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
-    phi_cor[rho<0.7] = np.nan
+    phi_cor[rho<0.8] = np.nan
     #phi_cor[phi_cor < 0] = np.nan #antes <= ? 
     phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
 
     # Smoothing final:
     for i in range(ni):
-        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
+        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=40,
                                             window='flat')
     return dphi, uphi_i, phi_cor
 
@@ -1682,7 +1682,7 @@ def get_sys_phase_simple(radar):
             PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan	
         rhv = RHOHV.copy()
         z_h = TH.copy()
-        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+        PHIDP = np.where( (rhv>0.8) & (z_h>35), PHIDP, np.nan)
         # por cada radial encontrar first non nan value: 
         phases = []
         for radial in range(radar.sweep_end_ray_index['data'][0]):
@@ -1846,21 +1846,8 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [220], colors=(['k']), linewidths=1.5);
         axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
-        plt.close()
+        #plt.close()
 	
-
-    # Filters
-    ni = radarTH.shape[0]
-    nj = radarTH.shape[1]
-    for i in range(ni):
-        rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
-        zh_h  = radarTH[i,:].copy()
-        for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
-                radarZDR[i,j]  = np.nan
-                radarTH[i,j]  = np.nan
-
-
     #------------------------------------------------------
     # histogram de HID dentro de cada contorno
     #------------------------------------------------------
@@ -1873,7 +1860,19 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     #for ic in range(len(GMI_tbs1_37)):
     breakpoint()
 	
-
+    # Filters
+    ni = radarTH.shape[0]
+    nj = radarTH.shape[1]
+    for i in range(ni):
+        rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
+        zh_h  = radarTH[i,:].copy()
+        for j in range(nj):
+            if (rho_h[j]<0.8) or (zh_h[j]<35):
+                radarZDR[i,j]  = np.nan
+                radarTH[i,j]  = np.nan
+		
+		
+		
 
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
     datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
