@@ -576,7 +576,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
         rho_h = drho_[i,:]
         zh_h = dzh_[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.8) or (zh_h[j]<35):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
                 dzh_[i,j]  = np.nan
                 dzv_[i,j]  = np.nan
                 drho_[i,j]  = np.nan
@@ -1563,7 +1563,7 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.8) or (zh_h[j]<35):  # 0.7 y 0.3
+            if (rho_h[j]<0.7) or (zh_h[j]<30):  # 0.7 y 0.3
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan
 
@@ -1584,13 +1584,13 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
-    phi_cor[rho<0.8] = np.nan
-    #phi_cor[phi_cor < 0] = np.nan #antes <= ? 
+    #phi_cor[rho<0.8] = np.nan
+    phi_cor[phi_cor < 0] = np.nan #antes <= ? 
     phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
 
     # Smoothing final:
     for i in range(ni):
-        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=40,
+        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
                                             window='flat')
     return dphi, uphi_i, phi_cor
 
@@ -1619,7 +1619,7 @@ def calc_KDP(radar):
             b=np.std(y)
   
             if a==5:# and b<20:
-                ajuste=np.polyfit(x,y,1)
+                ajuste=np.polyoptionsfit(x,y,1)
                 kdp[j,i]=ajuste[0]
             else:
                 kdp[j,i]=np.nan
@@ -1682,12 +1682,12 @@ def get_sys_phase_simple(radar):
             PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan	
         rhv = RHOHV.copy()
         z_h = TH.copy()
-        PHIDP = np.where( (rhv>0.8) & (z_h>35), PHIDP, np.nan)
+        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
         # por cada radial encontrar first non nan value: 
         phases = []
         for radial in range(radar.sweep_end_ray_index['data'][0]):
-            if firstNonNan(PHIDP[radial,80:]):
-                phases.append(firstNonNan(PHIDP[radial,80:])) #FOR RMA1 :60, SINO :30?
+            if firstNonNan(PHIDP[radial,60:]):
+                phases.append(firstNonNan(PHIDP[radial,60:])) #FOR RMA1 :60, SINO :30?
         phases_nlev.append(np.median(phases))
     phases_out = np.nanmedian(phases_nlev) 
 
