@@ -1443,6 +1443,187 @@ def calc_freezinglevel(era5, lat_pf, lon_pf):
 	
 	return alt_ref, tfield_ref, freezing_lev
 
+def despeckle_phidp(phi, rho, zh):
+    '''
+    Elimina pixeles aislados de PhiDP
+    '''
+
+    # Unmask data and despeckle
+    dphi = phi.copy()
+    
+    # Descartamos pixeles donde RHO es menor que un umbral (e.g., 0.7) o no está definido (e.g., NaN)
+    dphi[np.isnan(rho)] = np.nan
+    
+    # Calculamos la textura de RHO (rhot) y descartamos todos los pixeles de PHIDP por encima
+    # de un umbral de rhot (e.g., 0.25)
+    rhot = wrl.dp.texture(rho)
+    rhot_thr = 0.25
+    dphi[rhot > rhot_thr] = np.nan
+    
+    # Eliminamos pixeles aislados rodeados de NaNs
+    # https://docs.wradlib.org/en/stable/generated/wradlib.dp.linear_despeckle.html     
+    dphi = wrl.dp.linear_despeckle(dphi, ndespeckle=5, copy=False)
+	
+    ni = phi.shape[0]
+    nj = phi.shape[1]
+
+    #for i in range(ni):
+    #    rho_h = rho[i,:]
+    #    zh_h = zh[i,:]
+    #    for j in range(nj):
+    #        if (rho_h[j]<0.7) or (zh_h[j]<30):
+    #            dphi[i,j]  = np.nan		
+	
+    return dphi
+		
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------ 
+def unfold_phidp(phi, rho, diferencia):
+    '''
+    Unfolding
+    '''
+       
+    # Dimensión del PPI (elevaciones, azimuth, bins)
+    nb = phi.shape[1]
+    nr = phi.shape[0]
+
+    phi_cor = np.zeros((nr, nb)) #Asigno cero a la nueva variable phidp corregida
+
+    v1 = np.zeros(nb)  #Vector v1
+
+    # diferencia = 200 # Valor que toma la diferencia entre uno y otro pixel dentro de un mismo azimuth
+    
+    for m in range(0, nr):
+    
+        v1 = phi[m,:]
+        v2 = np.zeros(nb)
+    
+        for l in range(0, nb):
+            a = v2[l-1] - v1[l]
+
+            if np.isnan(a):
+                v2[l] = v2[l-1]
+
+            elif a > diferencia:  # np.abs(a) ? 
+                v2[l] = v1[l] + 360 # para -180to180 1ue le sumo 360, aca v1[l]-360
+                if v2[l-1] - v2[l] > 100:  # Esto es por el doble folding cuando es mayor a 700
+                    v2[l] = v1[l] + v2[l-1]
+
+            else:
+                v2[l] = v1[l]
+    
+        phi_cor[m,:] = v2
+    
+    #phi_cor[phi_cor <= 0] = np.nan
+    #phi_cor[rho < .7] = np.nan
+    
+    return phi_cor
+
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------    
+def subtract_sys_phase(phi, sys_phase):
+
+    nb = phi.shape[1] #GATE
+    nr = phi.shape[0] #AZYMUTH
+    phi_final = np.copy(phi) * 0
+    phi_err=np.ones((nr, nb)) * np.nan
+    
+    try:
+        phi_final = phi-sys_phase
+    except:
+        phi_final = phi_err
+    
+    return phi_final
+
+#------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------    
+def check_increasing(A):
+  
+    return (all(A[i] <= A[i + 1] for i in range(len(A) - 1)) or
+            all(A[i] >= A[i + 1] for i in range(len(A) - 1)))
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
+
+    phiphi = phi.copy()
+    rho = rho_data.copy()
+    ni = phi.shape[0]
+    nj = phi.shape[1]
+    for i in range(ni):
+        rho_h = rho[i,:]
+        zh_h = zh[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                phiphi[i,j]  = np.nan 
+                rho[i,j]     = np.nan 
+    phiphi[:,0:20]  = np.nan 
+    rho[:,0:20]    = np.nan 
+	
+    dphi = despeckle_phidp(phiphi, rho, zh)
+    uphi_i = unfold_phidp(dphi, rho, diferencia) 
+    uphi_accum = [] 	
+    for i in range(ni):
+        phi_h = uphi_i[i,:]
+        for j in range(1,nj-1,1):
+            if phi_h[j] <= np.nanmax(np.fmax.accumulate(phi_h[0:j])): 
+              	uphi_i[i,j] = uphi_i[i,j-1] 
+
+    # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
+    uphi = uphi_i.copy()
+    uphi = np.where(np.isnan(uphi), sys_phase, uphi)
+    phi_cor = subtract_sys_phase(uphi, sys_phase)
+    # phi_cor[rho<0.7] = np.nan
+    phi_cor[phi_cor < 0] = np.nan #antes <= ? 
+    phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
+
+    # Smoothing final:
+    for i in range(ni):
+        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
+                                            window='flat')
+    return dphi, uphi_i, phi_cor
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def calc_KDP(radar):
+
+    dbz     = radar.fields['TH']['data']
+    maskphi = radar.fields['corrPHIDP']['data']
+
+    nb = radar.ngates
+    nr = radar.nrays
+    
+    kdp = np.zeros((nr,nb))
+
+    for j in range(0,nr):
+        phi_kdp = maskphi[j,:]
+    
+        for i in range(0,nb): 
+            s1=max(0,i-2)
+            s2=min(i+2,nb-1)
+            r=[x*1. for x in range(s2-s1+1)]
+            x=2.*0.5*np.array(r)
+            y=phi_kdp[s1:s2+1]
+            a=len(y[np.where(y>0)])
+            b=np.std(y)
+  
+            if a==5:# and b<20:
+                ajuste=np.polyfit(x,y,1)
+                kdp[j,i]=ajuste[0]
+            else:
+                kdp[j,i]=np.nan
+
+    #Enmascarar los datos invalidos con umbrales y con la mascara
+    # kdp[kdp>15]=np.nan
+    # kdp[kdp<-10]=np.nan
+    kdp_ok = np.ma.masked_invalid(kdp) 
+    mask_kdp=np.ma.masked_where(np.isnan(radar.fields['corrPHIDP']['data']),kdp_ok)
+    aa=np.ma.filled(mask_kdp,fill_value=np.nan)
+    bb = np.ma.masked_invalid(aa)
+
+    radar.add_field_like('RHOHV','NEW_kdp',bb, replace_existing=True)
+	
+    return radar 
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
