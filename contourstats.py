@@ -1574,7 +1574,6 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     #----------------------------------------------------------------------------------------
     # Test plot figure: General figure with Zh and the countours identified 
     #----------------------------------------------------------------------------------------
-    breakpoint()
     test_this = 1
     if test_this == 1: 
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,12])
@@ -1609,7 +1608,12 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
         plt.close()
 	
-	
+    datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
+    datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
+
+    TB_inds = get_contour_info(contorno89, icois, datapts)
+    RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
+
     #--------------------------------------------------------------------------------------
     TB_inds = get_contour_info(contorno89, icois, datapts)
     # ACA, RN_inds_parallax es pixels del radar (dato original) dentro del contorno
@@ -1674,6 +1678,10 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     #------------------------------------------------------
     # histogram de HID dentro de cada contorno
     #------------------------------------------------------
+    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    radar = add_43prop_field(radar)     
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
     #for ic in range(len(GMI_tbs1_37)):
     breakpoint()
@@ -1728,7 +1736,7 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
         PHIORIG.mask = mask
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
         
-    #plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
+    plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
    
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
     # ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, gmi_dir+options['gfile'])
