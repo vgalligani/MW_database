@@ -1952,7 +1952,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
 	
     #------------------------------------------------------
-    name = ['','Drizzle','Rain', 'Ice Crystals', 'Aggregates', 'Wet Snow', 'Vertical Ice', 'LD Graupel', 'HD Graupel', 'Hail', 'Big Drops'])
+    name = ['Drizzle','Rain', 'Ice Crystals', 'Aggregates', 'Wet Snow', 'Vertical Ice', 'LD Graupel', 'HD Graupel', 'Hail', 'Big Drops']
     barWidth = 0.15 
 
     # ahora si, HID por contorno! y por sweep
@@ -2012,30 +2012,24 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
 	# And barplot ... 
 	fig = plt.figure(figsize=(20,7)) 
 	barlabels = []
-	for ic in range(len(icois)): 
-		if icois[ic] == options['icoi_PHAIL']:
-			barlabels.append(labels_plot[ic]+', Phail: '+str(options['phail']))
-		else:
-			barlabels.append(labels_plot[ic])
-			
 	# Set position of bar on X axis   
     	br1 = np.arange(len(name)) #---- adjutst!
-    	plt.bar(br1, HIDs_coi[0,:], color='darkblue',  width = barWidth, label=barlabels[0])
+    	plt.bar(br1, HIDs_coi[0,:], color='darkblue',  width = barWidth, label='icoi')
     	if len(RN_inds_parallax) == 2:
-        	br2 = [x + barWidth for x in br1] 
-        	plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+		br2 = [x + barWidth for x in br1] 
+		plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi')
     	if len(RN_inds_parallax) == 3:
-        	br2 = [x + barWidth for x in br1] 
-        	br3 = [x + barWidth for x in br2]
-        	plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label=barlabels[1])
-        	plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label=barlabels[2])
+	        br2 = [x + barWidth for x in br1] 
+       	 	br3 = [x + barWidth for x in br2]	
+        	plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi')
+        	plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi')
     	if len(RN_inds_parallax) == 4:
-        	br2 = [x + barWidth for x in br1] 
+		br2 = [x + barWidth for x in br1] 
         	br3 = [x + barWidth for x in br2]
         	br4 = [x + barWidth for x in br3]
-       	 	plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label=barlabels[1])
-        	plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label=barlabels[2])	
-        	plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label=barlabels[3])	
+       		plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi')
+        	plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi')	
+        	plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label='icoi')	
     	plt.xlabel('HID counts')  
     	plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
     	plt.legend()
@@ -2425,7 +2419,7 @@ def main_20180208():
 	    'rfile': 'RMA1/'+rfile, 
 	    'era5_file': era5_file,
 	    'radar_name':'RMA1',
-	    'icoi_PHAIL':[4],
+	    'icoi_PHAIL':[4], 
 	    'gfile': gfile, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/', 
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
