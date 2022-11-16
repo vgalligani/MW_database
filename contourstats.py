@@ -1678,7 +1678,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     #------------------------------------------------------
     # histogram de HID dentro de cada contorno
     #------------------------------------------------------
-    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)     
