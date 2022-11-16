@@ -26,7 +26,7 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import gc
 import math
 from pyart.core.transforms import antenna_to_cartesian
-
+from collections import Counter
 import alphashape
 from descartes import PolygonPatch
 import cartopy.feature as cfeature
@@ -1745,6 +1745,42 @@ def add_43prop_field(radar):
 	return radar 
 
 
+def adjust_fhc_colorbar_for_pyart(cb):
+    
+    # HID types:           Species #:  
+    # -------------------------------
+    # Drizzle                  1    
+    # Rain                     2    
+    # Ice Crystals             3
+    # Aggregates               4
+    # Wet Snow                 5
+    # Vertical Ice             6
+    # Low-Density Graupel      7
+    # High-Density Graupel     8
+    # Hail                     9
+    # Big Drops                10
+    
+    
+    cb.set_ticks(np.arange(0.4, 10, 0.9))
+    cb.ax.set_yticklabels(['','Drizzle','Rain', 'Ice Crystals', 'Aggregates',
+                           'Wet Snow', 'Vertical Ice', 'LD Graupel',
+                           'HD Graupel', 'Hail', 'Big Drops'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
+
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+def adjust_meth_colorbar_for_pyart(cb, tropical=False):
+    if not tropical:
+        cb.set_ticks(np.arange(1.25, 5, 0.833))
+        cb.ax.set_yticklabels(['R(Kdp, Zdr)', 'R(Kdp)', 'R(Z, Zdr)', 'R(Z)', 'R(Zrain)'])
+    else:
+        cb.set_ticks(np.arange(1.3, 6, 0.85))
+        cb.ax.set_yticklabels(['R(Kdp, Zdr)', 'R(Kdp)', 'R(Z, Zdr)', 'R(Z_all)', 'R(Z_c)', 'R(Z_s)'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
 #------------------------------------------------------------------------------  
 #------------------------------------------------------------------------------  
 def get_z_from_radar(radar):
@@ -1843,7 +1879,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
         axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200] , colors=(['r']), linewidths=1.5);
-        contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [220], colors=(['k']), linewidths=1.5);
+        contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [200], colors=(['k']), linewidths=1.5);
         axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
         #plt.close()
@@ -1857,8 +1893,6 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)     
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    #for ic in range(len(GMI_tbs1_37)):
-    breakpoint()
 	
     # Filters
     ni = radarTH.shape[0]
@@ -1867,30 +1901,30 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         rho_h = radar.fields[RHOHVname]['data'][start_index:end_index][i,:]
         zh_h  = radarTH[i,:].copy()
         for j in range(nj):
-            if (rho_h[j]<0.8) or (zh_h[j]<35):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
                 radarZDR[i,j]  = np.nan
                 radarTH[i,j]  = np.nan
-		
-		
-		
-
+    #--------------------------------------------------------------------------------------
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
     datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
-
+    #--------------------------------------------------------------------------------------
     TB_inds = get_contour_info(contorno89, icois, datapts)
     RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
-
-    #--------------------------------------------------------------------------------------
-    TB_inds = get_contour_info(contorno89, icois, datapts)
-    # ACA, RN_inds_parallax es pixels del radar (dato original) dentro del contorno
-    RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
     # tambien me va a interesar el grillado a diferentes resoluciones 
-	
-	
-    # y usando contornos de DBZ sumados? en vez del contorno de sarah. 
- 
-	
-    #--------------------------------------------------------------------------------------
+    # y usando contornos de DBZ sumados? en vez del contorno de sarah.
+    #--------------------------------------------------------------------------------------	
+    # FIGURE CHECK CONTORNOS
+    if test_this == 1: 	
+    	fig = plt.figure(figsize=(20,7)) 
+    	plt.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+    	for ic in range(len(icois)):
+        	plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
+        	plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
+    	plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
+    	plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    	plt.xlim([options['xlim_min'], options['xlim_max']]) 
+    	plt.ylim([options['ylim_min'], options['ylim_max']])
+    #------------------------------------------------------
 	
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
@@ -1918,18 +1952,99 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
 	
     #------------------------------------------------------
-    # FIGURE CHECK CONTORNOS
-    if test_this == 1: 	
+    name = ['','Drizzle','Rain', 'Ice Crystals', 'Aggregates', 'Wet Snow', 'Vertical Ice', 'LD Graupel', 'HD Graupel', 'Hail', 'Big Drops'])
+    barWidth = 0.15 
+
+    # ahora si, HID por contorno! y por sweep
+    for nlev in range(radar.nsweeps): 
+	del datapts_RADAR_NATIVE, datapts_RADAR_NATIVE
+	start_index = radar.sweep_start_ray_index['data'][nlev]
+	end_index   = radar.sweep_end_ray_index['data'][nlev]
+	lats    = radar.gate_latitude['data'][start_index:end_index]
+	lons    = radar.gate_longitude['data'][start_index:end_index]
+	radarTH = radar.fields['TH']['data'][start_index:end_index]
+
+	datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
+	RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
     	fig = plt.figure(figsize=(20,7)) 
     	plt.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
-    	for ic in range(len(GMI_tbs1_37)):
+    	for ic in range(len(icois)):
         	plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
         	plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
     	plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200], colors=(['r']), linewidths=1.5);
     	plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
     	plt.xlim([options['xlim_min'], options['xlim_max']]) 
     	plt.ylim([options['ylim_min'], options['ylim_max']])
+	plt.title('Elevation nlev '+str(nlev))
+	
+	RHIs_nlev = radar.fields['HID']['data'][start_index:end_index]
+        #---- plot hid ppi  
+        hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+              'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+        cmaphid       = colors.ListedColormap(hid_colors)
+
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+        pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
+        axes.set_title('HID nlev '+str(nlev)+' PPI')
+        axes.set_xlim([options['xlim_min'], options['xlim_max']])
+        axes.set_ylim([options['ylim_min'], options['ylim_max']])
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+        cbar_HID = plt.colorbar(pcm1, ax=axes, shrink=1.1, label=r'HID')    
+        cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+    	for ic in range(len(icois)):
+        	plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
+        	plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
+		
+	# Entonces ... 
+        HIDs_coi = np.zeros((len(RN_inds_parallax), 10)); HIDs_coi[:]=np.nan
+    	for ic in range(len(icois)):
+		HIDS = np.ravel(RHIs_nlev)[RN_inds_parallax[ic]]
+		n, bins, patches = plt.hist(x=HIDS, bins=np.arange(0,11,1))		
+		HIDs_coi[ic,:] = n
+		del n, bins, patches
+		plt.close()
+		
+	# And barplot ... 
+	fig = plt.figure(figsize=(20,7)) 
+	barlabels = []
+	for ic in range(len(icois)): 
+		if icois[ic] == options['icoi_PHAIL']:
+			barlabels.append(labels_plot[ic]+', Phail: '+str(options['phail']))
+		else:
+			barlabels.append(labels_plot[ic])
+			
+	# Set position of bar on X axis   
+    	br1 = np.arange(len(name)) #---- adjutst!
+    	plt.bar(br1, HIDs_coi[0,:], color='darkblue',  width = barWidth, label=barlabels[0])
+    	if len(RN_inds_parallax) == 2:
+        	br2 = [x + barWidth for x in br1] 
+        	plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+    	if len(RN_inds_parallax) == 3:
+        	br2 = [x + barWidth for x in br1] 
+        	br3 = [x + barWidth for x in br2]
+        	plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+        	plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label=barlabels[2])
+    	if len(RN_inds_parallax) == 4:
+        	br2 = [x + barWidth for x in br1] 
+        	br3 = [x + barWidth for x in br2]
+        	br4 = [x + barWidth for x in br3]
+       	 	plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label=barlabels[1])
+        	plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label=barlabels[2])	
+        	plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label=barlabels[3])	
+    	plt.xlabel('HID counts')  
+    	plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
+    	plt.legend()
+    	plt.title('HID for nsweep Nr. ' + str(nlev))
+    	plt.grid(True)
+
+
     return 
+
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
