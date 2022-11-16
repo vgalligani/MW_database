@@ -175,6 +175,76 @@ def GMI_colormap():
     cmaps['turbo_r'] = ListedColormap(_turbo_colormap_data, name='turbo_r')
     
     return cmaps
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def discrete_cmap(N, base_cmap=None):
+    """Create an N-bin discrete colormap from the specified input map"""
+
+    # Note that if base_cmap is a string or None, you can simply do
+    #    return plt.cm.get_cmap(base_cmap, N)
+    # The following works for string, None, or a colormap instance:
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    base = plt.cm.get_cmap(base_cmap)
+    color_list = base(np.linspace(0, 1, N))
+    cmap_name = base.name + str(N)
+    
+    return base.from_list(cmap_name, color_list, N)
+
+
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------    
+def get_contour_info(contorno, icois, datapts_in): 
+
+    # Get verticies: 
+    for item in contorno.collections:
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1] 
+
+    # Get vertices of these polygon type shapes
+    for ii in range(len(icois)): 
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno.collections[0].get_paths()[int(icois[ii])].vertices)): 
+            X1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0])
+            Y1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1])
+            vertices.append([contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
+                                        contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
+        #convexhull = ConvexHull(vertices)
+        array_points = np.array(vertices)
+
+        #hull_path   = Path( array_points[convexhull.vertices] )
+        #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
+        alpha = 0.95 * alphashape.optimizealpha(array_points)
+        hull_pts_CONCAVE   = alphashape.alphashape(array_points, alpha)
+        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
+        check_points = np.vstack((hull_coors_CONCAVE)).T
+        concave_path = Path(check_points)
+        
+        if ii == 0:
+            inds_1   = concave_path.contains_points(datapts_in)
+            iinds      = [inds_1]
+       	if ii == 1:
+            inds_2   = concave_path.contains_points(datapts_in)
+            iinds      = [inds_1, inds_2]
+        if ii == 2:
+            inds_3   = concave_path.contains_points(datapts_in)
+            iinds      = [inds_1, inds_2, inds_3]
+        if ii == 3:
+            inds_4   = concave_path.contains_points(datapts_in)
+            iinds      = [inds_1, inds_2, inds_3, inds_4]   
+
+    return iinds
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------     
@@ -451,102 +521,21 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     #plt.close()
     return
 
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------    
-#RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
-
-def get_contour_info(contorno, icois, datapts_in): 
-
-    # Get verticies: 
-    for item in contorno.collections:
-        for i in item.get_paths():
-            v = i.vertices
-            x = v[:, 0]
-            y = v[:, 1] 
-
-    # Get vertices of these polygon type shapes
-    for ii in range(len(icois)): 
-        X1 = []; Y1 = []; vertices = []
-        for ik in range(len(contorno.collections[0].get_paths()[int(icois[ii])].vertices)): 
-            X1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0])
-            Y1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1])
-            vertices.append([contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
-                                        contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
-        #convexhull = ConvexHull(vertices)
-        array_points = np.array(vertices)
-
-        #hull_path   = Path( array_points[convexhull.vertices] )
-        #------- testing from https://stackoverflow.com/questions/57260352/python-concave-hull-polygon-of-a-set-of-lines 
-        alpha = 0.95 * alphashape.optimizealpha(array_points)
-        hull_pts_CONCAVE   = alphashape.alphashape(array_points, alpha)
-        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
-        check_points = np.vstack((hull_coors_CONCAVE)).T
-        concave_path = Path(check_points)
-        
-        if ii == 0:
-            inds_1   = concave_path.contains_points(datapts_in)
-            iinds      = [inds_1]
-       	if ii == 1:
-            inds_2   = concave_path.contains_points(datapts_in)
-            iinds      = [inds_1, inds_2]
-        if ii == 2:
-            inds_3   = concave_path.contains_points(datapts_in)
-            iinds      = [inds_1, inds_2, inds_3]
-        if ii == 3:
-            inds_4   = concave_path.contains_points(datapts_in)
-            iinds      = [inds_1, inds_2, inds_3, inds_4]   
-
-    return iinds
 
 
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
-
-def discrete_cmap(N, base_cmap=None):
-    """Create an N-bin discrete colormap from the specified input map"""
-
-    # Note that if base_cmap is a string or None, you can simply do
-    #    return plt.cm.get_cmap(base_cmap, N)
-    # The following works for string, None, or a colormap instance:
-
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    base = plt.cm.get_cmap(base_cmap)
-    color_list = base(np.linspace(0, 1, N))
-    cmap_name = base.name + str(N)
-    
-    return base.from_list(cmap_name, color_list, N)
 
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
-    #---------------------------------------------------------------------------------------------------------
-    #---------------------------------------------------------------------------------------------------------
-    # OJO CON MOVING AVERAGE EN pyart.correct.phase_proc.smooth_and_trim QUE USO VENTANA DE 40! 	
-    # breakpoint()
-    #----- cambiado para RMA3: 	
-    #sys_phase  = get_sys_phase(radar, ncp_lev=0.8, rhohv_lev=0.7, 
-    #	 						ncp_field='RHOHV', rhv_field='RHOHV', phidp_field='PHIDP')
-    #dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], 
-    #					   sys_phase, diff_value)
-    #------ REMPLAZADO POR:
     if 'TH' in radar.fields.keys():  
         sys_phase = get_sys_phase_simple(radar)
     elif 'DBZHCC' in radar.fields.keys():
         sys_phase = get_sys_phase_simple_dow7(radar)
     elif 'DBZH' in radar.fields.keys():
         sys_phase = get_sys_phase_simple(radar)	
-    # replace PHIDP w/ np.nan
-    #PHIORIG = radar.fields['PHIDP']['data'].copy() 
-    #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
-    #PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
-    #mask = radar.fields['PHIDP']['data'].data.copy()    
-    #mask[:] = False
-    #PHIDP_nans.mask = mask
-    #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+    #------------
     if 'TH' in radar.fields.keys():  
         dphi, uphi, corr_phidp = correct_phidp(radar.fields['PHIDP']['data'], radar.fields['RHOHV']['data'], radar.fields['TH']['data'], sys_phase, 280)
     elif 'DBZHCC' in radar.fields.keys():
@@ -1577,12 +1566,10 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan
-            if (rho_h[j]<0.7): 
-                phiphi[i,j]  = np.nan 
-                rho[i,j]     = np.nan
+
 		
-    phiphi[:,0:20]  = np.nan 
-    rho[:,0:20]    = np.nan 
+    #phiphi[:,0:20]  = np.nan 
+    #rho[:,0:20]    = np.nan 
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
@@ -1597,8 +1584,8 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
     uphi = uphi_i.copy()
     uphi = np.where(np.isnan(uphi), sys_phase, uphi)
     phi_cor = subtract_sys_phase(uphi, sys_phase)
-    # phi_cor[rho<0.7] = np.nan
-    phi_cor[phi_cor < 0] = np.nan #antes <= ? 
+    phi_cor[rho<0.7] = np.nan
+    #phi_cor[phi_cor < 0] = np.nan #antes <= ? 
     phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
 
     # Smoothing final:
@@ -1656,88 +1643,6 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-#------------------------------------------------------------------------------
-def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
-
-    phiphi = phi.copy()
-    rho = rho_data.copy()
-    ni = phi.shape[0]
-    nj = phi.shape[1]
-    for i in range(ni):
-        rho_h = rho[i,:]
-        zh_h = zh[i,:]
-        for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
-                phiphi[i,j]  = np.nan 
-                rho[i,j]     = np.nan 
-    phiphi[:,0:20]  = np.nan 
-    rho[:,0:20]    = np.nan 
-	
-    dphi = despeckle_phidp(phiphi, rho, zh)
-    uphi_i = unfold_phidp(dphi, rho, diferencia) 
-    uphi_accum = [] 	
-    for i in range(ni):
-        phi_h = uphi_i[i,:]
-        for j in range(1,nj-1,1):
-            if phi_h[j] <= np.nanmax(np.fmax.accumulate(phi_h[0:j])): 
-              	uphi_i[i,j] = uphi_i[i,j-1] 
-
-    # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
-    uphi = uphi_i.copy()
-    uphi = np.where(np.isnan(uphi), sys_phase, uphi)
-    phi_cor = subtract_sys_phase(uphi, sys_phase)
-    # phi_cor[rho<0.7] = np.nan
-    phi_cor[phi_cor < 0] = np.nan #antes <= ? 
-    phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
-
-    # Smoothing final:
-    for i in range(ni):
-        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
-                                            window='flat')
-    return dphi, uphi_i, phi_cor
-
-#------------------------------------------------------------------------------
-#------------------------------------------------------------------------------
-def calc_KDP(radar):
-
-    dbz     = radar.fields['TH']['data']
-    maskphi = radar.fields['corrPHIDP']['data']
-
-    nb = radar.ngates
-    nr = radar.nrays
-    
-    kdp = np.zeros((nr,nb))
-
-    for j in range(0,nr):
-        phi_kdp = maskphi[j,:]
-    
-        for i in range(0,nb): 
-            s1=max(0,i-2)
-            s2=min(i+2,nb-1)
-            r=[x*1. for x in range(s2-s1+1)]
-            x=2.*0.5*np.array(r)
-            y=phi_kdp[s1:s2+1]
-            a=len(y[np.where(y>0)])
-            b=np.std(y)
-  
-            if a==5:# and b<20:
-                ajuste=np.polyfit(x,y,1)
-                kdp[j,i]=ajuste[0]
-            else:
-                kdp[j,i]=np.nan
-
-    #Enmascarar los datos invalidos con umbrales y con la mascara
-    # kdp[kdp>15]=np.nan
-    # kdp[kdp<-10]=np.nan
-    kdp_ok = np.ma.masked_invalid(kdp) 
-    mask_kdp=np.ma.masked_where(np.isnan(radar.fields['corrPHIDP']['data']),kdp_ok)
-    aa=np.ma.filled(mask_kdp,fill_value=np.nan)
-    bb = np.ma.masked_invalid(aa)
-
-    radar.add_field_like('RHOHV','NEW_kdp',bb, replace_existing=True)
-	
-    return radar 
-
 #---------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------- 
 def firstNonNan(listfloats):
@@ -1781,8 +1686,8 @@ def get_sys_phase_simple(radar):
         # por cada radial encontrar first non nan value: 
         phases = []
         for radial in range(radar.sweep_end_ray_index['data'][0]):
-            if firstNonNan(PHIDP[radial,30:]):
-                phases.append(firstNonNan(PHIDP[radial,100:])) #FOR RMA1:50, SINO 30?
+            if firstNonNan(PHIDP[radial,80:]):
+                phases.append(firstNonNan(PHIDP[radial,80:])) #FOR RMA1 :60, SINO :30?
         phases_nlev.append(np.median(phases))
     phases_out = np.nanmedian(phases_nlev) 
 
