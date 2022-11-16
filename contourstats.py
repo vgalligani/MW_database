@@ -1782,7 +1782,7 @@ def get_sys_phase_simple(radar):
         phases = []
         for radial in range(radar.sweep_end_ray_index['data'][0]):
             if firstNonNan(PHIDP[radial,30:]):
-                phases.append(firstNonNan(PHIDP[radial,50:])) #FOR RMA1:50, SINO 30?
+                phases.append(firstNonNan(PHIDP[radial,100:])) #FOR RMA1:50, SINO 30?
         phases_nlev.append(np.median(phases))
     phases_out = np.nanmedian(phases_nlev) 
 
