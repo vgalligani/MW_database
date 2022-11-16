@@ -1576,7 +1576,11 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
         for j in range(nj):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
                 phiphi[i,j]  = np.nan 
-                rho[i,j]     = np.nan 
+                rho[i,j]     = np.nan
+            if (rho_h[j]<0.7): 
+                phiphi[i,j]  = np.nan 
+                rho[i,j]     = np.nan
+		
     phiphi[:,0:20]  = np.nan 
     rho[:,0:20]    = np.nan 
 	
