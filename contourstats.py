@@ -485,18 +485,18 @@ def get_contour_info(contorno, icois, datapts_in):
         
         if ii == 0:
             inds_1   = concave_path.contains_points(datapts_in)
-            TB_inds      = [inds_1]
+            iinds      = [inds_1]
        	if ii == 1:
             inds_2   = concave_path.contains_points(datapts_in)
-            TB_inds      = [inds_1, inds_2]
+            iinds      = [inds_1, inds_2]
         if ii == 2:
             inds_3   = concave_path.contains_points(datapts_in)
-            TB_inds      = [inds_1, inds_2, inds_3]
+            iinds      = [inds_1, inds_2, inds_3]
         if ii == 3:
             inds_4   = concave_path.contains_points(datapts_in)
-            TB_inds      = [inds_1, inds_2, inds_3, inds_4]   
+            iinds      = [inds_1, inds_2, inds_3, inds_4]   
 
-    return TB_inds
+    return iinds
 
 
 #------------------------------------------------------------------------------
@@ -1451,6 +1451,137 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
+#------------------------------------------------------------------------------
+def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
+
+    phiphi = phi.copy()
+    rho = rho_data.copy()
+    ni = phi.shape[0]
+    nj = phi.shape[1]
+    for i in range(ni):
+        rho_h = rho[i,:]
+        zh_h = zh[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                phiphi[i,j]  = np.nan 
+                rho[i,j]     = np.nan 
+    phiphi[:,0:20]  = np.nan 
+    rho[:,0:20]    = np.nan 
+	
+    dphi = despeckle_phidp(phiphi, rho, zh)
+    uphi_i = unfold_phidp(dphi, rho, diferencia) 
+    uphi_accum = [] 	
+    for i in range(ni):
+        phi_h = uphi_i[i,:]
+        for j in range(1,nj-1,1):
+            if phi_h[j] <= np.nanmax(np.fmax.accumulate(phi_h[0:j])): 
+              	uphi_i[i,j] = uphi_i[i,j-1] 
+
+    # Reemplazo nan por sys_phase para que cuando reste esos puntos queden en cero <<<<< ojo aca! 
+    uphi = uphi_i.copy()
+    uphi = np.where(np.isnan(uphi), sys_phase, uphi)
+    phi_cor = subtract_sys_phase(uphi, sys_phase)
+    # phi_cor[rho<0.7] = np.nan
+    phi_cor[phi_cor < 0] = np.nan #antes <= ? 
+    phi_cor[np.isnan(phi_cor)] = 0 #agregado para RMA1?
+
+    # Smoothing final:
+    for i in range(ni):
+        phi_cor[i,:] = pyart.correct.phase_proc.smooth_and_trim(phi_cor[i,:], window_len=20,
+                                            window='flat')
+    return dphi, uphi_i, phi_cor
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def calc_KDP(radar):
+
+    dbz     = radar.fields['TH']['data']
+    maskphi = radar.fields['corrPHIDP']['data']
+
+    nb = radar.ngates
+    nr = radar.nrays
+    
+    kdp = np.zeros((nr,nb))
+
+    for j in range(0,nr):
+        phi_kdp = maskphi[j,:]
+    
+        for i in range(0,nb): 
+            s1=max(0,i-2)
+            s2=min(i+2,nb-1)
+            r=[x*1. for x in range(s2-s1+1)]
+            x=2.*0.5*np.array(r)
+            y=phi_kdp[s1:s2+1]
+            a=len(y[np.where(y>0)])
+            b=np.std(y)
+  
+            if a==5:# and b<20:
+                ajuste=np.polyfit(x,y,1)
+                kdp[j,i]=ajuste[0]
+            else:
+                kdp[j,i]=np.nan
+
+    #Enmascarar los datos invalidos con umbrales y con la mascara
+    # kdp[kdp>15]=np.nan
+    # kdp[kdp<-10]=np.nan
+    kdp_ok = np.ma.masked_invalid(kdp) 
+    mask_kdp=np.ma.masked_where(np.isnan(radar.fields['corrPHIDP']['data']),kdp_ok)
+    aa=np.ma.filled(mask_kdp,fill_value=np.nan)
+    bb = np.ma.masked_invalid(aa)
+
+    radar.add_field_like('RHOHV','NEW_kdp',bb, replace_existing=True)
+	
+    return radar 
+
+#---------------------------------------------------------------------------------------------- 
+#---------------------------------------------------------------------------------------------- 
+def firstNonNan(listfloats):
+  for item in listfloats:
+    if math.isnan(item) == False:
+      return item
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def get_sys_phase_simple(radar):
+
+    start_index = radar.sweep_start_ray_index['data'][0]
+    end_index   = radar.sweep_end_ray_index['data'][0]
+
+    phases_nlev = []
+    for nlev in range(radar.nsweeps-1):
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats  = radar.gate_latitude['data'][start_index:end_index]
+        lons  = radar.gate_longitude['data'][start_index:end_index]
+        if 'TH' in radar.fields.keys():  
+            TH    = radar.fields['TH']['data'][start_index:end_index]
+            TV    = radar.fields['TV']['data'][start_index:end_index]
+            RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+            PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+            PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        elif 'DBZHCC' in radar.fields.keys():
+            TH    = radar.fields['DBZHCC']['data'][start_index:end_index]
+            TV    = radar.fields['DBZVCC']['data'][start_index:end_index]
+            RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+            PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+            PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan		
+        elif 'DBZH' in radar.fields.keys():
+            TH    = radar.fields['DBZH']['data'][start_index:end_index]
+            TV    = radar.fields['DBZV']['data'][start_index:end_index]
+            RHOHV = radar.fields['RHOHV']['data'][start_index:end_index]
+            PHIDP = np.array(radar.fields['PHIDP']['data'][start_index:end_index])
+            PHIDP[np.where(PHIDP==radar.fields['PHIDP']['data'].fill_value)] = np.nan	
+        rhv = RHOHV.copy()
+        z_h = TH.copy()
+        PHIDP = np.where( (rhv>0.7) & (z_h>30), PHIDP, np.nan)
+        # por cada radial encontrar first non nan value: 
+        phases = []
+        for radial in range(radar.sweep_end_ray_index['data'][0]):
+            if firstNonNan(PHIDP[radial,30:]):
+                phases.append(firstNonNan(PHIDP[radial,30:]))
+        phases_nlev.append(np.median(phases))
+    phases_out = np.nanmedian(phases_nlev) 
+
+    return phases_out
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
 def interpolate_sounding_to_radar(snd_T, snd_z, radar):
@@ -1519,7 +1650,6 @@ def get_z_from_radar(radar):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-
 def plot_icois_HIDinfo(options, radar, icois, fname):
 
     # ojo que aca agarro los verdaderos PCTMIN, no los que me pasó Sarah B. que estan 
@@ -1678,7 +1808,8 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     #------------------------------------------------------
     # histogram de HID dentro de cada contorno
     #------------------------------------------------------
-    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+era5_file, lat_pfs, lon_pfs) 
+    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], 
+							    options['lat_pfs'], options['lon_pfs']) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)     
