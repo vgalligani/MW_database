@@ -2004,7 +2004,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
 	fig.savefig(options['fig_dir']+'RHIs_nlev_+'str(nlev)+'contours.png', dpi=300, transparent=False)  
 	plt.close()
 	
-	# Entonces plot hid ppi  
+       	# Entonces plot hid ppi  
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
         pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
         axes.set_title('HID nlev '+str(nlev)+' PPI')
@@ -2021,67 +2021,60 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         for ic in range(len(icois)):
             plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
             plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
-        
-    	# Entonces get HIDs por contorno en HIDs_coi: 
-    	HIDs_coi = np.zeros((len(RN_inds_parallax), 10)); HIDs_coi[:]=np.nan
-    	for ic in range(len(icois)):
-        	HIDS = np.ravel(RHIs_nlev)[RN_inds_parallax[ic]]
-        	n, bins, patches = plt.hist(x=HIDS, bins=np.arange(0,11,1))		
-        	HIDs_coi[ic,:] = n
-        	del n, bins, patches
+        # Entonces get HIDs por contorno en HIDs_coi: 
+        HIDs_coi = np.zeros((len(RN_inds_parallax), 10)); HIDs_coi[:]=np.nan
+        for ic in range(len(icois)):
+            HIDS = np.ravel(RHIs_nlev)[RN_inds_parallax[ic]]
+            n, bins, patches = plt.hist(x=HIDS, bins=np.arange(0,11,1))		
+            HIDs_coi[ic,:] = n
+            del n, bins, patches
         plt.close()
-	
-    	# And barplot ... 
-    	fig = plt.figure(figsize=(8,3)) 
-    	barlabels = []
+        # And barplot ... 
+        fig = plt.figure(figsize=(8,3)) 
+        barlabels = []
     	# Set position of bar on X axis   
-   	br1 = np.arange(len(name)) #---- adjutst!
-   	bar1 = plt.bar(br1, HIDs_coi[0,:], color='darkblue',  width = barWidth, label='icoi: '+str(icoi[0]))
-    	if len(RN_inds_parallax) == 2:
-        	br2 = [x + barWidth for x in br1] 
-        	bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icoi[1]))
-		for rect in bar1 + bar2:
-			height = rect.get_height()
-			if height < 20:
-				height=np.nan;
-			plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
-		
-    	if len(RN_inds_parallax) == 3:
-        	br2 = [x + barWidth for x in br1]
-        	br3 = [x + barWidth for x in br2]	
-       		bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icoi[1]))
-        	bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icoi[2]))
-		for rect in bar1 + bar2 + bar3 :
-			height = rect.get_height()
-			plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
-		
-    	if len(RN_inds_parallax) == 4:
-        	br2 = [x + barWidth for x in br1] 
-        	br3 = [x + barWidth for x in br2]
-        	br4 = [x + barWidth for x in br3]
-        	bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icoi[1]))
-        	bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icoi[2]))
-        	bar4 = plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label='icoi: '+str(icoi[3]))
-		# Add counts above the two bar graphs
-		for rect in bar1 + bar2 + bar3 + bar4:
-			height = rect.get_height()
-			plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
-			
-    	if len(RN_inds_parallax) == 1:
-		for rect in bar1:
-			height = rect.get_height()
-			plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
-		
-    	plt.xlabel('HID')  
-    	plt.xlabel('HID counts')  
-    	plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
-    	plt.legend()
-    	plt.title('HID for nsweep Nr. ' + str(nlev))
-    	plt.grid(True)
-	plt.close()
-	fig.savefig(options['fig_dir']+'RHIs_BARPLOT_nlev_+'str(nlev)+'contours.png', dpi=300, transparent=False)  
+       	br1 = np.arange(len(name)) #---- adjutst!
+       	bar1 = plt.bar(br1, HIDs_coi[0,:], color='darkblue',  width = barWidth, label='icoi: '+str(icois[0]))
+        if len(RN_inds_parallax) == 2:
+            br2 = [x + barWidth for x in br1] 
+            bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
+            for rect in bar1 + bar2:
+                height = rect.get_height()
+                if height < 20:
+                    height=np.nan;
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+        if len(RN_inds_parallax) == 3:
+            br2 = [x + barWidth for x in br1]
+            br3 = [x + barWidth for x in br2]	
+            bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
+            bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
+            for rect in bar1 + bar2 + bar3 :
+                height = rect.get_height()
+            plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+        if len(RN_inds_parallax) == 4:
+            br2 = [x + barWidth for x in br1] 
+            br3 = [x + barWidth for x in br2]
+            br4 = [x + barWidth for x in br3]
+            bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
+            bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
+            bar4 = plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label='icoi: '+str(icoi[3]))
+            # Add counts above the two bar graph
+            for rect in bar1 + bar2 + bar3 + bar4:
+                height = rect.get_height()
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+        if len(RN_inds_parallax) == 1:
+            for rect in bar1:
+                height = rect.get_height()
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+        plt.xlabel('HID')  
+        plt.xlabel('HID counts')  
+        plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
+        plt.legend()
+        plt.title('HID for nsweep Nr. ' + str(nlev))
+        plt.grid(True)
+        plt.close()
+        fig.savefig(options['fig_dir']+'RHIs_BARPLOT_nlev_'+str(nlev)+'contours.png', dpi=300, transparent=False)  
 
-		
 
 
 
