@@ -2123,6 +2123,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             n, bins, patches = plt.hist(x=HIDS, bins=np.arange(0,11,1))		
             HIDs_coi_GRID[ic,:] = n
             del n, bins, patches
+        fig.savefig(options['fig_dir']+'GRIDDEDPPI_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
         plt.close()
         # And barplot ... 
         fig = plt.figure(figsize=(8,3)) 
