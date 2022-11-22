@@ -1815,12 +1815,12 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     S1_sub_tb = tb_s1_gmi.copy()
 
     idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
-	
+
     S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
     S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
     for i in range(tb_s1_gmi.shape[2]):
         S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
-		
+
     PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
     ##------------------------------------------------------------------------------------------------
     if 'TH' in radar.fields.keys():  
@@ -1883,7 +1883,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
         #plt.close()
-	
+
     #------------------------------------------------------
     # histogram de HID dentro de cada contorno
     #------------------------------------------------------
@@ -1893,7 +1893,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)     
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-	
+
     # Filters
     ni = radarTH.shape[0]
     nj = radarTH.shape[1]
@@ -1925,24 +1925,24 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     	plt.xlim([options['xlim_min'], options['xlim_max']]) 
     	plt.ylim([options['ylim_min'], options['ylim_max']])
     #------------------------------------------------------
-	
+
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
-	
+
     S1_sub_tb_v2 = S1_sub_tb[:,:,:][idx1]		
 
     for ii in range(len(TB_inds)): 
      	GMI_tbs1_37.append( S1_sub_tb_v2[TB_inds[ii],5] ) 
      	GMI_tbs1_85.append( S1_sub_tb_v2[TB_inds[ii],7] ) 
-		
+
     if len(icois)==1:
         colors_plot = ['k']
         labels_plot = [str('icoi=')+str(icois[0])] 	
-	
+
     if len(icois)==2:
         colors_plot = ['k', 'darkblue']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1])] 
-	
+
     if len(icois)==3:
         colors_plot = ['k', 'darkblue', 'darkred']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2])] 
@@ -1950,7 +1950,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     if len(icois)==4:
         colors_plot = ['k', 'darkblue', 'darkred', 'darkgreen']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
-	
+
     #------------------------------------------------------
     name = ['Drizzle','Rain', 'Ice C.', 'Agg.', 'WS', 'V. Ice', 'LD Gr.', 'HD Gr.', 'Hail', 'BD']
     hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
@@ -2003,7 +2003,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
         fig.savefig(options['fig_dir']+'RHIs_nlev_'+str(nlev)+'contours.png', dpi=300, transparent=False)  
         plt.close()
-	
+
        	# Entonces plot hid ppi  
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
         pcm1 = axes.pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
@@ -2042,7 +2042,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
                 height = rect.get_height()
                 if height < 20:
                     height=np.nan;
-                    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         if len(RN_inds_parallax) == 3:
             br2 = [x + barWidth for x in br1]
             br3 = [x + barWidth for x in br2]	
@@ -2050,9 +2050,9 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
             for rect in bar1 + bar2 + bar3 :
                 height = rect.get_height()
-		if height < 20:
+                if height < 20:
                     height=np.nan;
-                    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         if len(RN_inds_parallax) == 4:
             br2 = [x + barWidth for x in br1] 
             br3 = [x + barWidth for x in br2]
@@ -2063,15 +2063,15 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             # Add counts above the two bar graph
             for rect in bar1 + bar2 + bar3 + bar4:
                 height = rect.get_height()
-		if height < 20:
+                if height < 20:
                     height=np.nan;
-		    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         if len(RN_inds_parallax) == 1:
             for rect in bar1:
                 height = rect.get_height()
-		if height < 20:
+                if height < 20:
                     height=np.nan;
-             	    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         plt.xlabel('HID')  
         plt.xlabel('HID counts')  
         plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
@@ -2080,39 +2080,29 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.grid(True)
         plt.close()
         fig.savefig(options['fig_dir']+'RHIs_BARPLOT_nlev_'+str(nlev)+'contours.png', dpi=300, transparent=False)  
-	
-	# Ahora grid
-	# 500m grid! 
-        grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
-        gc.collect()
-	check_resolxy = radar.range['data'][0,1,0]-radar.range['data'][0,0,0]
-	check_resolz = radar.range['data'][0,0,0]-radar.range['data'][1,0,0]
-	
-	
-	       nz = grided.fields['HID']['data'].shape[0]
-       nx = grided.fields['HID']['data'].shape[1]
-       ny = grided.fields['HID']['data'].shape[2]
-       priority_map = np.zeros((nx,ny)); priority_map[:] = np.nan
-       for ix in range(nx):
-           for iy in range(ny):
-               #ix = 268
-               #iy = 430
-               HID_col = np.zeros((grided.fields['HID']['data'][:,ix,iy].shape[0]))
-	
-	
-	            plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
 
-		
-        #------------------------------------------------------	
-        datapts_RADAR_GRID = np.column_stack(( np.ravel(grided.point_longitude['data'][0,:,:]),np.ravel(grided.point_latitude['data'][0,:,:]) ))
-        RNgrid_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_GRID)		
-        #------------------------------------------------------	
+    # Ahora con la grid for nlev = 0km, 1km, 2km, 5km, 8km, 10km
+    PlotGRIDlevels = [0, 2, 4, 10, 16, 20] 
+    alt_z = [0, 1, 2, 5, 8, 10] 
+    # 
+    # 500m grid! 
+    grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+    gc.collect()
+    check_resolxy = grided.point_x['data'][0,0,1]-grided.point_x['data'][0,0,0]
+    check_resolz  = grided.point_y['data'][0,1,0]-grided.point_y['data'][0,0,0]
+    #
+    datapts_RADAR_GRID = np.column_stack(( np.ravel(grided.point_longitude['data'][0,:,:]),np.ravel(grided.point_latitude['data'][0,:,:]) ))
+    RNgrid_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_GRID)		  
+    gc.collect()
+    #------------------------------------------------------	
+    for nlev in range(len(PlotGRIDlevels)):
        	# Entonces plot hid GRID  
+       	thislev =  PlotGRIDlevels[nlev]
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
-        pcm1 = axes.pcolormesh(grided.point_longitude['data'][0,:,:], grided.point_latitude['data'][0,:,:], 
-			       grided.fields['HID']['data'][0,:,:], cmap = cmaphid, vmin=0.2, vmax=10)
-        axes.set_title('HID nlev '+str(nlev)+' grided level 0km')
+        pcm1 = axes.pcolormesh(grided.point_longitude['data'][thislev,:,:], grided.point_latitude['data'][thislev,:,:], 
+			       grided.fields['HID']['data'][thislev,:,:], cmap = cmaphid, vmin=0.2, vmax=10)
+        axes.set_title('HID gridded at '+str(alt_z[nlev])+' km')
         axes.set_xlim([options['xlim_min'], options['xlim_max']])
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
@@ -2127,11 +2117,11 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
             plt.plot( np.ravel(grided.point_longitude['data'][0,:,:])[RNgrid_inds_parallax[ic]], np.ravel(grided.point_latitude['data'][0,:,:])[RNgrid_inds_parallax[ic]], 'om')
         # Entonces get HIDs por contorno en HIDs_coi: 
-        HIDs_coi = np.zeros((len(RNgrid_inds_parallax), 10)); HIDs_coi[:]=np.nan
+        HIDs_coi_GRID = np.zeros((len(RNgrid_inds_parallax), 10)); HIDs_coi_GRID[:]=np.nan
         for ic in range(len(icois)):
-            HIDS = np.ravel(grided.fields['HID']['data'][0,:,:])[RNgrid_inds_parallax[ic]]
+            HIDS = np.ravel(grided.fields['HID']['data'][thislev,:,:])[RNgrid_inds_parallax[ic]]
             n, bins, patches = plt.hist(x=HIDS, bins=np.arange(0,11,1))		
-            HIDs_coi[ic,:] = n
+            HIDs_coi_GRID[ic,:] = n
             del n, bins, patches
         plt.close()
         # And barplot ... 
@@ -2139,54 +2129,52 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         barlabels = []
     	# Set position of bar on X axis   
        	br1 = np.arange(len(name)) #---- adjutst!
-       	bar1 = plt.bar(br1, HIDs_coi[0,:], color='darkblue',  width = barWidth, label='icoi: '+str(icois[0]))
-        if len(RN_inds_parallax) == 2:
+       	bar1 = plt.bar(br1, HIDs_coi_GRID[0,:], color='darkblue',  width = barWidth, label='icoi: '+str(icois[0]))
+        if len(RNgrid_inds_parallax) == 2:
             br2 = [x + barWidth for x in br1] 
-            bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
+            bar2 = plt.bar(br2, HIDs_coi_GRID[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
             for rect in bar1 + bar2:
                 height = rect.get_height()
                 if height < 20:
                     height=np.nan;
-                    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
-        if len(RN_inds_parallax) == 3:
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+        if len(RNgrid_inds_parallax) == 3:
             br2 = [x + barWidth for x in br1]
             br3 = [x + barWidth for x in br2]	
-            bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
-            bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
+            bar2 = plt.bar(br2, HIDs_coi_GRID[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
+            bar3 = plt.bar(br3, HIDs_coi_GRID[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
             for rect in bar1 + bar2 + bar3 :
                 height = rect.get_height()
-		if height < 20:
+                if height < 20:
                     height=np.nan;
-                    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
-        if len(RN_inds_parallax) == 4:
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+        if len(RNgrid_inds_parallax) == 4:
             br2 = [x + barWidth for x in br1] 
             br3 = [x + barWidth for x in br2]
             br4 = [x + barWidth for x in br3]
-            bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
-            bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
-            bar4 = plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label='icoi: '+str(icoi[3]))
+            bar2 = plt.bar(br2, HIDs_coi_GRID[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
+            bar3 = plt.bar(br3, HIDs_coi_GRID[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
+            bar4 = plt.bar(br4, HIDs_coi_GRID[3,:], color='black', width = barWidth, label='icoi: '+str(icoi[3]))
             # Add counts above the two bar graph
             for rect in bar1 + bar2 + bar3 + bar4:
                 height = rect.get_height()
-		if height < 20:
+                if height < 20:
                     height=np.nan;
-		    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
-        if len(RN_inds_parallax) == 1:
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+        if len(RNgrid_inds_parallax) == 1:
             for rect in bar1:
                 height = rect.get_height()
-		if height < 20:
+                if height < 20:
                     height=np.nan;
-             	    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         plt.xlabel('HID')  
         plt.xlabel('HID counts')  
         plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
         plt.legend()
-        plt.title('HID for nsweep Nr. ' + str(nlev))
+        plt.title('HID for gridded radar at ' + str(alt_z[nlev])+' km')
         plt.grid(True)
         plt.close()
-        fig.savefig(options['fig_dir']+'RHIs_BARPLOT_nlev_'+str(nlev)+'contours.png', dpi=300, transparent=False) 	
-
-
+        fig.savefig(options['fig_dir']+'RHIs_BARPLOT_gridded_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
 
     return check_resolxy, check_resolz
 
