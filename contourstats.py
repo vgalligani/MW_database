@@ -2042,7 +2042,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
                 height = rect.get_height()
                 if height < 20:
                     height=np.nan;
-                    plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         if len(RN_inds_parallax) == 3:
             br2 = [x + barWidth for x in br1]
             br3 = [x + barWidth for x in br2]	
@@ -2051,7 +2051,8 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             for rect in bar1 + bar2 + bar3 :
                 height = rect.get_height()
 		if height < 20:
-                	plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                    height=np.nan;
+                plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         if len(RN_inds_parallax) == 4:
             br2 = [x + barWidth for x in br1] 
             br3 = [x + barWidth for x in br2]
@@ -2063,12 +2064,14 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             for rect in bar1 + bar2 + bar3 + bar4:
                 height = rect.get_height()
 		if height < 20:
-                	plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                    height=np.nan;
+		plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         if len(RN_inds_parallax) == 1:
             for rect in bar1:
                 height = rect.get_height()
 		if height < 20:
-               		plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
+                    height=np.nan;
+             	plt.text(rect.get_x() + rect.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom', rotation='vertical')
         plt.xlabel('HID')  
         plt.xlabel('HID counts')  
         plt.xticks([r + barWidth for r in range(len(name))], name)   # adjutst! len() 
