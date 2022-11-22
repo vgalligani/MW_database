@@ -1977,9 +1977,9 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.xlim([options['xlim_min'], options['xlim_max']]) 
         plt.ylim([options['ylim_min'], options['ylim_max']])
         plt.title('Elevation nlev '+str(nlev))
-	# GUARDAR CONTORNOS. 
-	fig.savefig(options['fig_dir']+'ZH_nlev_+'str(nlev)+'contours.png', dpi=300, transparent=False)  
-	plt.close()
+        # GUARDAR CONTORNOS. 
+        fig.savefig(options['fig_dir']+'ZH_nlev_'+str(nlev)+'contours.png', dpi=300, transparent=False)  
+        plt.close()
 
 
         RHIs_nlev = radar.fields['HID']['data'][start_index:end_index]
@@ -2001,8 +2001,8 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         # 	plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
         #	plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], p.ravel(lats)[RN_inds_parallax[ic]], 'om')	
         plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
-	fig.savefig(options['fig_dir']+'RHIs_nlev_+'str(nlev)+'contours.png', dpi=300, transparent=False)  
-	plt.close()
+        fig.savefig(options['fig_dir']+'RHIs_nlev_'+str(nlev)+'contours.png', dpi=300, transparent=False)  
+        plt.close()
 	
        	# Entonces plot hid ppi  
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
