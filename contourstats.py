@@ -2177,7 +2177,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.close()
         fig.savefig(options['fig_dir']+'RHIs_BARPLOT_gridded_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
 
-    return check_resolxy, check_resolz
+    return check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi
 
 
 #----------------------------------------------------------------------------------------------
@@ -2230,12 +2230,16 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
    
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
     # ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, gmi_dir+options['gfile'])
-    plot_icois_HIDinfo(options, radar, icois, gmi_dir+options['gfile'])
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = plot_icois_HIDinfo(options, radar, icois, gmi_dir+options['gfile'])
 	
     gc.collect()
 
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, 
-	    GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
+
+    return [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] 
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, 
+    #	    GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
   
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -2564,13 +2568,22 @@ def main_20180208():
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
-
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    #RMA4_20181218 = xr.Dataset( {
+    #                "PCTarray_PHAIL_out": (('icois','PCTs'), PCTarray_PHAIL_out),
+    #                "PCTarray_NOPHAIL_out": (('PCTs'), PCTarray_NOPHAIL_out_),
+    #                "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
+    #                "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)])        }   )
+    breakpoint()
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------  
