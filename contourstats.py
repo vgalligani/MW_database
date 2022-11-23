@@ -2542,8 +2542,8 @@ def colormaps(variable):
 def main_main(): 
 	
 	#main_20180208() 
-	main_DOW7_20181214() 
-	main_CSPR2_20181111()
+	#main_DOW7_20181214()  redo pq no hay correccion
+	#main_CSPR2_20181111()   redo pq no hay correccion
 	RMA1_20190308()
 	RMA5_20200815()
 	RMA3_20190305()
@@ -2625,7 +2625,7 @@ def main_DOW7_20181214():
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
     reportes_granizo_twitterAPI_meta = [['0320UTC','0100']]
     opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0,
-	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
+	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0,
 	     'radar_name':'DOW7', 'era5_file': era5_file,
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
@@ -2666,7 +2666,7 @@ def main_CSPR2_20181111():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -65.5, 'xlim_max': -63.6, 'ylim_min': -33, 'ylim_max': -31.5, 
     	    'ZDRoffset': 0, 'era5_file': era5_file,
-	    'rfile': 'CSPR2_data/'+rfile, 'gfile': gfile, 
+	    'rfile': 'CSPR2_data/'+rfile, 'gfile': gfile, 'azimuth_ray': 0,
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
     	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
@@ -2705,7 +2705,7 @@ def RMA1_20190308():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
     	    'ZDRoffset': 0.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
-    	    'window_calc_KDP': 7, 'era5_file': era5_file,
+    	    'window_calc_KDP': 7, 'era5_file': era5_file, 'azimuth_ray': 50,
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
@@ -2744,7 +2744,7 @@ def RMA5_20200815():
     reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24]] 
     reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America']
     opts = {'xlim_min': -55.0, 'xlim_max': -52.0, 'ylim_min': -27.5, 'ylim_max': -25.0, 
-	    'ZDRoffset': 2, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 
+	    'ZDRoffset': 2, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 'azimuth_ray': 50,
 	    'window_calc_KDP': 7, 'era5_file': era5_file,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
@@ -2787,7 +2787,7 @@ def RMA3_20190305():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -63, 'xlim_max': -58, 'ylim_min': -27, 'ylim_max': -23, 'ZDRoffset': 3, 
 	    'rfile': 'RMA3/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'era5_file': era5_file,
+	    'window_calc_KDP': 7, 'era5_file': era5_file, 'azimuth_ray': 210,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190305_RMA3/', 
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
@@ -2827,7 +2827,7 @@ def RMA4_20180209():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': -1,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 'azimuth_ray': 210,
 	    'window_calc_KDP': 7, 'era5_file': era5_file,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180209_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
@@ -2868,7 +2868,7 @@ def RMA4_20181001():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 1.5,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 'azimuth_ray': 150,
 	    'window_calc_KDP': 7,'era5_file': era5_file,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181001_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
@@ -2910,7 +2910,7 @@ def RMA4_20190209():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 1,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 'azimuth_ray': 268,
 	    'window_calc_KDP': 7,  'era5_file': era5_file,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190209_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
@@ -2955,7 +2955,7 @@ def RMA4_20181218():
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 3,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7,  'era5_file': era5_file,
+	    'window_calc_KDP': 7,  'era5_file': era5_file, 'azimuth_ray': 210,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181218_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
@@ -3000,7 +3000,7 @@ def RMA4_20181215():
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 1.5,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
-	    'window_calc_KDP': 7, 'era5_file': era5_file,
+	    'window_calc_KDP': 7, 'era5_file': era5_file, 'azimuth_ray': 180,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181215_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
@@ -3051,7 +3051,7 @@ def RMA4_20181031():
     reportes_granizo_twitterAPI_meta = []
     opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 1.5,   
-	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 
+	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 'azimuth_ray': 157,
 	    'window_calc_KDP': 7,  'era5_file': era5_file,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
