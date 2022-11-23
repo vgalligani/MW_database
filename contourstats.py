@@ -2541,12 +2541,12 @@ def colormaps(variable):
 
 def main_main(): 
 	
-	#main_20180208() 
+	OK main_20180208() 
 	#main_DOW7_20181214()  redo pq no hay correccion
 	#main_CSPR2_20181111()   redo pq no hay correccion
-	RMA1_20190308()
-	RMA5_20200815()
-	RMA3_20190305()
+	OK RMA1_20190308()
+	OK RMA5_20200815()
+	OK RMA3_20190305()
 	RMA4_20180209()
 	RMA4_20181001()
 	RMA4_20190209()
