@@ -2539,6 +2539,23 @@ def colormaps(variable):
     if variable == 'dv':
        return cmap_nws_dv
 
+def main_main(): 
+	
+	#main_20180208() 
+	main_DOW7_20181214() 
+	main_CSPR2_20181111()
+	RMA1_20190308()
+	RMA5_20200815()
+	RMA3_20190305()
+	RMA4_20180209()
+	RMA4_20181001()
+	RMA4_20190209()
+	RMA4_20181218()
+	RMA4_20181215()
+	RMA4_20181031()	
+	
+	return
+
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------      
@@ -2574,12 +2591,11 @@ def main_20180208():
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
-    #RMA4_20181218 = xr.Dataset( {
-    #                "PCTarray_PHAIL_out": (('icois','PCTs'), PCTarray_PHAIL_out),
-    #                "PCTarray_NOPHAIL_out": (('PCTs'), PCTarray_NOPHAIL_out_),
-    #                "PCTarray_PHAIL_mean": (('PCTs'),      PCTarray_PHAIL_out_mean),
-    #                "AREA_PHAIL":            (('Nr'),    [np.nanmean(AREA_PHAIL)])        }   )
-    breakpoint()
+    
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20180208.nc', 'w')
 
 	
     return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
@@ -2613,16 +2629,25 @@ def main_DOW7_20181214():
 	     'radar_name':'DOW7', 
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	     'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [15]}
     icois_input  = [15] 
 		
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181214.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 	
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------  
@@ -2644,16 +2669,25 @@ def main_CSPR2_20181111():
 	    'rfile': 'CSPR2_data/'+rfile, 'gfile': gfile, 
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
     	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-    	    'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+    	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2'}
     icois_input  = [6,5] 
 	
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181111.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 
 #----------------------------------------------------------------------------------------------
@@ -2674,16 +2708,25 @@ def RMA1_20190308():
     	    'window_calc_KDP': 7, 
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-    	    'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+    	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'RMA1'}
     icois_input  = [3]
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20190308.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------  
@@ -2705,16 +2748,25 @@ def RMA5_20200815():
 	    'window_calc_KDP': 7, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [7], 'radar_name':'RMA5'}
     icois_input  = [7] 
    
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]		
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20200815.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+	
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------  
@@ -2738,16 +2790,25 @@ def RMA3_20190305():
 	    'window_calc_KDP': 7, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190305_RMA3/', 
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL':[6], 'radar_name':'RMA3'}
     icois_input  = [6,7] 
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20190305.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 #----------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------- 
@@ -2770,16 +2831,25 @@ def RMA4_20180209():
 	    'window_calc_KDP': 7, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180209_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [17], 'radar_name':'RMA4'}
     icois_input  = [10,17,19] 
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20180209.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 #----------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------- 
@@ -2802,16 +2872,25 @@ def RMA4_20181001():
 	    'window_calc_KDP': 7,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181001_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [37], 'radar_name':'RMA4'}
     icois_input  = [26,36,37] 
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181001.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 
 #----------------------------------------------------------------------------------------------
@@ -2835,16 +2914,25 @@ def RMA4_20190209():
 	    'window_calc_KDP': 7, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190209_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [15], 'radar_name':'RMA4'}
     icois_input  = [11,15,16] 
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, time_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20190209.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 
 
@@ -2870,16 +2958,25 @@ def RMA4_20181218():
 	    'window_calc_KDP': 7, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181218_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [7, 6], 'radar_name':'RMA4'}
     icois_input  = [8, 7, 6]
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181218.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 
 
@@ -2906,16 +3003,25 @@ def RMA4_20181215():
 	    'window_calc_KDP': 7,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181215_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [14,11], 'radar_name':'RMA4'}
     icois_input  = [14, 11] 
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181215.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+
 
 
 #----------------------------------------------------------------------------------------------
@@ -2949,16 +3055,24 @@ def RMA4_20181031():
 	    'window_calc_KDP': 7, 
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
-	   'time_pfs':time_pfs[0], 'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4'}
     icois_input  = [1,26,20,58] 
 
-    [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
-	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
-	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
+    #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
+    #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    return [PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
-	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]	
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181031.nc', 'w')
+
+	
+    return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
+    #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
 
 
 
