@@ -1963,7 +1963,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         end_index   = radar.sweep_end_ray_index['data'][nlev]
         lats    = radar.gate_latitude['data'][start_index:end_index]
         lons    = radar.gate_longitude['data'][start_index:end_index]
-        radarTH = radar.fields['TH']['data'][start_index:end_index]
+        radarTH = radar.fields[THNAME]['data'][start_index:end_index]
 
         datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
         RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
