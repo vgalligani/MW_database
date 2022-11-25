@@ -2249,20 +2249,20 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)   
 
-    if option['radar_name'] == 'DOW7':
+    if options['radar_name'] == 'DOW7':
         radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         gridded_iz  = 41
-	gridded_ixy = 355 
-	
+        gridded_ixy = 355 
+
     elif options['radar_name'] == 'CSPR2':
         radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)	
         gridded_iz  = 41
-	gridded_ixy = 440 
-	
+        gridded_ixy = 440 
+
     else:
-	radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         gridded_iz  = 40
-	gridded_ixy = 940 
+        gridded_ixy = 940 
 	
 	
     # Filters
@@ -2642,7 +2642,8 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
 
 
 
-    return [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] 
+    return [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, zgrid_alt] 
+
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, 
     #	    GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
@@ -3017,7 +3018,7 @@ def main_20180208():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
     
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
@@ -3027,6 +3028,8 @@ def main_20180208():
                     "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
                     "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20180208.nc', 'w')
+	
+    breakpoint()
 
 	
     return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
