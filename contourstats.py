@@ -1794,6 +1794,362 @@ def get_z_from_radar(radar):
 
     return zz + radar.altitude['data'][0]	
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
+
+    #---- plot hid ppi  
+    hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+           'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+
+    # AGREGAR HID?
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    if 'TH' in radar.fields.keys():  
+        dzh_  = radar.fields['TH']['data'].copy()
+        dzv_  = radar.fields['TV']['data'].copy()
+    elif 'DBZHCC' in radar.fields.keys():
+        dzh_  = radar.fields['DBZHCC']['data'].copy()
+        dzv_  = radar.fields['DBZVCC']['data'].copy()
+        dZDR  = radar.fields['ZDRC']['data'].copy()
+    drho_ = radar.fields['RHOHV']['data'].copy()
+    dkdp_ = radar.fields['KDP']['data'].copy()
+
+    # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
+    dkdp_[np.where(drho_.data==radar.fields['RHOHV']['data'].fill_value)] = np.nan
+
+    # Filters
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+        rho_h = drho_[i,:]
+        zh_h = dzh_[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                dzh_[i,j]  = np.nan
+                dzv_[i,j]  = np.nan
+                drho_[i,j]  = np.nan
+                dkdp_[i,j]  = np.nan
+
+    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], 
+					     rho=drho_, kdp=dkdp_, 
+                                             use_temp=True, band='C', T=radar_T)
+
+    RHIs_nlev = np.argmax(scores, axis=0) + 1 
+    radar.add_field_like('KDP','HID', RHIs_nlev, replace_existing=True)
+
+
+    #-EJEMPLO de azimuth
+    azimuths = radar.azimuth['data']
+    target_azimuth = azimuths[azimuth_ray]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+
+    lats  = radar.gate_latitude['data']
+    lons  = radar.gate_longitude['data']
+    rhoHV = radar.fields['RHOHV']['data']
+    PHIDP = radar.fields['PHIDP']['data']
+    if 'KDP' in radar.fields.keys():  
+    	KDP   = radar.fields['KDP']['data']
+
+    fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
+                        figsize=[14,7])
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+    pcm1 = axes[0,0].pcolormesh(lons, lats, rhoHV, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,0].set_title('RHOHV radar nlev '+str(nlev)+' PPI')
+    axes[0,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,0])
+    axes[0,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[0,1].pcolormesh(lons, lats, radar.fields['PHIDP']['data'], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,1].set_title('Phidp radar nlev '+str(nlev)+' PPI')
+    axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,1].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,1])
+    axes[0,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
+    if 'KDP' in radar.fields.keys():  
+    	pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,2])
+    axes[0,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    if 'TH' in radar.fields.keys():  
+        ZHFIELD = 'TH'
+        THH =  radar.fields['TH']['data']
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['TH']['data'], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    elif 'DBZHCC' in radar.fields.keys():
+        ZHFIELD = 'DBZHCC'
+        THH =  radar.fields['DBZHCC']['data']
+        pcm1 = axes[1,0].pcolormesh(lons, lats, radar.fields['DBZHCC']['data'], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)		
+    axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
+    axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,0])
+    axes[1,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[1,1].pcolormesh(lons, lats, radar.fields['PHIDP']['data'], cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[1,1].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
+    axes[1,1].set_title('CORR Phidp radar nlev '+str(nlev)+'  PPI')
+    axes[1,1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,1].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,1])
+    axes[1,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    pcm1 = axes[1,2].pcolormesh(lons, lats, RHIs_nlev, cmap = cmaphid, vmin=0.2, vmax=10)
+    axes[1,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
+    axes[1,2].set_title('HID '+str(nlev)+' PPI')
+    axes[1,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    cbar_HID = plt.colorbar(pcm1, ax=axes[1,2], shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+	
+    fig.savefig(options['fig_dir']+'PPIs_KDPcorr'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
+    #plt.close()
+
+    return radar
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def CSPR2_correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
+
+    #---- plot hid ppi  
+    hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+           'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)
+
+    # AGREGAR HID?
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+
+    dzh_  = radar.fields['corrected_reflectivity']['data'].copy()
+    dZDR  = radar.fields['corrected_differential_reflectivity']['data'].copy()
+    drho_ = radar.fields['copol_correlation_coeff']['data'].copy()
+    dkdp_ = radar.fields['filtered_corrected_specific_diff_phase']['data'].copy()
+    ZHFIELD = 'corrected_reflectivity'
+    # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
+    dkdp_[np.where(drho_.data==radar.fields['copol_correlation_coeff']['data'].fill_value)] = np.nan
+
+    #------------	
+    #------------		
+    sys_phase = get_sys_phase_simple_CSPR2(radar)
+    # replace PHIDP w/ np.nan
+    #PHIORIG = radar.fields['PHIDP']['data'].copy() 
+    #PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+    #PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+    #mask = radar.fields['PHIDP']['data'].data.copy()    
+    #mask[:] = False
+    #PHIDP_nans.mask = mask
+    #radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+    #dphi, uphi, corr_phidp = correct_phidp((radar.fields['differential_phase']['data'])+180, radar.fields['copol_correlation_coeff']['data'], 
+    #					   radar.fields['attenuation_corrected_reflectivity_h']['data'], sys_phase, 280)
+    #------------	
+    #radar.add_field_like('reflectivity','corrPHIDP', corr_phidp, replace_existing=True)
+
+    # Y CALCULAR KDP! 
+    #calculated_KDP = wrl.dp.kdp_from_phidp(corr_phidp, winlen=options['window_calc_KDP'], dr=(radar.range['data'][1]-radar.range['data'][0])/1e3, 
+    #					   method='lanczos_conv', skipna=True)	
+    #radar.add_field_like('reflectivity','corrKDP', calculated_KDP, replace_existing=True)
+    #------------	
+    #------------	
+
+    # Filters
+    ni = dzh_.shape[0]
+    nj = dzh_.shape[1]
+    for i in range(ni):
+        rho_h = drho_[i,:]
+        zh_h = dzh_[i,:]
+        for j in range(nj):
+            if (rho_h[j]<0.7) or (zh_h[j]<30):
+                dzh_[i,j]  = np.nan
+                dZDR[i,j]  = np.nan
+                drho_[i,j]  = np.nan
+                dkdp_[i,j]  = np.nan		
+
+    scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR, 
+					     rho=drho_, kdp=dkdp_, 
+                                             use_temp=True, band='C', T=radar_T)
+
+    RHIs_nlev = np.argmax(scores, axis=0) + 1 
+    radar.add_field_like('filtered_corrected_differential_phase','HID', RHIs_nlev, replace_existing=True)
+
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+
+    #-EJEMPLO de azimuth
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    target_azimuth = azimuths[azimuth_ray]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    rhoHV = radar.fields['copol_correlation_coeff']['data'][start_index:end_index]
+    PHIDP = (radar.fields['filtered_corrected_differential_phase']['data'][start_index:end_index])+360
+    KDP   = radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index]
+
+    fig, axes = plt.subplots(nrows=2, ncols=3, constrained_layout=True,
+                        figsize=[14,7])
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('rhohv')
+    pcm1 = axes[0,0].pcolormesh(lons, lats, rhoHV, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,0].set_title('RHOHV radar nlev '+str(nlev)+' PPI')
+    axes[0,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,0])
+    axes[0,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('phidp')
+    pcm1 = axes[0,1].pcolormesh(lons, lats, PHIDP, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[0,1].set_title('Phidp radar nlev '+str(nlev)+' PPI')
+    axes[0,1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,1].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,1])
+    axes[0,1].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Kdp')
+    pcm1 = axes[0,2].pcolormesh(lons, lats, KDP, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    THH =  radar.fields['attenuation_corrected_reflectivity_h']['data'][start_index:end_index]
+    #axes[0,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
+    axes[0,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[0,2])
+    axes[0,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    axes[0,2].set_title('KDP radar nlev '+str(nlev)+' PPI')
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    ZHFIELD = 'corrected_reflectivity'
+    THH =  radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+    pcm1 = axes[1,0].pcolormesh(lons, lats, THH, cmap=cmap, 
+			  vmin=vmin, vmax=vmax)
+    axes[1,0].set_title('ZH nlev '+str(nlev)+' PPI')
+    axes[1,0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,0].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    plt.colorbar(pcm1, ax=axes[1,0])
+    axes[1,0].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+
+    pcm1 = axes[1,2].pcolormesh(lons, lats, RHIs_nlev[start_index:end_index], cmap = cmaphid, vmin=0.2, vmax=10)
+    axes[1,2].contour(lons,lats, THH, [45], colors='k', linewidths=0.8)  
+    axes[1,2].set_title('HID '+str(nlev)+' PPI')
+    axes[1,2].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1,2].set_ylim([options['ylim_min'], options['ylim_max']])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1,2].plot(lon_radius, lat_radius, 'k', linewidth=0.8)	
+    axes[1,2].plot(np.ravel(lons[filas,:]),np.ravel(lats[filas,:]), '-k')
+    cbar_HID = plt.colorbar(pcm1, ax=axes[1,2], shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+
+    fig.savefig(options['fig_dir']+'PPIs_KDPcorr'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)   
+    #plt.close()
+
+    #----------------------------------------------------------------------
+    #-figure
+    fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True,figsize=[14,10])
+    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields['copol_correlation_coeff']['data'][start_index:end_index][filas,:])*100, '-k', label='RHOHV')
+    axes[0].plot(radar.range['data']/1e3, np.ravel(radar.fields[ZHFIELD]['data'][start_index:end_index][filas,:]), '-r', label='ZH')
+    axes[0].legend()
+    axes[1].plot(radar.range['data']/1e3, np.ravel(radar.fields['differential_phase']['data'][start_index:end_index][filas,:]), 'or', label='phidp')
+    axes[1].legend()
+    axes[1].set_xlim([0,100])
+    axes[2].plot(radar.range['data']/1e3, np.ravel(radar.fields['filtered_corrected_specific_diff_phase']['data'][start_index:end_index][filas,:]), color='gray', label='KDP');
+    axes[2].legend()
+    #axes[0].set_xlim([50, 120])
+    #axes[1].set_xlim([50, 120])
+    #axes[2].set_xlim([50, 120])
+    axes[2].set_ylim([-1, 5])
+    axes[2].grid(True) 
+    axes[2].plot([0, 300], [0, 0], color='darkgreen', linestyle='-') 
+    axes[2].set_xlim([0,100])
+    axes[0].set_xlim([0,100])
+    fig.savefig(options['fig_dir']+'PHIcorrazi'+'nlev'+str(nlev)+'.png', dpi=300,transparent=False)    
+#plt.close()
+
+    return radar
+
+
+
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 def plot_icois_HIDinfo(options, radar, icois, fname):
@@ -1891,9 +2247,24 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
 							    options['lat_pfs'], options['lon_pfs']) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-    radar = add_43prop_field(radar)     
-    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+    radar = add_43prop_field(radar)   
 
+    if option['radar_name'] == 'DOW7':
+        radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        gridded_iz  = 41
+	gridded_ixy = 355 
+	
+    elif options['radar_name'] == 'CSPR2':
+        radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)	
+        gridded_iz  = 41
+	gridded_ixy = 440 
+	
+    else:
+	radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        gridded_iz  = 40
+	gridded_ixy = 940 
+	
+	
     # Filters
     ni = radarTH.shape[0]
     nj = radarTH.shape[1]
@@ -1958,6 +2329,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     cmaphid       = colors.ListedColormap(hid_colors)
     barWidth = 0.15 
     # ahora si, HID por contorno! y por sweep
+    HIDs_coi_nlev = np.zeros((radar.nsweeps, len(RN_inds_parallax), 10)); HIDs_coi_nlev[:]=np.nan
     for nlev in range(radar.nsweeps):
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -2021,7 +2393,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         for ic in range(len(icois)):
             plt.plot(lon_gmi[:,:][idx1][TB_inds[ic]], lat_gmi[:,:][idx1][TB_inds[ic]],'x' );    
             plt.plot( np.ravel(lons)[RN_inds_parallax[ic]], 	np.ravel(lats)[RN_inds_parallax[ic]], 'om')
-        # Entonces get HIDs por contorno en HIDs_coi: 
+        # Entonces get HIDs por contorno en \: 
         HIDs_coi = np.zeros((len(RN_inds_parallax), 10)); HIDs_coi[:]=np.nan
         for ic in range(len(icois)):
             HIDS = np.ravel(RHIs_nlev)[RN_inds_parallax[ic]]
@@ -2029,6 +2401,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             HIDs_coi[ic,:] = n
             del n, bins, patches
         plt.close()
+	HIDs_coi_nlev[nlev,:,:] = HIDs_coi[:,:]
         # And barplot ... 
         fig = plt.figure(figsize=(8,3)) 
         barlabels = []
@@ -2086,7 +2459,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     alt_z = [0, 1, 2, 5, 8, 10] 
     # 
     # 500m grid! 
-    grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+    grided  = pyart.map.grid_from_radars(radar, grid_shape=(gridded_iz, gridded_ixy, gridded_ixy), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
     gc.collect()
     check_resolxy = grided.point_x['data'][0,0,1]-grided.point_x['data'][0,0,0]
@@ -2095,6 +2468,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     datapts_RADAR_GRID = np.column_stack(( np.ravel(grided.point_longitude['data'][0,:,:]),np.ravel(grided.point_latitude['data'][0,:,:]) ))
     RNgrid_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_GRID)		  
     gc.collect()
+    HIDs_coi_zgrid = np.zeros((len(PlotGRIDlevels), len(RNgrid_inds_parallax), 10)); HIDs_coi_zgrid[:]=np.nan
     #------------------------------------------------------	
     for nlev in range(len(PlotGRIDlevels)):
        	# Entonces plot hid GRID  
@@ -2125,6 +2499,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             del n, bins, patches
         fig.savefig(options['fig_dir']+'GRIDDEDPPI_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
         plt.close()
+	HIDs_coi_zgrid[nlev,:,:] = HIDs_coi_GRID[:,:]
         # And barplot ... 
         fig = plt.figure(figsize=(8,3)) 
         barlabels = []
@@ -2177,7 +2552,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.close()
         fig.savefig(options['fig_dir']+'RHIs_BARPLOT_gridded_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
 
-    return check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi
+    return check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev
 
 
 #----------------------------------------------------------------------------------------------
@@ -2226,6 +2601,31 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
         PHIORIG.mask = mask
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
         
+    plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
+   
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
+    # ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, gmi_dir+options['gfile'])
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = plot_icois_HIDinfo(options, radar, icois, gmi_dir+options['gfile'])
+	
+    gc.collect()
+
+
+
+    return [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] 
+
+    #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, 
+    #	    GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
+  
+#------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+def run_general_case_RELAMPAGO(options, lat_pfs, lon_pfs, icois):
+
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+    radar = pyart.io.read(r_dir+options['rfile'])
+            
     plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
    
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
@@ -2541,15 +2941,15 @@ def colormaps(variable):
 
 def main_main(): 
 	
-	OK main_20180208() 
+	main_20180208() 
 	#main_DOW7_20181214()  redo pq no hay correccion
 	#main_CSPR2_20181111()   redo pq no hay correccion
-	OK RMA1_20190308()
-	OK RMA5_20200815()
-	OK RMA3_20190305()
-	OK RMA4_20180209()
-	ok RMA4_20181001()
-	ok RMA4_20190209()
+	RMA1_20190308()
+	RMA5_20200815()
+	RMA3_20190305()
+	RMA4_20180209()
+	RMA4_20181001()
+	RMA4_20190209()
 	RMA4_20181218()
 	RMA4_20181215()
 	RMA4_20181031()	
