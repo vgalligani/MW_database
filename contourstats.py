@@ -2576,31 +2576,29 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
 
 def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z):
 
-	linecolors = ['LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+    linecolors = ['LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
            'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
-		
-	
-	HID_fraction = np.zeros((HIDs_coi_zgrid.shape[0], HIDs_coi_zgrid.shape[1], HIDs_coi_zgrid.shape[2] ));  HID_fraction[:]=np.nan
-	for nlev in range(HIDs_coi_zgrid.shape[0]):
-		for icois in range(HIDs_coi_zgrid.shape[1]):
-			for hid_id in range(HIDs_coi_zgrid.shape[2]):
-				HID_fraction[nlev,icois,hid_id] = HIDs_coi_zgrid[nlev,icois,hid_id]/np.sum(HIDs_coi_zgrid[nlev,icois,:])
-
-	for icois in range(HIDs_coi_zgrid.shape[1]):
-		fig = plt.figure(figsize=(4,6))
-		plt.plot(HID_fraction[:,icois,8]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
-		plt.plot(HID_fraction[:,icois,7]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
-		plt.plot(HID_fraction[:,icois,6]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
-		plt.plot(HID_fraction[:,icois,5]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
-		plt.plot(HID_fraction[:,icois,2]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
-		plt.plot(HID_fraction[:,icois,3]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
-		plt.plot(HID_fraction[:,icois,4]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
-		plt.plot(HID_fraction[:,icois,1]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')
-		plt.plot(HID_fraction[:,icois,9]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
-		
-		plt.ylabel('Altitude (km)')
-		plt.xlabel('Hydrometeor Fraction')
-		plt.title('icoi Nr. '+str(icois_NR[icois]))
+           
+    HID_fraction = np.zeros((HIDs_coi_zgrid.shape[0], HIDs_coi_zgrid.shape[1], HIDs_coi_zgrid.shape[2] ));  HID_fraction[:]=np.nan
+    for nlev in range(HIDs_coi_zgrid.shape[0]):
+        for icois in range(HIDs_coi_zgrid.shape[1]):
+            for hid_id in range(HIDs_coi_zgrid.shape[2]):
+                HIDD_fraction[nlev,icois,hid_id] = HIDs_coi_zgrid[nlev,icois,hid_id]/np.sum(HIDs_coi_zgrid[nlev,icois,:])
+                
+    for icois in range(HIDs_coi_zgrid.shape[1]):
+        fig = plt.figure(figsize=(4,6))
+        plt.plot(HID_fraction[:,icois,8]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
+        plt.plot(HID_fraction[:,icois,7]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
+        plt.plot(HID_fraction[:,icois,6]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
+        plt.plot(HID_fraction[:,icois,5]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
+        plt.plot(HID_fraction[:,icois,2]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
+        plt.plot(HID_fraction[:,icois,3]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
+        plt.plot(HID_fraction[:,icois,4]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
+        plt.plot(HID_fraction[:,icois,1]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')     
+        plt.plot(HID_fraction[:,icois,9]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
+        plt.ylabel('Altitude (km)')
+        plt.xlabel('Hydrometeor Fraction')
+        plt.title('icoi Nr. '+str(icois_NR[icois]))
 	
 	
 return 
@@ -3044,13 +3042,11 @@ def main_20180208():
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi),
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
 	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20180208.nc', 'w')
 	
-    breakpoint()
-
 	
     return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
     #	    GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
@@ -3087,15 +3083,16 @@ def main_DOW7_20181214():
 	   'icoi_PHAIL': [15]}
     icois_input  = [15] 
 		
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181214.nc', 'w')
 
 	
@@ -3127,15 +3124,16 @@ def main_CSPR2_20181111():
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2'}
     icois_input  = [6,5] 
 	
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181111.nc', 'w')
 
 	
@@ -3166,15 +3164,16 @@ def RMA1_20190308():
      	   'icoi_PHAIL': [3], 'radar_name':'RMA1'}
     icois_input  = [3]
 
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20190308.nc', 'w')
 
 	
@@ -3205,16 +3204,17 @@ def RMA5_20200815():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [7], 'radar_name':'RMA5'}
     icois_input  = [7] 
-   
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20200815.nc', 'w')
 
 	
@@ -3248,15 +3248,16 @@ def RMA3_20190305():
 	   'icoi_PHAIL':[6], 'radar_name':'RMA3'}
     icois_input  = [6,7] 
 
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20190305.nc', 'w')
 
 	
@@ -3288,16 +3289,16 @@ def RMA4_20180209():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [17], 'radar_name':'RMA4'}
     icois_input  = [10,17,19] 
-
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20180209.nc', 'w')
 
 	
@@ -3330,15 +3331,16 @@ def RMA4_20181001():
 	   'icoi_PHAIL': [37], 'radar_name':'RMA4'}
     icois_input  = [26,36,37] 
 
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181001.nc', 'w')
 
 	
@@ -3372,15 +3374,16 @@ def RMA4_20190209():
 	   'icoi_PHAIL': [15], 'radar_name':'RMA4'}
     icois_input  = [11,15,16] 
 
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20190209.nc', 'w')
 
 	
@@ -3416,15 +3419,16 @@ def RMA4_20181218():
 	   'icoi_PHAIL': [7, 6], 'radar_name':'RMA4'}
     icois_input  = [8, 7, 6]
 
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181218.nc', 'w')
 
 	
@@ -3461,15 +3465,16 @@ def RMA4_20181215():
 	   'icoi_PHAIL': [14,11], 'radar_name':'RMA4'}
     icois_input  = [14, 11] 
 
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181215.nc', 'w')
 
 	
@@ -3513,15 +3518,16 @@ def RMA4_20181031():
 	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4'}
     icois_input  = [1,26,20,58] 
 
-    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
     contourstats = xr.Dataset( {
-                    "HIDs_coi_GRID": (('icois','HIDs'), HIDs_coi_GRID),
-                    "HIDs_coi": (('icois','HIDs'), HIDs_coi) })
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181031.nc', 'w')
 
 	
