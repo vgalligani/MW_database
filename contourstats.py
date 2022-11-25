@@ -2401,7 +2401,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             HIDs_coi[ic,:] = n
             del n, bins, patches
         plt.close()
-	HIDs_coi_nlev[nlev,:,:] = HIDs_coi[:,:]
+        HIDs_coi_nlev[nlev,:,:] = HIDs_coi[:,:]
         # And barplot ... 
         fig = plt.figure(figsize=(8,3)) 
         barlabels = []
@@ -2468,7 +2468,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     datapts_RADAR_GRID = np.column_stack(( np.ravel(grided.point_longitude['data'][0,:,:]),np.ravel(grided.point_latitude['data'][0,:,:]) ))
     RNgrid_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_GRID)		  
     gc.collect()
-    HIDs_coi_zgrid = np.zeros((len(PlotGRIDlevels), len(RNgrid_inds_parallax), 10)); HIDs_coi_zgrid[:]=np.nan
+    #HIDs_coi_zgrid = np.zeros((len(PlotGRIDlevels), len(RNgrid_inds_parallax), 10)); HIDs_coi_zgrid[:]=np.nan
     #------------------------------------------------------	
     for nlev in range(len(PlotGRIDlevels)):
        	# Entonces plot hid GRID  
@@ -2499,7 +2499,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             del n, bins, patches
         fig.savefig(options['fig_dir']+'GRIDDEDPPI_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
         plt.close()
-	HIDs_coi_zgrid[nlev,:,:] = HIDs_coi_GRID[:,:]
+	#HIDs_coi_zgrid[nlev,:,:] = HIDs_coi_GRID[:,:]
         # And barplot ... 
         fig = plt.figure(figsize=(8,3)) 
         barlabels = []
@@ -2551,7 +2551,22 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.grid(True)
         plt.close()
         fig.savefig(options['fig_dir']+'RHIs_BARPLOT_gridded_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
+	
+	
+    # ----------------------------------------------------------------- 
+    # Ahora con la grid entera pero sin graficos ... 
+    #
+    HIDs_coi_zgrid = np.zeros((len(grided.point_z['data'][:,0,0]), len(RNgrid_inds_parallax), 10)); HIDs_coi_zgrid[:]=np.nan
+    #------------------------------------------------------	
+    for nlev in range(len(grided.point_z['data'][:,0,0])):
+        HIDs_coi_GRID = np.zeros((len(RNgrid_inds_parallax), 10)); HIDs_coi_GRID[:]=np.nan
+        for ic in range(len(icois)):
+            HIDS = np.ravel(grided.fields['HID']['data'][nlev,:,:])[RNgrid_inds_parallax[ic]]
+            n, bins, patches = plt.hist(x=HIDS, bins=np.arange(0,11,1))		
+            HIDs_coi_zgrid[nlev,ic,:] = n
+            del n, bins, patches
 
+	
     return check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev, grided.point_z['data'][:,0,0]
 
 
@@ -2559,25 +2574,29 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 
-def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR):
+def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z):
 
-	# HIDs_coi_zgrid = np.zeros((len(PlotGRIDlevels), len(RNgrid_inds_parallax), 10)); 
-	for nlev in range(HIDs_coi_zgrid.size[0]):
-		for icois in range(HIDs_coi_zgrid.size[1]):
-			for hid_id in range(HIDs_coi_zgrid.size[2]):
+	linecolors = ['LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+           'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+		
+	
+	HID_fraction = np.zeros((HIDs_coi_zgrid.shape[0], HIDs_coi_zgrid.shape[1], HIDs_coi_zgrid.shape[2] ));  HID_fraction[:]=np.nan
+	for nlev in range(HIDs_coi_zgrid.shape[0]):
+		for icois in range(HIDs_coi_zgrid.shape[1]):
+			for hid_id in range(HIDs_coi_zgrid.shape[2]):
 				HID_fraction[nlev,icois,hid_id] = HIDs_coi_zgrid[nlev,icois,hid_id]/np.sum(HIDs_coi_zgrid[nlev,icois,:])
 
-	for icois in range(HIDs_coi_zgrid.size[1]):
+	for icois in range(HIDs_coi_zgrid.shape[1]):
 		fig = plt.figure(figsize=(4,6))
-		plt.plot(HID_fraction[:,icois,8], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
-		plt.plot(HID_fraction[:,icois,7], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
-		plt.plot(HID_fraction[:,icois,6], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
-		plt.plot(HID_fraction[:,icois,5], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
-		plt.plot(HID_fraction[:,icois,2], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
-		plt.plot(HID_fraction[:,icois,3], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
-		plt.plot(HID_fraction[:,icois,4], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
-		plt.plot(HID_fraction[:,icois,1], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')
-		plt.plot(HID_fraction[:,icois,9], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
+		plt.plot(HID_fraction[:,icois,8]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
+		plt.plot(HID_fraction[:,icois,7]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
+		plt.plot(HID_fraction[:,icois,6]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
+		plt.plot(HID_fraction[:,icois,5]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
+		plt.plot(HID_fraction[:,icois,2]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
+		plt.plot(HID_fraction[:,icois,3]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
+		plt.plot(HID_fraction[:,icois,4]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
+		plt.plot(HID_fraction[:,icois,1]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')
+		plt.plot(HID_fraction[:,icois,9]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
 		
 		plt.ylabel('Altitude (km)')
 		plt.xlabel('Hydrometeor Fraction')
