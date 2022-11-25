@@ -2552,8 +2552,39 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.close()
         fig.savefig(options['fig_dir']+'RHIs_BARPLOT_gridded_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
 
-    return check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev
+    return check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev, grided.point_z['data'][:,0,0]
 
+
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+
+def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR):
+
+	# HIDs_coi_zgrid = np.zeros((len(PlotGRIDlevels), len(RNgrid_inds_parallax), 10)); 
+	for nlev in range(HIDs_coi_zgrid.size[0]):
+		for icois in range(HIDs_coi_zgrid.size[1]):
+			for hid_id in range(HIDs_coi_zgrid.size[2]):
+				HID_fraction[nlev,icois,hid_id] = HIDs_coi_zgrid[nlev,icois,hid_id]/np.sum(HIDs_coi_zgrid[nlev,icois,:])
+
+	for icois in range(HIDs_coi_zgrid.size[1]):
+		fig = plt.figure(figsize=(4,6))
+		plt.plot(HID_fraction[:,icois,8], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
+		plt.plot(HID_fraction[:,icois,7], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
+		plt.plot(HID_fraction[:,icois,6], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
+		plt.plot(HID_fraction[:,icois,5], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
+		plt.plot(HID_fraction[:,icois,2], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
+		plt.plot(HID_fraction[:,icois,3], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
+		plt.plot(HID_fraction[:,icois,4], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
+		plt.plot(HID_fraction[:,icois,1], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')
+		plt.plot(HID_fraction[:,icois,9], grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
+		
+		plt.ylabel('Altitude (km)')
+		plt.xlabel('Hydrometeor Fraction')
+		plt.title('icoi Nr. '+str(icois_NR[icois]))
+	
+	
+return 
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
