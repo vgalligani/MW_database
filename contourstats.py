@@ -2059,7 +2059,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             br4 = [x + barWidth for x in br3]
             bar2 = plt.bar(br2, HIDs_coi[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
             bar3 = plt.bar(br3, HIDs_coi[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
-            bar4 = plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label='icoi: '+str(icoi[3]))
+            bar4 = plt.bar(br4, HIDs_coi[3,:], color='black', width = barWidth, label='icoi: '+str(icois[3]))
             # Add counts above the two bar graph
             for rect in bar1 + bar2 + bar3 + bar4:
                 height = rect.get_height()
@@ -2155,7 +2155,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
             br4 = [x + barWidth for x in br3]
             bar2 = plt.bar(br2, HIDs_coi_GRID[1,:], color='darkred',   width = barWidth, label='icoi: '+str(icois[1]))
             bar3 = plt.bar(br3, HIDs_coi_GRID[2,:], color='darkgreen', width = barWidth, label='icoi: '+str(icois[2]))
-            bar4 = plt.bar(br4, HIDs_coi_GRID[3,:], color='black', width = barWidth, label='icoi: '+str(icoi[3]))
+            bar4 = plt.bar(br4, HIDs_coi_GRID[3,:], color='black', width = barWidth, label='icoi: '+str(icois[3]))
             # Add counts above the two bar graph
             for rect in bar1 + bar2 + bar3 + bar4:
                 height = rect.get_height()
