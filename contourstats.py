@@ -2239,6 +2239,9 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
         #plt.close()
+	
+	
+	
 
     #------------------------------------------------------
     # histogram de HID dentro de cada contorno
@@ -2754,6 +2757,7 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
         
     plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
+
    
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
     # ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, gmi_dir+options['gfile'])
@@ -3105,7 +3109,7 @@ def main_main():
 	RMA4_20190209()
 	RMA4_20181218()
 	RMA4_20181215()
-	RMA4_20181031()	
+	RMA4_20181031() ## OJO QUE ACA TENGO QUE CAMBIAR CONTORNO_FIX ... sin correccion por paralaje?	
 	
 	return
 
@@ -3191,17 +3195,17 @@ def main_DOW7_20181214():
 	   'icoi_PHAIL': [15]}
     icois_input  = [15] 
 		
-    #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
     #	ZDRarray_PHAIL, ZDRarray_NOPHAIL] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
     
-    #contourstats = xr.Dataset( {
-    #                "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
-    #                "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
-    #	            "gridz": (('altitude'), gridz) })
-    #contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181214.nc', 'w')
+    contourstats = xr.Dataset( {
+                    "HIDs_coi_GRID": (('grid_nz','icois','HIDs'), HIDs_coi_GRID),
+                    "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
+    	            "gridz": (('altitude'), gridz) })
+    contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181214.nc', 'w')
 
     DATA = xr.open_dataset('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20181214.nc')
     CalcandPlot_HID_fraction(DATA['HIDs_coi_GRID'], icois_input, DATA['gridz'], opts)
@@ -3651,7 +3655,7 @@ def RMA4_20181031():
 	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4'}
     icois_input  = [1,26,20,58] 
 
-    #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
+    [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
     #	PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, 
