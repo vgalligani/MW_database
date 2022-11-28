@@ -2576,6 +2576,33 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
 
 def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z, options):
 
+    # AND ADD SUBPLOT WITH TBS DISTRIBUTION?
+    f = h5py.File( gmi_dir+options['gfile'], 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]          
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    f.close()
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb = tb_s1_gmi.copy()
+	#
+    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    #
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
+    #------------------------------------------------------------------------------------------------
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,12])
+    contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200] , colors=(['r']), linewidths=1.5);
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+    #plt.close()
+    #--------------------------------------------------------------------------------------
+    datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
+    #--------------------------------------------------------------------------------------
+	
     linecolors = ['LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
            'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
            
@@ -2583,36 +2610,116 @@ def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z, options):
     for nlev in range(HIDs_coi_zgrid.shape[0]):
         for icois in range(HIDs_coi_zgrid.shape[1]):
             for hid_id in range(HIDs_coi_zgrid.shape[2]):
-                HIDD_fraction[nlev,icois,hid_id] = HIDs_coi_zgrid[nlev,icois,hid_id]/np.sum(HIDs_coi_zgrid[nlev,icois,:])
+                HID_fraction[nlev,icois,hid_id] = HIDs_coi_zgrid[nlev,icois,hid_id]/np.sum(HIDs_coi_zgrid[nlev,icois,:])
                 
     for icois in range(HIDs_coi_zgrid.shape[1]):
         fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True, figsize=(8,6))	
 	
-        axes[0].plot(HID_fraction[:,icois,8]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
-        axes[0].plot(HID_fraction[:,icois,7]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
-        axes[0].plot(HID_fraction[:,icois,6]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
-        axes[0].plot(HID_fraction[:,icois,5]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
-        axes[0].plot(HID_fraction[:,icois,2]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
-        axes[0].plot(HID_fraction[:,icois,3]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
-        axes[0].plot(HID_fraction[:,icois,4]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
-        axes[0].plot(HID_fraction[:,icois,9]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
+        axes[0].plot(HID_fraction[:,icois,8]*100, grided_point_z/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
+        axes[0].plot(HID_fraction[:,icois,7]*100+HID_fraction[:,icois,6]*100, grided_point_z/1e3, linewidth=1.4, color=linecolors[6], label='HD+LD graupel')
+        axes[0].plot(HID_fraction[:,icois,5]*100+HID_fraction[:,icois,2]*100, grided_point_z/1e3, linewidth=1.4, color=linecolors[5], label='Ice')
+        axes[0].plot(HID_fraction[:,icois,3]*100, grided_point_z/1e3, linewidth=1.4, color=linecolors[2], label='Agg.')
+        axes[0].plot(HID_fraction[:,icois,9]*100, grided_point_z/1e3, linewidth=1.4, color=linecolors[9], label='BD')
         axes[0].set_ylabel('Altitude (km)')
         axes[0].set_xlabel('Hydrometeor Fraction')
-	
-        axes[1].plot(HID_fraction[:,icois,1]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')     
+        axes[0].set_title('Frozen-phase')
+        axes[0].legend()
+        axes[0].set_ylim([0,20])
+        axes[0].set_xlim([0,40])
+        axes[0].grid(True)
+
+
+        axes[1].plot(HID_fraction[:,icois,4]*100, grided_point_z/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
+        axes[1].plot(HID_fraction[:,icois,1]*100, grided_point_z/1e3, linewidth=1.4, color=linecolors[1], label='Rain')     
+        axes[1].set_title('Liquid-Phase')
+        axes[1].legend()
+        axes[1].set_xlim([0,100])
+        axes[1].set_ylim([0,20])
+        axes[1].grid(True)
+        #
+        plt.subplots_adjust(wspace=0, hspace=0)
+        axes[1].set_yticklabels([])
 	
 	#suptitle
-	if icois_NR[icois] == options['icoi_PHAIL']:
-            plt.suptitle('icoi Nr. '+str(icois_NR[icois])  +', \textbf{Phail: '+str(options['phail'])} ) 
-	else:
+        if icois_NR[icois] == options['icoi_PHAIL'][0]:
+            plt.suptitle('icoi Nr. '+str(icois_NR[icois])  +', Phail: '+str(options['phail']) ) 
+
+        else:
+            plt.suptitle('icoi Nr. '+str(icois_NR[icois]))  
+	
+    TB_inds = get_contour_info(contorno89, icois_NR, datapts)
+
+    MIN19PCT = []
+    MIN37PCT = []
+    MIN89PCT = []
+	
+    for icois in range(HIDs_coi_zgrid.shape[1]):
+	contour_pct19 = PCT19[idx1][TB_inds[icois]]
+	contour_pct37 = PCT37[idx1][TB_inds[icois]]
+	contour_pct89 = PCT89[idx1][TB_inds[icois]]
+	
+	n19, bins, patches19 = plt.hist(x=contour_pct19, bins=np.arange(0,300,1))	
+	n37, bins, patches37 = plt.hist(x=contour_pct37, bins=np.arange(0,300,1))		
+	n89, bins, patches89 = plt.hist(x=contour_pct89, bins=np.arange(0,300,1))		
+        plt.close()
+
+	# And barplot ... 
+        fig = plt.figure(figsize=(8,3)) 
+        barlabels = []
+	barWidth = 1
+
+	#
+       	bar1 = plt.bar(bins[1:], n19, color='darkblue',  width = barWidth, label='PCT19')
+       	bar2 = plt.bar(bins[1:], n37, color='darkred',   width = barWidth, label='PCT37')
+        bar3 = plt.bar(bins[1:], n89, color='darkgreen', width = barWidth, label='PCT89')
+	#
+        plt.xlabel('PCT')  
+        plt.ylabel('Counts')  
+        plt.legend()
+        plt.grid(True)
+	#suptitle
+        if icois_NR[icois] == options['icoi_PHAIL'][0]:
+            plt.suptitle('icoi Nr. '+str(icois_NR[icois])  +', Phail: '+str(options['phail']) ) 
+
+        else:
             plt.suptitle('icoi Nr. '+str(icois_NR[icois])) 
 	
-	# AND ADD SUBPLOT WITH TBS DISTRIBUTION?
+	MIN19PCT.append(np.nanmin(contour_pct19))
+        MIN37PCT.append(np.nanmin(contour_pct37))
+        MIN89PCT.append(np.nanmin(contour_pct89))
 	
 	
-		
+    fig = plt.figure(figsize=(8,3)) 
+    linestyle_coi = ['solid','dotted','dashed','loosely dashed']
+    for icois in range(HIDs_coi_zgrid.shape[1]):
+    	plt.plot(np.nan, np.nan, 'k' ,linestyle=linestyle_coi[icois], label='icoi Nr.'+str(icois_NR[icois]))
+    plt.legend()
+    plt.text(120,0.1,'MIN19PCT', color='darkblue',bbox=dict(boxstyle="square,pad=0.3", fc='None')) 
+    plt.text(120,0.1,'MIN37PCT', color='darkred',bbox=dict(boxstyle="square,pad=0.3",fc='None'))
+    plt.text(120,0.1,'MIN85PCT', color='darkgreen',bbox=dict(boxstyle="square,pad=0.3",fc='None'))
+
+    for icois in range(HIDs_coi_zgrid.shape[1]):
+		plt.axvline(x=MIN19PCT[icois],color='darkblue',linestyle=linestyle_coi[icois])
+		plt.axvline(x=MIN37PCT[icois],color='darkred',linestyle=linestyle_coi[icois])
+		plt.axvline(x=MIN89PCT[icois],color='darkgreen',linestyle=linestyle_coi[icois])
+plt.xlabel('PCT (K)')
+plt.ylim([0,1])
+plt.xlim([100, 280])
+
+
+
+
 	
-	return 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+    return
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
@@ -3057,6 +3164,10 @@ def main_20180208():
                     "HIDs_coi": (('nsweeps','icois','HIDs'), HIDs_coi),
 	            "gridz": (('altitude'), gridz) })
     contourstats.to_netcdf('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20180208.nc', 'w')
+	
+    DATA = xr.open_dataset('/home/victoria.galligani/Work/Studies/Hail_MW/case_outputfiles_stats/contourstats_20180208.nc')
+	CalcandPlot_HID_fraction(DATA['HIDs_coi_GRID'], icois_input, DATA['gridz'], opts)
+
 	
 	
     return #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, 
