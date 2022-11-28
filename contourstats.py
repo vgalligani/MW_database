@@ -2689,7 +2689,7 @@ def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z, options):
         MIN89PCT.append(np.nanmin(contour_pct89))
 
     fig = plt.figure(figsize=(8,3)) 
-    linestyle_coi = ['solid','dotted','dashed','loosely dashed']
+    linestyle_coi = ['solid','dotted','dashed','dashdot']
     for icois in range(HIDs_coi_zgrid.shape[1]):
     	plt.plot(np.nan, np.nan, 'k' ,linestyle=linestyle_coi[icois], label='icoi Nr.'+str(icois_NR[icois]))
     plt.legend()
