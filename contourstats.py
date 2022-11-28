@@ -2574,7 +2574,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 
-def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z):
+def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z, options):
 
     linecolors = ['LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
            'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
@@ -2586,22 +2586,33 @@ def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z):
                 HIDD_fraction[nlev,icois,hid_id] = HIDs_coi_zgrid[nlev,icois,hid_id]/np.sum(HIDs_coi_zgrid[nlev,icois,:])
                 
     for icois in range(HIDs_coi_zgrid.shape[1]):
-        fig = plt.figure(figsize=(4,6))
-        plt.plot(HID_fraction[:,icois,8]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
-        plt.plot(HID_fraction[:,icois,7]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
-        plt.plot(HID_fraction[:,icois,6]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
-        plt.plot(HID_fraction[:,icois,5]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
-        plt.plot(HID_fraction[:,icois,2]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
-        plt.plot(HID_fraction[:,icois,3]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
-        plt.plot(HID_fraction[:,icois,4]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
-        plt.plot(HID_fraction[:,icois,1]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')     
-        plt.plot(HID_fraction[:,icois,9]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
-        plt.ylabel('Altitude (km)')
-        plt.xlabel('Hydrometeor Fraction')
-        plt.title('icoi Nr. '+str(icois_NR[icois]))
+        fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True, figsize=(8,6))	
+	
+        axes[0].plot(HID_fraction[:,icois,8]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[8], label='Hail')
+        axes[0].plot(HID_fraction[:,icois,7]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[7], label='HD. grauepel')
+        axes[0].plot(HID_fraction[:,icois,6]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[6], label='LD. grauepel')
+        axes[0].plot(HID_fraction[:,icois,5]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[5], label='V. ice')
+        axes[0].plot(HID_fraction[:,icois,2]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[2], label='Ice C.')
+        axes[0].plot(HID_fraction[:,icois,3]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[3], label='Agg.')
+        axes[0].plot(HID_fraction[:,icois,4]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[4], label='Wet Snow')
+        axes[0].plot(HID_fraction[:,icois,9]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[9], label='BD')
+        axes[0].set_ylabel('Altitude (km)')
+        axes[0].set_xlabel('Hydrometeor Fraction')
+	
+        axes[1].plot(HID_fraction[:,icois,1]*100, grided_point_z['data']/1e3, linewidth=1.4, color=linecolors[1], label='Rain')     
+	
+	#suptitle
+	if icois_NR[icois] == options['icoi_PHAIL']:
+            plt.suptitle('icoi Nr. '+str(icois_NR[icois])  +', \textbf{Phail: '+str(options['phail'])} ) 
+	else:
+            plt.suptitle('icoi Nr. '+str(icois_NR[icois])) 
+	
+	# AND ADD SUBPLOT WITH TBS DISTRIBUTION?
 	
 	
-return 
+		
+	
+	return 
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
