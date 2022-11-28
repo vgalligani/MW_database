@@ -2646,49 +2646,47 @@ def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z, options):
 
         else:
             plt.suptitle('icoi Nr. '+str(icois_NR[icois]))  
-	
+
     TB_inds = get_contour_info(contorno89, icois_NR, datapts)
 
     MIN19PCT = []
     MIN37PCT = []
     MIN89PCT = []
-	
+
     for icois in range(HIDs_coi_zgrid.shape[1]):
-	contour_pct19 = PCT19[idx1][TB_inds[icois]]
-	contour_pct37 = PCT37[idx1][TB_inds[icois]]
-	contour_pct89 = PCT89[idx1][TB_inds[icois]]
-	
-	n19, bins, patches19 = plt.hist(x=contour_pct19, bins=np.arange(0,300,1))	
-	n37, bins, patches37 = plt.hist(x=contour_pct37, bins=np.arange(0,300,1))		
-	n89, bins, patches89 = plt.hist(x=contour_pct89, bins=np.arange(0,300,1))		
+        contour_pct19 = PCT19[idx1][TB_inds[icois]]
+        contour_pct37 = PCT37[idx1][TB_inds[icois]]
+        contour_pct89 = PCT89[idx1][TB_inds[icois]]
+        
+        n19, bins, patches19 = plt.hist(x=contour_pct19, bins=np.arange(0,300,1))	
+        n37, bins, patches37 = plt.hist(x=contour_pct37, bins=np.arange(0,300,1))		
+        n89, bins, patches89 = plt.hist(x=contour_pct89, bins=np.arange(0,300,1))		
         plt.close()
 
-	# And barplot ... 
+        # And barplot ... 
         fig = plt.figure(figsize=(8,3)) 
         barlabels = []
-	barWidth = 1
-
-	#
+        barWidth = 1
+        #
        	bar1 = plt.bar(bins[1:], n19, color='darkblue',  width = barWidth, label='PCT19')
        	bar2 = plt.bar(bins[1:], n37, color='darkred',   width = barWidth, label='PCT37')
         bar3 = plt.bar(bins[1:], n89, color='darkgreen', width = barWidth, label='PCT89')
-	#
+        #
         plt.xlabel('PCT')  
         plt.ylabel('Counts')  
         plt.legend()
         plt.grid(True)
-	#suptitle
+        #suptitle
         if icois_NR[icois] == options['icoi_PHAIL'][0]:
             plt.suptitle('icoi Nr. '+str(icois_NR[icois])  +', Phail: '+str(options['phail']) ) 
 
         else:
             plt.suptitle('icoi Nr. '+str(icois_NR[icois])) 
-	
-	MIN19PCT.append(np.nanmin(contour_pct19))
+        #
+        MIN19PCT.append(np.nanmin(contour_pct19))
         MIN37PCT.append(np.nanmin(contour_pct37))
         MIN89PCT.append(np.nanmin(contour_pct89))
-	
-	
+
     fig = plt.figure(figsize=(8,3)) 
     linestyle_coi = ['solid','dotted','dashed','loosely dashed']
     for icois in range(HIDs_coi_zgrid.shape[1]):
@@ -2699,26 +2697,13 @@ def CalcandPlot_HID_fraction(HIDs_coi_zgrid, icois_NR, grided_point_z, options):
     plt.text(120,0.1,'MIN85PCT', color='darkgreen',bbox=dict(boxstyle="square,pad=0.3",fc='None'))
 
     for icois in range(HIDs_coi_zgrid.shape[1]):
-		plt.axvline(x=MIN19PCT[icois],color='darkblue',linestyle=linestyle_coi[icois])
-		plt.axvline(x=MIN37PCT[icois],color='darkred',linestyle=linestyle_coi[icois])
-		plt.axvline(x=MIN89PCT[icois],color='darkgreen',linestyle=linestyle_coi[icois])
-plt.xlabel('PCT (K)')
-plt.ylim([0,1])
-plt.xlim([100, 280])
+        plt.axvline(x=MIN19PCT[icois],color='darkblue',linestyle=linestyle_coi[icois])
+        plt.axvline(x=MIN37PCT[icois],color='darkred',linestyle=linestyle_coi[icois])
+        plt.axvline(x=MIN89PCT[icois],color='darkgreen',linestyle=linestyle_coi[icois])
+    plt.xlabel('PCT (K)')
+    plt.ylim([0,1])
+    plt.xlim([100, 280])
 
-
-
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
     return
 
 #----------------------------------------------------------------------------------------------
@@ -4653,7 +4638,7 @@ make_scatterplots_sector1_with3Dvalue('GATES_PHAIL', 'GATES_PHAIL','GATES_NOPHAI
 
 
 
-
+dsds
 
 
 
