@@ -247,7 +247,134 @@ def get_contour_info(contorno, icois, datapts_in):
     return iinds
 
 #----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+def points_in_polygon(pts, polygon):
+    """
+    Returns if the points are inside the given polygon,
+
+    Implemented with angle accumulation.
+    see: https://en.wikipedia.org/wiki/Point_in_polygon#Winding_number_algorithm
+
+    :param np.ndarray pts: 2d points
+    :param np.ndarray polygon: 2d polygon
+    :return: Returns if the points are inside the given polygon, array[i] == True means pts[i] is inside the polygon.
+    """
+    polygon = np.vstack((polygon, polygon[0, :]))  # close the polygon (if already closed shouldn't hurt)
+    sum_angles = np.zeros([len(pts), ])
+    for i in range(len(polygon) - 1):
+        v1 = polygon[i, :] - pts
+        norm_v1 = np.linalg.norm(v1, axis=1, keepdims=True)
+        norm_v1[norm_v1 == 0.0] = 1.0  # prevent divide-by-zero nans
+        v1 = v1 / norm_v1
+        v2 = polygon[i + 1, :] - pts
+        norm_v2 = np.linalg.norm(v2, axis=1, keepdims=True)
+        norm_v2[norm_v2 == 0.0] = 1.0  # prevent divide-by-zero nans
+        v2 = v2 / norm_v2
+        dot_prods = np.sum(v1 * v2, axis=1)
+        cross_prods = np.cross(v1, v2)
+        angs = np.arccos(np.clip(dot_prods, -1, 1))
+        angs = np.sign(cross_prods) * angs
+        sum_angles += angs
+
+    sum_degrees = np.rad2deg(sum_angles)
+    # In most cases abs(sum_degrees) should be close to 360 (inside) or to 0 (outside).
+    # However, in end cases, points that are on the polygon can be less than 360, so I allow a generous margin..
+    return abs(sum_degrees) > 90.0
+
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+#https://stackoverflow.com/questions/70701788/find-points-that-lie-in-a-concave-hull-of-a-point-cloud
+#---------------------------------------------------------------------------------------------
+def get_contour_info_IMPROVED(contorno, icois, datapts_in): 
+
+    # Get verticies: 
+    for item in contorno.collections:
+        for i in item.get_paths():
+            v = i.vertices
+            x = v[:, 0]
+            y = v[:, 1] 
+
+    # Get vertices of these polygon type shapes
+    for ii in range(len(icois)): 
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno.collections[0].get_paths()[int(icois[ii])].vertices)): 
+            X1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0])
+            Y1.append(contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1])
+            vertices.append([contorno.collections[0].get_paths()[icois[ii]].vertices[ik][0], 
+                                        contorno.collections[0].get_paths()[icois[ii]].vertices[ik][1]])
+	
+        array_points = np.array(vertices)
+        cond = points_in_polygon(datapts_in, array_points)
+        
+        if ii == 0:
+            inds_1   = points_in_polygon(datapts_in, array_points)
+            iinds    = [inds_1]
+       	if ii == 1:
+            inds_2   = points_in_polygon(datapts_in, array_points)
+            iinds    = [inds_1, inds_2]
+        if ii == 2:
+            inds_3   = points_in_polygon(datapts_in, array_points)
+            iinds    = [inds_1, inds_2, inds_3]
+        if ii == 3:
+            inds_4   = points_in_polygon(datapts_in, array_points)
+            iinds    = [inds_1, inds_2, inds_3, inds_4]   
+
+    return iinds
+
+#----------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------
+def circ_radius(p0,p1,p2):
+    """
+    Vectorized computation of triangle circumscribing radii.
+    See for example https://www.cuemath.com/jee/circumcircle-formulae-trigonometry/
+    """
+    a = p1-p0
+    b = p2-p0
+
+    norm_a = np.linalg.norm(a, axis=1)
+    norm_b = np.linalg.norm(b, axis=1)
+    norm_a_b = np.linalg.norm(a-b, axis=1)
+    cross_a_b = np.cross(a,b)  # 2 * area of triangles
+    return (norm_a*norm_b*norm_a_b) / np.abs(2.0*cross_a_b)
+
+#----------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------
+def alpha_shape_delaunay_mask(points, alpha):
+    """
+    Compute the alpha shape (concave hull) of a set of points and return the Delaunay triangulation and a boolean
+    mask for any triangle in the triangulation whether it belongs to the alpha shape.
+    :param points: np.array of shape (n,2) points.
+    :param alpha: alpha value.
+    :return: Delaunay triangulation dt and boolean array is_in_shape, so that dt.simplices[is_in_alpha] contains
+    only the triangles that belong to the alpha shape.
+    """
+    # Modified and vectorized from:
+    # https://stackoverflow.com/questions/50549128/boundary-enclosing-a-given-set-of-points/50714300#50714300
+
+    assert points.shape[0] > 3, "Need at least four points"
+    dt = Delaunay(points)
+
+    p0 = points[dt.simplices[:,0],:]
+    p1 = points[dt.simplices[:,1],:]
+    p2 = points[dt.simplices[:,2],:]
+
+    rads = circ_radius(p0, p1, p2)
+
+    is_in_shape = (rads < alpha)
+
+    return dt, is_in_shape
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------    
+def in_alpha_shape(p, dt, is_in_alpha):
+    simplex_ids = dt.find_simplex(p)
+    res = np.full(p.shape[0], False)
+    res[simplex_ids >= 0] = is_in_alpha[simplex_ids[simplex_ids >= 0]]  # simplex should be in dt _and_ in alpha
+    return res
+#----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------     
+
 def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
 
     if options['radar_name'] == 'RMA1':
@@ -476,7 +603,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
 	
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
-    TB_inds = get_contour_info(contorno89, icoi, datapts)	
+    TB_inds = get_contour_info_IMPROVED(contorno89, icoi, datapts) #get_contour_info(contorno89, icoi, datapts)	
     for ii in range(len(icoi)): 
     
         if ii==0:
@@ -2282,7 +2409,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
     datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
     #--------------------------------------------------------------------------------------
-    TB_inds = get_contour_info(contorno89, icois, datapts)
+    TB_inds = get_contour_info_IMPROVED(contorno89, icois, datapts)  #get_contour_info(contorno89, icois, datapts)
     RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
     # tambien me va a interesar el grillado a diferentes resoluciones 
     # y usando contornos de DBZ sumados? en vez del contorno de sarah.
@@ -2755,7 +2882,9 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
         mask[:] = False
         PHIORIG.mask = mask
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
-        
+		
+
+	
     plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
 
    
