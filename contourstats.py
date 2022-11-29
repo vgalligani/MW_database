@@ -2890,7 +2890,7 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
    
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
     # ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, gmi_dir+options['gfile'])
-    [ check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev, zgrid_alt] = dewf(options, radar, icois, gmi_dir+options['gfile'])
+    [ check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev, zgrid_alt] = plot_icois_HIDinfo(options, radar, icois, gmi_dir+options['gfile'])
 	
     gc.collect()
 
