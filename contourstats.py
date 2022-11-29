@@ -2468,7 +2468,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         radarTH = radar.fields[THNAME]['data'][start_index:end_index]
 
         datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
-        RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
+        RN_inds_parallax =  get_contour_info_IMPROVED(contorno89_FIX, icois, datapts_RADAR_NATIVE)  #get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
         fig = plt.figure(figsize=(20,7)) 
         plt.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
         #for ic in range(len(icois)):
@@ -2596,7 +2596,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     check_resolz  = grided.point_y['data'][0,1,0]-grided.point_y['data'][0,0,0]
     #
     datapts_RADAR_GRID = np.column_stack(( np.ravel(grided.point_longitude['data'][0,:,:]),np.ravel(grided.point_latitude['data'][0,:,:]) ))
-    RNgrid_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_GRID)		  
+    RNgrid_inds_parallax = get_contour_info_IMPROVED(contorno89_FIX, icois, datapts_RADAR_GRID) #get_contour_info(contorno89_FIX, icois, datapts_RADAR_GRID)		  
     gc.collect()
     #HIDs_coi_zgrid = np.zeros((len(PlotGRIDlevels), len(RNgrid_inds_parallax), 10)); HIDs_coi_zgrid[:]=np.nan
     #------------------------------------------------------	
@@ -2890,7 +2890,7 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
    
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
     # ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL] = plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, gmi_dir+options['gfile'])
-    [ check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev, zgrid_alt] = plot_icois_HIDinfo(options, radar, icois, gmi_dir+options['gfile'])
+    [ check_resolxy, check_resolz, HIDs_coi_zgrid, HIDs_coi_nlev, zgrid_alt] = dewf(options, radar, icois, gmi_dir+options['gfile'])
 	
     gc.collect()
 
