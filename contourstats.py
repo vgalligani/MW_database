@@ -2581,8 +2581,9 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.legend()
         plt.title('HID for nsweep Nr. ' + str(nlev))
         plt.grid(True)
-        plt.close()
+        
         fig.savefig(options['fig_dir']+'RHIs_BARPLOT_nlev_'+str(nlev)+'contours.png', dpi=300, transparent=False)  
+	plt.close()
 
     # Ahora con la grid for nlev = 0km, 1km, 2km, 5km, 8km, 10km
     PlotGRIDlevels = [0, 2, 4, 10, 16, 20] 
@@ -2679,8 +2680,9 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
         plt.legend()
         plt.title('HID for gridded radar at ' + str(alt_z[nlev])+' km')
         plt.grid(True)
-        plt.close()
-        fig.savefig(options['fig_dir']+'RHIs_BARPLOT_gridded_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
+	fig.savefig(options['fig_dir']+'RHIs_BARPLOT_gridded_'+str(alt_z[nlev])+'km_contours.png', dpi=300, transparent=False) 	
+        #plt.close()
+        
 	
 	
     # ----------------------------------------------------------------- 
@@ -2881,7 +2883,12 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
         mask = radar.fields['PHIDP']['data'].data.copy()    
         mask[:] = False
         PHIORIG.mask = mask
-        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+
+    if options['radar_name'] == 'DOW7':
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
 		
 
 	
@@ -3297,6 +3304,30 @@ def main_20180208():
 
 def main_DOW7_20181214():
 	
+    files_list = ['cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc',
+		  'cfrad.20181214_022019_DOW7low_v176_s02_el1.98_SUR.nc',
+		  'cfrad.20181214_022031_DOW7low_v176_s03_el3.97_SUR.nc',
+		  'cfrad.20181214_022043_DOW7low_v176_s04_el5.98_SUR.nc',
+		  'cfrad.20181214_022055_DOW7low_v176_s05_el7.98_SUR.nc',
+		  'cfrad.20181214_022106_DOW7low_v176_s06_el9.98_SUR.nc',
+		  'cfrad.20181214_022118_DOW7low_v176_s07_el11.98_SUR.nc',
+		  'cfrad.20181214_022130_DOW7low_v176_s08_el13.99_SUR.nc',
+		  'cfrad.20181214_022142_DOW7low_v176_s09_el15.97_SUR.nc',
+		  'cfrad.20181214_022154_DOW7low_v176_s10_el17.97_SUR.nc',
+		  'cfrad.20181214_022206_DOW7low_v176_s11_el19.98_SUR.nc',	  
+		  'cfrad.20181214_022218_DOW7low_v176_s12_el21.98_SUR.nc',
+		  'cfrad.20181214_022230_DOW7low_v176_s13_el23.99_SUR.nc',
+		  'cfrad.20181214_022241_DOW7low_v176_s14_el25.98_SUR.nc',	  
+		  'cfrad.20181214_022253_DOW7low_v176_s15_el27.98_SUR.nc',
+		  'cfrad.20181214_022305_DOW7low_v176_s16_el29.98_SUR.nc',
+		  'cfrad.20181214_022317_DOW7low_v176_s17_el31.98_SUR.nc',
+		  'cfrad.20181214_022329_DOW7low_v176_s18_el33.98_SUR.nc',	    
+		  'cfrad.20181214_022341_DOW7low_v176_s19_el36.98_SUR.nc',
+		  'cfrad.20181214_022353_DOW7low_v176_s20_el40.97_SUR.nc',
+		  'cfrad.20181214_022405_DOW7low_v176_s21_el44.98_SUR.nc',
+		  'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']	
+		
+	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
     lon_pfs  = [-63.11] # [-61.40] [-59.65]
@@ -3321,7 +3352,7 @@ def main_DOW7_20181214():
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	     'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
-	   'icoi_PHAIL': [15]}
+	   'icoi_PHAIL': [15], 'files_list':files_list}
     icois_input  = [15] 
 		
     [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
