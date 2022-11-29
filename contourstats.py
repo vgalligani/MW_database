@@ -1938,7 +1938,7 @@ def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfie
         dzv_  = radar.fields['TV']['data'].copy()
     elif 'DBZHCC' in radar.fields.keys():
         dzh_  = radar.fields['DBZHCC']['data'].copy()
-        dzv_  = radar.fields['DBZVCC']['data'].copy()
+        #dzv_  = radar.fields['DBZVCC']['data'].copy()
         dZDR  = radar.fields['ZDRC']['data'].copy()
     drho_ = radar.fields['RHOHV']['data'].copy()
     dkdp_ = radar.fields['KDP']['data'].copy()
@@ -1955,7 +1955,7 @@ def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfie
         for j in range(nj):
             if (rho_h[j]<0.7) or (zh_h[j]<30):
                 dzh_[i,j]  = np.nan
-                dzv_[i,j]  = np.nan
+                #dzv_[i,j]  = np.nan
                 drho_[i,j]  = np.nan
                 dkdp_[i,j]  = np.nan
 
