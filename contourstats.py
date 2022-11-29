@@ -1944,7 +1944,7 @@ def DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfie
     dkdp_ = radar.fields['KDP']['data'].copy()
 
     # ESTO DE ACA ABAJO PROBADO PARA RMA3:  
-    dkdp_[np.where(drho_.data==radar.fields['RHOHV']['data'].fill_value)] = np.nan
+    # dkdp_[np.where(drho_.data==radar.fields['RHOHV']['data'].fill_value)] = np.nan
 
     # Filters
     ni = dzh_.shape[0]
