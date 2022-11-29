@@ -2410,7 +2410,7 @@ def plot_icois_HIDinfo(options, radar, icois, fname):
     datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
     #--------------------------------------------------------------------------------------
     TB_inds = get_contour_info_IMPROVED(contorno89, icois, datapts)  #get_contour_info(contorno89, icois, datapts)
-    RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
+    RN_inds_parallax = get_contour_info_IMPROVED(contorno89_FIX, icois, datapts_RADAR_NATIVE) #get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)	
     # tambien me va a interesar el grillado a diferentes resoluciones 
     # y usando contornos de DBZ sumados? en vez del contorno de sarah.
     #--------------------------------------------------------------------------------------	
