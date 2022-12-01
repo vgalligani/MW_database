@@ -1,0 +1,93 @@
+#DEFINITIONS:  -*-sh-*-
+
+Arts2 {
+
+# Some special variables
+# ---    
+ArrayOfArrayOfIndexCreate( met_mm_available_accuracies )
+ArrayOfIndexCreate( freq_number_tmp )
+
+VectorCreate( freq_spacing_tmp )
+
+VectorCreate( met_mm_freq_spacing )
+
+ArrayOfIndexCreate(channels)
+
+ArrayOfIndexCreate( met_mm_freq_number )
+ReadXML( met_mm_freq_number, "met_mm_freq_number.xml" )
+
+
+# Sensor response setup
+# ---
+MatrixSet(
+        met_mm_backend,
+        # all frequencies are in Hz 
+        # CenterFreq, Offset1, Offset2, Bandwidth; #ARTS channel index
+        #                                             (Instrument channel)
+        [
+         10.650e9,     0.0e9, 0.,  100.00e6 ;     #1 (H1) V,H
+         18.700e9,     0.0e9, 0.,  200.00e6 ;     #2 (H2) V,H
+         23.800e9,     0.0e9, 0.,  400.00e6 ;     #3 (H3) V
+         36.500e9,     0.0e9, 0.,  1000.00e6 ;    #4 (H4) V,H
+         89.000e9,     0.0e9, 0.,  6000.00e6 ;    #5 (H5) V,H
+         166.00e9,     0.0e9, 0.,  4000.00e6 ;    #6 (H6) V,H
+         183.310e9,    3.00e9,  0.,  2000.00e6 ;    #7 (H7)  V
+         183.310e9,    7.00e9,  0.,  2000.00e6     #8 (H8)  V
+        ] )
+
+ArrayOfStringSet(
+        met_mm_polarisation,
+        [
+        "V,H",  #0 (H1)
+        "V,H",  #1 (H2)
+        "V",    #2 (H3)
+        "V,H",  #3 (H4)
+        "v,H",  #4 (H5)
+        "V,H",  #5 (H6)
+        "V,",   #6 (H7)
+        "V,"    #7 (H8)
+        ]) 
+
+#ArrayOfIndexSet(
+#        met_mm_freq_number,
+#        [
+#        12, #0 (H1)
+#        12, #1 (H2)
+#        12, #2 (H3)
+#        12, #3 (H4)
+#        12  #4 (H5)
+#        ] )
+
+VectorSetConstant( met_mm_freq_spacing, 8, 10e9 )
+
+# Antenna is not supported for now
+VectorSet( met_mm_antenna, [] )
+
+
+
+# Set up f_grid and sensor_response
+# ---
+
+# We use all channels
+ArrayOfIndexSet(channels, [-1])
+
+
+Select( met_mm_polarisation, met_mm_polarisation, channels )
+Select( met_mm_freq_number,  met_mm_freq_number,  channels )
+Select( met_mm_freq_spacing, met_mm_freq_spacing, channels )
+
+f_gridMetMM( freq_spacing = met_mm_freq_spacing,
+              freq_number = met_mm_freq_number )
+
+sensor_responseMetMM
+
+#Print(f_grid,0)
+WriteXML( "ascii", f_backend,  "gmi_f_backend.xml" )
+WriteXML( "ascii", f_grid,  "gmi_F_grid.xml" )
+WriteXML( "ascii", channel2fgrid_indexes,  "gmi_channel2fgrid_indexes.xml" )
+WriteXML( "ascii", channel2fgrid_weights,  "gmi_channel2fgrid_weights.xml" )
+
+WriteXML( "ascii", sensor_response_dlos,  "sensor_response_dlos.xml" )
+WriteXML( "ascii", sensor_response_dlos_grid,  "sensor_response_dlos_grid.xml" )
+
+}
