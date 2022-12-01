@@ -1,0 +1,71 @@
+#DEFINITIONS:  -*-sh-*-
+
+Arts2 {
+
+INCLUDE "cfile_common.arts"
+
+INCLUDE "instrument.arts"
+
+cloudboxOff
+
+# Check data
+#
+abs_xsec_agenda_checkedCalc
+lbl_checkedCalc                          # !!!
+propmat_clearsky_agenda_checkedCalc
+atmfields_checkedCalc
+atmgeom_checkedCalc
+sensor_checkedCalc
+cloudbox_checkedCalc
+
+# Calculate and save
+#
+yCalc
+WriteXML( "ascii", y,  "y.xml" )
+WriteXML( "ascii", y_geo,  "y_geo.xml" )
+
+# Towards transmission
+#
+AgendaSet(iy_transmitter_agenda){
+   Ignore( rtp_pos )
+   Ignore( rtp_los )
+   MatrixUnitIntensity( iy, stokes_dim, f_grid )
+}
+
+AgendaSet(iy_main_agenda){
+   Ignore( iy_id )
+   Ignore( iy_unit )
+   ppathCalc( cloudbox_on=0 )
+   iyTransmissionStandard
+   WriteXML( "ascii", ppvar_p,  "ppvar_p.xml" )
+   WriteXML( "ascii", ppvar_t,  "ppvar_t.xml" )
+   WriteXML( "ascii", ppvar_vmr,"ppvar_vmr.xml" )
+   WriteXML( "ascii", ppvar_pnd,"ppvar_pnd.xml" )
+   WriteXML( "ascii", ppvar_trans_cumulat, "ppvar_trans_cumulat.xml" )
+}
+
+# 
+VectorExtractFromMatrix( 	rte_pos, sensor_pos,0,"column")  # 0 or 1 ?
+
+# Sensor_mhs requires sensor_los to 180. That is why we use the los
+#VectorExtractFromMatrix(        rte_los, sensor_los,0,"column") 
+MatrixCreate( 	los )
+ReadXML(        los, "los.xml" )
+VectorExtractFromMatrix(        rte_los, los,0,"column")
+
+VectorSet( rte_pos2, [] )
+
+#Print(rte_pos,0)
+#Print(rte_los,0)
+
+
+iyCalc
+WriteXML( "ascii", iy,  "iy.xml" )
+WriteXML( "ascii", iy_aux,  "iy_aux.xml" )
+WriteXML( "ascii", ppath,  "ppath.xml" )
+
+ReadXML(ppvar_trans_cumulat, "ppvar_trans_cumulat.xml" )
+ppvar_optical_depthFromPpvar_trans_cumulat(     ppvar_optical_depth, ppvar_trans_cumulat )
+
+WriteXML("ascii", ppvar_optical_depth,  "ppvar_optical_depth.xml")
+}
