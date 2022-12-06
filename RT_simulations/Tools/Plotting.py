@@ -5,6 +5,8 @@ import scipy.io
 
 # Definitions
 #
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 def FullData(fmat):
     """
     -------------------------------------------------------------
@@ -26,7 +28,8 @@ def FullData(fmat):
         dset[k] = dataset[k]
     return dset
   
-
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 def Plot_exp(dset1, dset2):  #,ititle,name,path):
     """
     -------------------------------------------------------------
@@ -69,7 +72,8 @@ def Plot_exp(dset1, dset2):  #,ititle,name,path):
     return
  
 
-
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 def Plot_exp_GRAUPEL(dd, dset1, dset2, dset3):  #,ititle,name,path):
     """
     -------------------------------------------------------------
@@ -131,6 +135,66 @@ def Plot_exp_GRAUPEL(dd, dset1, dset2, dset3):  #,ititle,name,path):
 
    
     return
+
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+def Plot_exp_RainGrau(dd, dset1, dset2, dset3):  #,ititle,name,path):
+    """
+    -------------------------------------------------------------
+    Experiment comparison "internal":
+    -------------------------------------------------------------
+    OUT    name.png   Plot stored at the given path
+    IN     d1         ARTS outputs
+           ititle     Title of figure
+           name       Name to store the figure
+           path       Path to store the figure
+    -------------------------------------------------------------
+    """
+    
+    f_grid = dd['D']['f_grid'][0][0][0][0][0][0]/1e9
+                 
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    fig = plt.figure(figsize=(9,6))    
+    
+    # EXPA
+    plt.plot(f_grid, dset1[0],linewidth=1,color='darkblue', label = '8-ColAgg')
+    plt.plot(f_grid, dset1[1],linewidth=1,color='darkred', label = 'EvansAgg')
+    plt.plot(f_grid, dset1[2],linewidth=1,color='red', label = 'LargeBlockAgg')
+
+    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP A')
+    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP B', linestyle='--')
+    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP C', linestyle=':')
+    plt.legend()
+    
+    # EXPB
+    plt.plot(f_grid, dset2[0],linewidth=1,color='darkblue', label = '8-ColAgg', linestyle='--')
+    plt.plot(f_grid, dset2[1],linewidth=1,color='darkred', label = 'EvansAgg', linestyle='--')
+    plt.plot(f_grid, dset2[2],linewidth=1,color='red', label = 'LargeBlockAgg', linestyle='--')
+    
+    # EXPC 
+    plt.plot(f_grid, dset3[0],linewidth=1,color='darkblue', label = '8-ColAgg', linestyle=':')
+    plt.plot(f_grid, dset3[1],linewidth=1,color='darkred', label = 'EvansAgg', linestyle=':')
+    plt.plot(f_grid, dset3[2],linewidth=1,color='red', label = 'LargeBlockAgg', linestyle=':')
+    
+    plt.title( 'Cloud Scenarios (Graupel-only)', fontsize='12', fontweight='bold')
+    plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+    plt.xlabel(r'Frequency [GHz]', color='k')
+    plt.grid('true')
+    plt.axvline(x=10 ,ls='-',color='k')
+    plt.axvline(x=19 ,ls='-',color='k')
+    plt.axvline(x=22 ,ls='-',color='k')
+    plt.axvline(x=37 ,ls='-',color='k')
+    plt.axvline(x=85 ,ls='-',color='k')
+    plt.axvline(x=166 ,ls='-',color='k')
+    plt.xlim([0,175])
+
+   
+    return
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+
+
+
 
 
 #------------------------------------------------------------------------------------------
@@ -213,7 +277,68 @@ plt.grid('true')
 plt.legend()
 plt.ylim([0,20])
 
+#------------------------------------------------------------------------------------------
+# HR + GRAU 
+#------------------------------------------------------------------------------------------
+graupels_folder = ['8-ColumnAggregate', 'EvansSnowAggregate', 
+                  'LargeBlockAggregate'] 
 
+tbs_exp1     = []
+expA_wc_rain = []
+expA_wc_grau = []
+
+tbs_exp2     = []
+expB_wc_rain = []
+expB_wc_grau = []
+
+tbs_exp3     = []
+expC_wc_rain = []
+expC_wc_grau = []
+
+for i_habits in graupels_folder: 
+    f_arts    = main_dir + 'HRG_ssd_EXPa' + i_habits + '/GMI_Fascod_HRG_ssd_EXPa'+ i_habits + '.mat'
+    arts_exp  = FullData(f_arts)
+    tbs_exp1.append( arts_exp['arts_tb'][0,:]-arts_exp['arts_cl'][0,:]) 
+    expA_wc_rain.append( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0,:])
+    expA_wc_grau.append( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][1,:])
+
+    f_arts    = main_dir + 'HRG_ssd_EXPb' + i_habits + '/GMI_Fascod_HRG_ssd_EXPb'+ i_habits + '.mat'
+    arts_exp  = FullData(f_arts)
+    tbs_exp2.append( arts_exp['arts_tb'][0,:]-arts_exp['arts_cl'][0,:]) 
+    expB_wc_rain.append( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0,:])
+    expB_wc_grau.append( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][1,:])
+
+    f_arts    = main_dir + 'HRG_ssd_EXPc' + i_habits + '/GMI_Fascod_HRG_ssd_EXPc'+ i_habits + '.mat'
+    arts_exp  = FullData(f_arts)
+    tbs_exp3.append( arts_exp['arts_tb'][0,:]-arts_exp['arts_cl'][0,:]) 
+    expC_wc_rain.append( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0,:])
+    expC_wc_grau.append( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][1,:])
+z_field = arts_exp['D']['z_field'][0][0][0][0][0] / 1e3
+
+Plot_exp_RainGrau(arts_exp, tbs_exp1, tbs_exp2, tbs_exp3 )
+
+plt.matplotlib.rc('font', family='serif', size = 12)
+fig = plt.figure(figsize=(9,6))    
+plt.plot( expA_wc_rain[0], z_field, linewidth=1,color='darkblue', label = 'rain', linestyle='-')
+plt.plot( expA_wc_grau[0], z_field, linewidth=1,color=',magenta', label = 'grau', linestyle='-')
+
+plt.plot( np.nan, np.nan, linewidth=1, color='k', label = 'rain', linestyle='-')
+plt.plot( np.nan, np.nan, linewidth=1, color='k', label = 'rain', linestyle='-')
+
+plt.legend()
+
+
+plt.plot( expB_wc_rain[0], z_field, linewidth=1,color='darkblue', label = 'rain', linestyle='--')
+plt.plot( expB_wc_grau[0], z_field, linewidth=1,color=',magenta', label = 'grau', linestyle='--')
+
+plt.plot( expC_wc_rain[0], z_field, linewidth=1,color='darkblue', label = 'rain', linestyle=':')
+plt.plot( expC_wc_grau[0], z_field, linewidth=1,color=',magenta', label = 'grau', linestyle=':')
+
+plt.title( 'Cloud Scenarios (HR+GRAU)', fontsize='12', fontweight='bold')
+plt.ylabel(r'Height [km]', color='k')
+plt.xlabel(r'mass content [g/m3]', color='k')
+plt.grid('true')
+plt.ylim([0,20])
 
 
 
