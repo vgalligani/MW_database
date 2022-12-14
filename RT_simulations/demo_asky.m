@@ -62,11 +62,12 @@ D.particle_bulkprop_field.group = 'Tensor4';
 %
 %D = PlotCloudScenarios(D,ifac);
 [D] = CloudScenario(D,flag,hail_shape);
+xmlStore(paths.hwc_psd, D.particle_bulkprop_field.data, 'Matrix');
 
-A{1}.data      = D.particle_bulkprop_field.data(1,:)';
-A{1}.grids     = {D.p_grid.data, [0], [0]};
-A{1}.gridnames = {'Pressure',  'Latitude',  'Longitude'};
-xmlStore(paths.hwc_psd, A, 'ArrayOfGriddedField3');
+%A{1}.data      = D.particle_bulkprop_field.data(1,:)';
+%A{1}.grids     = {D.p_grid.data, [0], [0]};
+%A{1}.gridnames = {'Pressure',  'Latitude',  'Longitude'};
+%xmlStore(paths.hwc_psd, A, 'ArrayOfGriddedField3');
 
 %- Run calculations
 %
