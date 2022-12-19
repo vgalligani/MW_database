@@ -1253,7 +1253,7 @@ def plot_scatter_4icois(options, radar, icois, fname):
 #------------------------------------------------------------------------------
 def GET_TBVH_4icois(options, icois, fname):
 
-	
+	home_dir = '/home/victoria.galligani/'  	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
