@@ -14,11 +14,11 @@
 %
 %       Graupel_Species: test: GemGraupel, IconGraupel, SphericalGraupel
 %       clear_only  Flag for clear- (1) or all-sky (0) simulations.
-%
+% 
 % 19.03.2020 Vasileios Barlakas and Patrick Eriksson
 % 01.01.2022 Adapted Vito Galligani
 %
-function test_gmi(flag, clear_only, graupel_SSD, hail_shape)
+function [arts_tb, arts_cl] = test_gmi(flag, clear_only, graupel_SSD, hail_shape)
 
 %addpath('/home/victoria.galligani/Work/Matlab/arts-sspdb-interface-main/DataInterfaces/Matlab/')
 %addpath('/home/victoria.galligani/Work/Data/SSD/')
@@ -33,7 +33,7 @@ zenith       = 180-53;
 
 %- reflectivity and size of the main output for GMI
 %- channels = 8
-nchan = length([1:1:90]); %6
+nchan = length([10:1:170]); %6    [10:1:170]*1e9
 nfreq = 1;
 %- 400 is the maximun vertical dimension according to rt4
 
@@ -85,4 +85,3 @@ end
 save(sprintf('%s',paths.mfolder,'/GMI_Fascod_',flag_name, '.mat'))
 
 end
-
