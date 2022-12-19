@@ -1254,7 +1254,7 @@ def plot_scatter_4icois(options, radar, icois, fname):
 #------------------------------------------------------------------------------
 def GET_TBVH_4icois(options, icois, fname):
 
-	home_dir = '/home/victoria.galligani/'  	
+    home_dir = '/home/victoria.galligani/'  	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
@@ -1342,10 +1342,9 @@ def GET_TBVH_4icois(options, icois, fname):
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
         axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [250] , colors=(['r']), linewidths=1.5);
-        contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [200], colors=(['k']), linewidths=1.5);
+        contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [250], colors=(['k']), linewidths=1.5);
         axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
-        plt.close()
 
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
     ##datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
@@ -1355,10 +1354,7 @@ def GET_TBVH_4icois(options, icois, fname):
     TB_inds = get_contour_info(contorno89, icois, datapts)
     # ACA, RN_inds_parallax es pixels del radar (dato original) dentro del contorno
     RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
-    # tambien me va a interesar el grillado a diferentes resoluciones 
-
-    # y usando contornos de DBZ sumados? en vez del contorno de sarah. 
-
+    # tambien me va a interesar el grillado a diferentes resoluciones 	
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
     # aca agrego V,H 
@@ -1394,8 +1390,11 @@ def GET_TBVH_4icois(options, icois, fname):
         colors_plot = ['k', 'darkblue', 'darkred', 'darkgreen']
         labels_plot = [str('icoi=')+str(icois[0]), str('icoi=')+str(icois[1]), str('icoi=')+str(icois[2]), str('icoi=')+str(icois[3])] 
 
-
-
+    #------------------------------------------------------
+    for ii in range(len(TB_inds)): 
+        plt.scatter(lon_gmi[TB_inds[ii]], lat_gmi[TB_inds[ii]], s=40, marker='*', color=colors_plot[ii], label=str(ii))
+	
+	
 
     # Shapefiles for cartopy 
     geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
