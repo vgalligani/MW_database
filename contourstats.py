@@ -524,6 +524,7 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
     ax1.add_feature(rivers)
     ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
                 edgecolor="black", facecolor='none')
+
     im = plt.scatter(S1_sub_lon, S1_sub_lat, c=S1_sub_tb[:,:,5], s=s_sizes, marker='h', vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
     #im = plt.pcolormesh(xx, yy, BT37, vmin=50, vmax=300, cmap=cmaps['turbo_r'])    
     plt.title('BT 37 GHz')
@@ -1415,7 +1416,7 @@ def GET_TBVH_4icois(options, icois, fname):
 
     cmaps = GMI_colormap() 
 
-
+    breakpoint()
     if test_this == 1: 
         fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,figsize=[14,12])
         fig = plt.figure(figsize=(30,10)) 
@@ -1432,7 +1433,8 @@ def GET_TBVH_4icois(options, icois, fname):
         ax1.add_feature(rivers)
         ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
                 edgecolor="black", facecolor='none')
-        im = plt.scatter(lon_gmi, lat_gmi, GMI_tbs1_19-GMI_tbs1_19H, s=s_sizes, marker='h', vmin=0, vmax=20, cmap=cmaps['turbo_r'])  
+        im  = plt.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,2]- S1_sub_tb[:,:,3] , s=450, marker='h', vmin=0, vmax=20, cmap='viridis'); plt.colorbar()
+	#im = plt.scatter(lon_gmi, lat_gmi, GMI_tbs1_19-GMI_tbs1_19H, s=s_sizes, marker='h', vmin=0, vmax=20, cmap=cmaps['turbo_r'])  
         plt.title('BT(V-H) 19  GHz')
         ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
         ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
@@ -1453,7 +1455,7 @@ def GET_TBVH_4icois(options, icois, fname):
         ax1.add_feature(rivers)
         ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
         edgecolor="black", facecolor='none')
-        im = plt.scatter(lon_gmi, lat_gmi, GMI_tbs1_37-GMI_tbs1_37H, s=s_sizes, marker='h', vmin=0, vmax=20, cmap=cmaps['turbo_r'])  
+        im  = plt.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,5]- S1_sub_tb[:,:,6] , s=450, marker='h', vmin=0, vmax=20, cmap='viridis'); plt.colorbar()
         plt.title('BT(V-H) 37  GHz')
         ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
         ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
@@ -1473,7 +1475,7 @@ def GET_TBVH_4icois(options, icois, fname):
         ax1.add_feature(rivers)
         ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
         edgecolor="black", facecolor='none')
-        im = plt.scatter(lon_gmi, lat_gmi, GMI_tbs1_85-GMI_tbs1_85H, s=s_sizes, marker='h', vmin=0, vmax=20, cmap=cmaps['turbo_r'])  
+        im  = plt.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,7]- S1_sub_tb[:,:,8] , s=450, marker='h', vmin=0, vmax=20, cmap='viridis'); plt.colorbar()
         plt.title('BT(V-H) 85  GHz')
         ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
         ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
