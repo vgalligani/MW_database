@@ -1310,8 +1310,9 @@ def GET_TBVH_4icois(options, icois, fname):
     #axes.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20])
 
     #----------------------------------------------------------------------------------------
-    # Test plot figure: General figure with Zh and the countours identified 
+    # Test plot figure: General figure with Zh and the countours identified  
     #----------------------------------------------------------------------------------------
+	# USAR CONTORNO DE 250 !!!
     test_this = 1
     if test_this == 1: 
         fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,12])
@@ -1340,7 +1341,7 @@ def GET_TBVH_4icois(options, icois, fname):
         axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
         [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
         axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-        contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [200] , colors=(['r']), linewidths=1.5);
+        contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [250] , colors=(['r']), linewidths=1.5);
         contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [200], colors=(['k']), linewidths=1.5);
         axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
@@ -1417,9 +1418,8 @@ def GET_TBVH_4icois(options, icois, fname):
     cmaps = GMI_colormap() 
 
     if test_this == 1: 
-        fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,figsize=[14,12])
         fig = plt.figure(figsize=(30,10)) 
-       	gs1 = gridspec.GridSpec(1, 3)
+       	gs1 = gridspec.GridSpec(1, 4)
 
        	ax1 = plt.subplot(gs1[0,0], projection=ccrs.PlateCarree())
 
@@ -1432,7 +1432,7 @@ def GET_TBVH_4icois(options, icois, fname):
         ax1.add_feature(rivers)
         ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
                 edgecolor="black", facecolor='none')
-        im  = plt.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,2]- S1_sub_tb[:,:,3] , s=450, marker='h', vmin=0, vmax=20, cmap='viridis'); plt.colorbar()
+        im  = ax1.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,2]- S1_sub_tb[:,:,3] , s=450, marker='h', vmin=0, vmax=20, cmap='jet'); 
 	#im = plt.scatter(lon_gmi, lat_gmi, GMI_tbs1_19-GMI_tbs1_19H, s=s_sizes, marker='h', vmin=0, vmax=20, cmap=cmaps['turbo_r'])  
         plt.title('BT(V-H) 19  GHz')
         ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
@@ -1440,55 +1440,74 @@ def GET_TBVH_4icois(options, icois, fname):
         ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
         lon_formatter = LongitudeFormatter(zero_direction_label=True)
         lat_formatter = LatitudeFormatter()
-        plt.contour(lon_gmi, lat_gmi, PCT89, [200, 225], colors=('m'), linewidths=2);
+        plt.contour(lon_gmi, lat_gmi, PCT89, [200, 250], colors=('m'), linewidths=2);
 
 
 
-       	ax1 = plt.subplot(gs1[1,0], projection=ccrs.PlateCarree())
+       	ax2 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
         crs_latlon = ccrs.PlateCarree()
-        ax1.set_extent([options['xlim_min'], options['xlim_max'], options['ylim_min'], options['ylim_max']], crs=crs_latlon)
-        ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
-        ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+        ax2.set_extent([options['xlim_min'], options['xlim_max'], options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+        ax2.coastlines(resolution='10m', color='black', linewidth=0.8)
+        ax2.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
         edgecolor="black", facecolor='none')
-        ax1.add_feature(states_provinces,linewidth=0.4)
-        ax1.add_feature(rivers)
-        ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+        ax2.add_feature(states_provinces,linewidth=0.4)
+        ax2.add_feature(rivers)
+        ax2.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
         edgecolor="black", facecolor='none')
-        im  = plt.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,5]- S1_sub_tb[:,:,6] , s=450, marker='h', vmin=0, vmax=20, cmap='viridis'); plt.colorbar()
+        im  = ax2.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,5]- S1_sub_tb[:,:,6] , s=450, marker='h', vmin=0, vmax=20, cmap='jet'); 
         plt.title('BT(V-H) 37  GHz')
-        ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
-        ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
-        ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+        ax2.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+        ax2.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
+        ax2.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
         lon_formatter = LongitudeFormatter(zero_direction_label=True)
         lat_formatter = LatitudeFormatter()
-        plt.contour(lon_gmi, lat_gmi, PCT89, [200, 225], colors=('m'), linewidths=2);
+        plt.contour(lon_gmi, lat_gmi, PCT89, [200, 250], colors=('m'), linewidths=2);
 
 
-       	ax1 = plt.subplot(gs1[2,0], projection=ccrs.PlateCarree())
+       	ax3 = plt.subplot(gs1[0,2], projection=ccrs.PlateCarree())
         crs_latlon = ccrs.PlateCarree()
-        ax1.set_extent([options['xlim_min'], options['xlim_max'], options['ylim_min'], options['ylim_max']], crs=crs_latlon)
-        ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
-        ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+        ax3.set_extent([options['xlim_min'], options['xlim_max'], options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+        ax3.coastlines(resolution='10m', color='black', linewidth=0.8)
+        ax3.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
         edgecolor="black", facecolor='none')
-        ax1.add_feature(states_provinces,linewidth=0.4)
-        ax1.add_feature(rivers)
-        ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+        ax3.add_feature(states_provinces,linewidth=0.4)
+        ax3.add_feature(rivers)
+        ax3.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
         edgecolor="black", facecolor='none')
-        im  = plt.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,7]- S1_sub_tb[:,:,8] , s=450, marker='h', vmin=0, vmax=20, cmap='viridis'); plt.colorbar()
+        im  = ax3.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,7]- S1_sub_tb[:,:,8] , s=450, marker='h', vmin=0, vmax=20, cmap='jet'); 
         plt.title('BT(V-H) 85  GHz')
-        ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
-        ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
-        ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+        ax3.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+        ax3.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
+        ax3.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
         lon_formatter = LongitudeFormatter(zero_direction_label=True)
         lat_formatter = LatitudeFormatter()
-        plt.contour(lon_gmi, lat_gmi, PCT89, [200, 225], colors=('m'), linewidths=2);
+        plt.contour(lon_gmi, lat_gmi, PCT89, [200, 250], colors=('m'), linewidths=2);
+        
+        p1 = ax1.get_position().get_points().flatten()
+        p2 = ax3.get_position().get_points().flatten()
+        ax_cbar = fig.add_axes([p1[0], 0.05, p2[2]-p1[0], 0.03])   # [left, bottom, width, height] or Bbox 
+        cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.8, ticks=np.arange(0,20,2), extend='both', orientation="horizontal", label='TBVH (K)')
 
 
 
-
-
-
-
+       	ax4 = plt.subplot(gs1[0,3], projection=ccrs.PlateCarree())
+        crs_latlon = ccrs.PlateCarree()
+        ax4.set_extent([options['xlim_min'], options['xlim_max'], options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+        ax4.coastlines(resolution='10m', color='black', linewidth=0.8)
+        ax4.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+        edgecolor="black", facecolor='none')
+        ax4.add_feature(states_provinces,linewidth=0.4)
+        ax4.add_feature(rivers)
+        ax4.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+        edgecolor="black", facecolor='none')
+        im  = ax4.scatter(S1_sub_lon, S1_sub_lat, c= S1_sub_tb[:,:,7], s=450, marker='h', vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+        plt.title('BTV 85  GHz')
+        ax4.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+        ax4.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
+        ax4.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+        lon_formatter = LongitudeFormatter(zero_direction_label=True)
+        lat_formatter = LatitudeFormatter()
+        plt.contour(lon_gmi, lat_gmi, PCT89, [200, 250], colors=('m'), linewidths=2);
 
 
 
@@ -3712,6 +3731,7 @@ def RMA5_20200815():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [7], 'radar_name':'RMA5'}
     icois_input  = [7] 
+    [GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
 
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
@@ -3757,7 +3777,11 @@ def RMA3_20190305():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL':[6], 'radar_name':'RMA3'}
     icois_input  = [6,7] 
+    [GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
 
+	
+	
+	
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
