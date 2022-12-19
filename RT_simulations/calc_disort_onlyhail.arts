@@ -1,4 +1,3 @@
-#DEFINITIONS:  -*-sh-*-
 
 Arts2 {
 
@@ -10,53 +9,14 @@ ReadXML( particle_bulkprop_field, "particle_bulkprop_field.xml" )
 
 Copy( iy_cloudbox_agenda, iy_cloudbox_agenda__QuarticInterpField ) 
 
-#--- HWC: TMATRIX: Define particle and ssd grids
-VectorCreate ( data_za_grid )
-VectorNLinSpace( data_za_grid, 19, 0, 180 )
-VectorCreate ( data_aa_grid )
-VectorNLinSpace( data_aa_grid, 19, 0, 180 )
-VectorCreate ( data_f_grid )
-VectorNLinSpace( data_f_grid, 500, 1e9, 177e9  )
-VectorCreate( data_t_grid )
-VectorSet( data_t_grid, [ 220, 250, 260] )
-complex_refr_indexIceMatzler06(
-  data_f_grid = data_f_grid,
-  data_T_grid = data_t_grid )
-StringCreate( part_shape )
-StringSet( part_shape, "spheroidal" )
-NumericCreate( part_dveq )
-NumericSet( part_dveq, 1e-2 ) # [m] 2cm ... 
-NumericCreate( part_ar )
-NumericSet( part_ar, 1. )
-NumericCreate( part_mass )
-NumericSet( part_mass, 4.79e-4 ) # 1cm /// [kg]; m = Pi/6. * dveq^3 * density_ice
-#NumericSet( part_mass, 0.0038 ) # 2cm /// [kg]; m = Pi/6. * dveq^3 * density_ice
-
 #---
 ArrayOfScatteringMetaDataCreate( scat_meta_1habit )
 ArrayOfSingleScatteringDataCreate( scat_data_1habit )
 StringCreate( species_id_string )
 
-#--- TMatrix calculation: 
-scat_data_singleTmatrix(
-   shape               = part_shape,
-   diameter_volume_equ = part_dveq,
-   aspect_ratio        = part_ar,
-   mass                = part_mass,
-   ptype               = "totally_random",
-   data_f_grid         = data_f_grid,
-   data_t_grid         = data_t_grid,
-   data_za_grid        = data_za_grid,
-   data_aa_grid        = data_aa_grid,
-)
-
-# Write data to file. And read from file (making sure, format is ok).
-# WriteXML( "ascii", scat_data_single, "TestTMatrix.scat_data_single_hail.xml" )
-# WriteXML( "ascii", scat_meta_single, "TestTMatrix.scat_meta_single_hail.xml" )
-
 ######
-# ReadXML( scat_data_single, "TestTMatrix.scat_data_single_hail.xml" )
-# ReadXML( scat_meta_single, "TestTMatrix.scat_meta_single_hail.xml" )
+ReadXML( scat_data_single, "TestTMatrix.scat_data_single_hail.xml" )
+ReadXML( scat_meta_single, "TestTMatrix.scat_meta_single_hail.xml" )
 
 #--- Set up scattering data
 Append(scat_data_1habit, scat_data_single)
@@ -75,23 +35,22 @@ ArrayOfStringSet( dpnd_data_dx_names, [ "HWC" ] )
 StringSet( species_id_string, "HWC" )
 
 # The input data in pnd_agenda_input shall be number densities, in unit of [#/m3].
-ReadXML( pnd_agenda_input, "hail_pnddata.xml" )   
+#ReadXML( pnd_agenda_input, "hail_pnddata.xml" )   
 
-ArrayOfAgendaAppend( pnd_agenda_array ){
-  VectorSet(pnd_size_grid, [1e-2,1.1e-2])
-  VectorSet(psd_size_grid, [1e-2,1.1e-2])
-  psdMonoDispersive(psd_data, dpsd_data_dx, pnd_agenda_input_t, pnd_agenda_input, 
-	pnd_agenda_input_names, dpnd_data_dx_names, scat_meta, agenda_array_index, 220, 260) 
-  pndFromPsdBasic
-}
+#ArrayOfAgendaAppend( pnd_agenda_array ){
+#  VectorSet(pnd_size_grid, [1e-2,1.1e-2])
+#  VectorSet(psd_size_grid, [1e-2,1.1e-2])
+#  psdMonoDispersive(psd_data, dpsd_data_dx, pnd_agenda_input_t, pnd_agenda_input, 
+#	pnd_agenda_input_names, dpnd_data_dx_names, scat_meta, agenda_array_index, 220, 260) 
+#  }
 Append( scat_species, species_id_string )
 Append( pnd_agenda_array_input_names, pnd_agenda_input_names )
 
 #
-#cloudboxSetFullAtm
-cloudboxSetManuallyAltitude( z1=-2e3, z2=25e3, lat1=-0, lat2=0, lon1=-0, lon2=0 )
-pnd_fieldCalcFromParticleBulkProps 
-#ReadXML( pnd_field, "hail_pnddata.xml" )
+cloudboxSetManuallyAltitude( z1=-9e3, z2=20e3, lat1=-0, lat2=0, lon1=-0, lon2=0 )
+cloudboxSetFullAtm
+#pnd_fieldCalcFromParticleBulkProps 
+ReadXML( pnd_field, "hail_pnddata.xml" )
 
 WriteXML( "ascii", cloudbox_limits,  "cloudbox_limits.xml" ) 
 WriteXML( "ascii", pnd_field,  "pnd_field.xml" )
@@ -109,9 +68,9 @@ cloudbox_checkedCalc
 # Calculate and save
 #
 
-DOAngularGridsSet( N_za_grid = 38 )
+DOAngularGridsSet( N_za_grid = 38 )   # == 38 ... 
 
-DisortCalcWithARTSSurface(nstreams = 16) #, pfct_method = "interpolate")
+DisortCalcWithARTSSurface(nstreams = 32, Npfct=-1) # Npfct=-1) # , pfct_method = "interpolate")
 #DisortCalc( nstreams = 16, pfct_method = "interpolate")
 
 yCalc
