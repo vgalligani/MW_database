@@ -1416,7 +1416,6 @@ def GET_TBVH_4icois(options, icois, fname):
 
     cmaps = GMI_colormap() 
 
-    breakpoint()
     if test_this == 1: 
         fig, axes = plt.subplots(nrows=1, ncols=3, constrained_layout=True,figsize=[14,12])
         fig = plt.figure(figsize=(30,10)) 
@@ -3502,8 +3501,7 @@ def main_20180208():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
 
-    [lon_gmi, lat_gmi, tb_s1_gmi]=  get_gmi(gmi_dir+opts['gfile'], opts, lon_pfs, lat_pfs, icois_input)
-
+    [GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
 
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
@@ -3580,6 +3578,10 @@ def main_DOW7_20181214():
 	     'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [15], 'files_list':files_list}
     icois_input  = [15] 
+	
+    
+    [GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
+
 		
     [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
@@ -3623,7 +3625,8 @@ def main_CSPR2_20181111():
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2'}
     icois_input  = [6,5] 
-	
+   [GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
+
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
@@ -3665,6 +3668,7 @@ def RMA1_20190308():
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'RMA1'}
     icois_input  = [3]
+    [GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
 
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
