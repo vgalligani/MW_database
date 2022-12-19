@@ -44,11 +44,11 @@ paths.rwc_habit = '/home/victoria.galligani/Work/Data/ArtsScatDbase/StandardHabi
 %paths.rwc_habit = fullfile(pwd, 'Input/SCAT/LiquidSpheres_TotRand', 'LiquidSpheres_TotRand');
 
 paths.gwc_psd   = fullfile( pwd, 'Input', 'psd_gwc_field07t.arts' );
-paths.gwc_habit = strcat('/home/victoria.galligani/Work/Data/ArtsScatDbase/StandardHabits/FullSet/',graupel_Habi
-t);
+paths.gwc_habit = strcat('/home/victoria.galligani/Work/Data/ArtsScatDbase/StandardHabits/FullSet/',graupel_Habit);
 
 paths.hwc_psd   = fullfile( pwd, 'Input', 'hail_pnddata.xml' );
 paths.hwc_habit = fullfile( pwd, 'Input', 'TestTMatrix.scat_data_single_hail.xml'); 
+paths.hwc_meta_habit = fullfile( pwd, 'Input', 'TestTMatrix.scat_meta_single_hail.xml');
 
 %- Variables to describe hydrometeor contents
 %
@@ -61,8 +61,11 @@ D.particle_bulkprop_field.group = 'Tensor4';
 %- Select cloud scenario
 %
 %D = PlotCloudScenarios(D,ifac);
-[D] = CloudScenario(D,flag,hail_shape);
-xmlStore(paths.hwc_psd, D.particle_bulkprop_field.data, 'Matrix');
+[D,Cscat] = CloudScenario(D,flag,hail_shape);
+%xmlStore(paths.hwc_psd, D.particle_bulkprop_field.data, 'Matrix');
+xmlStore(paths.hwc_psd, D.particle_bulkprop_field.data, 'Tensor4');
+xmlStore(paths.hwc_habit, Cscat.SCAT_DATA, 'SingleScatteringData');
+xmlStore(paths.hwc_meta_habit, Cscat.SCAT_meta_DATA, 'ScatteringMetaData');
 
 %A{1}.data      = D.particle_bulkprop_field.data(1,:)';
 %A{1}.grids     = {D.p_grid.data, [0], [0]};
