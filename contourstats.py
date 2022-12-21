@@ -3595,6 +3595,25 @@ def colormaps(variable):
     if variable == 'dv':
        return cmap_nws_dv
 
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------     
+def get_median(y, x):
+
+    TBV_bin  = np.arange(50,300,2)
+    TBVH_bin = np.arange(-5,25,1)
+    figfig = plt.figure(figsize=(30,10))
+    [counts, xedges, yedges, _] = plt.hist2d( x,
+        y, bins=[TBV_bin, TBVH_bin], norm=matplotlib.colors.LogNorm())
+    xbins = np.digitize( x, xedges[1:-1])
+    running_median = [np.median(y[xbins==k]) for k in range(len(xedges))]
+    del counts, xedges, yedges
+    plt.close()
+    return [running_median]
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------     
+
 def main_main(): 
 	
 	main_20180208() 
@@ -3647,13 +3666,23 @@ def main_20180208():
 
     GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'])
 
-    coi_250 =  [2,3,4]	
+    coi_250 =  [3,4]	
     [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'])
     for i in range(len(GMI_latlat)):
-		print('-------- icoi NR. '+str(coi_250[i])+str(' -----')
+		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
 		print('MIN(TBVH 19:', np.min(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
 		print('MIN(TBVH 37:', np.min(GMI_tbs1_37[i]-GMI_tbs1_37H[i]))
-		print('MIN(TBVH 89:', np.min(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))		      
+		print('MIN(TBVH 89:', np.min(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))	
+    TBV_bin  = np.arange(50,300,5)
+    for i in range(len(coi_250)):
+		plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i])
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=str(coi_250[i]))
+    plt.xlabel('TBV')
+    plt.ylabel('TBVH')
+    plt.title('85 GHz')
+		      
+
 
 		      
 		      
