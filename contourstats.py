@@ -12,7 +12,7 @@ from os.path import isfile, join
 import pandas as pd
 from pyart.correct import phase_proc
 import xarray as xr
-from copy import deepcopy
+from copy import deepcopyf
 import matplotlib.colors as colors
 import wradlib as wrl    
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
@@ -3670,10 +3670,11 @@ def main_20180208():
     [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'])
     for i in range(len(GMI_latlat)):
 		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
-		print('MIN(TBVH 19:', np.min(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
-		print('MIN(TBVH 37:', np.min(GMI_tbs1_37[i]-GMI_tbs1_37H[i]))
-		print('MIN(TBVH 89:', np.min(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))	
+		print('MAX(TBVH 19:', np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
+		print('MAX(TBVH 37:', np.max(GMI_tbs1_37[i]-GMI_tbs1_37H[i]))
+		print('MAX(TBVH 89:', np.max(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))	
     TBV_bin  = np.arange(50,300,5)
+    fig = plt.figure(figsize=(30,10))
     for i in range(len(coi_250)):
 		plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
     		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i])
