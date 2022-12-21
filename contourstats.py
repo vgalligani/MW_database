@@ -1467,6 +1467,7 @@ def GET_TBVH_250_TBVHplots(options, icois, fname):
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
 
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] ))
+    TB_inds = get_contour_info(contorno89, icois, datapts)
     for ii in range(len(TB_inds)):
         plt.plot(lat_gmi[:,:][idx1][TB_inds[ii]] , lat_gmi[:,:][idx1][TB_inds[ii]], 'x', label=str(icois[ii])) 
     plt.legend()
