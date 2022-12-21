@@ -1490,8 +1490,8 @@ def GET_TBVH_250_TBVHplots(options, icois, fname):
         GMI_tbs1_85H.append( S1_sub_tb_v2[TB_inds[ii],8] ) 
         GMI_tbs1_19.append( S1_sub_tb_v2[TB_inds[ii],2] ) 
         GMI_tbs1_19H.append( S1_sub_tb_v2[TB_inds[ii],3] ) 
-        GMI_latlat.append( S1_sub_lat[TB_inds[ii]] )
-        GMI_lonlon.append( S1_sub_lon[TB_inds[ii]] )
+        GMI_latlat.append( lat_gmi[:,:][idx1][TB_inds[ii]] )
+        GMI_lonlon.append( lon_gmi[:,:][idx1][TB_inds[ii]] )
 	
     if len(icois)==1:
         colors_plot = ['k']
@@ -3640,7 +3640,7 @@ def main_20180208():
 
     GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'])
 	
-    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, [2,3, 4], gmi_dir+opts['gfile'])
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, [2,3, 4], gmi_dir+opts['gfile'])
 
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
