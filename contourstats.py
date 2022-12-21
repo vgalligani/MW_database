@@ -1276,7 +1276,7 @@ def GET_TBVH_4icois(options, icois, fname):
     S1_sub_lon  = lon_gmi.copy()
     S1_sub_tb = tb_s1_gmi.copy()
 
-    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+    idx1 = (lat_gmi>=options['ylim_min']-2) & (lat_gmi<=options['ylim_max']+2) & (lon_gmi>=options['xlim_min']-2) & (lon_gmi<=options['xlim_max']+2)
 
     S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
     S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
@@ -1349,11 +1349,8 @@ def GET_TBVH_4icois(options, icois, fname):
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
     ##datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
     ##datapts = np.column_stack(( np.ravel(lon_gmi), np.ravel(lat_gmi) ))
-    datapts_RADAR_NATIVE = np.column_stack(( np.ravel(lons),np.ravel(lats) ))
 
-    TB_inds = get_contour_info(contorno89, icois, datapts)
-    # ACA, RN_inds_parallax es pixels del radar (dato original) dentro del contorno
-    RN_inds_parallax =  get_contour_info(contorno89_FIX, icois, datapts_RADAR_NATIVE)
+    TB_inds = get_contour_info(contorno89, icois, datapts)  #<<<< el problema es este! icois viejos no cuentan aca! usando 250!!! 
     # tambien me va a interesar el grillado a diferentes resoluciones 	
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
@@ -1362,18 +1359,21 @@ def GET_TBVH_4icois(options, icois, fname):
     GMI_tbs1_85H = [] 
     GMI_tbs1_19 = []
     GMI_tbs1_19H = [] 
+    GMI_latlat = []
+    GMI_lonlon = []
 
     S1_sub_tb_v2 = S1_sub_tb[:,:,:][idx1]		
 
     for ii in range(len(TB_inds)): 
-     	GMI_tbs1_37.append( S1_sub_tb_v2[TB_inds[ii],5] ) 
-     	GMI_tbs1_85.append( S1_sub_tb_v2[TB_inds[ii],7] ) 
-
-     	GMI_tbs1_37H.append( S1_sub_tb_v2[TB_inds[ii],6] ) 
-     	GMI_tbs1_85H.append( S1_sub_tb_v2[TB_inds[ii],8] ) 
-     	GMI_tbs1_19.append( S1_sub_tb_v2[TB_inds[ii],2] ) 
-     	GMI_tbs1_19H.append( S1_sub_tb_v2[TB_inds[ii],3] ) 
-
+        GMI_tbs1_37.append( S1_sub_tb_v2[TB_inds[ii],5] ) 
+        GMI_tbs1_85.append( S1_sub_tb_v2[TB_inds[ii],7] ) 
+        GMI_tbs1_37H.append( S1_sub_tb_v2[TB_inds[ii],6] ) 
+        GMI_tbs1_85H.append( S1_sub_tb_v2[TB_inds[ii],8] ) 
+        GMI_tbs1_19.append( S1_sub_tb_v2[TB_inds[ii],2] ) 
+        GMI_tbs1_19H.append( S1_sub_tb_v2[TB_inds[ii],3] ) 
+        GMI_latlat.append( S1_sub_lat[TB_inds[ii]] )
+        GMI_lonlon.append( S1_sub_lon[TB_inds[ii]] )
+	
     if len(icois)==1:
         colors_plot = ['k']
         labels_plot = [str('icoi=')+str(icois[0])] 	
@@ -1392,7 +1392,7 @@ def GET_TBVH_4icois(options, icois, fname):
 
     #------------------------------------------------------
     for ii in range(len(TB_inds)): 
-        plt.scatter(lon_gmi[TB_inds[ii]], lat_gmi[TB_inds[ii]], s=40, marker='*', color=colors_plot[ii], label=str(ii))
+        plt.plot(GMI_lonlon[ii], GMI_latlat[ii], marker='o', color=colors_plot[ii], label=str(ii))
 	
 	
 
@@ -1510,7 +1510,7 @@ def GET_TBVH_4icois(options, icois, fname):
 
 
 
-    return  GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H
+    return  GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -3519,7 +3519,7 @@ def main_20180208():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
 
-    [GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
 
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
