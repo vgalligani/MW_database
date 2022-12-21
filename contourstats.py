@@ -1252,7 +1252,7 @@ def plot_scatter_4icois(options, radar, icois, fname):
 #----------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-def GET_TBVH_4icois(options, icois, fname):
+def GET_TBVH_250ICOIS(options, fname):
 
     home_dir = '/home/victoria.galligani/'  	
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
@@ -1276,7 +1276,8 @@ def GET_TBVH_4icois(options, icois, fname):
     S1_sub_lon  = lon_gmi.copy()
     S1_sub_tb = tb_s1_gmi.copy()
 
-    idx1 = (lat_gmi>=options['ylim_min']-2) & (lat_gmi<=options['ylim_max']+2) & (lon_gmi>=options['xlim_min']-2) & (lon_gmi<=options['xlim_max']+2)
+    # ESTO ACA REDUJE A 1! ESTABA EN 5. para tener menos contornos! 
+    idx1 = (lat_gmi>=options['ylim_min']-1) & (lat_gmi<=options['ylim_max']+1) & (lon_gmi>=options['xlim_min']-1) & (lon_gmi<=options['xlim_max']+1)
 
     S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
     S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
@@ -1347,10 +1348,128 @@ def GET_TBVH_4icois(options, icois, fname):
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
 
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] )) 
-    ##datapts = np.column_stack((lon_gmi_inside,lat_gmi_inside))
-    ##datapts = np.column_stack(( np.ravel(lon_gmi), np.ravel(lat_gmi) ))
 
-    TB_inds = get_contour_info(contorno89, icois, datapts)  #<<<< el problema es este! icois viejos no cuentan aca! usando 250!!! 
+    # Get vertices of these polygon type shapes
+    for ii in range(len(contorno89.collections[0].get_paths())): 
+        X1 = []; Y1 = []; vertices = []
+        for ik in range(len(contorno89.collections[0].get_paths()[ii].vertices)): 
+            X1.append(contorno89.collections[0].get_paths()[ii].vertices[ik][0])
+            Y1.append(contorno89.collections[0].get_paths()[ii].vertices[ik][1])
+            vertices.append([contorno89.collections[0].get_paths()[ii].vertices[ik][0], 
+                                        contorno89.collections[0].get_paths()[ii].vertices[ik][1]])
+        array_points = np.array(vertices)
+        alpha = 0.95 * alphashape.optimizealpha(array_points)
+        hull_pts_CONCAVE   = alphashape.alphashape(array_points, alpha)
+        hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
+        check_points = np.vstack((hull_coors_CONCAVE)).T
+        concave_path = Path(check_points)
+        plt.plot(lon_gmi[:,:][idx1][inds], lat_gmi[:,:][idx1][inds], marker='o', label=str(ii))
+        plt.legend()
+
+    return
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def GET_TBVH_250_TBVHplots(options, icois, fname):
+
+    home_dir = '/home/victoria.galligani/'  	
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+    radar = pyart.io.read(r_dir+options['rfile'])
+	
+    # ojo que aca agarro los verdaderos PCTMIN, no los que me pasó Sarah B. que estan 
+    # ajustados a TMI footprints. 
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb = tb_s1_gmi.copy()
+
+    # ESTO ACA REDUJE A 1! ESTABA EN 5. para tener menos contornos! 
+    idx1 = (lat_gmi>=options['ylim_min']-1) & (lat_gmi<=options['ylim_max']+1) & (lon_gmi>=options['xlim_min']-1) & (lon_gmi<=options['xlim_max']+1)
+
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
+
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
+    ##------------------------------------------------------------------------------------------------
+    if 'TH' in radar.fields.keys():  
+       THNAME= 'TH'
+       RHOHVname = 'RHOHV'
+    elif 'DBZHCC' in radar.fields.keys():        
+       THNAME= 'DBZHCC'
+       RHOHVname = 'RHOHV'
+    elif 'corrected_reflectivity' in radar.fields.keys():        
+       THNAME= 'corrected_reflectivity'	
+       RHOHVname = 'copol_correlation_coeff'
+       ZDRname = 'corrected_differential_reflectivity'
+    elif 'DBZH' in radar.fields.keys():        
+       THNAME= 'DBZH'	
+       RHOHVname = 'RHOHV'
+       TVNAME= 'DBZV'	
+
+    nlev=0
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats  = radar.gate_latitude['data'][start_index:end_index]
+    lons  = radar.gate_longitude['data'][start_index:end_index]
+    #fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,
+    #                    figsize=[14,12])
+    #axes.pcolormesh(lon_gmi, lat_gmi, PCT89); plt.xlim([-70,-60]); plt.ylim([-40,-20])
+
+    #----------------------------------------------------------------------------------------
+    # Test plot figure: General figure with Zh and the countours identified  
+    #----------------------------------------------------------------------------------------
+	# USAR CONTORNO DE 250 !!!
+    test_this = 1
+    if test_this == 1: 
+        fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[14,12])
+        if 'TH' in radar.fields.keys():  
+            radarTH = radar.fields['TH']['data'][start_index:end_index]
+            radarZDR = (radar.fields['TH']['data'][start_index:end_index])-(radar.fields['TV']['data'][start_index:end_index])-options['ZDRoffset']
+        elif 'DBZH' in radar.fields.keys():
+            radarTH = radar.fields['DBZH']['data'][start_index:end_index]
+            radarZDR = radar.fields['DBZH']['data'][start_index:end_index]-radar.fields['DBZV']['data'][start_index:end_index]
+        elif 'DBZHCC' in radar.fields.keys(): 
+            radarTH = radar.fields['DBZHCC']['data'][start_index:end_index]
+            radarZDR = radar.fields['ZDRC']['data'][start_index:end_index]
+        elif 'corrected_reflectivity' in radar.fields.keys(): 
+            radarTH = radar.fields['corrected_reflectivity']['data'][start_index:end_index]
+            radarZDR = radar.fields[ZDRname]['data'][start_index:end_index]
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        pcm1 = axes.pcolormesh(lons, lats, radarTH, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(pcm1, ax=axes, shrink=1, label=units, ticks = np.arange(vmin,max,intt))
+        cbar.cmap.set_under(under)
+        cbar.cmap.set_over(over)
+        axes.grid(True)
+        axes.legend(loc='upper left')
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        contorno89 = plt.contour(lon_gmi[:,:], lat_gmi[:,:], PCT89[:,:], [250] , colors=(['r']), linewidths=1.5);
+        contorno89_FIX = plt.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:] , [250], colors=(['k']), linewidths=1.5);
+        axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
+        axes.set_ylim([options['ylim_min'], options['ylim_max']])
+
+    datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] ))
+    TB_inds = get_contour_info(contorno89, icois, datapts)
+
+
     # tambien me va a interesar el grillado a diferentes resoluciones 	
     GMI_tbs1_37 = []
     GMI_tbs1_85 = [] 	
@@ -3519,7 +3638,9 @@ def main_20180208():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
 
-    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, icois_input,  gmi_dir+opts['gfile'])
+    GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'])
+	
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_4icois(opts, [2,3, 4], gmi_dir+opts['gfile'])
 
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
