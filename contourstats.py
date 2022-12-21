@@ -1467,12 +1467,12 @@ def GET_TBVH_250_TBVHplots(options, icois, fname):
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
 
 	
-    colores_in = ['k','r','darkred','darkgreen','cyan']
+    colores_in = ['k','darkgreen','darkred','darkblue','cyan']
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] ))
     TB_inds = get_contour_info(contorno89, icois, datapts)
     lines = []
     for ii in range(len(TB_inds)):
-        lines += axes.plot(lon_gmi[:,:][idx1][TB_inds[ii]] , lat_gmi[:,:][idx1][TB_inds[ii]], 'x', markersize=10, markerfacecolor=colores_in[ii], markeredgecolor=colores_in[ii], label=str(icois[ii])) 
+        lines += axes.plot(lon_gmi[:,:][idx1][TB_inds[ii]] , lat_gmi[:,:][idx1][TB_inds[ii]], 'o', markersize=10, markerfacecolor=colores_in[ii], markeredgecolor=colores_in[ii], label=str(icois[ii])) 
     plt.legend()
 
 
