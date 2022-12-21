@@ -3641,10 +3641,11 @@ def main_20180208():
     icois_input  = [2,4,5] 
 
     GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'])
-	
-    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, [2,3, 4], gmi_dir+opts['gfile'])
+
+    coi_250 =  [2,3,4]	
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'])
     for i in range(len(GMI_latlat)):
-		print('-------- icoi NR. ----- [2,3, 4] ')
+		print('-------- icoi NR. '+str(coi_250[i])+str(' -----')
 		print('MIN(TBVH 19:', np.min(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
 		print('MIN(TBVH 37:', np.min(GMI_tbs1_37[i]-GMI_tbs1_37H[i]))
 		print('MIN(TBVH 89:', np.min(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))		      
