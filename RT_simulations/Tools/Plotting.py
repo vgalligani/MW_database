@@ -47,8 +47,8 @@ def Plot_exp(dset1, dset2):  #,ititle,name,path):
                  
     plt.matplotlib.rc('font', family='serif', size = 12)
     fig = plt.figure(figsize=(9,6))
-    plt.plot(f_grid, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain Only')
-    plt.plot(f_grid, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain Only')
+    plt.plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain Only')
+    plt.plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain Only')
     
     plt.title( 'Cloud Scenarios (Rain-only)', fontsize='12', fontweight='bold')
     plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
@@ -387,6 +387,31 @@ plt.ylim([0,20])
 #------------------------------------------------------------------------------------------
 # Hail Only
 #------------------------------------------------------------------------------------------ 
+# 1e-2 (1cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPa0.01/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.01.mat'
+arts_exp1 = FullData(f_arts)
+
+# 10e-2 (10cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPa0.1/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.1.mat'
+arts_exp2 = FullData(f_arts)
+
+# ----------------------------- plot
+Plot_exp(arts_exp1, arts_exp2, labels)
+
+plt.matplotlib.rc('font', family='serif', size = 12)
+fig = plt.figure(figsize=(9,6))    
+plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0], arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='darkblue', label = 'Heavy Rain Only')
+plt.plot( arts_exp2['D']['particle_bulkprop_field'][0][0][0][0][0][0] , arts_exp2['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='cyan', label = 'Light Rain Only')
+plt.title( 'Cloud Scenarios (Rain-Only)', fontsize='12', fontweight='bold')
+plt.ylabel(r'Height [km]', color='k')
+plt.xlabel(r'mass content [g/m3]', color='k')
+plt.grid('true')
+plt.legend()
+plt.ylim([0,20])
+
+
+
+
 
 
 
