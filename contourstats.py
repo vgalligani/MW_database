@@ -1467,8 +1467,10 @@ def GET_TBVH_250_TBVHplots(options, icois, fname):
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
 
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] ))
-    TB_inds = get_contour_info(contorno89, icois, datapts)
-
+    for ii in range(len(TB_inds)):
+        plt.plot(lat_gmi[:,:][idx1][TB_inds[ii]] , lat_gmi[:,:][idx1][TB_inds[ii]], 'x', label=str(icois[ii])) 
+    plt.legend()
+	
 
     # tambien me va a interesar el grillado a diferentes resoluciones 	
     GMI_tbs1_37 = []
@@ -3641,7 +3643,14 @@ def main_20180208():
     GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'])
 	
     [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, [2,3, 4], gmi_dir+opts['gfile'])
+    for i in range(len(GMI_latlat)):
+		print('-------- icoi NR. ----- [2,3, 4] ')
+		print('MIN(TBVH 19:', np.min(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
+		print('MIN(TBVH 37:', np.min(GMI_tbs1_37[i]-GMI_tbs1_37H[i]))
+		print('MIN(TBVH 89:', np.min(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))		      
 
+		      
+		      
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
