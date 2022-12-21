@@ -1466,13 +1466,16 @@ def GET_TBVH_250_TBVHplots(options, icois, fname):
         axes.set_xlim([options['xlim_min'], options['xlim_max']]) 
         axes.set_ylim([options['ylim_min'], options['ylim_max']])
 
+	
+    colores_in = ['k','r','darkred','darkgreen','cyan']
     datapts = np.column_stack((lon_gmi[:,:][idx1], lat_gmi[:,:][idx1] ))
     TB_inds = get_contour_info(contorno89, icois, datapts)
     lines = []
     for ii in range(len(TB_inds)):
-        lines += plt.plot(lon_gmi[:,:][idx1][TB_inds[ii]] , lat_gmi[:,:][idx1][TB_inds[ii]], 'x', markersize=20, label=str(icois[ii])) 
-    plt.legend(lines)
-	
+        lines += axes.plot(lon_gmi[:,:][idx1][TB_inds[ii]] , lat_gmi[:,:][idx1][TB_inds[ii]], 'x', markersize=10, markerfacecolor=colores_in[ii], markeredgecolor=colores_in[ii], label=str(icois[ii])) 
+    plt.legend()
+
+
 
     # tambien me va a interesar el grillado a diferentes resoluciones 	
     GMI_tbs1_37 = []
