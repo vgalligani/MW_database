@@ -4415,10 +4415,10 @@ def RMA4_20181218():
 	   'icoi_PHAIL': [7, 6], 'radar_name':'RMA4'}
     icois_input  = [8, 7, 6]
 
-    GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],7)  # ??? 
+    GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],7)
 
-    coi_250 =  [0,10]	
-    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
+    coi_250 =  [39]	
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],7)
 
     for i in range(len(GMI_latlat)):
 		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
@@ -4497,6 +4497,39 @@ def RMA4_20181215():
 	   'icoi_PHAIL': [14,11], 'radar_name':'RMA4'}
     icois_input  = [14, 11] 
 
+    GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],1)
+
+    coi_250 =  [1]	
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
+
+    for i in range(len(GMI_latlat)):
+		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
+		print('MAX(TBVH 19:', round(np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]),1))
+		print('MAX(TBVH 37:', round(np.max(GMI_tbs1_37[i]-GMI_tbs1_37H[i]),1))
+		print('MAX(TBVH 89:', round(np.max(GMI_tbs1_85[i]-GMI_tbs1_85H[i]),1))	
+		
+    TBV_bin  = np.arange(50,300,5)
+    fig = plt.figure(figsize=(10,10))
+    for i in range(len(coi_250)):
+		plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i])
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=str(coi_250[i]))
+    plt.xlabel('TBV')
+    plt.ylabel('TBVH')
+    plt.title('85 GHz')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+    fig = plt.figure(figsize=(10,10))
+    for i in range(len(coi_250)):
+		plt.plot(GMI_tbs1_37[i], GMI_tbs1_37[i]-GMI_tbs1_37H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_37[i]-GMI_tbs1_37H[i], GMI_tbs1_37[i])
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=str(coi_250[i]))
+    plt.xlabel('TBV')
+    plt.ylabel('TBVH')
+    plt.title('37 GHz')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+
     #[ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, 
@@ -4553,6 +4586,41 @@ def RMA4_20181031():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4'}
     icois_input  = [1,26,20,58] 
+
+
+    GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],1)
+
+    coi_250 =  [0,4,11,17]	
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
+    for i in range(len(GMI_latlat)):
+		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
+		print('MAX(TBVH 19:', round(np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]),1))
+		print('MAX(TBVH 37:', round(np.max(GMI_tbs1_37[i]-GMI_tbs1_37H[i]),1))
+		print('MAX(TBVH 89:', round(np.max(GMI_tbs1_85[i]-GMI_tbs1_85H[i]),1))	
+		
+    TBV_bin  = np.arange(50,300,5)
+    fig = plt.figure(figsize=(10,10))
+    for i in range(len(coi_250)):
+		plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i])
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=str(coi_250[i]))
+    plt.xlabel('TBV')
+    plt.ylabel('TBVH')
+    plt.title('85 GHz')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+    fig = plt.figure(figsize=(10,10))
+    for i in range(len(coi_250)):
+		plt.plot(GMI_tbs1_37[i], GMI_tbs1_37[i]-GMI_tbs1_37H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_37[i]-GMI_tbs1_37H[i], GMI_tbs1_37[i])
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=str(coi_250[i]))
+    plt.xlabel('TBV')
+    plt.ylabel('TBVH')
+    plt.title('37 GHz')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+
+
 
     [ check_resolxy, check_resolz, HIDs_coi_GRID, HIDs_coi, gridz] = run_general_case(opts, lat_pfs, lon_pfs, icois_input)
 
