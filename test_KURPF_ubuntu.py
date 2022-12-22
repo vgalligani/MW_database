@@ -379,8 +379,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.rcParams['xtick.labelsize']=12
     plt.rcParams['ytick.labelsize']=12
 
-    prov = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
 
     # replace highest temperatures with gray
     cmap1 =  plt.cm.get_cmap('tab20c')
@@ -688,7 +688,8 @@ def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, 
     #------ MAXHT40
     ax1 = plt.subplot(gs1[0,0])
     plt.title('PF MAXHT40 intensity distribution')
-    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
+    #MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
+    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN37PCT')    
     MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
     MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
     counter = 0
@@ -745,13 +746,13 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     #------ VOLRAIN_KU
     ax1 = plt.subplot(gs1[0,0])
     plt.title('KuRPF VOLRAIN_KU intensity distribution')
-    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN85PCT')
+    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN85PCT')
     VOLRAIN_KU_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'VOLRAIN_KU')
     #precipitation area IS estimated by the number of pixels associated with each PF.
     if PFtype_area == 'KuRPF':
         NPIXELS_cat, _, _, _= get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS')
     elif PFtype_area == 'GPCTF':
-        NPIXELS_cat, _, _, _ = get_categoryPF_hi_altfilter(MWRPF, selectMWRPF, 'NPIXELS_GMI')
+        NPIXELS_cat, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS_GMI')
 
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
