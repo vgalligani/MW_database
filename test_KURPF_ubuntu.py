@@ -30,8 +30,9 @@ def merge_KuRPF_dicts_all(Kurpf_path):
         Kurpf = read_KuRPF(Kurpf_path+i)
         for key, value in Kurpf.items():
             Kurpf_data[key].append(value)
+            gc.collect()
         del Kurpf
-    gc.collect()
+        gc.collect()
     return Kurpf_data
 
 #-------------------------------------------------------------------------
