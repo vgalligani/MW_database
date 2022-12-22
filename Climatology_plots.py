@@ -72,7 +72,7 @@ def get_categoryPF_altfilter(PF_all, select, vkey):
     topo_lat = ds.variables['lat'][:]
     topo_lon = ds.variables['lon'][:]
     topo_dat = ds.variables['Band1'][:]/1e3
-    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat) 
 
     var    = PF_all[vkey][select].copy()
     latlat = PF_all['LAT'][select].copy()
