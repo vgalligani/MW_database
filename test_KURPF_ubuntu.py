@@ -1,7 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on 22/12/2022
+
+@author: victoria.galligani
+
+funciones que necesito para correr stats over RPF_GPM
+pf_20xxxx_level2.HDF en conjunto con main_clim_ku.py 
+UPDATED PARA CONTEMPLAR ULTIMO ANALISIS PARA EL PAPER
+"""
+
+
 from scipy.interpolate import griddata
 from collections import defaultdict
+from scipy import stats 
 
-#################################################################
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 def merge_KuRPF_dicts_all(Kurpf_path):
 
     Kurpf_data = defaultdict(list)
@@ -18,7 +34,8 @@ def merge_KuRPF_dicts_all(Kurpf_path):
     gc.collect()
     return Kurpf_data
 
-#################################################################
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 def merge_GPCTF_dicts_keys(Kurpf_path):
 
     Kurpf_data = defaultdict(list)
@@ -64,7 +81,8 @@ def merge_GPCTF_dicts_keys(Kurpf_path):
     return Kurpf_data
 
 
-#################################################################
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 def read_KuRPF(ifile):
         
     # open the hdf file
@@ -84,7 +102,8 @@ def read_KuRPF(ifile):
     return Kurpf_data
 
 
-#################################################################
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
 
     import seaborn as sns
@@ -752,21 +771,477 @@ def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRP
     return
 
 
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def get_orbits_extreme(Kurpf, selectKurpf, vkey):
+    
+    var         = Kurpf[vkey][selectKurpf].copy()
+    percentiles = np.percentile(var, [10, 1, 0.1, 0.01])
+    
+    latlat = Kurpf['LAT'][selectKurpf].copy()
+    lonlon = Kurpf['LON'][selectKurpf].copy()
+    
+    orbit  = Kurpf['ORBIT'][selectKurpf].copy()
+    month  = Kurpf['MONTH'][selectKurpf].copy()
+    day    = Kurpf['DAY'][selectKurpf].copy()
+    hour   = Kurpf['HOUR'][selectKurpf].copy()
+    
+    LON = lonlon[np.where(var < percentiles[3])]   
+    LAT = latlat[np.where(var < percentiles[3])]
+
+    ORB = orbit[np.where(var < percentiles[3])]
+    MM  = month[np.where(var < percentiles[3])]
+    DD  = day[np.where(var < percentiles[3])]
+    HH  = hour[np.where(var < percentiles[3])]
+    
+    info = []
+    for i in range(len(ORB)):
+        info.append('orbit Nr: '+str(ORB[i])+' '+str(DD[i])+'/'+str(MM[i])+'/2018 H'+str(HH[i])+' UTC')    
+        # # Plot map? 
+        # fig = plt.figure(figsize=(12,12))     
+        # gs1 = gridspec.GridSpec(1, 1)
+        # ax1 = plt.subplot(gs1[0,0])
+        # plt.scatter(LON, LAT, c=tb_s1_gmi[inside,7], s=10, cmap=PlottingGMITools.cmaps['turbo_r']) 
+        # ax1.set_xlim([-70,-45])
+        # ax1.set_ylim([-45,-15])
+        # plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+        # plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+        # plt.title('Location of PF centers after domain-location filter')
+        # plt.text(-55, -17, 'Nr. PFs:'+str(Kurpf['LAT'][selectKurpf].shape[0]))
+    
+    
+    return(info)  
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def get_orbits_extreme_hi(Kurpf, selectKurpf, vkey):
+    
+    var         = Kurpf[vkey][selectKurpf].copy()
+    percentiles = np.percentile(var, [90, 99, 99.9, 99.99] )
+    
+    latlat = Kurpf['LAT'][selectKurpf].copy()
+    lonlon = Kurpf['LON'][selectKurpf].copy()
+    
+    orbit  = Kurpf['ORBIT'][selectKurpf].copy()
+    month  = Kurpf['MONTH'][selectKurpf].copy()
+    day    = Kurpf['DAY'][selectKurpf].copy()
+    hour   = Kurpf['HOUR'][selectKurpf].copy()
+    
+    LON = lonlon[np.where(var > percentiles[3])]   
+    LAT = latlat[np.where(var > percentiles[3])]
+
+    ORB = orbit[np.where(var > percentiles[3])]
+    MM  = month[np.where(var > percentiles[3])]
+    DD  = day[np.where(var > percentiles[3])]
+    HH  = hour[np.where(var > percentiles[3])]
+    
+    info = []
+    for i in range(len(ORB)):
+        info.append('orbit Nr: '+str(ORB[i])+' '+str(DD[i])+'/'+str(MM[i])+'/2018 H'+str(HH[i])+' UTC')
+    
+    return(info) 
 
 
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+def get_hourly_normbins(PF, select, vkey):
+
+    # e.g. PCT_i_binned[0] is between 00UTC - 01UTC for percentile i 
+    # normalize by the total numer of elements. 
+
+    hour_bins = np.linspace(0, 24, 25)
+    
+    PCT_cat, latlat, lonlon, percentiles, hour, surfFlag = get_categoryPF(PF, select, vkey)
+    normelems = np.zeros((len(hour_bins)-1, 4)); normelems[:]=np.nan
+    counter = 0
+
+    # NEED TO REMOVE SEA! KEEP ONLY LAND!!
+    # ['LANDOCEAN'] --->    0: over ocean, 1: over land
+    
+    for i in percentiles:
+        HOUR    = hour[np.where( (PCT_cat < i) & (surfFlag == 1))]   
+        PCT_i   = PCT_cat[np.where( (PCT_cat < i) & (surfFlag == 1))]  
+        totalelems_i = len(HOUR)
+        PCT_i_binned = [PCT_i[np.where((HOUR > low) & (HOUR <= high))] for low, high in zip(hour_bins[:-1], hour_bins[1:])]
+        for ih in range(len(hour_bins)-1):
+            normelems[ih, counter] = len(PCT_i_binned[ih].data)/totalelems_i
+        counter = counter+1
+        del HOUR, PCT_i, totalelems_i, PCT_i_binned  
+        
+    return normelems, percentiles
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def get_categoryPF(PF_all, select, vkey):
+    
+    var        = PF_all[vkey][select].copy()
+    percentiles = np.percentile(var, [10, 1, 0.1, 0.01])
+    
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    hour   = PF_all['HOUR'][select].copy()
+    surfFlag = PF_all['LANDOCEAN'][select].copy()
+    
+    return var, latlat, lonlon, percentiles, hour, surfFlag
 
 
 
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
-
-
-
-
-
+def get_categoryPF_hi(PF_all, select, vkey):
+    
+    var        = PF_all[vkey][select].copy()
+    percentiles = np.percentile(var, [99.99, 99.9, 99, 90])
+    
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    hour   = PF_all['HOUR'][select].copy()
+    surfFlag = PF_all['LANDOCEAN'][select].copy()
+    
+    return var, latlat, lonlon, percentiles, hour, surfFlag
 
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+
+def plot_regrid_map(lonbins, latbins, zi_37, zi_85, zi_max40ht, filename, main_title, LON, LAT, MIN37PCT):
+
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+
+    xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension 
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+
+    fig = plt.figure(figsize=(12,12))  
+    gs1 = gridspec.GridSpec(2, 2)   
+    ax1 = plt.subplot(gs1[0,0])
+    pc = ax1.pcolor(lonbins, latbins, zi_37, vmin=50, vmax=300)
+    plt.colorbar(pc)        
+    ax1.set_title('MIN37PCT < 1% percentile')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+      
+    ax1 = plt.subplot(gs1[0,1])
+    pc = ax1.pcolor(lonbins, latbins, zi_85, vmin=50, vmax=300)
+    plt.colorbar(pc)    
+    ax1.set_title('MIN85PCT < 1% percentile')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    
+    ax1 = plt.subplot(gs1[1,0])
+    pc = ax1.pcolor(lonbins, latbins, zi_max40ht, vmin=0, vmax=20)
+    plt.colorbar(pc)    
+    ax1.set_title('MAXHT40 > 99% percentile')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+
+    plt.suptitle(main_title,y=0.93)
+    
+    #fig.savefig(filename+'.png', dpi=300,transparent=False)        
+
+    return
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+def plot_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_title):
+
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['x'][:]
+    topo_lon = ds.variables['y'][:]
+    topo_dat = ds.variables['z'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+
+    lonbins = np.arange(-70, -40, 2) 
+    latbins = np.arange(-50, -10, 2)
+    xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
+    
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    max40ht_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (max40ht_cat > percentiles[1]) & (sat_alt < 2.4) )]       
+    LAT         = latlat[np.where( (max40ht_cat > percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT_max40ht = max40ht_cat[np.where( (max40ht_cat > percentiles[1]) & (sat_alt < 2.4) )]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT_max40ht, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)        
+    cbar = plt.colorbar(pc,label='Freq. distribution')    
+    #plt.plot(LON,LAT, 'xr')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #cbar.set_label('# of elements in 2x2 grid')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude') 
+    #fig.savefig(filename+'MAXHT40only.png', dpi=300,transparent=False)        
+
+
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]     
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
+    plt.colorbar(pc, label='Freq. distribution')        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #plt.title(main_title)
+    #fig.savefig(filename+'MIN37PCTonly.png', dpi=300,transparent=False)        
+
+    fig = plt.figure(figsize=(12,12))  
+    gs1 = gridspec.GridSpec(2, 2)   
+    
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]       
+    LAT         = latlat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT37       = MIN37PCT_cat[np.where( (MIN37PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]       
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
+    #plt.plot(LON,LAT, 'xr')
+    plt.colorbar(pc)        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+      
+    ax1 = plt.subplot(gs1[0,1])
+    MIN85PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]      
+    LAT         = latlat[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT85       = MIN85PCT_cat[np.where( (MIN85PCT_cat < percentiles[1]) & (sat_alt < 2.4) )]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT85, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)    
+    #plt.plot(LON,LAT, 'xr')
+    plt.colorbar(pc)    
+    ax1.set_title('MIN85PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    
+    ax1 = plt.subplot(gs1[1,0])
+    max40ht_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    LON         = lonlon[np.where( (max40ht_cat > percentiles[1]) & (sat_alt < 2.4) )]    
+    LAT         = latlat[np.where( (max40ht_cat > percentiles[1]) & (sat_alt < 2.4) )]    
+    PCT_max40ht = max40ht_cat[np.where( (max40ht_cat > percentiles[1]) & (sat_alt < 2.4) )]       
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT_max40ht, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)        
+    cbar = plt.colorbar(pc)    
+    #plt.plot(LON,LAT, 'xr')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    cbar.set_label('# of elements in 2x2 grid')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    
+    plt.suptitle(main_title, y=0.93)
+    
+    #fig.savefig(filename+'.png', dpi=300,transparent=False)        
+
+    return
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+def plot_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
+
+    lonbins = np.arange(-70, -40, 2) 
+    latbins = np.arange(-50, -10, 2)
+    xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
+    
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    max40ht_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    LON         = lonlon[np.where(max40ht_cat > percentiles[1])]   
+    LAT         = latlat[np.where(max40ht_cat > percentiles[1])]
+    PCT_max40ht = max40ht_cat[np.where(max40ht_cat > percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT_max40ht, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)        
+    cbar = plt.colorbar(pc,label='Freq. distribution')    
+    #plt.plot(LON,LAT, 'xr')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #cbar.set_label('# of elements in 2x2 grid')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude') 
+    #fig.savefig(filename+'MAXHT40only.png', dpi=300,transparent=False)        
+
+
+
+    fig = plt.figure(figsize=(6,5))  
+    gs1 = gridspec.GridSpec(1, 1)   
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    LON         = lonlon[np.where(MIN37PCT_cat < percentiles[1])]   
+    LAT         = latlat[np.where(MIN37PCT_cat < percentiles[1])]
+    PCT37       = MIN37PCT_cat[np.where(MIN37PCT_cat < percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
+    plt.colorbar(pc, label='Freq. distribution')        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #plt.title(main_title)
+    #fig.savefig(filename+'MIN37PCTonly.png', dpi=300,transparent=False)        
+
+    fig = plt.figure(figsize=(12,12))  
+    gs1 = gridspec.GridSpec(2, 2)   
+    
+    ax1 = plt.subplot(gs1[0,0])
+    MIN37PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN37PCT')
+    LON         = lonlon[np.where(MIN37PCT_cat < percentiles[1])]   
+    LAT         = latlat[np.where(MIN37PCT_cat < percentiles[1])]
+    PCT37       = MIN37PCT_cat[np.where(MIN37PCT_cat < percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT37, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T, vmax=20)
+    #plt.plot(LON,LAT, 'xr')
+    plt.colorbar(pc)        
+    ax1.set_title('MIN37PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+      
+    ax1 = plt.subplot(gs1[0,1])
+    MIN85PCT_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF(Kurpf, selectKurpf, 'MIN85PCT')
+    LON         = lonlon[np.where(MIN85PCT_cat < percentiles[1])]   
+    LAT         = latlat[np.where(MIN85PCT_cat < percentiles[1])]
+    PCT85       = MIN85PCT_cat[np.where(MIN85PCT_cat < percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT85, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)    
+    #plt.plot(LON,LAT, 'xr')
+    plt.colorbar(pc)    
+    ax1.set_title('MIN85PCT < 1% percentile ('+str(np.round(percentiles[1], 2))+' K)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    
+    ax1 = plt.subplot(gs1[1,0])
+    max40ht_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXHT40')
+    LON         = lonlon[np.where(max40ht_cat > percentiles[1])]   
+    LAT         = latlat[np.where(max40ht_cat > percentiles[1])]
+    PCT_max40ht = max40ht_cat[np.where(max40ht_cat > percentiles[1])]    
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(LON, LAT, values = PCT_max40ht, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)        
+    cbar = plt.colorbar(pc)    
+    #plt.plot(LON,LAT, 'xr')
+    ax1.set_title('MAXHT40 > 99% percentile ('+str(np.round(percentiles[1], 2))+' km)')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    cbar.set_label('# of elements in 2x2 grid')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    
+    plt.suptitle(main_title, y=0.93)
+    
+    #fig.savefig(filename+'.png', dpi=300,transparent=False)        
+
+    return
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
