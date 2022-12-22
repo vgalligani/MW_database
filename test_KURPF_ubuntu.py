@@ -330,16 +330,14 @@ def get_categoryPF_altfilter(PF_all, select, vkey):
       
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
-
 def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
 
     import netCDF4 as nc
-    fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['lat'][:]
-    topo_lon = ds.variables['lon'][:]   
-    topo_dat = ds.variables['Band1'][:]/1e3
+    topo_lat = ds.variables['x'][:]
+    topo_lon = ds.variables['y'][:]   
+    topo_dat = ds.variables['z'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
 
     import seaborn as sns
@@ -535,14 +533,240 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     cbar.set_ticks(loc)
     cbar.ax.set_xticklabels(labels)
     
-    fig.savefig(dir+filename, dpi=300,transparent=False)        
+    #fig.savefig(dir+filename, dpi=300,transparent=False)        
    
     Stats.close()
 
     return fig 
 
-  
-  
-  
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def get_categoryPF_hi_altfilter(PF_all, select, vkey):
+    
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['x'][:]
+    topo_lon = ds.variables['y'][:]   
+    topo_dat = ds.variables['z'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
+    var    = PF_all[vkey][select].copy()
+    latlat = PF_all['LAT'][select].copy()
+    lonlon = PF_all['LON'][select].copy()
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                        (lonlon,latlat), method='nearest')
+    varfilt = var[ np.where(sat_alt < 2.4) ]      
+    percentiles = np.percentile(varfilt, [99.99, 99.9, 99, 90])
+    
+
+    
+    return varfilt, latlat[ np.where(sat_alt < 2.4) ], lonlon[ np.where(sat_alt < 2.4) ], percentiles
+ 
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
+
+    # Get altitude
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['x'][:]
+    topo_lon = ds.variables['y'][:]   
+    topo_dat = ds.variables['z'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
+    import seaborn as sns
+
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+    
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(12,12))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MIN37PCT
+    ax1 = plt.subplot(gs1[0,0])
+    plt.title(PFtype+' MIN1838 intensity distribution')
+    MIN37PCT_cat, _, _, _  = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN37PCT')
+    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN85PCT')
+    MIN1838_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN1838')
+    # here mask latlat and lonlon above 2.4 km altitude  
+    counter = 0
+    for i in percentiles:
+        x_min37  = MIN37PCT_cat[( np.where( (MIN1838_cat < i) ))]          
+        y_min85  = MIN85PCT_cat[( np.where( (MIN1838_cat < i)  ))]          
+        if counter < 1:
+            plt.scatter(x_min37, y_min85, s=15, marker='o', c = cmap_f(counter))
+        elif counter < 3:
+            plt.scatter(x_min37, y_min85, s=30, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(x_min37, y_min85, s=50, marker='o', c = cmap_f(counter))        
+        counter = counter+1
+    plt.xlabel(PFtype+' MIN37PCT (K)')
+    plt.ylabel(PFtype+' MIN85PCT (K)')
+    plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class < 10%')        
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class < 1%')             
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class < 0.1%')        
+    plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class < 0.11%')        
+    plt.legend()    
+    plt.grid()  
+    #fig.savefig(dir+filename, dpi=300,transparent=False)        
+    #plt.close()
+
+    return
 
 
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def plot_MAXHT40_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, PFtype):
+
+    import seaborn as sns
+
+    # Some matplotlib figure definitions
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+    
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(12,12))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ MAXHT40
+    ax1 = plt.subplot(gs1[0,0])
+    plt.title('PF MAXHT40 intensity distribution')
+    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
+    MAXNSZ_cat, _, _, _ = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
+    counter = 0
+    for i in reversed(percentiles):
+        x_min37   = MIN37PCT_cat[np.where(MAXHT40_cat > i)]   
+        y_MAXNSZ  = MAXNSZ_cat[np.where(MAXHT40_cat > i)]
+        if counter < 1:
+            plt.scatter(x_min37, y_MAXNSZ, s=15, marker='o', c = cmap_f(counter))
+        elif counter < 3:
+            plt.scatter(x_min37, y_MAXNSZ, s=30, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(x_min37, y_MAXNSZ, s=50, marker='o', c = cmap_f(counter))        
+        counter = counter+1
+    plt.xlabel(PFtype+' MIN37PCT (K)')
+    plt.ylabel('KuRPF MAXNSZ (dBZ)')
+    plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class > 90%')        
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class > 99%')             
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class > 99.9%')        
+    plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class > 99.99%')        
+    plt.legend()    
+    plt.grid()
+    
+    #fig.savefig(dir+filename, dpi=300,transparent=False)        
+    
+    
+    return
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+def plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, PFtype1, PFtype_area):
+
+    import seaborn as sns
+    
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+    # Some matplotlib figure definitions
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+    
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(12,12))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ VOLRAIN_KU
+    ax1 = plt.subplot(gs1[0,0])
+    plt.title('KuRPF VOLRAIN_KU intensity distribution')
+    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN85PCT')
+    VOLRAIN_KU_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'VOLRAIN_KU')
+    #precipitation area IS estimated by the number of pixels associated with each PF.
+    if PFtype_area == 'KuRPF':
+        NPIXELS_cat, _, _, _= get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS')
+    elif PFtype_area == 'GPCTF':
+        NPIXELS_cat, _, _, _ = get_categoryPF_hi_altfilter(MWRPF, selectMWRPF, 'NPIXELS_GMI')
+
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    
+    counter = 0
+    for i in reversed(percentiles):
+        x_min85   = MIN85PCT_cat[np.where(VOLRAIN_KU_cat > i)]   
+        y_area    = area[np.where(VOLRAIN_KU_cat > i)]
+        if counter < 1:
+            plt.scatter(x_min85, y_area, s=15, marker='o', c = cmap_f(counter))
+        elif counter < 3:
+            plt.scatter(x_min85, y_area, s=30, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(x_min85, y_area, s=50, marker='o', c = cmap_f(counter))        
+        counter = counter+1
+    plt.xlabel(PFtype1+' MIN85PCT (K)')
+    plt.ylabel(PFtype_area+r' area (km$^2$)')
+    ax1.set_yscale('log')
+    plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class > 90%')        
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class > 99%')             
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class > 99.9%')        
+    plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class > 99.99%')        
+    plt.legend()    
+    plt.grid()
+    
+    #fig.savefig(dir+filename, dpi=300,transparent=False)        
+    
+    
+    return
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
