@@ -1,6 +1,90 @@
 from scipy.interpolate import griddata
+from collections import defaultdict
+
+#################################################################
+def merge_KuRPF_dicts_all(Kurpf_path):
+
+    Kurpf_data = defaultdict(list)
+
+    files = listdir(Kurpf_path)
+    for i in files: 
+        print(i)
+        print(psutil.virtual_memory().percent)
+        print('========================================')
+        Kurpf = read_KuRPF(Kurpf_path+i)
+        for key, value in Kurpf.items():
+            Kurpf_data[key].append(value)
+        del Kurpf
+    gc.collect()
+    return Kurpf_data
+
+#################################################################
+def merge_GPCTF_dicts_keys(Kurpf_path):
+
+    Kurpf_data = defaultdict(list)
+
+    files = listdir(Kurpf_path)
+    for i in files: 
+        print(i)
+        Kurpf = read_KuRPF(Kurpf_path+i)
+        Kurpf_data['ORBIT'].append(Kurpf['ORBIT'])
+        Kurpf_data['YEAR'].append(Kurpf['YEAR'])
+        Kurpf_data['MONTH'].append(Kurpf['MONTH'])
+        Kurpf_data['DAY'].append(Kurpf['DAY'])
+        Kurpf_data['HOUR'].append(Kurpf['HOUR'])
+        Kurpf_data['LAT'].append(Kurpf['LAT'])
+        Kurpf_data['LON'].append(Kurpf['LON'])
+        Kurpf_data['NPIXELS_GMI'].append(Kurpf['NPIXELS_GMI'])
+        Kurpf_data['NRAINPIXELS_GMI'].append(Kurpf['NRAINPIXELS_GMI'])
+        Kurpf_data['NRAINAREA_GMI'].append(Kurpf['NRAINAREA_GMI'])
+        Kurpf_data['VOLRAIN_GMI'].append(Kurpf['VOLRAIN_GMI'])
+        Kurpf_data['NLT250'].append(Kurpf['NLT250'])
+        Kurpf_data['NLT225'].append(Kurpf['NLT225'])
+        Kurpf_data['NLT200'].append(Kurpf['NLT200'])
+        Kurpf_data['NLT175'].append(Kurpf['NLT175'])
+        Kurpf_data['N37LT250'].append(Kurpf['N37LT250'])
+        Kurpf_data['N37LT225'].append(Kurpf['N37LT225'])
+        Kurpf_data['N37LT200'].append(Kurpf['N37LT200'])
+        Kurpf_data['MIN85PCT'].append(Kurpf['MIN85PCT'])
+        Kurpf_data['MIN85PCTLAT'].append(Kurpf['MIN85PCTLAT'])
+        Kurpf_data['MIN85PCTLON'].append(Kurpf['MIN85PCTLON'])
+        Kurpf_data['MIN37PCT'].append(Kurpf['MIN37PCT'])
+        Kurpf_data['MIN37PCTLAT'].append(Kurpf['MIN37PCTLAT'])
+        Kurpf_data['MIN37PCTLON'].append(Kurpf['MIN37PCTLON'])
+        Kurpf_data['MIN1833'].append(Kurpf['MIN1833'])
+        Kurpf_data['MIN1838'].append(Kurpf['MIN1838'])
+        Kurpf_data['MIN165V'].append(Kurpf['MIN165V'])
+        Kurpf_data['MIN165H'].append(Kurpf['MIN165H'])
+        Kurpf_data['V19ATMIN37'].append(Kurpf['V19ATMIN37'])
+        Kurpf_data['H19ATMIN37'].append(Kurpf['H19ATMIN37'])
+        Kurpf_data['LANDOCEAN'].append(Kurpf['LANDOCEAN'])
+        gc.collect
+        del Kurpf
+
+    return Kurpf_data
 
 
+#################################################################
+def read_KuRPF(ifile):
+        
+    # open the hdf file
+    hdf  = SD.SD(ifile)
+    # Make dictionary and read the HDF file
+    dsets = hdf.datasets()
+    dsNames = sorted(dsets.keys())
+    Kurpf_data = {}         
+    for name in dsNames:
+        # Get dataset instance
+        ds  = hdf.select(name)
+        data = ds.get()
+        Kurpf_data[name] = data
+    hdf.end()
+
+    del data, ds, dsets, dsNames
+    return Kurpf_data
+
+
+#################################################################
 def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
 
     import seaborn as sns
