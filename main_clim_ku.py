@@ -119,6 +119,7 @@ for i in elems[0]:
 
 # none found for RELAMPAGO-CACTI study period !
 # none found for the full data period neither
+# FOUND ONLY 1 All conditions for:37794 
 
 #-------------------------------------------------------------------------    
 # 3) Data: snow filter: In our case summer season -> remove topography ?
@@ -131,9 +132,24 @@ for i in elems[0]:
 # ANALISIS PARA EL PAPER (UPDATED 12-2022) 
 #--------------------------------------------------------------------------    
 
+dir_name = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/Output/Climatology'
+filename = 'full_GMI_parameters.png'
+plot_PCT_percentiles_GMI(dir_name, filename, Kurpf, selectKurpf, 'KuRPF')
+filename = 'full_Ku_parameters.png'
+plot_PCT_percentiles_Ku(dir_name, filename, Kurpf, selectKurpf, 'KuRPF'
 
+# PLOT  X=MIN37PCT, Y=MIN85PCT, Z=MIN1838
+filename = 'full_min1838PCT_distrib.png'  
+plot_MIN1838_distrib(dir_name, filename, Kurpf, selectKurpf, 'KuRPF')
 
-
+# PLOT  X=MIN37PCT, Y=MAXNSZ, Z=MAXHT40
+filename = 'full_MAXHT40_distrib.png'  # TAMBIEN HACER CON 85GHz
+plot_MAXHT40_distrib(dir_name, filename, Kurpf, [], selectKurpf, [], 'KuRPF')
+                        
+                        
+# PLOT  X=MIN85PCT, Y=PFsarea, Z=VOLRAIN_Ku
+filename = 'full_VolRain_Ku_distrib.png'
+plot_volrain_Ku_distrib(dir_name, filename, Kurpf, selectKurpf)
 
 
 
