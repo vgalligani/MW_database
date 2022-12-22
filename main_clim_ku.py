@@ -18,12 +18,10 @@ import sys
 import numpy as np
 import h5py 
 import matplotlib.pyplot as plt
-import Plots as PlottingGMITools
 from os import listdir
 from os.path import isfile, join
 import shutil
 import pandas as pd
-import osgeo
 import geopandas as gpd
 from shapely.ops import cascaded_union
 from numpy import genfromtxt;
@@ -34,7 +32,10 @@ import matplotlib
 import matplotlib.gridspec as gridspec
 import matplotlib.colors as mcolors
 import seaborn as sns
+
 import Climatology_plots as ClimPlot
+import Plots as PlottingGMITools
+import osgeo
 
 
 # Some matplotlib figure definitions
@@ -43,8 +44,8 @@ plt.rcParams['xtick.labelsize']=12
 plt.rcParams['ytick.labelsize']=12
 
 #################################################################
-prov = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/provincias.txt", delimiter='')
-samerica = genfromtxt("/Users/victoria.galligani/Work/Tools/Maps/samerica.txt", delimiter='')
+prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
 
 #################################################################
 # Data base limits
@@ -59,8 +60,12 @@ opts = {'xlim_min': xlim_min, 'xlim_max': xlim_max,
 
 #-------------------------------------------------------------------------- KuRPF
 import numpy.ma as ma
+import gc
+import psutil
 
-Kurpf_path = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/KURPF/'
+#Kurpf_path = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/KURPF/'
+
+Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/KURPF/'
 Kurpf_data = ClimPlot.merge_KuRPF_dicts_all(Kurpf_path)
 
 # So far this generates e.g. Kurpf_data['LON'][0:37]. To to join ... 
@@ -93,8 +98,8 @@ plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);
 plt.title('Location of PF centers after domain-location filter')
 plt.text(-55, -17, 'Nr. PFs:'+str(Kurpf['LAT'][selectKurpf].shape[0]))
 
-filename = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/Plots/RPFscatter_domain.png'
-fig.savefig(filename, dpi=300,transparent=False)        
+#filename = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/Plots/RPFscatter_domain.png'
+#fig.savefig(filename, dpi=300,transparent=False)        
 
 #--------------------------------------------------------------------------    
 # 2) Data: “noise” filter: To remove these noisy signals, PFs with maximum 20 dBZ echo tops greater 
@@ -126,7 +131,8 @@ for i in elems[0]:
 # these percentages correspond to the 0.01th, 0.1th, 1th and 10th percentiles of each distribution, respectively. 
 # For the parameters in which frequency decreases as their value increases (e.g., maximum radar echo top, or volumetric precipitation),
 # these percentages correspond to the 99.99th, 99.9th, 99th, and 90th percentiles of each distribution, respectively.
-dir_name = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/Plots/Climatology'
+#dir_name = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/Plots/Climatology'
+dir_name = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/Output/Climatology'
 filename = 'full_GMI_parameters.png'
 ClimPlot.plot_PCT_percentiles_GMI(dir_name, filename, Kurpf, selectKurpf)
 filename = 'full_Ku_parameters.png'
