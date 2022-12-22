@@ -81,6 +81,13 @@ def merge_GPCTF_dicts_keys(Kurpf_path):
         #Kurpf_data['V19ATMIN37'].append(Kurpf['V19ATMIN37'])
         #Kurpf_data['H19ATMIN37'].append(Kurpf['H19ATMIN37'])
         Kurpf_data['LANDOCEAN'].append(Kurpf['LANDOCEAN'])
+        Kurpf_data['MAXHT20'].append(Kurpf['MAXHT20'])
+        Kurpf_data['NPIXELS'].append(Kurpf['NPIXELS'])
+        Kurpf_data['MAXNSZ'].append(Kurpf['MAXNSZ'])
+        Kurpf_data['MAXHT40'].append(Kurpf['MAXHT40'])
+        Kurpf_data['VOLRAIN_KU'].append(Kurpf['VOLRAIN_KU'])
+
+               
         gc.collect
         del Kurpf
 
@@ -493,7 +500,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('KuRPF VOLRAIN_KU intensity category')
-    VOLRAIN_KU_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'VOLRAIN_KU')
+    VOLRAIN_KU_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'VOLRAIN_KU') 
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')    
     counter = 0
@@ -521,7 +528,7 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     plt.title('KuRPF MAXNSZ intensity category')
     MAXNSZ_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXNSZ')
-    #MAXNSZ_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXNSZ')
+    #MAXNSZ_cat, latlat, lonlon, percentiles, _, _ = get_categoryPF_hi(Kurpf, selectKurpf, 'MAXNSZ') 
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
     counter = 0
