@@ -66,7 +66,9 @@ import psutil
 #Kurpf_path = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/KURPF/'
 
 Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/KURPF/'
-Kurpf_data = ClimPlot.merge_KuRPF_dicts_all(Kurpf_path)
+#Kurpf_data = ClimPlot.merge_KuRPF_dicts_all(Kurpf_path)
+Kurpf_data = merge_GPCTF_dicts_keys(Kurpf_path)
+
 
 # So far this generates e.g. Kurpf_data['LON'][0:37]. To to join ... 
 Kurpf = {}
