@@ -58,7 +58,7 @@ ylim_max = -19;
 opts = {'xlim_min': xlim_min, 'xlim_max': xlim_max, 
         'ylim_min': ylim_min, 'ylim_max': ylim_max}
 
-#-------------------------------------------------------------------------- KuRPF
+#-------------------------------------------------------------------------- KuRPF 
 import numpy.ma as ma
 import gc
 import psutil
