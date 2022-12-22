@@ -149,16 +149,17 @@ ClimPlot.plot_MAXHT40_distrib(dir_name, filename, Kurpf, selectKurpf)
 # PLOT  X=MIN85PCT, Y=PFsarea, Z=VOLRAIN_Ku
 filename = 'full_VolRain_Ku_distrib.png'
 ClimPlot.plot_volrain_Ku_distrib(dir_name, filename, Kurpf, selectKurpf)
-
+#------            OJO QUE ACA       --------------------------------
+# plot_volrain_Ku_distrib(dir, filename, Kurpf, MWRPF, selectKurpf, selectMWRPF, PFtype1, PFtype_area):
+#NECESITO LEER MWRPF PARA DETERMINAR AREA DESDE AHI? 
+#---------------------------------------------------------------------
+        
+        
 #-------------------------------------------------------------------------    
 # Get the dates of the top 0.01% 
-#- For  'MIN37PCT'
 info_orbit_min37 = ClimPlot.get_orbits_extreme(Kurpf, selectKurpf, 'MIN37PCT')
 info_orbit_min85 = ClimPlot.get_orbits_extreme(Kurpf, selectKurpf, 'MIN85PCT')
 info_orbit_max40 = ClimPlot.get_orbits_extreme_hi(Kurpf, selectKurpf, 'MAXHT40')
-
-#- For  'MIN85PCT'
-
 
 #-------------------------------------------------------------------------    
 # extend analysis 
@@ -240,8 +241,9 @@ zi_MAXHT40 = griddata((LON,LAT), MAXHT40, (xi,yi), method='nearest')
     
 # plot the actual values
 filename = 'regridded_map.png'
-ClimPlot.plot_regrid_map(lonbins, latbins, zi_MIN37PCT, zi_MIN85PCT, zi_MAXHT40, dir_name+filename)
+ClimPlot.plot_regrid_map(lonbins, latbins, zi_MIN37PCT, zi_MIN85PCT, zi_MAXHT40, dir_name+filename,'test',LON,LAT,MIN37PCT)
 
+        
 # plot the spatial frequency distrb. note that the number of PFs within each grid box is different when
 #  different proxies are considered, since different subsets of elements are selected from the entire dataset. 
 # GPM sampling maximizes near 60◦S due to the orbital recurvature at that latitude, 
