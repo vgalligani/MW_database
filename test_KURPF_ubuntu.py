@@ -1404,7 +1404,7 @@ def plot_pixels_GPCTF_distrib(dir, filename, MWRPF, selectMWRPF):
             plt.scatter(x_min85, y_min37, s=50, marker='o', c = cmap_f(counter))        
         counter = counter+1
     plt.xlabel('GPCTF MIN85PCT (K)')
-    plt.xlabel('GPCTF MIN37PCT (K)')
+    plt.ylabel('GPCTF MIN37PCT (K)')
     #ax1.set_yscale('log')
     plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class > 90%')        
     plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class > 99%')             
