@@ -35,6 +35,47 @@ def merge_KuRPF_dicts_all(Kurpf_path):
         gc.collect()
     return Kurpf_data
 
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def merge_GPCTF_dicts_keys(Kurpf_path):
+
+    Kurpf_data = defaultdict(list)
+
+    files = listdir(Kurpf_path)
+    for i in files: 
+        print(i)
+        Kurpf = read_KuRPF(Kurpf_path+i)
+        #Kurpf_data['ORBIT'].append(Kurpf['ORBIT'])
+        #Kurpf_data['YEAR'].append(Kurpf['YEAR'])
+        #Kurpf_data['MONTH'].append(Kurpf['MONTH'])
+        #Kurpf_data['DAY'].append(Kurpf['DAY'])
+        #Kurpf_data['HOUR'].append(Kurpf['HOUR'])
+        Kurpf_data['ACTRK'].append(Kurpf['ACTRK'])             # Cross track center location (#pixels)
+        Kurpf_data['ALTRK'].append(Kurpf['ALTRK'])             # Along track center location (# pixels)   
+        Kurpf_data['H10ATMIN37'].append(Kurpf['H10ATMIN37'])   # 10H GHz TB at min 37 PCT location (K)
+        Kurpf_data['H19ATMIN37'].append(Kurpf['H19ATMIN37'])   # 1H GHz TB at min 37 PCT location (K)
+        Kurpf_data['LANDOCEAN'].append(Kurpf['LANDOCEAN'])     
+        Kurpf_data['LAT'].append(Kurpf['LAT'])                 # Geographical center latitude (degree)
+        Kurpf_data['LON'].append(Kurpf['LON'])                 # Geographical center longitude (degree)
+        Kurpf_data['MIN1833'].append(Kurpf['MIN1833'])
+        Kurpf_data['MIN1838'].append(Kurpf['MIN1838'])
+        Kurpf_data['MIN165V'].append(Kurpf['MIN165V'])     
+        Kurpf_data['MIN85PCT'].append(Kurpf['MIN85PCT'])
+        Kurpf_data['MIN37PCT'].append(Kurpf['MIN37PCT'])
+        Kurpf_data['NPIXELS_GMI'].append(Kurpf['NPIXELS_GMI'])   # Number of GMI pixels (#)
+        Kurpf_data['NRAINAREA_GMI'].append(Kurpf['NRAINAREA_GMI'])  
+        Kurpf_data['NRAINPIXELS_GMI'].append(Kurpf['NRAINPIXELS_GMI']) # Number of GMI pixels with precip (#)
+        Kurpf_data['VOLRAIN_GMI'].append(Kurpf['VOLRAIN_GMI'])
+ 
+               
+        gc.collect
+        del Kurpf
+
+    return Kurpf_data
+
+
+
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 def merge_GPCTF_dicts_keys(Kurpf_path):
@@ -125,13 +166,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     # Get altitude
     import netCDF4 as nc
     #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
-    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['x'][:]
-    topo_lon = ds.variables['y'][:]
-    topo_dat = ds.variables['z'][:]/1e3
+    topo_lat = ds.variables['lon'][:]
+    topo_lon = ds.variables['lat'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
-
+    
     # Some matplotlib figure definitions
     plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
@@ -148,8 +189,7 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
 
 
-    Stats = open(dir+filename+'_'+PFtype+'_info.txt', 'w')
-
+    Stats = open(dir+filename+'_'+PFtype+'_info.txt', 'w')  
 
     #------------------------- Figure 
     fig = plt.figure(figsize=(6,5))     
@@ -164,9 +204,13 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     #sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
     #                   (lonlon,latlat), method='nearest')
     counter = 0
+    
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
     for i in percentiles:
-        LON = lonlon[( np.where( (MIN37PCT_cat < i) ))]         
-        LAT = latlat[( np.where( (MIN37PCT_cat < i) ))]                
+        LON  = lonlon[np.where( (MIN37PCT_cat < i) & (sat_alt < 2.4) )]        
+        LAT = latlat[np.where(  (MIN37PCT_cat < i) & (sat_alt < 2.4) )]                  
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -199,6 +243,56 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     cbar.ax.set_xticklabels(labels)
 
 
+    #------------------------- Figure PIXELS
+    fig = plt.figure(figsize=(6,5))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ pixels
+    ax1 = plt.subplot(gs1[0,0])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.title(PFtype+' NPIXELS GMI intensity category')
+    pixels_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS_GMI')
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
+    # here mask latlat and lonlon above 2.4 km altitude
+    #sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+    #                   (lonlon,latlat), method='nearest')
+    counter = 0
+    for i in reveresed(percentiles):
+        LON  = lonlon[np.where( (pixels_cat > i) & (sat_alt < 2.4) )]        
+        LAT = latlat[np.where(  (pixels_cat > i) & (sat_alt < 2.4) )]               
+        if counter < 1:
+            plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))        
+        counter = counter+1
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-70,-45])
+    ax1.set_ylim([-45,-15])
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    ax1.set_xlim([-70,-45])
+    ax1.set_ylim([-45,-15])
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, 0.01, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['90', '99', '99.9', '99.99']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+    
+    
     #fig.savefig(dir+filename+'only37.png', dpi=300,transparent=False)        
 
     #------------------------- Figure 
@@ -341,12 +435,14 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
 def get_categoryPF_altfilter(PF_all, select, vkey):
 
     import netCDF4 as nc
-    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['x'][:]
-    topo_lon = ds.variables['y'][:]
-    topo_dat = ds.variables['z'][:]/1e3
+    topo_lat = ds.variables['lon'][:]
+    topo_lon = ds.variables['lat'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
 
     var    = PF_all[vkey][select].copy()
     latlat = PF_all['LAT'][select].copy()
@@ -365,11 +461,12 @@ def get_categoryPF_altfilter(PF_all, select, vkey):
 def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
 
     import netCDF4 as nc
-    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['x'][:]
-    topo_lon = ds.variables['y'][:]   
-    topo_dat = ds.variables['z'][:]/1e3
+    topo_lat = ds.variables['lon'][:]
+    topo_lon = ds.variables['lat'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
 
     import seaborn as sns
@@ -576,12 +673,14 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
 def get_categoryPF_hi_altfilter(PF_all, select, vkey):
     
     import netCDF4 as nc
-    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['x'][:]
-    topo_lon = ds.variables['y'][:]   
-    topo_dat = ds.variables['z'][:]/1e3
+    topo_lat = ds.variables['lon'][:]
+    topo_lon = ds.variables['lat'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
     
     var    = PF_all[vkey][select].copy()
     latlat = PF_all['LAT'][select].copy()
@@ -601,12 +700,14 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
 
     # Get altitude
     import netCDF4 as nc
-    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['x'][:]
-    topo_lon = ds.variables['y'][:]   
-    topo_dat = ds.variables['z'][:]/1e3
+    topo_lat = ds.variables['lon'][:]
+    topo_lon = ds.variables['lat'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
     
     import seaborn as sns
 
@@ -977,12 +1078,14 @@ def plot_regrid_map(lonbins, latbins, zi_37, zi_85, zi_max40ht, filename, main_t
 def plot_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_title):
 
     import netCDF4 as nc
-    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/ETOPO1_Bed_c_gmt4.grd_0.1deg_SA.nc'
+    #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['x'][:]
-    topo_lon = ds.variables['y'][:]
-    topo_dat = ds.variables['z'][:]/1e3
+    topo_lat = ds.variables['lon'][:]
+    topo_lon = ds.variables['lat'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
 
     lonbins = np.arange(-70, -40, 2) 
     latbins = np.arange(-50, -10, 2)
@@ -1245,6 +1348,65 @@ def plot_spatial_distrib(Kurpf, selectKurpf, filename, main_title):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+def plot_pixels_GPCTF_distrib(dir, filename, MWRPF, selectMWRPF):
+
+    import seaborn as sns
+    
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12
+    # Some matplotlib figure definitions
+
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(cmap.N)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, cmap.N)
+    
+    #------------------------- Figure 
+    fig = plt.figure(figsize=(12,12))     
+    gs1 = gridspec.GridSpec(1, 1)
+    #------ VOLRAIN_KU
+    ax1 = plt.subplot(gs1[0,0])
+    plt.title('GPCTF pixels')
+    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN85PCT')
+    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
+    NPIXELS_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS_GMI')
+
+    npixels = NPIXELS_cat.copy()
+    npixels = npixels.astype(np.float32)
+    area    = npixels*5.*5.
+    
+    counter = 0
+    for i in reversed(percentiles):
+        x_min85   = MIN85PCT_cat[np.where(NPIXELS_cat > i)]   
+        y_min37   = MIN37PCT_cat[np.where(NPIXELS_cat > i)]
+        if counter < 1:
+            plt.scatter(x_min85, y_min37, s=15, marker='o', c = cmap_f(counter))
+        elif counter < 3:
+            plt.scatter(x_min85, y_min37, s=30, marker='o', c = cmap_f(counter))
+        else:
+            plt.scatter(x_min85, y_min37, s=50, marker='o', c = cmap_f(counter))        
+        counter = counter+1
+    plt.xlabel('GPCTF MIN85PCT (K)')
+    plt.xlabel('GPCTF MIN37PCT (K)')
+    #ax1.set_yscale('log')
+    plt.scatter(np.nan, np.nan, s=15, marker='o', c = cmap_f(0), label='class > 90%')        
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(1), label='class > 99%')             
+    plt.scatter(np.nan, np.nan, s=30, marker='o', c = cmap_f(2), label='class > 99.9%')        
+    plt.scatter(np.nan, np.nan, s=50, marker='o', c = cmap_f(3), label='class > 99.99%')        
+    plt.legend()    
+    plt.grid()
+    
+    #fig.savefig(dir+filename, dpi=300,transparent=False)        
+    
+    
+    return
+
 
 
 #-------------------------------------------------------------------------
