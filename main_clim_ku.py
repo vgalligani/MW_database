@@ -50,7 +50,7 @@ samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimi
 #################################################################
 # Data base limits
 #
-xlim_min = -75; # (actually used -70 in search)
+xlim_min = -70; # (actually used -70 in search)
 xlim_max = -50; 
 ylim_min = -40; 
 ylim_max = -19; 
@@ -58,24 +58,89 @@ ylim_max = -19;
 opts = {'xlim_min': xlim_min, 'xlim_max': xlim_max, 
         'ylim_min': ylim_min, 'ylim_max': ylim_max}
 
-#-------------------------------------------------------------------------- KuRPF 
+#-------------------------------------------------------------------------- why use GPCTF 
+# ojo: Figure 2 lists current precipitation feature definitions. Kurpf, Karpf, and DPRrpf are
+# defined based on the contiguous pixels with non zero precipitation rate (here >
+# 0.1mm/hr is used) from Ku, Ka, and DPR retrievals. Kurppf is based on the projected
+# area with any radar echo in the column. gpf is based on the GMI precipitation inside
+# Ku swath. Rgpf and kuclconf are designed to assess the performance of retrievals and
+# the convective regions for storms. Ggpf is the GMI precipitation feature in GMI swath.
+# Gpctf is defined with area of GMI 89GHz Polarization Corrected Temperature (PCT,
+# Spence et al., 1989) colder than 250 K
+#--------------------------------------------------------------------------  
+
+#--------------------------------------------------------------------------    
+# ANALISIS PARA EL PAPER (UPDATED 12-2022) 
+#--------------------------------------------------------------------------  
+
 import numpy.ma as ma
 import gc
 import psutil
 
 #Kurpf_path = '/Users/victoria.galligani/Work/Data/RELAMPAGO_GPM/KURPF/'
+#Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/KURPF/'
+#Kurpf_data = ClimPlot.merge_KuRPF_dicts_all(Kurpf_path) # se quedeba sin memoria y no necesito todo ... 
 
-Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/KURPF/'
-#Kurpf_data = ClimPlot.merge_KuRPF_dicts_all(Kurpf_path)
+Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/GPCTF/'
 Kurpf_data = merge_GPCTF_dicts_keys(Kurpf_path)
-
-
 # So far this generates e.g. Kurpf_data['LON'][0:37]. To to join ... 
-Kurpf = {}
+GPCTF = {}
 for key in Kurpf_data.keys():
-    Kurpf[key] =  np.concatenate(Kurpf_data[key][:])
-
+    GPCTF[key] =  np.concatenate(Kurpf_data[key][:])
 del Kurpf_data
+
+# 1)  Apply area fileter
+selectGPCTF = np.logical_and(np.logical_and(GPCTF['LON'] >= opts['xlim_min'], GPCTF['LON'] <= opts['xlim_max']), 
+                np.logical_and(GPCTF['LAT'] >= opts['ylim_min'], GPCTF['LAT'] <= opts['ylim_max']))
+fig = plt.figure(figsize=(12,12))     
+gs1 = gridspec.GridSpec(1, 1)
+ax1 = plt.subplot(gs1[0,0])
+plt.plot(GPCTF['LON'][selectGPCTF], GPCTF['LAT'][selectGPCTF], 'x', color='darkblue')
+ax1.set_xlim([-80,-45])
+ax1.set_ylim([-45,-15])
+plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+plt.title('Location of PF centers after domain-location filter')
+plt.text(-55, -17, 'Nr. PFs:'+str(Kurpf['LAT'][selectKurpf].shape[0]))   
+
+dir_name = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/Output/Climatology'
+
+filename = 'full_GMI_parameters.png'
+plot_PCT_percentiles_GMI(dir_name, filename, GPCTF, selectGPCTF, 'GPCTF')
+filename = 'pixels_GMI_parameters.png'
+plot_pixels_GPCTF_distrib(dir_name, filename, GPCTF, selectGPCTF)
+
+
+
+# -------- OJO PARA ESTO SI LEER KURPF!  ---------------------------
+filename = 'full_Ku_parameters.png'
+plot_PCT_percentiles_Ku(dir_name, filename, Kurpf, selectKurpf, 'KURPF')
+
+# PLOT  X=MIN37PCT, Y=MIN85PCT, Z=MIN1838
+filename = 'full_min1838PCT_distrib.png'  
+plot_MIN1838_distrib(dir_name, filename, Kurpf, selectKurpf, 'GPCTF')
+
+# PLOT  X=MIN37PCT, Y=MAXNSZ, Z=MAXHT40
+filename = 'full_MAXHT40_distrib.png'  # TAMBIEN HACER CON 85GHz
+plot_MAXHT40_distrib(dir_name, filename, Kurpf, [], selectKurpf, [], 'GPCTF')                   
+                        
+# PLOT  X=MIN85PCT, Y=PFsarea, Z=VOLRAIN_Ku
+filename = 'full_VolRain_Ku_distrib.png'
+plot_volrain_Ku_distrib(dir_name, filename, Kurpf, selectKurpf)
+
+# ------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 
 # for key in Kurpf_data.keys():
 #     print(key)
@@ -125,32 +190,6 @@ for i in elems[0]:
 # 3) Data: snow filter: In our case summer season -> remove topography ?
 
 # TODO!?
-
-
-
-#--------------------------------------------------------------------------    
-# ANALISIS PARA EL PAPER (UPDATED 12-2022) 
-#--------------------------------------------------------------------------    
-
-dir_name = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/Output/Climatology'
-filename = 'full_GMI_parameters.png'
-plot_PCT_percentiles_GMI(dir_name, filename, Kurpf, selectKurpf, 'KuRPF')
-filename = 'full_Ku_parameters.png'
-plot_PCT_percentiles_Ku(dir_name, filename, Kurpf, selectKurpf, 'KuRPF'
-
-# PLOT  X=MIN37PCT, Y=MIN85PCT, Z=MIN1838
-filename = 'full_min1838PCT_distrib.png'  
-plot_MIN1838_distrib(dir_name, filename, Kurpf, selectKurpf, 'KuRPF')
-
-# PLOT  X=MIN37PCT, Y=MAXNSZ, Z=MAXHT40
-filename = 'full_MAXHT40_distrib.png'  # TAMBIEN HACER CON 85GHz
-plot_MAXHT40_distrib(dir_name, filename, Kurpf, [], selectKurpf, [], 'KuRPF')
-                        
-                        
-# PLOT  X=MIN85PCT, Y=PFsarea, Z=VOLRAIN_Ku
-filename = 'full_VolRain_Ku_distrib.png'
-plot_volrain_Ku_distrib(dir_name, filename, Kurpf, selectKurpf)
-
 
 
 
