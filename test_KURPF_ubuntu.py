@@ -168,11 +168,11 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
     fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['lon'][:]
-    topo_lon = ds.variables['lat'][:]
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
     topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
-    
+
     # Some matplotlib figure definitions
     plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
@@ -258,9 +258,9 @@ def plot_PCT_percentiles_GMI(dir, filename, Kurpf, selectKurpf, PFtype):
     #sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
     #                   (lonlon,latlat), method='nearest')
     counter = 0
-    for i in reveresed(percentiles):
-        LON  = lonlon[np.where( (pixels_cat > i) & (sat_alt < 2.4) )]        
-        LAT = latlat[np.where(  (pixels_cat > i) & (sat_alt < 2.4) )]               
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (pixels_cat > i) & (sat_alt < 1.7) )]        
+        LAT = latlat[np.where(  (pixels_cat > i) & (sat_alt < 1.7) )]               
         if counter < 1:
             plt.scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
         else:
@@ -438,8 +438,8 @@ def get_categoryPF_altfilter(PF_all, select, vkey):
     #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
     fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['lon'][:]
-    topo_lon = ds.variables['lat'][:]
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
     topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
     
@@ -449,12 +449,12 @@ def get_categoryPF_altfilter(PF_all, select, vkey):
     lonlon = PF_all['LON'][select].copy()
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                         (lonlon,latlat), method='nearest')
-    varfilt = var[ np.where(sat_alt < 2.4) ]      
+    varfilt = var[ np.where(sat_alt < 1.7) ]      
 
     percentiles = np.percentile(varfilt, [10, 1, 0.1, 0.01])
 
 
-    return varfilt, latlat[ np.where(sat_alt < 2.4) ] , lonlon[ np.where(sat_alt < 2.4) ] , percentiles
+    return varfilt, latlat[ np.where(sat_alt < 1.7) ] , lonlon[ np.where(sat_alt < 1.7) ] , percentiles
       
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
@@ -464,8 +464,8 @@ def plot_PCT_percentiles_Ku(dir, filename, Kurpf, selectKurpf):
     #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
     fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['lon'][:]
-    topo_lon = ds.variables['lat'][:]
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
     topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
 
@@ -676,8 +676,8 @@ def get_categoryPF_hi_altfilter(PF_all, select, vkey):
     #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
     fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['lon'][:]
-    topo_lon = ds.variables['lat'][:]
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
     topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
     
@@ -687,12 +687,12 @@ def get_categoryPF_hi_altfilter(PF_all, select, vkey):
     lonlon = PF_all['LON'][select].copy()
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                         (lonlon,latlat), method='nearest')
-    varfilt = var[ np.where(sat_alt < 2.4) ]      
+    varfilt = var[ np.where(sat_alt < 1.7) ]      
     percentiles = np.percentile(varfilt, [99.99, 99.9, 99, 90])
     
 
     
-    return varfilt, latlat[ np.where(sat_alt < 2.4) ], lonlon[ np.where(sat_alt < 2.4) ], percentiles
+    return varfilt, latlat[ np.where(sat_alt < 1.7) ], lonlon[ np.where(sat_alt < 1.7) ], percentiles
  
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
@@ -703,8 +703,8 @@ def plot_MIN1838_distrib(dir, filename, Kurpf, selectKurpf, PFtype):
     #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
     fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['lon'][:]
-    topo_lon = ds.variables['lat'][:]
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
     topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
     
@@ -1081,8 +1081,8 @@ def plot_spatial_distrib_altfilter(Kurpf, selectKurpf, filename, main_title):
     #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
     fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
     ds = nc.Dataset(fn)
-    topo_lat = ds.variables['lon'][:]
-    topo_lon = ds.variables['lat'][:]
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
     topo_dat = ds.variables['Band1'][:]/1e3
     lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
     
@@ -1373,18 +1373,29 @@ def plot_pixels_GPCTF_distrib(dir, filename, MWRPF, selectMWRPF):
     #------ VOLRAIN_KU
     ax1 = plt.subplot(gs1[0,0])
     plt.title('GPCTF pixels')
-    MIN85PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN85PCT')
-    MIN37PCT_cat, _, _, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
-    NPIXELS_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS_GMI')
-
+    MIN85PCT_cat, latlat_85, lonlon85, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN85PCT')
+    MIN37PCT_cat, latlat_37, lonlon_37, _ = get_categoryPF_altfilter(MWRPF, selectMWRPF, 'MIN37PCT')
+    NPIXELS_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(MWRPF, selectMWRPF, 'NPIXELS_GMI')
+        
+    # Get altitude
+    import netCDF4 as nc
+    #fn = '/home/victoria.galligani/Work/Tools/etopo1_bedrock.nc'
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)  
+    
     npixels = NPIXELS_cat.copy()
     npixels = npixels.astype(np.float32)
     area    = npixels*5.*5.
     
     counter = 0
     for i in reversed(percentiles):
-        x_min85   = MIN85PCT_cat[np.where(NPIXELS_cat > i)]   
-        y_min37   = MIN37PCT_cat[np.where(NPIXELS_cat > i)]
+        x_min85   = MIN85PCT_cat[np.where(NPIXELS_cat > i) ]   
+        y_min37   = MIN37PCT_cat[np.where(NPIXELS_cat > i)  ]        
+        
         if counter < 1:
             plt.scatter(x_min85, y_min37, s=15, marker='o', c = cmap_f(counter))
         elif counter < 3:
