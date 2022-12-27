@@ -30,7 +30,7 @@ def FullData(fmat):
   
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
-def Plot_exp(dset1, dset2):  #,ititle,name,path):
+def Plot_exp(dset1, dset2, labels):  #,ititle,name,path):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -192,9 +192,48 @@ def Plot_exp_RainGrau(dd, dset1, dset2, dset3, infotitle):  #,ititle,name,path):
     return
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
+def Plot_exp_hail(dset1, dset2, dset3, dset4, labels_in):  #,ititle,name,path):
+    """
+    -------------------------------------------------------------
+    Experiment comparison "internal":
+    -------------------------------------------------------------
+    OUT    name.png   Plot stored at the given path
+    IN     d1         ARTS outputs
+           ititle     Title of figure
+           name       Name to store the figure
+           path       Path to store the figure
+    -------------------------------------------------------------
+    """
+
+    f_grid = dset1['D']['f_grid'][0][0][0][0][0][0]/1e9
+
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    fig = plt.figure(figsize=(9,6))
+    plt.plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = labels_in[0])
+    plt.plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = labels_in[1])
+    plt.plot(dset3['D']['f_grid'][0][0][0][0][0][0]/1e9, dset3['arts_tb'][0,:]-dset3['arts_cl'][0,:],linewidth=1,color='darkred', label = labels_in[2])
+    plt.plot(dset4['D']['f_grid'][0][0][0][0][0][0]/1e9, dset4['arts_tb'][0,:]-dset4['arts_cl'][0,:],linewidth=1,color='magenta', label = labels_in[3])
+
+    plt.title( 'Cloud Scenarios (Hail-only)', fontsize='12', fontweight='bold')
+    plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+    plt.xlabel(r'Frequency [GHz]', color='k')
+    plt.grid('true')
+    plt.axvline(x=10 ,ls='-',color='k')
+    plt.axvline(x=19 ,ls='-',color='k')
+    plt.axvline(x=22 ,ls='-',color='k')
+    plt.axvline(x=37 ,ls='-',color='k')
+    plt.axvline(x=85 ,ls='-',color='k')
+    plt.axvline(x=166 ,ls='-',color='k')
+    plt.xlim([4,120])
+    plt.legend()
 
 
-
+    #fig.suptitle(str(ititle) ,fontweight='bold' )
+    #plt.tight_layout()
+    #plt.subplots_adjust(top=0.899)
+    #plt.savefig(path+'/'+str(name)+'.png')
+    #plt.close()
+    return
 
 
 #------------------------------------------------------------------------------------------
@@ -387,27 +426,70 @@ plt.ylim([0,20])
 #------------------------------------------------------------------------------------------
 # Hail Only
 #------------------------------------------------------------------------------------------ 
-# 1e-2 (1cm)
+# simple cloudbox 1e-2 (1cm)
 f_arts    = main_dir + 'HailOnly_ssd_EXPa0.01/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.01.mat'
 arts_exp1 = FullData(f_arts)
 
-# 10e-2 (10cm)
-f_arts    = main_dir + 'HailOnly_ssd_EXPa0.1/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.1.mat'
+# simple cloudbox 5e-2 (5cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPa0.05/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.05.mat'
 arts_exp2 = FullData(f_arts)
 
+# Exponetial cloubox 1e-2 (1cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPb0.01/' + 'GMI_Fascod_HailOnly_ssd_EXPb0.01.mat'
+arts_exp3 = FullData(f_arts)
+
+# Exponetial cloudbox 5e-2 (5cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPb0.05/' + 'GMI_Fascod_HailOnly_ssd_EXPb0.05.mat'
+arts_exp4 = FullData(f_arts)
+
 # ----------------------------- plot
-Plot_exp(arts_exp1, arts_exp2, labels)
+Plot_exp_hail(arts_exp1, arts_exp2, arts_exp3, arts_exp4, ['Simple cloudbox (mono 1cm)','Simple cloudbox (mono 5cm)','Exp cloudbox (mono 1cm)','Exp. cloudbox (mono 5cm)'])
+
+mass_1 = 500 * 4 * 3.14 * (1e-2 **3) / 24;
+mass_2 = 500 * 4 * 3.14 * (5e-2 **3) / 24;
 
 plt.matplotlib.rc('font', family='serif', size = 12)
 fig = plt.figure(figsize=(9,6))    
-plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0], arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='darkblue', label = 'Heavy Rain Only')
-plt.plot( arts_exp2['D']['particle_bulkprop_field'][0][0][0][0][0][0] , arts_exp2['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='cyan', label = 'Light Rain Only')
-plt.title( 'Cloud Scenarios (Rain-Only)', fontsize='12', fontweight='bold')
+plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_1, arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='k', label = 'Simple cloudbox')
+plt.plot( arts_exp3['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_1, arts_exp3['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='gray', label = 'Exp. cloudbox')
+
+plt.plot( arts_exp2['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_2, arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='k', label = 'Simple cloudbox')
+plt.plot( arts_exp4['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_2, arts_exp3['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='gray', label = 'Exp. cloudbox')
+
+plt.title( 'Cloud Scenarios (Hail-Only)', fontsize='12', fontweight='bold')
 plt.ylabel(r'Height [km]', color='k')
 plt.xlabel(r'mass content [g/m3]', color='k')
 plt.grid('true')
 plt.legend()
 plt.ylim([0,20])
+
+
+# ssp (resosnance issues!?)
+ssp_001 = FullData(main_dir + 'HailOnly_ssd_EXPb0.01/' + 'SSP.mat')
+ext_mat_1cm = ssp_001['test']['ext_mat_data'][0][0][:,1]
+abs_vec_1cm = ssp_001['test']['abs_vec_data'][0][0][:,1]
+pha_mat_1cm = ssp_001['test']['pha_mat_data'][0][0][:,1,:,0,0,0,:]
+
+ssp_005 = FullData(main_dir + 'HailOnly_ssd_EXPb0.05/' + 'SSP.mat')
+ext_mat_5cm = ssp_005['test']['ext_mat_data'][0][0][:,1]
+abs_vec_5cm = ssp_005['test']['abs_vec_data'][0][0][:,1]
+pha_mat_5cm = ssp_005['test']['pha_mat_data'][0][0][:,1,:,0,0,0,:]
+
+fig = plt.figure(figsize=(9,6))    
+plt.plot(ssp_001['test']['f_grid'][0][0][:]/1e9, 
+plt.plot(ssp_005['test']['f_grid'][0][0][:]/1e9, 
+ 
+plt.title('Single Scttering Properties (Hail-Only)', fontsize='12', fontweight='bold')
+plt.ylabel(r'Frequency', color='k')
+plt.xlabel(r'SSP', color='k')
+plt.grid('true')
+plt.legend()
+plt.xlim([4,120])
+       
+
+         
+         
+         
 
 
 
