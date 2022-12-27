@@ -476,9 +476,12 @@ abs_vec_5cm = ssp_005['test']['abs_vec_data'][0][0][:,1]
 pha_mat_5cm = ssp_005['test']['pha_mat_data'][0][0][:,1,:,0,0,0,:]
 
 fig = plt.figure(figsize=(9,6))    
-plt.plot(ssp_001['test']['f_grid'][0][0][:]/1e9, 
-plt.plot(ssp_005['test']['f_grid'][0][0][:]/1e9, 
- 
+plt.semilogy(ssp_001['test']['f_grid'][0][0][:]/1e9,  ext_mat_1cm-abs_vec_1cm, 'darkgreen', label = '1cm')
+plt.semilogy(ssp_005['test']['f_grid'][0][0][:]/1e9, ext_mat_5cm-abs_vec_5cm, 'darkblue', label = '5cm')
+
+plt.semilogy(ssp_001['test']['f_grid'][0][0][:]/1e9, abs_vec_1cm, 'darkgreen', linestyle='--')
+plt.semilogy(ssp_005['test']['f_grid'][0][0][:]/1e9, abs_vec_5cm, 'darkblue', linestyle='--')
+
 plt.title('Single Scttering Properties (Hail-Only)', fontsize='12', fontweight='bold')
 plt.ylabel(r'Frequency', color='k')
 plt.xlabel(r'SSP', color='k')
