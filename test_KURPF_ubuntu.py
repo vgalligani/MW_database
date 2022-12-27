@@ -1423,9 +1423,252 @@ def plot_pixels_GPCTF_distrib(dir, filename, MWRPF, selectMWRPF):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
+def plot_spatial_distrib_Phail(lonP, latP, Phail, title_in, gridsize):
+
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+    
+    lonbins = np.arange(-70, -40, gridsize) 
+    latbins = np.arange(-50, -10, gridsize)
+    xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
+    
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+    fig = plt.figure(figsize=(12,10))  
+    gs1 = gridspec.GridSpec(2, 2)   
+    ax1 = plt.subplot(gs1[0,0])
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(lonP, latP, values = Phail, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T)        
+    cbar = plt.colorbar(pc,label='Freq. distribution')    
+    ax1.set_title(title_in)
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    cbar.set_label('# of elements')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude') 
+    #fig.savefig(filename+'.png', dpi=300,transparent=False)        
+
+    # normalized by dividing each bin by the total pixel number
+    Ntot =  len(Phail) 
+    
+    ax1 = plt.subplot(gs1[0,1])
+    H, xedges, yedges, binnumber = stats.binned_statistic_2d(lonP, latP, values = Phail, statistic='count', bins = [xbins, ybins])  
+    H = np.ma.masked_where(H==0, H) #masking where there was no data
+    XX, YY = np.meshgrid(xedges, yedges)
+    pc = ax1.pcolormesh(XX,YY,H.T/Ntot*100)                
+    cbar = plt.colorbar(pc,label='Norm. Freq. distribution')    
+    ax1.set_title(title_in)
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])   
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    cbar.set_label('Norm. # of elements')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude') 
+    #fig.savefig(filename+'.png', dpi=300,transparent=False)  
+    
+    
+    return
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+
+def plot_norm_spatial_distrib_PERCENTILES(lonP, latP, Phail, MINPCT, title_in, gridsize, index_percentiles, channel):
+   
+    import netCDF4 as nc
+    fn = '/home/victoria.galligani/Dropbox/Hail_MW/Tools/etopo1_bedrock.nc'
+    ds = nc.Dataset(fn)
+    topo_lat = ds.variables['lat'][:]
+    topo_lon = ds.variables['lon'][:]
+    topo_dat = ds.variables['Band1'][:]/1e3
+    lons_topo, lats_topo = np.meshgrid(topo_lon,topo_lat)
+
+    lonbins = np.arange(-70, -40, gridsize) 
+    latbins = np.arange(-50, -10, gridsize)
+    xbins, ybins = len(lonbins), len(latbins) #number of bins in each dimension
+    
+    prov = genfromtxt("/home/victoria.galligani/Work/Tools/provincias.txt", delimiter='')
+    samerica = genfromtxt("/home/victoria.galligani/Work/Tools/samerica.txt", delimiter='')
+
+    fig, axes = plt.subplots(2,2,figsize=(14,12)) 
+    percentiles = np.percentile(MINPCT, index_percentiles)
+  
+    for i, ax in enumerate(axes.flatten()):
+        Phailplot = Phail[np.where( MINPCT < percentiles[i] )] 
+        LONplot   = lonP[np.where( MINPCT < percentiles[i] )] 
+        LATplot   = latP[np.where( MINPCT < percentiles[i] )] 
+        pc = ax.scatter(LONplot,LATplot, s=25, marker='s',c=Phailplot, vmin=0.5, vmax=1)            
+        #cbar = plt.colorbar(pc, label='Phail')    
+        ax.set_title('Phail for MIN'+str(channel)+'PCT < ' + str(index_percentiles[i]) +'% percentile ('+str(np.round(percentiles[i], 2))+' K)')
+        ax.set_xlim([-75,-50])
+        ax.set_ylim([-40,-19])
+        ax.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+        ax.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+        #plt.title(main_title)
+        if i==2:
+            p2 = ax.get_position().get_points().flatten()
+            
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0], 0.01, p2[2]*1.6, 0.02])
+    cbar = fig.colorbar(pc, cax=ax_cbar, orientation="horizontal")
+    #cbar.set_ticks(loc)
+    #cbar.ax.set_xticklabels(labels)
+    cbar.set_label('Phail')
+    
+    #------------------------------------------------------- 
+    # replace highest temperatures with gray
+    cmap1 =  plt.cm.get_cmap('tab20c')
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+   
+
+    fig = plt.figure(figsize=(12,10)) 
+    gs1 = gridspec.GridSpec(1, 1)   
+    
+    ax1 = plt.subplot(gs1[0,0])
+    percentiles = np.percentile(MINPCT, [10, 1, 0.1, 0.01])
+    index_percentiles = [10, 1, 0.1, 0.01]
+    counter = 0
+    for i in percentiles:              
+        Phailplot = Phail[np.where( MINPCT < i )] 
+        LONplot   = lonP[np.where( MINPCT < i )] 
+        LATplot   = latP[np.where( MINPCT < i )] 
+        if counter < 1:
+            plt.scatter(LONplot, LATplot, s=15, marker='o', facecolor = cmap_f(counter))
+        else:
+            plt.scatter(LONplot, LATplot, s=30, marker='o', facecolor = cmap_f(counter))        
+        counter = counter+1
+        
+    ax1.set_title('PFs where MIN'+str(channel)+'PCT < percentiles')
+    ax1.set_xlim([-75,-50])
+    ax1.set_ylim([-40,-19])
+    plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+    plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);     
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    #plt.title(main_title)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #fig.savefig(filename+'MAXHT40only.png', dpi=300,transparent=False)      
+    
+    p2 = ax1.get_position().get_points().flatten()
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    #-colorbar
+    ax_cbar = fig.add_axes([p2[0]-0.08, 0.01, p2[2], 0.02])
+    cbar = fig.colorbar(img, cax=ax_cbar, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['10', '1', '0.1', '0.01']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+
+    
+    return
+    
+    
+
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+def plot_TBscatters(LON_CONC, LAT_CONC, MIN37, MIN85, Phail, title_in):
+
+
+    # Define regionals: 
+    select_WCA = np.logical_and(np.logical_and(LON_CONC >= -69, LON_CONC <= -63), np.logical_and(LAT_CONC >= -36, LAT_CONC <= -29))
+    select_PS  = np.logical_and(np.logical_and(LON_CONC >= -63, LON_CONC <= -55), np.logical_and(LAT_CONC >= -36, LAT_CONC <= -29))
+    select_NOA = np.logical_and(np.logical_and(LON_CONC >= -68, LON_CONC <= -62), np.logical_and(LAT_CONC >= -29, LAT_CONC <= -20))
+    select_PN  = np.logical_and(np.logical_and(LON_CONC >= -62, LON_CONC <= -53), np.logical_and(LAT_CONC >= -29,LAT_CONC <= -20))
+
+
+    
+    fig = plt.figure(figsize=(14,12))  
+    gs1 = gridspec.GridSpec(2, 2)   
+    
+    ax1 = plt.subplot(gs1[0,0])
+    pc = ax1.scatter(MIN37[select_NOA],MIN85[select_NOA], s=25, c = Phail[select_NOA], 
+                marker='o', vmin=0.5, vmax=1)      
+    ax1.set_xlabel('MIN19PCT')
+    ax1.set_ylabel('MIN37PCT')
+    ax1.grid(True)
+    ax1.set_title('NOA', color='r')    
+    ax1.set_xlim([80,210])
+    ax1.set_ylim([50,160])
+    
+    #---
+    ax1 = plt.subplot(gs1[0,1])
+    pc = ax1.scatter(MIN37[select_PN],MIN85[select_PN], s=25, c = Phail[select_PN], 
+                marker='o', vmin=0.5, vmax=1)         
+    ax1.set_xlabel('MIN19PCT')
+    ax1.set_ylabel('MIN37PCT')
+    ax1.grid(True)
+    ax1.set_title('PN', color='green')    
+    ax1.set_xlim([80,210])
+    ax1.set_ylim([50,160])    
+    
+    #----
+    ax1 = plt.subplot(gs1[1,0])
+    pc = ax1.scatter(MIN37[select_WCA],MIN85[select_WCA], s=25, c = Phail[select_WCA], 
+                marker='o', vmin=0.5, vmax=1)
+    ax1.set_xlabel('MIN19PCT')
+    ax1.set_ylabel('MIN37PCT')
+    ax1.grid(True)
+    ax1.set_title('WCA', color='blue')    
+    ax1.set_xlim([80,210])
+    ax1.set_ylim([50,160])    
+
+    #---
+    ax1 = plt.subplot(gs1[1,1])
+    pc = ax1.scatter(MIN37[select_PS],MIN85[select_PS], s=25, c = Phail[select_PS], 
+                marker='o', vmin=0.5, vmax=1)      
+    ax1.set_xlabel('MIN19PCT')
+    ax1.set_ylabel('MIN37PCT')
+    ax1.grid(True)
+    ax1.set_title('PS', color='magenta')
+    ax1.set_xlim([80,210])
+    ax1.set_ylim([50,160])    
+    
+    return
+    
+    
+    
+    
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
 
 
 #-------------------------------------------------------------------------
