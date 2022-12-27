@@ -110,8 +110,6 @@ plot_PCT_percentiles_GMI(dir_name, filename, GPCTF, selectGPCTF, 'GPCTF')
 filename = 'pixels_GMI_parameters.png'
 plot_pixels_GPCTF_distrib(dir_name, filename, GPCTF, selectGPCTF)
 
-
-
 # -------- OJO PARA ESTO SI LEER KURPF!  ---------------------------
 filename = 'full_Ku_parameters.png'
 plot_PCT_percentiles_Ku(dir_name, filename, Kurpf, selectKurpf, 'KURPF')
@@ -129,6 +127,111 @@ filename = 'full_VolRain_Ku_distrib.png'
 plot_volrain_Ku_distrib(dir_name, filename, Kurpf, selectKurpf)
 
 # ------------------------------------------------------------------
+# LEER LA BASE DE SARAH
+# TMI
+# YEAR / MONTH / DAY / HOUR / MIN / LAT / LON / P_hail_BC2019 / MIN10PCT / MAX10PCT / MIN19PCT / MIN37PCT / MIN85PCT / MAX85PCT / FLAG
+# TMIKu
+# YEAR / MONTH / DAY / HOUR / MIN / LAT / LON / P_hail_BC2019 / MIN10PCT / MAX10PCT / MIN19PCT / MIN37PCT / MIN85PCT / MAX85PCT / FLAG / MaxRef-10 / MaxRef-20
+
+# TMI
+bangpath  = '/home/victoria.galligani/Work/Studies/Hail_MW/' 
+TMIfile   = 'TMI_BC2019_50_hailcases_ARGE.txt'
+TMI       = genfromtxt(bangpath+TMIfile, skip_header=1)
+TMI_LAT   = TMI[:,5] 
+TMI_LON   = TMI[:,6] 
+TMI_Phail = TMI[:,7] 
+TMI_MIN19 = TMI[:,10] 
+TMI_MIN37 = TMI[:,11] 
+TMI_MIN85 = TMI[:,12] 
+plot_spatial_distrib_Phail(TMI_LON, TMI_LAT, TMI_Phail, 'TMI_BC2019_50', gridsize=1.5)
+
+# TMI Ku swath
+TMIKufile   = 'TMI_BC2019_50_hailcases_ARGE_Ku_swath.txt'
+TMIKu       = genfromtxt(bangpath+TMIKufile, skip_header=1)
+TMIKu_LAT   = TMIKu[:,5] 
+TMIKu_LON   = TMIKu[:,6] 
+TMIKu_Phail = TMIKu[:,7] 
+TMIKu_MIN19 = TMIKu[:,10] 
+TMIKu_MIN37 = TMIKu[:,11] 
+TMIKu_MIN85 = TMIKu[:,12] 
+plot_spatial_distrib_Phail(TMIKu_LON, TMIKu_LAT, TMIKu_Phail, 'TMIKu_BC2019_50', gridsize=2)
+
+# GMI 
+GMIfile   = 'GMI_BC2019_50_hailcases_ARGE.txt'
+GMI       = genfromtxt(bangpath+GMIfile, skip_header=1)
+GMI_LAT   = GMI[:,5] 
+GMI_LON   = GMI[:,6] 
+GMI_Phail = GMI[:,7] 
+GMI_MIN19 = GMI[:,10] 
+GMI_MIN37 = GMI[:,11] 
+GMI_MIN85 = GMI[:,12] 
+plot_spatial_distrib_Phail(GMI_LON, GMI_LAT, GMI_Phail, 'GMI_BC2019_50', gridsize=1.5)
+
+# GMIKu
+GMIKufile   = 'GMI_BC2019_50_hailcases_ARGE_Ku_swath.txt'
+GMIKu       = genfromtxt(bangpath+GMIKufile, skip_header=1)
+GMIKu_LAT   = GMIKu[:,5] 
+GMIKu_LON   = GMIKu[:,6] 
+GMIKu_Phail = GMIKu[:,7] 
+GMIKu_MIN19 = GMIKu[:,10] 
+GMIKu_MIN37 = GMIKu[:,11] 
+GMIKu_MIN85 = GMIKu[:,12] 
+plot_spatial_distrib_Phail(GMIKu_LON, GMIKu_LAT, GMIKu_Phail, 'GMIKu_BC2019_50', gridsize=1.5)
+
+#concatinate TMI and GMI
+plot_spatial_distrib_Phail(np.concatenate((GMI_LON, TMI_LON)), np.concatenate((GMI_LAT, TMI_LAT)), np.concatenate((GMI_Phail, TMI_Phail)), 'GMI+TMI', gridsize=2)
+
+#
+plot_norm_spatial_distrib_PERCENTILES(np.concatenate((GMI_LON, TMI_LON)), np.concatenate((GMI_LAT, TMI_LAT)), 
+                                      np.concatenate((GMI_Phail, TMI_Phail)), 
+                                      np.concatenate((GMI_MIN19, TMI_MIN19)),'GMI+TMI', gridsize=2, index_percentiles=[20,10,1,0.1],channel='19')   
+
+plot_norm_spatial_distrib_PERCENTILES(np.concatenate((GMI_LON, TMI_LON)), np.concatenate((GMI_LAT, TMI_LAT)), 
+                                      np.concatenate((GMI_Phail, TMI_Phail)), 
+                                      np.concatenate((GMI_MIN37, TMI_MIN37)),'GMI+TMI', gridsize=2, index_percentiles=[20,10,1,0.1],channel='37')                      
+                                      
+
+plot_norm_spatial_distrib_PERCENTILES(np.concatenate((GMI_LON, TMI_LON)), np.concatenate((GMI_LAT, TMI_LAT)), 
+                                      np.concatenate((GMI_Phail, TMI_Phail)), 
+                                      np.concatenate((GMI_MIN85, TMI_MIN85)),'GMI+TMI', gridsize=2, index_percentiles=[20,10,1,0.1],channel='85')   
+
+
+     
+        
+    fig = plt.figure(figsize=(12,10)) 
+    pc = plt.scatter(np.concatenate((GMI_MIN37, TMI_MIN37)),np.concatenate((GMI_MIN85, TMI_MIN85)), s=25, c= np.concatenate((GMI_Phail, TMI_Phail)), 
+                marker='o', vmin=0.5, vmax=1)            
+    plt.xlabel('MIN37PCT')
+    plt.ylabel('MIN85PCT')
+    cbar = plt.colorbar(pc, label='Phail')      
+    plt.grid(True)
+    plt.title('GMI+TMI P_hail > 50%')
+
+        
+    fig = plt.figure(figsize=(12,10)) 
+    pc = plt.scatter(np.concatenate((GMI_MIN19, TMI_MIN19)),np.concatenate((GMI_MIN37, TMI_MIN37)), s=25, c= np.concatenate((GMI_Phail, TMI_Phail)), 
+                marker='o', vmin=0.5, vmax=1)            
+    plt.xlabel('MIN19PCT')
+    plt.ylabel('MIN37PCT')
+    cbar = plt.colorbar(pc, label='Phail')      
+    plt.grid(True)
+    plt.title('GMI+TMI P_hail > 50%')
+
+
+    LON_CONC   = np.concatenate((GMI_LON, TMI_LON))
+    LAT_CONC   = np.concatenate((GMI_LAT, TMI_LAT))
+    PHAIL_CONC = np.concatenate((GMI_Phail, TMI_Phail))
+    MIN19PCT_CONC = np.concatenate((GMI_MIN19, TMI_MIN19))
+    MIN37CT_CONC  = np.concatenate((GMI_MIN37, TMI_MIN37))
+    MIN85PCT_CONC = np.concatenate((GMI_MIN85, TMI_MIN85))
+    plot_TBscatters(LON_CONC, LAT_CONC, MIN37CT_CONC, MIN85PCT_CONC, PHAIL_CONC, 'check')
+        
+        
+    # Define regionals: 
+    select_WCA = np.logical_and(np.logical_and(LON_CONC >= -69, LON_CONC <= -63), np.logical_and(LAT_CONC >= -36, LAT_CONC <= -29))
+    select_PS  = np.logical_and(np.logical_and(LON_CONC >= -63, LON_CONC <= -55), np.logical_and(LAT_CONC >= -36, LAT_CONC <= -29))
+    select_NOA = np.logical_and(np.logical_and(LON_CONC >= -68, LON_CONC <= -62), np.logical_and(LAT_CONC >= -29, LAT_CONC <= -20))
+    select_PN  = np.logical_and(np.logical_and(LON_CONC >= -62, LON_CONC <= -53), np.logical_and(LAT_CONC >= -29,LAT_CONC <= -20))
 
 
 
@@ -139,6 +242,68 @@ plot_volrain_Ku_distrib(dir_name, filename, Kurpf, selectKurpf)
 
 
 
+
+
+
+
+
+
+
+#----
+#correlacion entre min19,min37, min85 y Phail?
+
+# a K-means clustering algorithm is implemented to self-generate groups
+import pandas as pd
+from sklearn.cluster import KMeans
+df = pd.DataFrame()
+aux = np.column_stack((MIN19PCT_CONC, MIN37CT_CONC, MIN85PCT_CONC, PHAIL_CONC, LON_CONC, LAT_CONC))
+df = pd.concat([df, pd.DataFrame(aux)], axis=0, ignore_index=True)
+           
+X = df.iloc[:,0:4].values # df.values
+
+#elbow method
+wcss = []
+for i in range(1,11):
+    k_means = KMeans(n_clusters=i,init='k-means++', random_state=42)
+    k_means.fit(X)
+    wcss.append(k_means.inertia_)
+
+#plot elbow curve
+plt.plot(np.arange(1,11),wcss)
+plt.xlabel('Clusters')
+plt.ylabel('SSE')
+plt.grid(True)
+        
+k_means_optimum = KMeans(n_clusters = 2, init = 'k-means++',  random_state=42)
+y = k_means_optimum.fit_predict(X)
+df['cluster'] = y  
+        
+data1 = df[df.cluster==0]
+data2 = df[df.cluster==1]  
+        
+kplot = plt.axes(projection='3d')
+xline = np.linspace(0, 205, 206)
+yline = np.linspace(0, 205, 206)
+zline = np.linspace(0, 205, 206)
+# Data for three-dimensional scattered points
+kplot.scatter3D(data1[0], data1[1], data1[2], c='darkred', label = 'Cluster 1')
+kplot.scatter3D(data2[0], data2[1], data2[2], c ='darkgreen', label = 'Cluster 2')
+plt.scatter(k_means_optimum.cluster_centers_[:,0], k_means_optimum.cluster_centers_[:,1], color = 'indigo', s = 200)
+plt.legend()
+plt.title("Kmeans")
+
+
+# check area filter 
+fig = plt.figure(figsize=(12,12))     
+gs1 = gridspec.GridSpec(1, 1)
+ax1 = plt.subplot(gs1[0,0])
+plt.plot(data1[4].values, data1[5].values, 'o', color='darkred')
+plt.plot(data2[4].values, data2[5].values, 'o', color='darkgreen')
+ax1.set_xlim([-80,-45])
+ax1.set_ylim([-45,-15])
+plt.plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
+plt.plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
+plt.title('Location of PF centers after domain-location filter')
 
 
 
