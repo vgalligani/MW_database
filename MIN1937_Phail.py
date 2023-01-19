@@ -21,8 +21,18 @@ plt.rcParams['ytick.labelsize']=12
 fig = plt.figure(figsize=(10,10)) 
 im = plt.scatter(MIN19PCT, MIN37PCT, c=Phail, s=30, marker='o', vmin=0, vmax=100)
 plt.plot(np.arange(50,300,10), np.arange(50,300,10), '--k')
-plt.plot(242.9253, 207.4241, 'rx', markersize=20)
-plt.plot(270.2810, 238.8242, 'ro', markersize=20)
+plt.plot(242.9253, 207.4241, 'r*', markersize=20)
+plt.plot(270.2810, 238.8242, 'rP', markersize=20)
+plt.plot(241.5902, 181.1631, 'b*', markersize=20)
+plt.plot(, color='darkgreen', marker='D', markersize=20)
+
+plt.plot(, color='darkgreen', marker='d', markersize=20)
+plt.plot(, color='darkgreen', marker='d', markersize=20)
+plt.plot(, color='darkgreen', marker='d', markersize=20)
+plt.plot(, color='darkgreen', marker='d', markersize=20)
+plt.plot(, color='darkgreen', marker='d', markersize=20)
+
+
 
 plt.grid(True)
 plt.xlabel('MIN19PCT')
