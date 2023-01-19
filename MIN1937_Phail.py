@@ -6,11 +6,22 @@ GMI_BC19_casestudies = genfromtxt("/home/victoria.galligani/Work/Studies/Hail_MW
 
 Phail    = []
 MIN19PCT = [] 
-MIN37PC  = []
+MIN37PCT = []
 
 for i in range(GMI_BC19_casestudies.shape[0]):
-  Phail.append()
-  MIN19PCT.append()
-  MIN37PC.append()  
+  Phail.append(GMI_BC19_casestudies[i,7]*100)
+  MIN19PCT.append(GMI_BC19_casestudies[i,9])
+  MIN37PCT.append(GMI_BC19_casestudies[i,10])  
   
+  
+plt.matplotlib.rc('font', family='serif', size = 12)
+plt.rcParams['xtick.labelsize']=12
+plt.rcParams['ytick.labelsize']=12  
+
+fig = plt.figure(figsize=(10,10)) 
+im = plt.scatter(MIN19PCT, MIN37PCT, c=Phail, s=30, marker='o', vmin=0, vmax=100)
+plt.grid(True)
+plt.xlabel('MIN19PCT')
+plt.ylabel('MIN37PCT')
+fig.colorbar(im, label='P$_{hail}$ %')   
   
