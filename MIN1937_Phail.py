@@ -20,6 +20,7 @@ plt.rcParams['ytick.labelsize']=12
 
 fig = plt.figure(figsize=(10,10)) 
 im = plt.scatter(MIN19PCT, MIN37PCT, c=Phail, s=30, marker='o', vmin=0, vmax=100)
+plt.plot(np.arange(50,300,10), np.arange(50,300,10), '--k')
 plt.grid(True)
 plt.xlabel('MIN19PCT')
 plt.ylabel('MIN37PCT')
