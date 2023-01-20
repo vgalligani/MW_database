@@ -48,9 +48,12 @@ plt.xlabel('MIN19PCT')
 plt.ylabel('MIN37PCT')
 fig.colorbar(im, label='P$_{hail}$ %')   
 
-plt.plot(242.9253, 207.4241, 'k*', markersize=15, markerfacecolor='None')
+plt.plot(242.9253, 207.4241, 'kv', markersize=15, markerfacecolor='None')
 plt.plot(270.2810, 238.8242, 'Pk', markersize=15, markerfacecolor='None')
-plt.plot(241.5902, 181.1631, '*k', markersize=15, markerfacecolor='NOne')
+plt.plot(241.5902, 181.1631, '*k', markersize=20, markerfacecolor='None')
+plt.plot(237.4247, 151.6656, 'dk', markersize=15, markerfacecolor='None')
+plt.plot(198.3740, 111.7183, 'Dk', markersize=15, markerfacecolor='None')
+plt.plot(244.4909, 174.1353, '^k', markersize=15, markerfacecolor='None')
 
 
 
@@ -60,25 +63,3 @@ plt.plot(241.5902, 181.1631, '*k', markersize=15, markerfacecolor='NOne')
 
 
 
-
-
-
-
-plt.plot(242.9253, 207.4241, 'r*', markersize=20)
-plt.plot(270.2810, 238.8242, 'rP', markersize=20)
-plt.plot(241.5902, 181.1631, 'b*', markersize=20)
-plt.plot(, color='darkgreen', marker='D', markersize=20)
-
-plt.plot(, color='darkgreen', marker='d', markersize=20)
-plt.plot(, color='darkgreen', marker='d', markersize=20)
-plt.plot(, color='darkgreen', marker='d', markersize=20)
-plt.plot(, color='darkgreen', marker='d', markersize=20)
-plt.plot(, color='darkgreen', marker='d', markersize=20)
-
-
-
-plt.grid(True)
-plt.xlabel('MIN19PCT')
-plt.ylabel('MIN37PCT')
-fig.colorbar(im, label='P$_{hail}$ %')   
-  
