@@ -192,7 +192,7 @@ def Plot_exp_RainGrau(dd, dset1, dset2, dset3, infotitle):  #,ititle,name,path):
     return
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
-def Plot_exp_hail(dset1, dset2, dset3, dset4, labels_in):  #,ititle,name,path):
+def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, labels_in):  #,ititle,name,path):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -210,10 +210,12 @@ def Plot_exp_hail(dset1, dset2, dset3, dset4, labels_in):  #,ititle,name,path):
     plt.matplotlib.rc('font', family='serif', size = 12)
     fig = plt.figure(figsize=(9,6))
     plt.plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = labels_in[0])
-    plt.plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = labels_in[1])
-    plt.plot(dset3['D']['f_grid'][0][0][0][0][0][0]/1e9, dset3['arts_tb'][0,:]-dset3['arts_cl'][0,:],linewidth=1,color='darkred', label = labels_in[2])
-    plt.plot(dset4['D']['f_grid'][0][0][0][0][0][0]/1e9, dset4['arts_tb'][0,:]-dset4['arts_cl'][0,:],linewidth=1,color='magenta', label = labels_in[3])
+    plt.plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='darkred', label = labels_in[1])
+    plt.plot(dset3['D']['f_grid'][0][0][0][0][0][0]/1e9, dset3['arts_tb'][0,:]-dset3['arts_cl'][0,:],linewidth=1,color='darkgreen', label = labels_in[2])
+    plt.plot(dset4['D']['f_grid'][0][0][0][0][0][0]/1e9, dset4['arts_tb'][0,:]-dset4['arts_cl'][0,:],linewidth=1,color='red', label = labels_in[3])
+    plt.plot(dset5['D']['f_grid'][0][0][0][0][0][0]/1e9, dset5['arts_tb'][0,:]-dset5['arts_cl'][0,:],linewidth=1,color='blue', label = labels_in[4])
 
+    
     plt.title( 'Cloud Scenarios (Hail-only)', fontsize='12', fontweight='bold')
     plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
     plt.xlabel(r'Frequency [GHz]', color='k')
@@ -426,42 +428,138 @@ plt.ylim([0,20])
 #------------------------------------------------------------------------------------------
 # Hail Only
 #------------------------------------------------------------------------------------------ 
+
+
+# simple cloudbox 5e-2 (5cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPa0.005/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.005.mat'
+arts_exp1 = FullData(f_arts)
+
 # simple cloudbox 1e-2 (1cm)
 f_arts    = main_dir + 'HailOnly_ssd_EXPa0.01/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.01.mat'
-arts_exp1 = FullData(f_arts)
+arts_exp2 = FullData(f_arts)
 
 # simple cloudbox 5e-2 (5cm)
 f_arts    = main_dir + 'HailOnly_ssd_EXPa0.05/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.05.mat'
-arts_exp2 = FullData(f_arts)
+arts_exp3 = FullData(f_arts)
+
+# Exponetial cloudbox (0.05 cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPb0.005/' + 'GMI_Fascod_HailOnly_ssd_EXPb0.005.mat'
+arts_exp4 = FullData(f_arts)
 
 # Exponetial cloubox 1e-2 (1cm)
 f_arts    = main_dir + 'HailOnly_ssd_EXPb0.01/' + 'GMI_Fascod_HailOnly_ssd_EXPb0.01.mat'
-arts_exp3 = FullData(f_arts)
+arts_exp5 = FullData(f_arts)
 
 # Exponetial cloudbox 5e-2 (5cm)
 f_arts    = main_dir + 'HailOnly_ssd_EXPb0.05/' + 'GMI_Fascod_HailOnly_ssd_EXPb0.05.mat'
-arts_exp4 = FullData(f_arts)
+arts_exp6 = FullData(f_arts)
 
-# ----------------------------- plot
-Plot_exp_hail(arts_exp1, arts_exp2, arts_exp3, arts_exp4, ['Simple cloudbox (mono 1cm)','Simple cloudbox (mono 5cm)','Exp cloudbox (mono 1cm)','Exp. cloudbox (mono 5cm)'])
+# Simple cloudbox EXP. PSD 0.2*5
+f_arts    = main_dir + 'HailOnly_ssd_EXPc999/' + 'GMI_Fascod_HailOnly_ssd_EXPc999.mat'
+arts_exp7 = FullData(f_arts)
 
-mass_1 = 500 * 4 * 3.14 * (1e-2 **3) / 24;
-mass_2 = 500 * 4 * 3.14 * (5e-2 **3) / 24;
+# Simple cloudbox EXP. PSD 0.4*5 
+f_arts    = main_dir + 'HailOnly_ssd_EXPd999/' + 'GMI_Fascod_HailOnly_ssd_EXPd999.mat'
+arts_exp8 = FullData(f_arts)
+
+# Simple cloudbox EXP. PSD 7.5*5 
+f_arts    = main_dir + 'HailOnly_ssd_EXPe999/' + 'GMI_Fascod_HailOnly_ssd_EXPe999.mat'
+arts_exp9 = FullData(f_arts)
+
+# Simple cloudbox EXP. PSD 1.5*5 
+f_arts    = main_dir + 'HailOnly_ssd_EXPf999/' + 'GMI_Fascod_HailOnly_ssd_EXPf999.mat'
+arts_exp10 = FullData(f_arts)
+
+# Simple cloudbox EXP. PSD 2*5 
+f_arts    = main_dir + 'HailOnly_ssd_EXPg999/' + 'GMI_Fascod_HailOnly_ssd_EXPg999.mat'
+arts_exp11 = FullData(f_arts)
+
+
+
+# ----------------------------- PLOT ALL EXP PSD
+
+Plot_exp_hail(arts_exp7, arts_exp8, arts_exp9, arts_exp10, arts_exp11, 
+              labels_in=['1 g/m$^2$', '2 g/m$^2$', '4 g/m$^2$', '7.5 g/m$^2$','10 g/m$^2$'])
+
+
+# ----------------------------- HAIL WATER CONTENT  
+# 0.2, 0.4, 0.8, 1.5, 2  ==> WP = 1 g/m2, 2 g/m2, 4 g/m2, 7.5 g/m2, 10 g/m2
+cloud_hwc      = np.zeros(arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0].shape[0]);
+cloud_hwc[:] = np.nan
 
 plt.matplotlib.rc('font', family='serif', size = 12)
 fig = plt.figure(figsize=(9,6))    
-plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_1, arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='k', label = 'Simple cloudbox')
-plt.plot( arts_exp3['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_1, arts_exp3['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='gray', label = 'Exp. cloudbox')
-
-plt.plot( arts_exp2['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_2, arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='k', label = 'Simple cloudbox')
-plt.plot( arts_exp4['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_2, arts_exp3['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='gray', label = 'Exp. cloudbox')
-
+cloud_hwc[0:4] = 0.2                       
+plt.plot( cloud_hwc[0:10], arts_exp1['D']['z_field'][0][0][0][0][0][0:10] / 1e3, 'darkblue', linewidth=1.5, label='1 g/m$^2$')
+cloud_hwc[0:4] = 0.4                          
+plt.plot( cloud_hwc[0:10], arts_exp1['D']['z_field'][0][0][0][0][0][0:10] / 1e3, 'darkred', linewidth=1.5, label='2 g/m$^2$')
+cloud_hwc[0:4] = 0.8                          
+plt.plot( cloud_hwc[0:10], arts_exp1['D']['z_field'][0][0][0][0][0][0:10] / 1e3, 'darkgreen', linewidth=1.5, label='4 g/m$^2$')
+cloud_hwc[0:4] = 1.5                          
+plt.plot( cloud_hwc[0:10], arts_exp1['D']['z_field'][0][0][0][0][0][0:10] / 1e3, 'red', linewidth=1.5, label='7.5 g/m$^2$')
+cloud_hwc[0:4] = 2                          
+plt.plot( cloud_hwc[0:10], arts_exp1['D']['z_field'][0][0][0][0][0][0:10] / 1e3, 'blue', linewidth=1.5, label='10 g/m$^2$')
 plt.title( 'Cloud Scenarios (Hail-Only)', fontsize='12', fontweight='bold')
 plt.ylabel(r'Height [km]', color='k')
-plt.xlabel(r'mass content [g/m3]', color='k')
+plt.xlabel(r'mass content [g/m$^3$]', color='k')
+plt.grid('true') 
+plt.legend()
+plt.ylim([0,3])
+
+
+
+
+
+
+
+# ----------------------------- plot
+Plot_exp_hail(arts_exp1, arts_exp2, arts_exp3, arts_exp4, arts_exp5, arts_exp6, 
+              ['Simple cloudbox (mono 0.05cm)', 'Simple cloudbox (mono 1cm)','Simple cloudbox (mono 5cm)',
+               'Exp cloudbox (mono 0.05cm)', 'Exp cloudbox (mono 1cm)','Exp. cloudbox (mono 5cm)'])
+
+mass_1 = 500 * 4 * 3.1416 * (0.005**3) / 24;
+mass_2 = 500 * 4 * 3.1416 * (1e-2 **3) / 24;
+mass_3 = 500 * 4 * 3.1416 * (5e-2 **3) / 24;
+
+plt.matplotlib.rc('font', family='serif', size = 12)
+fig = plt.figure(figsize=(9,6))    
+plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*mass_1*1000, arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='k', label = 'Simple cloudbox')
+plt.title( 'Cloud Scenarios (Hail-Only)', fontsize='12', fontweight='bold')
+plt.ylabel(r'Height [km]', color='k')
+plt.xlabel(r'mass content [kg/m3]', color='k')
 plt.grid('true')
 plt.legend()
 plt.ylim([0,20])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fig = plt.figure(figsize=(9,6))    
+plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0], arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='k', label = 'Simple cloudbox 1cm')
+plt.plot( arts_exp3['D']['particle_bulkprop_field'][0][0][0][0][0][0], arts_exp3['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='gray', label = 'Exp. cloudbox 1cm')
+plt.plot( arts_exp2['D']['particle_bulkprop_field'][0][0][0][0][0][0], arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='darkblue', label = 'Simple cloudbox 5cm')
+plt.plot( arts_exp4['D']['particle_bulkprop_field'][0][0][0][0][0][0], arts_exp3['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='cyan', label = 'Exp. cloudbox 5cm')
+plt.title( 'Cloud Scenarios (Hail-Only)', fontsize='12', fontweight='bold')
+plt.ylabel(r'Height [km]', color='k')
+plt.xlabel(r'PND [1/m3]', color='k')
+plt.grid('true')
+plt.legend()
+plt.ylim([0,20])
+
+
 
 
 # ssp (resosnance issues!?)
