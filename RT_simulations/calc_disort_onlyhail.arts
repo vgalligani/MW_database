@@ -1,8 +1,11 @@
+#DEFINITIONS:  -*-sh-*
 
 Arts2 {
 
 INCLUDE "cfile_common.arts"
 INCLUDE "instrument.arts"
+
+StringCreate( species_id_string )
 
 ReadXML( particle_bulkprop_names, "particle_bulkprop_names.xml" )
 ReadXML( particle_bulkprop_field, "particle_bulkprop_field.xml" )
@@ -10,47 +13,97 @@ ReadXML( particle_bulkprop_field, "particle_bulkprop_field.xml" )
 Copy( iy_cloudbox_agenda, iy_cloudbox_agenda__QuarticInterpField ) 
 
 #---
-ArrayOfScatteringMetaDataCreate( scat_meta_1habit )
-ArrayOfSingleScatteringDataCreate( scat_data_1habit )
-StringCreate( species_id_string )
+#ArrayOfScatteringMetaDataCreate( scat_meta_1habit )
+#ArrayOfSingleScatteringDataCreate( scat_data_1habit )
+
+StringSet( species_id_string, "HWC")
 
 ######
-ReadXML( scat_data_single, "TestTMatrix.scat_data_single_hail.xml" )
-ReadXML( scat_meta_single, "TestTMatrix.scat_meta_single_hail.xml" )
+ArrayOfSingleScatteringDataCreate(tmp)
+ArrayOfScatteringMetaDataCreate(tmp_meta)
+######
+ReadXML( tmp, "TestTMatrix.scat_data_single_hail1.xml" )
+ReadXML( tmp_meta, "TestTMatrix.scat_meta_single_hail1.xml" )
+Append( scat_data_raw, tmp )
 
-#--- Set up scattering data
-Append(scat_data_1habit, scat_data_single)
-Append(scat_data_raw, scat_data_1habit)
-# and meta data ... 
-Append(scat_meta_1habit, scat_meta_single)
-Append(scat_meta, scat_meta_1habit)
+ReadXML( tmp, "TestTMatrix.scat_data_single_hail2.xml" )
+ReadXML( tmp_meta, "TestTMatrix.scat_meta_single_hail1.xml" )
+Append( scat_data_raw, tmp )
+
+ReadXML( tmp, "TestTMatrix.scat_data_single_hail3.xml" )
+ReadXML( tmp_meta, "TestTMatrix.scat_meta_single_hail1.xml" )
+Append( scat_data_raw, tmp )
+
+ReadXML( tmp, "TestTMatrix.scat_data_single_hail4.xml" )
+ReadXML( tmp_meta, "TestTMatrix.scat_meta_single_hail1.xml" )
+Append( scat_data_raw, tmp )
+
+ReadXML( tmp, "TestTMatrix.scat_data_single_hail5.xml" )
+ReadXML( tmp_meta, "TestTMatrix.scat_meta_single_hail1.xml" )
+Append( scat_data_raw, tmp )
+
+
+
+Append( scat_species, species_id_string )
+Append( scat_species, species_id_string )
+Append( scat_species, species_id_string )
+Append( scat_species, species_id_string )
+Append( scat_species, species_id_string )
+
+WriteXML( "ascii", scat_data_raw,  "scat_data_raw.xml" )
+
+# scat_data_raw should be == scat_data_1habit! 
 #
 scat_dataCalc(scat_data, scat_data_raw, f_grid)
 scat_data_checkedCalc(	scat_data_checked, scat_data, f_grid, 0.1, "none", 5e-2 )
 WriteXML( "ascii", scat_data,  "scat_data.xml" ) 
 
 #-- PND AGENDA ARRAY
-ArrayOfStringSet( pnd_agenda_input_names, [ "HWC" ] )
-ArrayOfStringSet( dpnd_data_dx_names, [ "HWC" ] )
-StringSet( species_id_string, "HWC" )
+ArrayOfStringSet( dpnd_data_dx_names, [ "HWC","HWC","HWC","HWC","HWC" ] )
+ArrayOfStringSet( pnd_agenda_input_names, [ "HWC","HWC","HWC","HWC","HWC"] )
 
-# The input data in pnd_agenda_input shall be number densities, in unit of [#/m3].
+# The input data in pnd_agenda_input shall be number densities, in unit of [#/m3].para 1 hail:
 #ReadXML( pnd_agenda_input, "hail_pnddata.xml" )   
 
+#--------------------------------------------------------------------------------------
 #ArrayOfAgendaAppend( pnd_agenda_array ){
 #  VectorSet(pnd_size_grid, [1e-2,1.1e-2])
 #  VectorSet(psd_size_grid, [1e-2,1.1e-2])
 #  psdMonoDispersive(psd_data, dpsd_data_dx, pnd_agenda_input_t, pnd_agenda_input, 
 #	pnd_agenda_input_names, dpnd_data_dx_names, scat_meta, agenda_array_index, 220, 260) 
 #  }
-Append( scat_species, species_id_string )
-Append( pnd_agenda_array_input_names, pnd_agenda_input_names )
-
-#
+#Append( pnd_agenda_array_input_names, pnd_agenda_input_names )
+#--------------------------------------------------------------------------------------
 cloudboxSetManuallyAltitude( z1=-9e3, z2=20e3, lat1=-0, lat2=0, lon1=-0, lon2=0 )
 cloudboxSetFullAtm
+
+#------------------------------------------------------------------
+#ArrayOfStringSet( pnd_agenda_input_names, [ "HWC" ] )
+
+ReadXML( pnd_field, "hail_pnddata1.xml" )
+
+Tensor4Create(pnd_field2)
+ReadXML( pnd_field2, "hail_pnddata2.xml" )
+Append( pnd_field, pnd_field2)
+
+Tensor4Create(pnd_field3)
+ReadXML( pnd_field3, "hail_pnddata3.xml" )
+Append( pnd_field, pnd_field3)
+
+Tensor4Create(pnd_field4)
+ReadXML( pnd_field4, "hail_pnddata4.xml" )
+Append( pnd_field, pnd_field4)
+
+Tensor4Create(pnd_field5)
+ReadXML( pnd_field5, "hail_pnddata5.xml" )
+Append( pnd_field, pnd_field5)
+
+WriteXML( "ascii", pnd_field,  "check_pnd_field.xml" )
+
 #pnd_fieldCalcFromParticleBulkProps 
-ReadXML( pnd_field, "hail_pnddata.xml" )
+
+
+#------------------------------------------------------------
 
 WriteXML( "ascii", cloudbox_limits,  "cloudbox_limits.xml" ) 
 WriteXML( "ascii", pnd_field,  "pnd_field.xml" )
@@ -67,8 +120,7 @@ cloudbox_checkedCalc
 
 # Calculate and save
 #
-
-DOAngularGridsSet( N_za_grid = 38 )   # == 38 ... 
+DOAngularGridsSet( N_za_grid = 70 )   # == 38 ... 
 
 DisortCalcWithARTSSurface(nstreams = 32, Npfct=-1) # Npfct=-1) # , pfct_method = "interpolate")
 #DisortCalc( nstreams = 16, pfct_method = "interpolate")
