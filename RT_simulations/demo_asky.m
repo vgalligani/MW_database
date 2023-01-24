@@ -31,7 +31,7 @@
 %
 % 19.03.2020 Patrick Eriksson, Vasileios Balrakas
 %
-function [D,paths,R,C] = demo_asky(pos,sat,los,flag,nfpb,solver,paths,graupel_Habit,hail_shape)
+function [D,paths,R,C] = demo_asky(pos,sat,los,flag,nfpb,solver,paths,graupel_Habit,hail_d) 
 %
 %- Conducts clear-sky simulations
 %
@@ -40,32 +40,84 @@ function [D,paths,R,C] = demo_asky(pos,sat,los,flag,nfpb,solver,paths,graupel_Ha
 %- Assign PSD and habit to each hydrometeor class
 %
 paths.rwc_psd   = fullfile( pwd, 'Input', 'psd_rwc_mp48.arts' );
-paths.rwc_habit = '/home/victoria.galligani/Work/Data/ArtsScatDbase/StandardHabits/FullSet/LiquidSphere';
+paths.rwc_habit = '/home/victoria.galligani/Work/Data/ArtsScatDbase/StandardHabits/FullSet/LiquidS
+phere';
 %paths.rwc_habit = fullfile(pwd, 'Input/SCAT/LiquidSpheres_TotRand', 'LiquidSpheres_TotRand');
 
 paths.gwc_psd   = fullfile( pwd, 'Input', 'psd_gwc_field07t.arts' );
-paths.gwc_habit = strcat('/home/victoria.galligani/Work/Data/ArtsScatDbase/StandardHabits/FullSet/',graupel_Habit);
+paths.gwc_habit = strcat('/home/victoria.galligani/Work/Data/ArtsScatDbase/StandardHabits/FullSet/
+',graupel_Habit);
 
-paths.hwc_psd   = fullfile( pwd, 'Input', 'hail_pnddata.xml' );
-paths.hwc_habit = fullfile( pwd, 'Input', 'TestTMatrix.scat_data_single_hail.xml'); 
-paths.hwc_meta_habit = fullfile( pwd, 'Input', 'TestTMatrix.scat_meta_single_hail.xml');
+paths.hwc_psd1   = fullfile( pwd, 'Input', 'hail_pnddata1.xml' );
+paths.hwc_psd2   = fullfile( pwd, 'Input', 'hail_pnddata2.xml' );
+paths.hwc_psd3   = fullfile( pwd, 'Input', 'hail_pnddata3.xml' );
+paths.hwc_psd4   = fullfile( pwd, 'Input', 'hail_pnddata4.xml' );
+paths.hwc_psd5   = fullfile( pwd, 'Input', 'hail_pnddata5.xml' );
+
+
+%--- Dummy way to include n(d)dD
+paths.hwc_habit1 = fullfile( pwd, 'Input', 'TestTMatrix.scat_data_single_hail1.xml'); 
+paths.hwc_meta_habit1 = fullfile( pwd, 'Input', 'TestTMatrix.scat_meta_single_hail1.xml');
+
+paths.hwc_habit2 = fullfile( pwd, 'Input', 'TestTMatrix.scat_data_single_hail2.xml');
+paths.hwc_meta_habit2 = fullfile( pwd, 'Input', 'TestTMatrix.scat_meta_single_hail2.xml');
+
+paths.hwc_habit3 = fullfile( pwd, 'Input', 'TestTMatrix.scat_data_single_hail3.xml');
+paths.hwc_meta_habit3 = fullfile( pwd, 'Input', 'TestTMatrix.scat_meta_single_hail3.xml');
+
+paths.hwc_habit4 = fullfile( pwd, 'Input', 'TestTMatrix.scat_data_single_hail4.xml');
+paths.hwc_meta_habit4 = fullfile( pwd, 'Input', 'TestTMatrix.scat_meta_single_hail4.xml');
+
+paths.hwc_habit5 = fullfile( pwd, 'Input', 'TestTMatrix.scat_data_single_hail5.xml');
+paths.hwc_meta_habit5 = fullfile( pwd, 'Input', 'TestTMatrix.scat_meta_single_hail5.xml');
 
 %- Variables to describe hydrometeor contents
 %
-D.particle_bulkprop_names.data  = {'HWC'}; %   { 'RWC','GWC','HWC'};  % , 'IWC', 'SWC' };
+D.particle_bulkprop_names.data  = {'HWC','HWC','HWC','HWC','HWC'};  
+
+%   { 'RWC','GWC','HWC'};  % , 'IWC', 'SWC' };
 D.particle_bulkprop_names.group = 'ArrayOfString';
 %
-D.particle_bulkprop_field.data  = zeros( 1, length(D.p_grid.data) );
+D.particle_bulkprop_field.data  = zeros( 5, length(D.p_grid.data), 1);
 D.particle_bulkprop_field.group = 'Tensor4';
 
 %- Select cloud scenario
 %
 %D = PlotCloudScenarios(D,ifac);
-[D,Cscat] = CloudScenario(D,flag,hail_shape);
-%xmlStore(paths.hwc_psd, D.particle_bulkprop_field.data, 'Matrix');
-xmlStore(paths.hwc_psd, D.particle_bulkprop_field.data, 'Tensor4');
-xmlStore(paths.hwc_habit, Cscat.SCAT_DATA, 'SingleScatteringData');
-xmlStore(paths.hwc_meta_habit, Cscat.SCAT_meta_DATA, 'ScatteringMetaData');
+[D,Cscat,Cscatmeta] = CloudScenario(D,flag, hail_d);
+
+if flag > 11
+ %xmlStore(paths.hwc_psd, D.particle_bulkprop_field.data, 'Matrix');
+ xmlStore(paths.hwc_psd1, D.particle_bulkprop_field.data(1,:), 'Tensor4');
+ xmlStore(paths.hwc_psd2, D.particle_bulkprop_field.data(2,:), 'Tensor4');
+ xmlStore(paths.hwc_psd3, D.particle_bulkprop_field.data(3,:), 'Tensor4');
+ xmlStore(paths.hwc_psd4, D.particle_bulkprop_field.data(4,:), 'Tensor4');
+ xmlStore(paths.hwc_psd5, D.particle_bulkprop_field.data(5,:), 'Tensor4');
+
+ %xmlStore(paths.hwc_habit1, Cscat, 'ArrayOfSingleScatteringData');
+ %xmlStore(paths.hwc_meta_habit1, Cscatmeta, 'ArrayOfScatteringMetaData');
+
+ xmlStore(paths.hwc_habit1, Cscat{1}, 'SingleScatteringData');
+ %xmlStore(paths.hwc_meta_habit1, Cscat{1}.SCAT_meta_DATA, 'ScatteringMetaData');
+
+ if length(Cscat) > 1
+ 
+ xmlStore(paths.hwc_habit2, Cscat{2}, 'SingleScatteringData');
+ %xmlStore(paths.hwc_meta_habit2, Cscat{2}.SCAT_meta_DATA, 'ScatteringMetaData');
+
+ xmlStore(paths.hwc_habit3, Cscat{3}, 'SingleScatteringData');
+ %xmlStore(paths.hwc_meta_habit3, Cscat{3}.SCAT_meta_DATA, 'ScatteringMetaData');
+
+ xmlStore(paths.hwc_habit4, Cscat{4}, 'SingleScatteringData');
+ %xmlStore(paths.hwc_meta_habit4, Cscat{4}.SCAT_meta_DATA, 'ScatteringMetaData');
+
+ xmlStore(paths.hwc_habit5, Cscat{5}, 'SingleScatteringData');
+ %xmlStore(paths.hwc_meta_habit5, Cscat{5}.SCAT_meta_DATA, 'ScatteringMetaData');
+
+
+ end
+
+end
 
 %A{1}.data      = D.particle_bulkprop_field.data(1,:)';
 %A{1}.grids     = {D.p_grid.data, [0], [0]};
