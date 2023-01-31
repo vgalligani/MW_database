@@ -192,7 +192,7 @@ def Plot_exp_RainGrau(dd, dset1, dset2, dset3, infotitle):  #,ititle,name,path):
     return
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
-def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, labels_in):  #,ititle,name,path):
+def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, dset6, dset7, dset8, labels_in):  #,ititle,name,path):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -208,33 +208,45 @@ def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, labels_in):  #,ititle,name,
     f_grid = dset1['D']['f_grid'][0][0][0][0][0][0]/1e9
 
     plt.matplotlib.rc('font', family='serif', size = 12)
-    fig = plt.figure(figsize=(9,6))
-    plt.plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = labels_in[0])
-    plt.plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='darkred', label = labels_in[1])
-    plt.plot(dset3['D']['f_grid'][0][0][0][0][0][0]/1e9, dset3['arts_tb'][0,:]-dset3['arts_cl'][0,:],linewidth=1,color='darkgreen', label = labels_in[2])
-    plt.plot(dset4['D']['f_grid'][0][0][0][0][0][0]/1e9, dset4['arts_tb'][0,:]-dset4['arts_cl'][0,:],linewidth=1,color='red', label = labels_in[3])
-    plt.plot(dset5['D']['f_grid'][0][0][0][0][0][0]/1e9, dset5['arts_tb'][0,:]-dset5['arts_cl'][0,:],linewidth=1,color='blue', label = labels_in[4])
-
+    fig, axes = plt.subplots(figsize=(10,8),nrows=2, ncols=1)
     
-    plt.title( 'Cloud Scenarios (Hail-only)', fontsize='12', fontweight='bold')
-    plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
-    plt.xlabel(r'Frequency [GHz]', color='k')
-    plt.grid('true')
-    plt.axvline(x=10 ,ls='-',color='k')
-    plt.axvline(x=19 ,ls='-',color='k')
-    plt.axvline(x=22 ,ls='-',color='k')
-    plt.axvline(x=37 ,ls='-',color='k')
-    plt.axvline(x=85 ,ls='-',color='k')
-    plt.axvline(x=166 ,ls='-',color='k')
-    plt.xlim([4,120])
-    plt.legend()
+    axes[0].plot(dset6['D']['f_grid'][0][0][0][0][0][0]/1e9, dset6['arts_tb'][0,:]-dset6['arts_cl'][0,:],linewidth=1,color='black', label = labels_in[5])
+    axes[0].plot(dset7['D']['f_grid'][0][0][0][0][0][0]/1e9, dset7['arts_tb'][0,:]-dset7['arts_cl'][0,:],linewidth=1,color='gray', label = labels_in[6])
+    axes[0].plot(dset8['D']['f_grid'][0][0][0][0][0][0]/1e9, dset8['arts_tb'][0,:]-dset8['arts_cl'][0,:],linewidth=1,color='k', linestyle='--', label = labels_in[7])
+    axes[0].set_title( 'Cloud Scenarios Monodisperse (Hail-only)', fontsize='12', fontweight='bold')
+    axes[0].set_ylabel(r'$\Delta$BT(Cloudy-Clear) [K]', color='k')
+    axes[0].grid('true')   
+    axes[0].axvline(x=10 ,ls='--',color='k');  axes[0].text(7,-15,'10 GHz',rotation=90)
+    axes[0].axvline(x=19 ,ls='--',color='k');  axes[0].text(16,-15,'19 GHz',rotation=90)
+    axes[0].axvline(x=22 ,ls='--',color='k');  axes[0].text(23,-15,'22 GHz',rotation=90)
+    axes[0].axvline(x=37 ,ls='--',color='k');  axes[0].text(33,-15,'37 GHz',rotation=90)
+    axes[0].axvline(x=85 ,ls='--',color='k');  axes[0].text(82,-15,'85 GHz',rotation=90)
+    axes[0].set_ylim([-25,2])
+    axes[0].set_xlim([4,100])
+    axes[0].legend(loc='lower right')
+    
+    axes[1].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = labels_in[0])
+    axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='darkred', label = labels_in[1])
+    axes[1].plot(dset3['D']['f_grid'][0][0][0][0][0][0]/1e9, dset3['arts_tb'][0,:]-dset3['arts_cl'][0,:],linewidth=1,color='darkgreen', label = labels_in[2])
+    axes[1].plot(dset4['D']['f_grid'][0][0][0][0][0][0]/1e9, dset4['arts_tb'][0,:]-dset4['arts_cl'][0,:],linewidth=1,color='red', label = labels_in[3])
+    axes[1].plot(dset5['D']['f_grid'][0][0][0][0][0][0]/1e9, dset5['arts_tb'][0,:]-dset5['arts_cl'][0,:],linewidth=1,color='blue', label = labels_in[4])
+    axes[1].set_title( 'Cloud Scenarios PSD (Hail-only)', fontsize='12', fontweight='bold')
+
+    axes[1].set_ylabel(r'$\Delta$BT(Cloudy-Clear) [K]', color='k')
+    axes[1].set_xlabel(r'Frequency [GHz]', color='k')
+    
+    axes[1].grid('true')   
+    axes[1].axvline(x=10 ,ls='--',color='k');  
+    axes[1].axvline(x=19 ,ls='--',color='k');  
+    axes[1].axvline(x=22 ,ls='--',color='k');  
+    axes[1].axvline(x=37 ,ls='--',color='k');  
+    axes[1].axvline(x=85 ,ls='--',color='k');  
+
+    axes[1].set_ylim([-25,2])
+    axes[1].set_xlim([4,100])
+    axes[1].legend(loc='lower right')
 
 
-    #fig.suptitle(str(ititle) ,fontweight='bold' )
-    #plt.tight_layout()
-    #plt.subplots_adjust(top=0.899)
-    #plt.savefig(path+'/'+str(name)+'.png')
-    #plt.close()
     return
 
 
@@ -478,8 +490,9 @@ arts_exp11 = FullData(f_arts)
 
 # ----------------------------- PLOT ALL EXP PSD
 
-Plot_exp_hail(arts_exp7, arts_exp8, arts_exp9, arts_exp10, arts_exp11, 
-              labels_in=['1 g/m$^2$', '2 g/m$^2$', '4 g/m$^2$', '7.5 g/m$^2$','10 g/m$^2$'])
+Plot_exp_hail(arts_exp7, arts_exp8, arts_exp9, arts_exp10, arts_exp11, arts_exp1, arts_exp2, arts_exp3,
+              labels_in=['1 g/m$^2$', '2 g/m$^2$', '4 g/m$^2$', '7.5 g/m$^2$','10 g/m$^2$', 'Monodisperse (0.5 cm)', 
+                         'Monodisperse (1 cm)', 'Monodisperse (5 cm)'])
 
 
 # ----------------------------- HAIL WATER CONTENT  
