@@ -192,7 +192,7 @@ def Plot_exp_RainGrau(dd, dset1, dset2, dset3, infotitle):  #,ititle,name,path):
     return
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
-def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, dset6, dset7, dset8, labels_in):  #,ititle,name,path):
+def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, dset6, dset7, dset8, dset9, dset10, dset11, labels_in):  #,ititle,name,path):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -212,7 +212,19 @@ def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, dset6, dset7, dset8, labels
     
     axes[0].plot(dset6['D']['f_grid'][0][0][0][0][0][0]/1e9, dset6['arts_tb'][0,:]-dset6['arts_cl'][0,:],linewidth=1,color='black', label = labels_in[5])
     axes[0].plot(dset7['D']['f_grid'][0][0][0][0][0][0]/1e9, dset7['arts_tb'][0,:]-dset7['arts_cl'][0,:],linewidth=1,color='gray', label = labels_in[6])
-    axes[0].plot(dset8['D']['f_grid'][0][0][0][0][0][0]/1e9, dset8['arts_tb'][0,:]-dset8['arts_cl'][0,:],linewidth=1,color='k', linestyle='--', label = labels_in[7])
+    axes[0].plot(dset8['D']['f_grid'][0][0][0][0][0][0]/1e9, dset8['arts_tb'][0,:]-dset8['arts_cl'][0,:],linewidth=1,color='rosybrown', label = labels_in[7])
+    axes[0].plot(np.nan, np.nan,linewidth=1,color='black',label='2 g/m$^2$')
+    axes[0].plot(np.nan, np.nan,linewidth=1,color='black', linestyle='--', label='10 g/m$^2$')
+   
+    axes[0].legend(loc='lower right')
+        
+    axes[0].plot(dset9['D']['f_grid'][0][0][0][0][0][0]/1e9, dset9['arts_tb'][0,:]-dset9['arts_cl'][0,:],linewidth=1,color='black', linestyle='--')
+    axes[0].plot(dset10['D']['f_grid'][0][0][0][0][0][0]/1e9, dset10['arts_tb'][0,:]-dset10['arts_cl'][0,:],linewidth=1,color='gray', linestyle='--')
+    axes[0].plot(dset11['D']['f_grid'][0][0][0][0][0][0]/1e9, dset11['arts_tb'][0,:]-dset11['arts_cl'][0,:],linewidth=1,color='rosybrown', linestyle='--')
+    
+    
+    
+    
     axes[0].set_title( 'Cloud Scenarios Monodisperse (Hail-only)', fontsize='12', fontweight='bold')
     axes[0].set_ylabel(r'$\Delta$BT(Cloudy-Clear) [K]', color='k')
     axes[0].grid('true')   
@@ -223,7 +235,6 @@ def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, dset6, dset7, dset8, labels
     axes[0].axvline(x=85 ,ls='--',color='k');  axes[0].text(82,-15,'85 GHz',rotation=90)
     axes[0].set_ylim([-25,2])
     axes[0].set_xlim([4,100])
-    axes[0].legend(loc='lower right')
     
     axes[1].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = labels_in[0])
     axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='darkred', label = labels_in[1])
@@ -441,7 +452,7 @@ plt.ylim([0,20])
 # Hail Only
 #------------------------------------------------------------------------------------------ 
 
-
+# NOTICE THAT EXPS. 1-6 HAVE TOTAL MASS OF 0.2
 # simple cloudbox 5e-2 (5cm)
 f_arts    = main_dir + 'HailOnly_ssd_EXPa0.005/' + 'GMI_Fascod_HailOnly_ssd_EXPa0.005.mat'
 arts_exp1 = FullData(f_arts)
@@ -486,11 +497,22 @@ arts_exp10 = FullData(f_arts)
 f_arts    = main_dir + 'HailOnly_ssd_EXPg999/' + 'GMI_Fascod_HailOnly_ssd_EXPg999.mat'
 arts_exp11 = FullData(f_arts)
 
+# NOTICE THAT EXPS. 12-14 HAVE TOTAL MASS OF 10
+# simple cloudbox 5e-2 (0.5cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPa_10gm20.005/' + 'GMI_Fascod_HailOnly_ssd_EXPa_10gm20.005.mat'
+arts_exp12 = FullData(f_arts)
 
+# simple cloudbox 5e-2 (1cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPa_10gm20.01/' + 'GMI_Fascod_HailOnly_ssd_EXPa_10gm20.01.mat'
+arts_exp13 = FullData(f_arts)
+
+# simple cloudbox 5e-2 (5cm)
+f_arts    = main_dir + 'HailOnly_ssd_EXPa_10gm20.05/' + 'GMI_Fascod_HailOnly_ssd_EXPa_10gm20.05.mat'
+arts_exp14 = FullData(f_arts)
 
 # ----------------------------- PLOT ALL EXP PSD
 
-Plot_exp_hail(arts_exp7, arts_exp8, arts_exp9, arts_exp10, arts_exp11, arts_exp1, arts_exp2, arts_exp3,
+Plot_exp_hail(arts_exp7, arts_exp8, arts_exp9, arts_exp10, arts_exp11, arts_exp1, arts_exp2, arts_exp3,arts_exp12, arts_exp13, arts_exp14,
               labels_in=['1 g/m$^2$', '2 g/m$^2$', '4 g/m$^2$', '7.5 g/m$^2$','10 g/m$^2$', 'Monodisperse (0.5 cm)', 
                          'Monodisperse (1 cm)', 'Monodisperse (5 cm)'])
 
