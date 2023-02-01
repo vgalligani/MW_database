@@ -1063,7 +1063,7 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
     #----------------------------------------------------------------------------------------
     # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
     #----------------------------------------------------------------------------------------
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[7,6])
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[5,4])
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     ZH[np.where(ZH<20)]=np.nan
     pcm1=axes.pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
@@ -1132,7 +1132,7 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
 	
     if len(options['REPORTES_meta'])>0:
         for ireportes in range(len(options['REPORTES_geo'])):
-            axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+            axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
         plt.legend() 
     
 
