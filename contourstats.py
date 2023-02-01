@@ -1129,6 +1129,12 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
         lat_transect     = lats[filas,:]
         plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
         #plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+	
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], '*', markeredgecolor='black', markerfacecolor='black', markersize=10, label=options['REPORTES_meta'][ireportes])
+        plt.legend() 
+    
 
     #fig.savefig(options['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
     #plt.close()
