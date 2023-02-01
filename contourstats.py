@@ -10,6 +10,7 @@ import platform
 from matplotlib.colors import ListedColormap
 from os.path import isfile, join
 import pandas as pd
+from copy import deepcopy
 from pyart.correct import phase_proc
 import xarray as xr
 from copy import deepcopyf
@@ -2453,9 +2454,10 @@ def plot_scatter_4icois_morethan1OFINTEREST(options, radar, icois, fname):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def calc_freezinglevel(era5, lat_pf, lon_pf):
+
+def calc_freezinglevel(era5_dir, era5_file, lat_pf, lon_pf):
 	
-	ERA5_field = xr.load_dataset(era5, engine="cfgrib")	
+	ERA5_field = xr.load_dataset(era5_dir+era5_file, engine="cfgrib")	
 	elemj      = find_nearest(ERA5_field['latitude'], lat_pf[0])
 	elemk      = find_nearest(ERA5_field['longitude'], lon_pf[0])
 	tfield_ref = ERA5_field['t'][:,elemj,elemk] - 273 # convert to C
@@ -2583,8 +2585,8 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
                 rho[i,j]     = np.nan
 
 		
-    phiphi[:,0:30]  = np.nan 
-    rho[:,0:30]    = np.nan 
+    phiphi[:,0:40]  = np.nan 
+    rho[:,0:40]    = np.nan 
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
@@ -3681,7 +3683,7 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
 #------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def run_general_paper(options, lat_pfs, lon_pfs, icois, transects):
+def run_general_paper(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,  xlims_mins_input, xlims_xlims_input):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
@@ -3733,8 +3735,20 @@ def run_general_paper(options, lat_pfs, lon_pfs, icois, transects):
 
 	
     plot_gmi_paper(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects)
+    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    radar = add_43prop_field(radar)     
+    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
 
-	return
+    # 500m grid! 
+    grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+    gc.collect()
+    #make_pseudoRHISfromGrid_4(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+    make_pseudoRHISfromGrid(grided, radar, transects, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+    gc.collect()
+    return
 
 
 #----------------------------------------------------------------------------------------------
@@ -4193,8 +4207,11 @@ def main_20180208():
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
+    labels_PHAIL = ['Transect(coi=1)','Transect(icoi=2) [Phail=53.4%]','Transect(icoi=3) [Phail=9.1%]'] 
+    xlims_xlims_input  = [60, 100, 150] 
+    xlims_mins_input  = [10, 40, 60]		
 	
-    run_general_paper(options, lat_pfs, lon_pfs, [2,4,5], [356,220,192] )
+    run_general_paper(opts, lat_pfs, lon_pfs, [2,4,5], [356,220,192], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
 	
 
     GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'],1)
