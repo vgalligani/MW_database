@@ -3750,7 +3750,241 @@ def run_general_paper(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,
     gc.collect()
     return
 
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims_mins, xlims_xlims, alt_ref, tfield_ref, options): 
 
+    plt.matplotlib.rc('font', family='serif', size = 20)
+    #plt.rcParams['font.sans-serif'] = ['Helvetica']
+    #plt.rcParams['font.serif'] = ['Helvetica']
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12  
+    
+    if 'TH' in radar.fields.keys():  
+            THname= 'TH'
+            TVname= 'TV'
+            KDPname='corrKDP'
+            RHOHVname = 'RHOHV'
+    elif 'DBZHCC' in radar.fields.keys():        
+           THname = 'DBZHCC'
+           KDPname='corrKDP'
+    elif 'corrected_reflectivity' in radar.fields.keys():        
+           TH   = 'corrected_reflectivity'
+           ZDRname =  'corrected_differential_reflectivity'
+           RHOHVname = 'copol_correlation_coeff'       
+           PHIname = 'filtered_corrected_differential_phase'       
+           KDPname = 'filtered_corrected_specific_diff_phase'
+           THname =  'corrected_reflectivity'
+    elif 'DBZH' in radar.fields.keys():        
+           THname = 'DBZH'
+           KDPname ='corrKDP'
+           TVname   = 'DBZV'  
+           RHOHVname   = 'RHOHV'  
+		
+    nlev = 0 
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats        = radar.gate_latitude['data'][start_index:end_index]
+    lons        = radar.gate_longitude['data'][start_index:end_index]
+    azimuths    = radar.azimuth['data'][start_index:end_index]
+
+    fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[14,13])
+
+    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+
+    for iz in range(len(azi_oi)):
+        target_azimuth = azimuths[options['alternate_azi'][iz]]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
+        if options['radar_name'] == 'CSPR2':
+            del filas
+            target_azimuth = azimuths[options['alternate_azi'][iz]]		
+            filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+            axescheck.plot(lons[filas,:], lats[filas,:],'-k')
+        grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
+        grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
+        grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
+        grid_TVTV  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
+        grid_ZDR   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
+        grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
+        grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
+        grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
+        grid_HID   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
+        grid_KDP   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
+
+        # need to find x/y pair for each gate at the surface 
+        for i in range(lons[filas,:].shape[2]):	
+            # First, find the index of the grid point nearest a specific lat/lon.   
+            abslat = np.abs(gridded_radar.point_latitude['data'][0,:,:]  - lats[filas,i])
+            abslon = np.abs(gridded_radar.point_longitude['data'][0,:,:] - lons[filas,i])
+            c = np.maximum(abslon, abslat)
+            ([xloc], [yloc]) = np.where(c == np.min(c))	
+            grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
+            grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
+            grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+            #grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+            grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
+            grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
+            grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
+            grid_alt[:,i]   = gridded_radar.z['data'][:]
+            x               = gridded_radar.point_x['data'][:,xloc,yloc]
+            y               = gridded_radar.point_y['data'][:,xloc,yloc]
+            z               = gridded_radar.point_z['data'][:,xloc,yloc]
+            grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
+            grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
+            grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
+
+        ni = grid_HID.shape[0]
+        nj = grid_HID.shape[1]
+        for i in range(ni):
+            rho_h = grid_RHO[i,:]
+            zh_h = grid_THTH[i,:]
+            for j in range(nj):
+                if (rho_h[j]<0.7) or (zh_h[j]<0):
+                    grid_THTH[i,j]  = np.nan
+                    grid_TVTV[i,j]  = np.nan
+                    grid_RHO[i,j]  = np.nan			
+
+
+        #Filters
+        #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
+        #grid_THTH[np.where(grid_RHO<0.6)] = np.nan	
+        #grid_RHO[np.where(grid_RHO<0.6)] = np.nan	
+        #grid_KDP[np.where(grid_RHO<0.6)] = np.nan	
+
+        #--- need to add tempertaure to grided data ... 
+        #radar_z = gridded_radar.point_z['data']
+        #shape   = np.shape(radar_z)
+        #rad_T1d = np.interp(radar_z.ravel(), alt_ref, tfield_ref)   # interpolate_sounding_to_radar(snd_T, snd_z, radar)
+        #radargrid_TT = np.reshape(rad_T1d, shape)
+        #gridded_radar = add_field_to_radar_object(np.reshape(rad_T1d, shape), gridded_radar, field_name='sounding_temperature')      
+        #- Add height field for 4/3 propagation
+        #gridded_radar = add_field_to_radar_object( gridded_radar.point_z['data'], gridded_radar, field_name = 'height')    	
+        #iso0 = np.ma.mean(gridded_radar.fields['height']['data'][np.where(np.abs(gridded_radar.fields['sounding_temperature']['data']) < 0)])
+        #gridded_radar.fields['height_over_iso0'] = deepcopy(gridded_radar.fields['height'])
+        #gridded_radar.fields['height_over_iso0']['data'] -= iso0 
+        #
+        #for i in range(lons[filas,:].shape[2]):	
+        #    scores          = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=(grid_TVTV[:,i]-grid_THTH[:,i]) - options['ZDRoffset'], 
+	#						 rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+        #                                    use_temp=True, band='C', T=radargrid_TT)
+        #    grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
+
+        #grid_HID[np.where(grid_RHO<0.7)] = np.nan
+
+        #---- plot hid ppi  
+        hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
+                'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+        cmaphid = colors.ListedColormap(hid_colors)
+        #cmaphid.set_bad('white')
+        #cmaphid.set_under('white')
+        # Figure
+        [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+        im_TH  = axes[0,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_THTH, cmap=cmap, vmin=vmin, vmax=vmax)
+
+        #im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+        im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_ZDR)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
+
+        im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
+
+        im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
+
+        axes[0,iz].set_title(titlecois[iz]) 
+        if iz == 1:
+            axes[0,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+
+        if iz == 2:
+            axes[0,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[2],xlims_xlims[2]])
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+
+        if iz == 3:
+            axes[0,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[3],xlims_xlims[3]])
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+
+        if iz == 0:
+            axes[0,0].set_ylabel('Altitude (km)')
+            axes[1,0].set_ylabel('Altitude (km)')
+            axes[2,0].set_ylabel('Altitude (km)')
+            axes[3,0].set_ylabel('Altitude (km)')
+            axes[0,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
+            axes[1,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
+            axes[2,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
+            axes[3,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
+            axes[3,0].set_xlabel('Range (km)')
+       	    axes[0,iz].set_ylim([0,15])
+       	    axes[1,iz].set_ylim([0,15])
+            axes[2,iz].set_ylim([0,15])
+            axes[3,iz].set_ylim([0,15])
+
+        if iz == len(azi_oi)-1: 
+	    # Add colorbars #ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height])
+            pm1    = axes[0,iz-1].get_position().get_points().flatten()
+            p_last = axes[0,iz].get_position().get_points().flatten(); 
+
+            ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
+            cbar    = fig.colorbar(im_TH,  cax=ax_cbar, shrink=0.9,  ticks=np.arange(0,60.01,10), label='ZH')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+            pm2    = axes[1,iz-1].get_position().get_points().flatten()
+
+            ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.55, 0.02, 0.2])  
+            cbar    = fig.colorbar(im_ZDR, cax=ax_cbar, shrink=0.9,  ticks=np.arange(-2.,5.01,1.), label='ZDR')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+
+            pm3   = axes[2,iz-1].get_position().get_points().flatten()
+
+            ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.28, 0.02, 0.2])  
+            cbar    = fig.colorbar(im_RHO, cax=ax_cbar, shrink=0.9, ticks=np.arange(0.7,1.01,0.1), label='RHOHV')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+
+            ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.03, 0.02, 0.2])  
+            cbar    = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+            cbar = adjust_fhc_colorbar_for_pyart(cbar)
+            #cbar.cmap.set_under('white')
+
+            pm2    = axes[3,iz-1].get_position().get_points().flatten()
+
+
+    #- savefile
+    fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
+    #plt.close()
+    del grid_THTH, grid_RHO, grid_TVTV, grid_HID
+
+    #-------------------------------
+    for i in range(20):
+        fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+        im_HID = ax.pcolormesh(gridded_radar.point_longitude['data'][i,:,:], 
+        gridded_radar.point_latitude['data'][i,:,:], gridded_radar.fields['HID']['data'][i,:,:], cmap=cmaphid, vmin=0.2, vmax=10)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],10)
+        ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        ax.plot(lon_radius, lat_radius, 'k', linewidth=0.8)  
+        ax.set_xlabel('Longitude'); ax.set_ylabel('Latitude')
+        ax.set_title('HID '+ str( round(grid_alt[i,0]/1e3,1)) +' km')
+        cbar = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')
+        cbar = adjust_fhc_colorbar_for_pyart(cbar)
+        ax.set_xlim([options['xlim_min'], options['xlim_max']])	
+        ax.set_ylim([options['ylim_min'], options['ylim_max']])
+        fig.savefig(options['fig_dir']+'RHIS_GRIDDED_verticalLevel_'+str(i)+'.png', dpi=300,transparent=False); plt.close()
+    return
+	
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 def run_general_case_startconv(options, lat_pfs, lon_pfs, icois):
@@ -4203,11 +4437,12 @@ def main_20180208():
 	    'era5_file': era5_file,
 	    'radar_name':'RMA1',
 	    'icoi_PHAIL':[4], 
+	    'alternate_azi':[356,220,192],
 	    'gfile': gfile, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/', 
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
-    labels_PHAIL = ['Transect(coi=1)','Transect(icoi=2) [Phail=53.4%]','Transect(icoi=3) [Phail=9.1%]'] 
+    labels_PHAIL = ['Transect (coi=1)','Transect (icoi=2, Phail=53.4%)','Transect(icoi=3, Phail=9.1%)'] 
     xlims_xlims_input  = [60, 100, 150] 
     xlims_mins_input  = [10, 40, 60]		
 	
