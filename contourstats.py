@@ -679,6 +679,470 @@ def plot_gmi(fname, options, radar, lon_pfs, lat_pfs, icoi):
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+from matplotlib import text as mtext
+
+class CurvedText(mtext.Text):
+    """
+    A text object that follows an arbitrary curve.
+    """
+    def __init__(self, x, y, text, axes, **kwargs):
+        super(CurvedText, self).__init__(x[0],y[0],' ', **kwargs)
+
+        axes.add_artist(self)
+
+        ##saving the curve:
+        self.__x = x
+        self.__y = y
+        self.__zorder = self.get_zorder()
+
+        ##creating the text objects
+        self.__Characters = []
+        for c in text:
+            if c == ' ':
+                ##make this an invisible 'a':
+                t = mtext.Text(0,0,'a')
+                t.set_alpha(0.0)
+            else:
+                t = mtext.Text(0,0,c, **kwargs)
+
+            #resetting unnecessary arguments
+            t.set_ha('center')
+            t.set_rotation(0)
+            t.set_zorder(self.__zorder +1)
+
+            self.__Characters.append((c,t))
+            axes.add_artist(t)
+
+
+    ##overloading some member functions, to assure correct functionality
+    ##on update
+    def set_zorder(self, zorder):
+        super(CurvedText, self).set_zorder(zorder)
+        self.__zorder = self.get_zorder()
+        for c,t in self.__Characters:
+            t.set_zorder(self.__zorder+1)
+
+    def draw(self, renderer, *args, **kwargs):
+        """
+        Overload of the Text.draw() function. Do not do
+        do any drawing, but update the positions and rotation
+        angles of self.__Characters.
+        """
+        self.update_positions(renderer)
+
+    def update_positions(self,renderer):
+        """
+        Update positions and rotations of the individual text elements.
+        """
+
+        #preparations
+
+        ##determining the aspect ratio:
+        ##from https://stackoverflow.com/a/42014041/2454357
+
+        ##data limits
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
+        ## Axis size on figure
+        figW, figH = self.axes.get_figure().get_size_inches()
+        ## Ratio of display units
+        _, _, w, h = self.axes.get_position().bounds
+        ##final aspect ratio
+        aspect = ((figW * w)/(figH * h))*(ylim[1]-ylim[0])/(xlim[1]-xlim[0])
+
+        #points of the curve in figure coordinates:
+        x_fig,y_fig = (
+            np.array(l) for l in zip(*self.axes.transData.transform([
+            (i,j) for i,j in zip(self.__x,self.__y)
+            ]))
+        )
+
+        #point distances in figure coordinates
+        x_fig_dist = (x_fig[1:]-x_fig[:-1])
+        y_fig_dist = (y_fig[1:]-y_fig[:-1])
+        r_fig_dist = np.sqrt(x_fig_dist**2+y_fig_dist**2)
+
+        #arc length in figure coordinates
+        l_fig = np.insert(np.cumsum(r_fig_dist),0,0)
+
+        #angles in figure coordinates
+        rads = np.arctan2((y_fig[1:] - y_fig[:-1]),(x_fig[1:] - x_fig[:-1]))
+        degs = np.rad2deg(rads)
+
+
+        rel_pos = 10
+        for c,t in self.__Characters:
+            #finding the width of c:
+            t.set_rotation(0)
+            t.set_va('center')
+            bbox1  = t.get_window_extent(renderer=renderer)
+            w = bbox1.width
+            h = bbox1.height
+
+            #ignore all letters that don't fit:
+            if rel_pos+w/2 > l_fig[-1]:
+                t.set_alpha(0.0)
+                rel_pos += w
+                continue
+
+            elif c != ' ':
+                t.set_alpha(1.0)
+
+            #finding the two data points between which the horizontal
+            #center point of the character will be situated
+            #left and right indices:
+            il = np.where(rel_pos+w/2 >= l_fig)[0][-1]
+            ir = np.where(rel_pos+w/2 <= l_fig)[0][0]
+
+            #if we exactly hit a data point:
+            if ir == il:
+                ir += 1
+
+            #how much of the letter width was needed to find il:
+            used = l_fig[il]-rel_pos
+            rel_pos = l_fig[il]
+
+            #relative distance between il and ir where the center
+            #of the character will be
+            fraction = (w/2-used)/r_fig_dist[il]
+
+            ##setting the character position in data coordinates:
+            ##interpolate between the two points:
+            x = self.__x[il]+fraction*(self.__x[ir]-self.__x[il])
+            y = self.__y[il]+fraction*(self.__y[ir]-self.__y[il])
+
+            #getting the offset when setting correct vertical alignment
+            #in data coordinates
+            t.set_va(self.get_va())
+            bbox2  = t.get_window_extent(renderer=renderer)
+
+            bbox1d = self.axes.transData.inverted().transform(bbox1)
+            bbox2d = self.axes.transData.inverted().transform(bbox2)
+            dr = np.array(bbox2d[0]-bbox1d[0])
+
+            #the rotation/stretch matrix
+            rad = rads[il]
+            rot_mat = np.array([
+                [math.cos(rad), math.sin(rad)*aspect],
+                [-math.sin(rad)/aspect, math.cos(rad)]
+            ])
+
+            ##computing the offset vector of the rotated character
+            drp = np.dot(dr,rot_mat)
+
+            #setting final position and rotation:
+            t.set_position(np.array([x,y])+drp)
+            t.set_rotation(degs[il])
+
+            t.set_va('center')
+            t.set_ha('center')
+
+            #updating rel_pos to right edge of character
+            rel_pos += w-used
+
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
+
+    if options['radar_name'] == 'RMA1':
+        reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'DOW7':
+        reflectivity_name = 'DBZHCC'   
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        ZH          = radar.fields[reflectivity_name]['data']
+        
+    elif options['radar_name'] == 'CSPR2':
+        reflectivity_name = 'corrected_reflectivity'   
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        ZH          = radar.fields[reflectivity_name]['data']
+	
+    elif options['radar_name'] == 'RMA5':
+        reflectivity_name = 'DBZH'   
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        ZH          = radar.fields[reflectivity_name]['data']	
+
+    elif options['radar_name'] == 'RMA4':
+        reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'RMA8':
+        reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'RMA3':
+        reflectivity_name = 'TH' 
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+	
+    s_sizes=450
+    user = platform.system()
+    if   user == 'Linux':
+        home_dir = '/home/victoria.galligani/'  
+    elif user == 'Darwin':
+        home_dir = '/Users/victoria.galligani'
+
+    # Shapefiles for cartopy 
+    geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+    geo_reg = shpreader.Reader(geo_reg_shp)
+
+    countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+    states_provinces = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+    rivers = cfeature.NaturalEarthFeature(
+        category='physical',
+        name='rivers_lake_centerlines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+
+    cmaps = GMI_colormap() 
+
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb   = tb_s1_gmi.copy()
+    S2_sub_tb   = tb_s2_gmi.copy()
+    S2_sub_lat  = lat_s2_gmi.copy()
+    S2_sub_lon  = lon_s2_gmi.copy()	
+
+    # Tambien se puenden hacer recortes guardando los indices. ejemplo para S1: 
+    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+    idx2 = (lat_s2_gmi>=options['ylim_min']-5) & (lat_s2_gmi<=options['ylim_max']+5) & (lon_s2_gmi>=options['xlim_min']-5) & (lon_s2_gmi<=options['xlim_max']+5)
+
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    S2_sub_lat = np.where(idx2 != False, S2_sub_lat, np.nan) 
+    S2_sub_lon = np.where(idx2 != False, S2_sub_lon, np.nan) 
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
+    for i in range(tb_s2_gmi.shape[2]):
+        S2_sub_tb[:,:,i]  = np.where(np.isnan(S2_sub_lon) != 1, tb_s2_gmi[:,:,i], np.nan)	
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
+    
+    fig = plt.figure(figsize=(30,10)) 
+    gs1 = gridspec.GridSpec(1, 3)
+
+    # BT(37)       
+    ax1 = plt.subplot(gs1[0,0], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax1.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax1.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax1.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax1.add_feature(states_provinces,linewidth=0.4)
+    ax1.add_feature(rivers)
+    ax1.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+
+    im = plt.scatter(S1_sub_lon, S1_sub_lat, c=S1_sub_tb[:,:,5], s=s_sizes, marker='h', vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    #im = plt.pcolormesh(xx, yy, BT37, vmin=50, vmax=300, cmap=cmaps['turbo_r'])    
+    plt.title('BT 37 GHz')
+    ax1.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax1.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
+    ax1.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, '-k', linewidth=1)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=20, markerfacecolor="magenta",
+            markeredgecolor='magenta', markeredgewidth=1.5) 
+    plt.contour(lon_gmi, lat_gmi, PCT89, [200, 225], colors=('m'), linewidths=2);
+    plt.plot(np.nan, np.nan, '-m', linewidth=2, label='PCT89 200/225 K ')
+    plt.legend(loc='upper left')
+
+
+    # BT(89)              
+    ax2 = plt.subplot(gs1[0,1], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax2.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax2.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax2.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax2.add_feature(states_provinces,linewidth=0.4)
+    ax2.add_feature(rivers)
+    ax2.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(S1_sub_lon, S1_sub_lat, c=S1_sub_tb[:,:,7], marker='h', s=s_sizes, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    #im = plt.pcolormesh(xx, yy, BT85, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 89 GHz')
+    ax2.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax2.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
+    ax2.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax2.xaxis.set_major_formatter(lon_formatter)
+    ax2.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=20, markerfacecolor="magenta",
+            markeredgecolor='magenta', markeredgewidth=1.5)   
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200,225], colors=('m'), linewidths=2);            
+
+    # BT(166)           
+    ax3 = plt.subplot(gs1[0,2], projection=ccrs.PlateCarree())
+    crs_latlon = ccrs.PlateCarree()
+    ax3.set_extent([options['xlim_min'], options['xlim_max'], 
+                    options['ylim_min'], options['ylim_max']], crs=crs_latlon)
+    ax3.coastlines(resolution='10m', color='black', linewidth=0.8)
+    ax3.add_geometries( countries.geometries(), ccrs.PlateCarree(), 
+                edgecolor="black", facecolor='none')
+    ax3.add_feature(states_provinces,linewidth=0.4)
+    ax3.add_feature(rivers)
+    ax3.add_geometries( geo_reg.geometries(), ccrs.PlateCarree(), \
+                edgecolor="black", facecolor='none')
+    im = plt.scatter(S2_sub_lon, S2_sub_lat, c=S2_sub_tb[:,:,0], marker='h', s=s_sizes, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    #im = plt.pcolormesh(xx, yy, BT166, vmin=50, vmax=300, cmap=cmaps['turbo_r'])  
+    plt.title('BT 166 GHz')
+    ax3.gridlines(linewidth=0.2, linestyle='dotted', crs=crs_latlon)
+    ax3.set_yticks(np.arange(options['ylim_min'], options['ylim_max'],1), crs=crs_latlon)
+    ax3.set_xticks(np.arange(options['xlim_min'], options['xlim_max']+2,2), crs=crs_latlon)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax3.xaxis.set_major_formatter(lon_formatter)
+    ax3.yaxis.set_major_formatter(lat_formatter)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],np.max(radar.range['data'])/1e3)
+    plt.plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i], marker='x', markersize=10, markerfacecolor="none",
+            markeredgecolor='magenta', markeredgewidth=1.5) 
+    # contorno de 200 K: The features are defined as contiguous areas with 85 GHz (89 for GPM) below 200K
+    contorno89 = plt.contour(lon_gmi, lat_gmi, PCT89, [200,225], colors=('m'), linewidths=2);            
+
+    p1 = ax1.get_position().get_points().flatten()
+    p2 = ax3.get_position().get_points().flatten()
+    ax_cbar = fig.add_axes([p1[0], 0.05, p2[2]-p1[0], 0.03])   # [left, bottom, width, height] or Bbox 
+    cbar = fig.colorbar(im, cax=ax_cbar, shrink=0.8, ticks=np.arange(50,300,50), extend='both', orientation="horizontal", label='TBV (K)')   
+
+    #fig.savefig(options['fig_dir']+'GMI_basicTBs.png', dpi=300, transparent=False)  
+    
+    #----------------------------------------------------------------------------------------
+    # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
+    #----------------------------------------------------------------------------------------
+    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[7,6])
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    ZH[np.where(ZH<20)]=np.nan
+    pcm1=axes.pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
+    axes.set_title('Ground Level')
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+    plt.colorbar(pcm1, ax=axes)
+
+	
+    # -----
+    # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
+    contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+	
+    
+    # LIMITS	 
+    axes.set_xlim([options['xlim_min'], options['xlim_max']])
+    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+    # TITLE
+    axes.set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
+    # RADAR RINGS	      
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    CurvedText(
+        x = lon_radius[20000:],
+        y = lat_radius[20000:],
+        text='50 km',#'this this is a very, very long text',
+        va = 'bottom', axes=axes)
+    	      
+	      
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    CurvedText(
+        x = lon_radius[17000:],
+        y = lat_radius[17000:],
+        text='100 km',#'this this is a very, very long text',
+        va = 'bottom', axes=axes)
+    	      
+	      
+	      
+    # Addlabels to icois! 
+
+    # Add labels:
+    labels = ["PCT 89-GHz 200 K contour"] 
+    for i in range(len(labels)):
+        contorno89.collections[i].set_label(labels[i])
+    axes.legend(loc='upper left')
+
+    plt.text(-64, -31, 'coi=1')
+    plt.text(-65.1, -31.9, 'coi=2')
+    plt.text(-65, -32.5, 'coi=3')
+    axes.set_xlabel('Longitude')
+    axes.set_ylabel('Latitude')
+	
+    for i in range(len(lon_pfs)):
+        plt.plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+        markeredgecolor='black', markeredgewidth=1.5)	
+    
+    # TRANSECTAS:
+    for itrans in transects:
+        target_azimuth = azimuths[itrans]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect     = lons[filas,:]
+        lat_transect     = lats[filas,:]
+        plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        #plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+
+    #fig.savefig(options['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
+    #plt.close()
+    return
+
+
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+
+
+
+
 def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref, alt_ref):
 
     if 'TH' in radar.fields.keys():  
@@ -3211,6 +3675,64 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
 #------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
+def run_general_paper(options, lat_pfs, lon_pfs, icois, transects):
+
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+    radar = pyart.io.read(r_dir+options['rfile'])
+    
+    if options['radar_name'] == 'RMA3':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIDP_nans.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+	
+    if options['radar_name'] == 'RMA1':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+ 
+    if options['radar_name'] == 'RMA5':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+	
+    if options['radar_name'] == 'RMA4':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+	
+    if options['radar_name'] == 'RMA8':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+
+    if options['radar_name'] == 'DOW7':
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
+		
+
+	
+    plot_gmi_paper(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects)
+
+	return
+
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
 def run_general_case_startconv(options, lat_pfs, lon_pfs, icois):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
@@ -3262,7 +3784,7 @@ def run_general_case_startconv(options, lat_pfs, lon_pfs, icois):
 		
 
 	
-    plot_gmi(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
+    plot_gmi_paper(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois)
 
    
     #[PCTarray_PHAIL_out, PCTarray_NOPHAIL_out, AREA_PHAIL, AREA_NOPHAIL,  PIXELS_PHAIL, PIXELS_NOPHAIL, GATES_PHAIL, GATES_NOPHAIL, 
@@ -3665,6 +4187,9 @@ def main_20180208():
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
+	
+    run_general_paper(options, lat_pfs, lon_pfs, [2,4,5], [356,220,192] )
+	
 
     GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'],1)
 
