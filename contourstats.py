@@ -2743,6 +2743,19 @@ def get_sys_phase_simple(radar):
 
     return phases_out
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 
+#------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------  
+def get_z_from_radar(radar):
+    """Input radar object, return z from radar (km, 2D)"""
+    azimuth_1D = radar.azimuth['data']
+    elevation_1D = radar.elevation['data']
+    srange_1D = radar.range['data']
+    sr_2d, az_2d = np.meshgrid(srange_1D, azimuth_1D)
+    el_2d = np.meshgrid(srange_1D, elevation_1D)[1]
+    xx, yy, zz = antenna_to_cartesian(sr_2d/1000.0, az_2d, el_2d) # Cartesian coordinates in meters from the radar.
+
+    return zz + radar.altitude['data'][0]	
+
 # --- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----- ---- ---- ---- 	
 def interpolate_sounding_to_radar(snd_T, snd_z, radar):
     """Takes sounding data and interpolates it to every radar gate."""
