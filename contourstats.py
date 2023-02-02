@@ -848,8 +848,12 @@ class CurvedText(mtext.Text):
 
 def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
 
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12  
+
     if options['radar_name'] == 'RMA1':
-        reflectivity_name = 'TH'   
+        reflectivity_name = 'TH'   		
         nlev = 0 
         start_index = radar.sweep_start_ray_index['data'][nlev]
         end_index   = radar.sweep_end_ray_index['data'][nlev]
@@ -1064,62 +1068,63 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
     #----------------------------------------------------------------------------------------
     # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
     #----------------------------------------------------------------------------------------
-    fig, axes = plt.subplots(nrows=1, ncols=1, constrained_layout=True,figsize=[5,4])
+    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[5,10])
+	
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     ZH[np.where(ZH<20)]=np.nan
-    pcm1=axes.pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
-    axes.set_title('Ground Level')
-    axes.set_xlim([options['xlim_min'], options['xlim_max']])
-    axes.set_ylim([options['ylim_min'], options['ylim_max']])
-    plt.colorbar(pcm1, ax=axes)
+    pcm1=axes[0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[0].set_title('Ground Level')
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+    plt.colorbar(pcm1, ax=axes[0])
 
-	
+
     # -----
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
-    contorno89 = axes.contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+    contorno89 = axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200,250], colors=(['k']), linewidths=1.5);
 	
     
     # LIMITS	 
-    axes.set_xlim([options['xlim_min'], options['xlim_max']])
-    axes.set_ylim([options['ylim_min'], options['ylim_max']])
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
     # TITLE
-    axes.set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
+    axes[0].set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
     # RADAR RINGS	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     CurvedText(
         x = lon_radius[20000:],
         y = lat_radius[20000:],
         text='50 km',#'this this is a very, very long text',
-        va = 'bottom', axes=axes)
+        va = 'bottom', axes=axes[0])
     	      
 	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-    axes.plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     CurvedText(
         x = lon_radius[17000:],
         y = lat_radius[17000:],
         text='100 km',#'this this is a very, very long text',
-        va = 'bottom', axes=axes)
+        va = 'bottom', axes=axes[0])
     	      
 	      
 	      
     # Addlabels to icois! 
 
     # Add labels:
-    labels = ["PCT 89-GHz 200 K contour"] 
+    labels = ["PCT 89-GHz 200 K contour","PCT 89-GHz 250 K contour"] 
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
-    axes.legend(loc='upper left')
+    axes[0].legend(loc='upper left')
 
-    plt.text(-64, -31, 'coi=1')
-    plt.text(-65.1, -31.9, 'coi=2')
-    plt.text(-65, -32.5, 'coi=3')
-    axes.set_xlabel('Longitude')
-    axes.set_ylabel('Latitude')
+    axes[0].text(-64, -31, 'coi=1')
+    axes[0].text(-65.1, -31.9, 'coi=2')
+    axes[0].text(-65, -32.5, 'coi=3')
+    axes[0].set_xlabel('Longitude')
+    axes[0].set_ylabel('Latitude')
 	
     for i in range(len(lon_pfs)):
-        plt.plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+        axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
         markeredgecolor='black', markeredgewidth=1.5)	
     azimuths = radar.azimuth['data'][start_index:end_index]
     # TRANSECTAS:
@@ -1128,17 +1133,47 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
-        plt.plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        axes[0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
         #plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
 	
     if len(options['REPORTES_meta'])>0:
         for ireportes in range(len(options['REPORTES_geo'])):
-            axes.plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+            axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
         plt.legend() 
-    
+	
+	
 
+    im = axes[1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
+    axes[1].set_title('PCT 89-GHz')
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    contorno89 = axes[1].contour(lon_gmi, lat_gmi, PCT89, [200,225], colors=('k'), linewidths=2);    
+    for i in range(len(lon_pfs)):
+        axes[1].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+        markeredgecolor='black', markeredgewidth=1.5)	
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    # TRANSECTAS:
+    for itrans in transects:
+        target_azimuth = azimuths[itrans]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect     = lons[filas,:]
+        lat_transect     = lats[filas,:]
+        axes[1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        #plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+	
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes[1].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+    axes[1].set_xlabel('Longitude')
+    axes[1].set_ylabel('Latitude')	
+    axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1].set_ylim([options['ylim_min'], options['ylim_max']])	
     #fig.savefig(options['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
     #plt.close()
+    plt.colorbar(im, ax=axes[1])
+
     return
 
 
@@ -3755,9 +3790,7 @@ def run_general_paper(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,
 #------------------------------------------------------------------------------
 def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims_mins, xlims_xlims, alt_ref, tfield_ref, options): 
 
-    plt.matplotlib.rc('font', family='serif', size = 20)
-    #plt.rcParams['font.sans-serif'] = ['Helvetica']
-    #plt.rcParams['font.serif'] = ['Helvetica']
+    plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
     plt.rcParams['ytick.labelsize']=12  
     
@@ -4447,12 +4480,13 @@ def main_20180208():
     xlims_mins_input  = [10, 40, 60]		
 	
     run_general_paper(opts, lat_pfs, lon_pfs, [2,4,5], [356,220,192], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
-	
-
-    GET_TBVH_250ICOIS(options, gmi_dir+opts['gfile'],1)
+    GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],1)
 
     coi_250 =  [3,4]	
-    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
+    [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, 
+     GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
+    
+    colores_in = ['darkred','darkblue']
     for i in range(len(GMI_latlat)):
 		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
 		print('MAX(TBVH 19:', np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
