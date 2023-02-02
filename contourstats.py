@@ -1121,7 +1121,7 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
     for i in range(len(lon_pfs)):
         plt.plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
         markeredgecolor='black', markeredgewidth=1.5)	
-    
+    azimuths = radar.azimuth['data'][start_index:end_index]
     # TRANSECTAS:
     for itrans in transects:
         target_azimuth = azimuths[itrans]
@@ -3840,12 +3840,11 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             rho_h = grid_RHO[i,:]
             zh_h = grid_THTH[i,:]
             for j in range(nj):
-                if (rho_h[j]<0.7) or (zh_h[j]<0):
+                if (rho_h[j]<0.7) or (zh_h[j]<20):
                     grid_THTH[i,j]  = np.nan
                     grid_TVTV[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan	
-		    grid_ZDR[i,j]  = np.nan	
-
+                    grid_ZDR[i,j]  = np.nan
 
         #Filters
         #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
@@ -4443,7 +4442,7 @@ def main_20180208():
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
-    labels_PHAIL = ['Transect (coi=1)','Transect (icoi=2, Phail=53.4%)','Transect(icoi=3, Phail=9.1%)'] 
+    labels_PHAIL = ['coi=3','icoi=2 (Phail=53.4%)','icoi=1 (Phail=9.1%)'] 
     xlims_xlims_input  = [60, 100, 150] 
     xlims_mins_input  = [10, 40, 60]		
 	
