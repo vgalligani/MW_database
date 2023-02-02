@@ -3821,6 +3821,8 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     lats        = radar.gate_latitude['data'][start_index:end_index]
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
+	
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
 
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[15,10])
 
@@ -3865,8 +3867,13 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             z               = gridded_radar.point_z['data'][:,xloc,yloc]
             grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
             grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
-            grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
+            #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
+            # CALCUALTE HID FROM THESE GRIDDED FIELDS:
+            scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], use_temp=True, band='C', T=radar_T)
+            grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
+		
 
+		
         ni = grid_HID.shape[0]
         nj = grid_HID.shape[1]
         for i in range(ni):
