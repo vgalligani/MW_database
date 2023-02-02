@@ -3834,7 +3834,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
 	
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, gridded_radar)
+    #radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, gridded_radar)
 
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[15,10])
 
@@ -3881,7 +3881,8 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
             #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
             # CALCUALTE HID FROM THESE GRIDDED FIELDS:
-            scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], use_temp=True, band='C', T=radar_T)
+            scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+					    use_temp=True, band='C', T=gridded_radar.fields['sounding_temperature']['data'][:,xloc,yloc])
             grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
 		
 
@@ -3897,7 +3898,8 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
                     grid_TVTV[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan	
                     grid_ZDR[i,j]  = np.nan
-	    #grid_HID = gaussian_filter(grid_HID, sigma=3) 
+                    grid_HID[i,j]  = np.nan
+		#grid_HID = gaussian_filter(grid_HID, sigma=3) 
 
         #Filters
         #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
