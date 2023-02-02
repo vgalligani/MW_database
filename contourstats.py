@@ -3792,6 +3792,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
     plt.rcParams['ytick.labelsize']=12  
+    from scipy.ndimage import gaussian_filter
     
     if 'TH' in radar.fields.keys():  
             THname= 'TH'
@@ -3821,9 +3822,9 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
 
-    fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[5,10])
+    fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[15,10])
 
-    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[5,10])
+    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[15,10])
 
     for iz in range(len(azi_oi)):
         target_azimuth = azimuths[options['alternate_azi'][iz]]
@@ -3877,6 +3878,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
                     grid_TVTV[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan	
                     grid_ZDR[i,j]  = np.nan
+	grid_HID = gaussian_filter(grid_HID, sigma=3) 
 
         #Filters
         #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
