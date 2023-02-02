@@ -29,6 +29,7 @@ from collections import Counter
 import alphashape
 from descartes import PolygonPatch
 import cartopy.feature as cfeature
+from matplotlib.path import Path
 
 from shapely.geometry import Polygon
 from shapely.geometry import Point
