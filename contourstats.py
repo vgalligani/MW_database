@@ -17,7 +17,6 @@ from copy import deepcopyf
 import matplotlib.colors as colors
 import wradlib as wrl    
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
-from matplotlib.path import Path
 from cycler import cycler
 #import seaborn as sns
 import cartopy.io.shapereader as shpreader
@@ -3822,9 +3821,9 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
 
-    fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[14,13])
+    fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[5,10])
 
-    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
+    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[5,10])
 
     for iz in range(len(azi_oi)):
         target_azimuth = azimuths[options['alternate_azi'][iz]]
@@ -3954,15 +3953,15 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             axes[3,iz].set_ylim([0,15])
 
         if iz == 0:
-            axes[0,0].set_ylabel('Altitude (km)')
-            axes[1,0].set_ylabel('Altitude (km)')
-            axes[2,0].set_ylabel('Altitude (km)')
-            axes[3,0].set_ylabel('Altitude (km)')
+            axes[0,0].set_ylabel('Altitude (km)', fontsize=12)
+            axes[1,0].set_ylabel('Altitude (km)', fontsize=12)
+            axes[2,0].set_ylabel('Altitude (km)', fontsize=12)
+            axes[3,0].set_ylabel('Altitude (km)', fontsize=12)
             axes[0,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
             axes[1,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
             axes[2,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
             axes[3,iz].set_xlim([xlims_xlims_mins[0],xlims_xlims[0]])
-            axes[3,0].set_xlabel('Range (km)')
+            axes[3,0].set_xlabel('Range (km)', fontsize=12)
        	    axes[0,iz].set_ylim([0,15])
        	    axes[1,iz].set_ylim([0,15])
             axes[2,iz].set_ylim([0,15])
