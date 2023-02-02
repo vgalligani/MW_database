@@ -13,7 +13,6 @@ import pandas as pd
 from copy import deepcopy
 from pyart.correct import phase_proc
 import xarray as xr
-from copy import deepcopyf
 import matplotlib.colors as colors
 import wradlib as wrl    
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
@@ -1872,7 +1871,7 @@ def GET_TBVH_250ICOIS(options, fname, changui):
         hull_coors_CONCAVE = hull_pts_CONCAVE.exterior.coords.xy
         check_points = np.vstack((hull_coors_CONCAVE)).T
         concave_path = Path(check_points)
-	inds   = concave_path.contains_points(datapts)
+        inds   = concave_path.contains_points(datapts)
         plt.plot(lon_gmi[:,:][idx1][inds], lat_gmi[:,:][idx1][inds], marker='o', label=str(ii))
         plt.legend()
 
@@ -3777,7 +3776,7 @@ def run_general_paper(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,
 
     # 500m grid! 
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=500.0, weighting_function='BARNES2')  
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
     gc.collect()
     #make_pseudoRHISfromGrid_4(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
     make_pseudoRHISfromGrid(grided, radar, transects, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
@@ -3822,7 +3821,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
 	
-    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, gridded_radar)
 
     fig, axes = plt.subplots(nrows=4, ncols=3, constrained_layout=True, figsize=[15,10])
 
@@ -3885,7 +3884,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
                     grid_TVTV[i,j]  = np.nan
                     grid_RHO[i,j]  = np.nan	
                     grid_ZDR[i,j]  = np.nan
-	grid_HID = gaussian_filter(grid_HID, sigma=3) 
+	    #grid_HID = gaussian_filter(grid_HID, sigma=3) 
 
         #Filters
         #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
