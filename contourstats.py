@@ -1117,8 +1117,8 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
     axes[0].legend(loc='upper left')
 
     axes[0].text(-64, -31, 'coi=1')
-    axes[0].text(-65.1, -31.9, 'coi=2')
-    axes[0].text(-65, -32.5, 'coi=3')
+    axes[0].text(-65.3, -32.0, 'coi=2')
+    axes[0].text(-65, -32.7, 'coi=3')
     axes[0].set_xlabel('Longitude')
     axes[0].set_ylabel('Latitude')
 	
@@ -4435,9 +4435,9 @@ def colormaps(variable):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------     
-def get_median(y, x):
+def get_median(y, x, tbvbin):
 
-    TBV_bin  = np.arange(50,300,2)
+    TBV_bin  = np.arange(50,300,tbvbin)
     TBVH_bin = np.arange(-5,25,1)
     figfig = plt.figure(figsize=(30,10))
     [counts, xedges, yedges, _] = plt.hist2d( x,
@@ -4475,6 +4475,9 @@ def main_main():
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------      
 def main_20180208(): 
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12  
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
@@ -4517,22 +4520,28 @@ def main_20180208():
 		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
 		print('MAX(TBVH 19:', np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
 		print('MAX(TBVH 37:', np.max(GMI_tbs1_37[i]-GMI_tbs1_37H[i]))
-		print('MAX(TBVH 89:', np.max(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))	
-    TBV_bin  = np.arange(50,300,5)
-    fig = plt.figure(figsize=(10,10))
+		print('MAX(TBVH 89:', np.max(GMI_tbs1_85[i]-GMI_tbs1_85H[i]))
+		
+    tbvbin = 10;	
+    coi_250_LABELS = ['coi=1','coi=2 + coi=3']
+    TBV_bin  = np.arange(50,300,tbvbin)
+    fig = plt.figure(figsize=(5,5))
     for i in range(len(coi_250)):
-		plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
-    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i])
-    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=str(coi_250[i]))
-    plt.xlabel('TBV')
-    plt.ylabel('TBVH')
-    plt.title('85 GHz')
+		#plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i],tbvbin)
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=coi_250_LABELS[i])
+    plt.xlabel('TBV (K)')
+    plt.ylabel('Polarization Difference (K)')
+    plt.title('85-GHz')
     plt.xlim([50,300])
     plt.ylim([0,15])
+    plt.legend()
+    plt.grid(True)
+	
     fig = plt.figure(figsize=(10,10))
     for i in range(len(coi_250)):
 		plt.plot(GMI_tbs1_37[i], GMI_tbs1_37[i]-GMI_tbs1_37H[i],'x',color=colores_in[i])
-    		running_median = get_median(GMI_tbs1_37[i]-GMI_tbs1_37H[i], GMI_tbs1_37[i])
+    		running_median = get_median(GMI_tbs1_37[i]-GMI_tbs1_37H[i], GMI_tbs1_37[i],tbvbin)
     		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=str(coi_250[i]))
     plt.xlabel('TBV')
     plt.ylabel('TBVH')
