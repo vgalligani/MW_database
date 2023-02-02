@@ -2619,8 +2619,8 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
                 rho[i,j]     = np.nan
 
 		
-    phiphi[:,0:40]  = np.nan 
-    rho[:,0:40]    = np.nan 
+    phiphi[:,0:80]  = np.nan 
+    rho[:,0:80]    = np.nan 
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
