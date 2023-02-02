@@ -3899,7 +3899,10 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
                     grid_RHO[i,j]  = np.nan	
                     grid_ZDR[i,j]  = np.nan
                     grid_HID[i,j]  = np.nan
-		#grid_HID = gaussian_filter(grid_HID, sigma=3) 
+            grid_HID[i,:] = gaussian_filter(grid_HID[i,:], sigma=1.5) 
+            grid_ZDR[i,:] = gaussian_filter(grid_ZDR[i,:], sigma=1.5) 
+            grid_RHO[i,:] = gaussian_filter(grid_RHO[i,:], sigma=1.5) 
+            grid_THTH[i,:] = gaussian_filter(grid_THTH[i,:], sigma=1.5) 
 
         #Filters
         #grid_TVTV[np.where(grid_RHO<0.6)] = np.nan	
