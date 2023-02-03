@@ -5705,20 +5705,40 @@ def RMA4_20181031():
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
-	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4', 'alternate_azi':[65, 157, 199, 230]}
+	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4', 'alternate_azi':[230, 199, 157, 65]}
     icois_input  = [1,26,20,58] 
-
-
-    labels_PHAIL = ['coi=1 (Phail= %)','coi=2 (Phail= %)','coi=3 (Phail= %)','coi=5 (Phail= %)' ] 
-    xlims_xlims_input  = [240, 200, 180, 250] 
-    xlims_mins_input  = [150,150,100,150]	
-    run_general_paper(opts, lat_pfs, lon_pfs, icois_input, [65, 157, 199, 230], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
+    
+    labels_PHAIL = ['coi=1 (Phail=73.8%)','coi=2 (Phail=26.2%)','coi=3 (Phail=93.1%)','coi=4 (Phail=99.3%)' ] 
+    xlims_xlims_input  = [250,180,200,240] #  [240, 200, 180, 250] 
+    xlims_mins_input  = [150,100,150,150]  #  [150,150,100,150]  	
+    run_general_paper(opts, lat_pfs, lon_pfs, icois_input,[230, 199, 157, 65], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
 
     GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],1)
 
     coi_250 =  [0,4,11,17]	
     [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
-    for i in range(len(GMI_latlat)):
+
+    tbvbin = 10;	
+    coi_250_LABELS = ['coi=1','coi=2 + coi=3']
+    TBV_bin  = np.arange(50,300,tbvbin)
+    fig = plt.figure(figsize=(5,5))
+    for i in range(len(coi_250)):
+		#plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i],tbvbin)
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=coi_250_LABELS[i])
+    plt.xlabel('89-GHz TBV (K)')
+    plt.ylabel('89-GHz Polarization Difference (K)')
+    plt.title('Case 31/10/2018')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+    plt.legend()
+    plt.grid(True)
+
+
+
+
+
+	for i in range(len(GMI_latlat)):
 		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
 		print('MAX(TBVH 19:', round(np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]),1))
 		print('MAX(TBVH 37:', round(np.max(GMI_tbs1_37[i]-GMI_tbs1_37H[i]),1))
