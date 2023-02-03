@@ -5718,8 +5718,9 @@ def RMA4_20181031():
     coi_250 =  [0,4,11,17]	
     [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
 
+    colores_in = ['k','darkgreen','darkred','darkblue','cyan']
     tbvbin = 10;	
-    coi_250_LABELS = ['coi=1','coi=2 + coi=3']
+    coi_250_LABELS = ['coi=1','coi=2','coi=3', 'coi=4']
     TBV_bin  = np.arange(50,300,tbvbin)
     fig = plt.figure(figsize=(5,5))
     for i in range(len(coi_250)):
