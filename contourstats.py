@@ -1151,9 +1151,10 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects, cas
             text='100 km',#'this this is a very, very long text',
             va = 'bottom', axes=axes[0])	
         # Addlabels to icois! 
-        #axes[0].text(-64, -31, 'coi=1')
-        #axes[0].text(-65.3, -32.0, 'coi=2')
-        #axes[0].text(-65, -32.7, 'coi=3')
+        axes[0].text(-61, -28.2, 'coi=1')
+        axes[0].text(-59.5, -28.3, 'coi=2')
+        axes[0].text(-58, -28.4, 'coi=3')
+        axes[0].text(-57.2, -26.3, 'coi=4')
         axes[0].set_xlabel('Longitude')
         axes[0].set_ylabel('Latitude')
         for i in range(len(lon_pfs)):
