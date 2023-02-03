@@ -4894,7 +4894,7 @@ def RMA5_20200815():
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [7], 'radar_name':'RMA5'}
     icois_input  = [7] 
-    labels_PHAIL = ['coi=X','icoi=X (Phail=72.5%)','icoi=x (Phail=72.5%)'] 
+    labels_PHAIL = ['coi=1 (Phail=72.5%)','coi=1 (Phail=72.5%)','coi=2 (Phail=46.6%)' ] 
     xlims_xlims_input  = [190, 190, 10] 
     xlims_mins_input  = [0, 0, 0]	 
 	
