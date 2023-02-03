@@ -1,5 +1,5 @@
 
-def plot_PCT_percentiles_paper(dir, filename, Kurpf, selectKurpf, PFtype):
+def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, realselectKurpf, PFtype):
 
     xlim1 = -70 
     xlim2 = -50
@@ -117,7 +117,7 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf, selectKurpf, PFtype):
     axes[2].plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     axes[2].plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
     axes[2].set_title('KuRPF MAXHT40T intensity category')
-    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(realKurpf, realselectKurpf, 'MAXHT40')
     # here mask latlat and lonlon above 2.4 km altitude
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
@@ -149,19 +149,16 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf, selectKurpf, PFtype):
     return fig
     
 
+xlim_min = -68; # (actually used -70 in search)
+xlim_max = -50; 
+ylim_min = -40; 
+ylim_max = -19; 
+
+opts = {'xlim_min': xlim_min, 'xlim_max': xlim_max, 
+        'ylim_min': ylim_min, 'ylim_max': ylim_max}
 
 
-
-return
-
-
-
-
-
-Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/GPCTF/'
 Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/KURPF/'
-
-
 Kurpf_data = merge_GPCTF_dicts_keys(Kurpf_path)
 # So far this generates e.g. Kurpf_data['LON'][0:37]. To to join ... 
 GPCTF = {}
@@ -169,9 +166,24 @@ for key in Kurpf_data.keys():
     GPCTF[key] =  np.concatenate(Kurpf_data[key][:])
 del Kurpf_data
 
-filename = 'paper_GMI_parameters.png'
-plot_PCT_percentiles_paper(dir_name, filename, GPCTF, selectGPCTF, 'GPCTF')
+selectGPCTF = np.logical_and(np.logical_and(GPCTF['LON'] >= opts['xlim_min'], GPCTF['LON'] <= opts['xlim_max']), 
+                np.logical_and(GPCTF['LAT'] >= opts['ylim_min'], GPCTF['LAT'] <= opts['ylim_max']))
 
+Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/GPCTF/'
+Kurpf_data = merge_GPCTF_dicts_keys(Kurpf_path)
+# So far this generates e.g. Kurpf_data['LON'][0:37]. To to join ... 
+GPCTFGPCTF = {}
+for key in Kurpf_data.keys():
+    GPCTFGPCTF[key] =  np.concatenate(Kurpf_data[key][:])
+del Kurpf_data
+
+
+selectGPCTFGPCTF = np.logical_and(np.logical_and(GPCTFGPCTF['LON'] >= opts['xlim_min'], GPCTFGPCTF['LON'] <= opts['xlim_max']), 
+                np.logical_and(GPCTFGPCTF['LAT'] >= opts['ylim_min'], GPCTFGPCTF['LAT'] <= opts['ylim_max']))
+
+
+filename = 'paper_GMI_parameters.png'
+plot_PCT_percentiles_paper(dir_name, filename, GPCTFGPCTF, selectGPCTFGPCTF,  GPCTF, selectGPCTF, 'GPCTF')
 
 
 
