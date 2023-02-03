@@ -3813,7 +3813,8 @@ def run_general_paper(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,
 
     # 500m grid! 
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+					 roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
     gc.collect()
     #make_pseudoRHISfromGrid_4(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
     make_pseudoRHISfromGrid(grided, radar, transects, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
@@ -4895,7 +4896,7 @@ def RMA5_20200815():
 	   'icoi_PHAIL': [7], 'radar_name':'RMA5'}
     icois_input  = [7] 
     labels_PHAIL = ['coi=1 (Phail=72.5%)','coi=1 (Phail=72.5%)','coi=2 (Phail=46.6%)' ] 
-    xlims_xlims_input  = [190, 190, 10] 
+    xlims_xlims_input  = [190, 190, 150] 
     xlims_mins_input  = [0, 0, 0]	 
 	
 	
