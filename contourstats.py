@@ -1141,7 +1141,26 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects, cas
         for i in range(len(lon_pfs)):
             axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
             markeredgecolor='black', markeredgewidth=1.5)	
-            
+ 
+    elif caso == '20181031': 
+        axes[0].set_title(r'RMA4 Zh (31/10/2018 0109UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='upper left')
+        CurvedText(
+            x = lon_radius[17000:],
+            y = lat_radius[17000:],
+            text='100 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[0])	
+        # Addlabels to icois! 
+        #axes[0].text(-64, -31, 'coi=1')
+        #axes[0].text(-65.3, -32.0, 'coi=2')
+        #axes[0].text(-65, -32.7, 'coi=3')
+        axes[0].set_xlabel('Longitude')
+        axes[0].set_ylabel('Latitude')
+        for i in range(len(lon_pfs)):
+            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+            markeredgecolor='black', markeredgewidth=1.5)	
+	
+	
     if len(options['REPORTES_meta'])>0:
         for ireportes in range(len(options['REPORTES_geo'])):
             axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
@@ -4914,7 +4933,30 @@ def RMA5_20200815():
 		print('MAX(TBVH 19:', round(np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]),1))
 		print('MAX(TBVH 37:', round(np.max(GMI_tbs1_37[i]-GMI_tbs1_37H[i]),1))
 		print('MAX(TBVH 89:', round(np.max(GMI_tbs1_85[i]-GMI_tbs1_85H[i]),1))	
-		
+	
+	
+	
+    tbvbin = 10;	
+    coi_250_LABELS = ['coi=1']
+    TBV_bin  = np.arange(50,300,tbvbin)
+    fig = plt.figure(figsize=(5,5))
+    for i in range(len(coi_250)):
+		#plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i],tbvbin)
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=coi_250_LABELS[i])
+    plt.xlabel('89-GHz TBV (K)')
+    plt.ylabel('89-GHz Polarization Difference (K)')
+    plt.title('Case 15/08/2020')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+    plt.legend()
+    plt.grid(True)
+	
+	
+	
+	
+	
+	
     TBV_bin  = np.arange(50,300,5)
     fig = plt.figure(figsize=(10,10))
     for i in range(len(coi_250)):
@@ -5463,16 +5505,21 @@ def RMA4_20181031():
     # San Antonio de Arredondo (https://t.co/GJwBLvwHVJ ) > 6 cm
     reportes_granizo_twitterAPI_geo = []
     reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+    opts = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -25.5, 
 	    'ZDRoffset': 1.5,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 'azimuth_ray': 157,
-	    'window_calc_KDP': 7,  'era5_file': era5_file,
+	    'window_calc_KDP': 7,  'era5_file': era5_file,'caso':'20200815',
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181031_RMA4/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
-	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4'}
+	   'icoi_PHAIL': [1,58,20], 'radar_name':'RMA4', 'alternate_azi':[65, 157, 199, 230]}
     icois_input  = [1,26,20,58] 
 
+
+    labels_PHAIL = ['coi=1 (Phail=72.5%)','coi=1 (Phail=72.5%)','coi=2 (Phail=46.6%)','' ] 
+    xlims_xlims_input  = [250, 250, 250, 250] 
+    xlims_mins_input  = [150,150,100,150]	
+    run_general_paper(opts, lat_pfs, lon_pfs, icois_input, [65, 157, 199, 230], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
 
     GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],1)
 
