@@ -43,7 +43,7 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     #------ MIN37PCT
     axes[0].plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     axes[0].plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    axes[0].set_title(PFtype+' MIN37PCT intensity category')
+    axes[0].set_title(PFtype+' MIN37PCT')
     MIN37PCT_cat, latlat, lonlon, percentiles = get_categoryPF_altfilter(Kurpf, selectKurpf, 'MIN37PCT')
     counter = 0
     # here mask latlat and lonlon above 2.4 km altitude
@@ -60,8 +60,6 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     axes[0].set_ylabel('Latitude')
     axes[0].set_xlim([xlim1,xlim2])
     axes[0].set_ylim([ylim1,ylim2])
-    #img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
-    #img.set_visible(False)
     axes[0].set_xlabel('Longtiude')
     # 
     cmap    = sns.color_palette("tab10", as_cmap=True)
@@ -71,8 +69,8 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     #-colorbar
-    cbar = fig.colorbar(img, ticks=[0, 1, 2, 3, 4], 
-                        orientation="horizontal")
+    cbar = fig.colorbar(img, ax=axes[0],ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal", label='Percentile (%)')
     labels = ['10', '1', '0.1', '0.01']
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
@@ -83,7 +81,7 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     #------ pixels
     axes[1].plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     axes[1].plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    axes[1].set_title(PFtype+' NPIXELS GMI intensity category')
+    axes[1].set_title(PFtype+' NPIXELS GMI')
     pixels_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'NPIXELS_GMI')
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
                        (lonlon,latlat), method='nearest')
@@ -98,6 +96,8 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
         counter = counter+1
     axes[1].set_xlim([xlim1,xlim2])
     axes[1].set_ylim([ylim1,ylim2])
+    axes[1].set_xlabel('Longtiude')
+
     cmap    = sns.color_palette("tab10", as_cmap=True)
     cmaplist = [cmap(i) for i in range(4)]
     cmaplist[0] = cmap1(18)
@@ -105,8 +105,8 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
     #-colorbar
-    cbar = fig.colorbar(img, ticks=[0, 1, 2, 3, 4], 
-                        orientation="horizontal")
+    cbar = fig.colorbar(img,  ax=axes[1], ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal", label='Percentile (%)')
     labels = ['90', '99', '99.9', '99.99']
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
@@ -116,7 +116,7 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     #------ max45ht
     axes[2].plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     axes[2].plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    axes[2].set_title('KuRPF MAXHT40T intensity category')
+    axes[2].set_title('KuRPF MAXHT40')
     MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(realKurpf, realselectKurpf, 'MAXHT40')
     # here mask latlat and lonlon above 2.4 km altitude
     sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
@@ -130,6 +130,7 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
         else:
             axes[2].scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
         counter = counter+1
+    axes[2].set_xlabel('Longtiude')
 
     cmap    = sns.color_palette("tab10", as_cmap=True)
     cmaplist = [cmap(i) for i in range(4)]
@@ -137,8 +138,8 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
     img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     img.set_visible(False)
-    cbar = fig.colorbar(img, ticks=[0, 1, 2, 3, 4], 
-                        orientation="horizontal")
+    cbar = fig.colorbar(img,  ax=axes[2], ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal", label='Percentile (%)')
     labels = ['90', '99', '99.9', '99.99']
     loc = np.arange(0, 4 , 1) + .5
     cbar.set_ticks(loc)
@@ -149,7 +150,7 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     return fig
     
 
-xlim_min = -68; # (actually used -70 in search)
+xlim_min = -69; # (actually used -70 in search)
 xlim_max = -50; 
 ylim_min = -40; 
 ylim_max = -19; 
