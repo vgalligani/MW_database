@@ -845,7 +845,7 @@ class CurvedText(mtext.Text):
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
-def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
+def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects, caso):
 
     plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
@@ -873,11 +873,13 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
         ZH          = radar.fields[reflectivity_name]['data']
 	
     elif options['radar_name'] == 'RMA5':
-        reflectivity_name = 'DBZH'   
-        lats        = radar.gate_latitude['data']
-        lons        = radar.gate_longitude['data']
-        ZH          = radar.fields[reflectivity_name]['data']	
-
+        reflectivity_name = 'DBZH'; nlev=0;
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+	
     elif options['radar_name'] == 'RMA4':
         reflectivity_name = 'TH'   
         nlev = 0 
@@ -1070,12 +1072,12 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
     fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[5,10])
 	
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    ZH[np.where(ZH<20)]=np.nan
+    #ZH[np.where(ZH<20)]=np.nan
     pcm1=axes[0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
     axes[0].set_title('Ground Level')
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[0])
+    plt.colorbar(pcm1, ax=axes[0],label='(dBZ)')
 
 
     # -----
@@ -1086,8 +1088,6 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
     # LIMITS	 
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
-    # TITLE
-    axes[0].set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
     # RADAR RINGS	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
@@ -1096,35 +1096,58 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
         y = lat_radius[20000:],
         text='50 km',#'this this is a very, very long text',
         va = 'bottom', axes=axes[0])
-    	      
-	      
+
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
-    CurvedText(
-        x = lon_radius[17000:],
-        y = lat_radius[17000:],
-        text='100 km',#'this this is a very, very long text',
-        va = 'bottom', axes=axes[0])
-    	      
-	      
-	      
-    # Addlabels to icois! 
-
+	
     # Add labels:
     labels = ["PCT 89-GHz 200 K contour","PCT 89-GHz 250 K contour"] 
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
-    axes[0].legend(loc='upper left')
 
-    axes[0].text(-64, -31, 'coi=1')
-    axes[0].text(-65.3, -32.0, 'coi=2')
-    axes[0].text(-65, -32.7, 'coi=3')
-    axes[0].set_xlabel('Longitude')
-    axes[0].set_ylabel('Latitude')
+
 	
-    for i in range(len(lon_pfs)):
-        axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
-        markeredgecolor='black', markeredgewidth=1.5)	
+    if caso == '20200815': 
+        axes[0].set_title(r'RMA5 Zh (15/8/2018 0216UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='lower left')
+        CurvedText(
+           	x = lon_radius[19000:],
+           	y = lat_radius[19000:],
+           	text='100 km',#'this this is a very, very long text',
+           	va = 'bottom', axes=axes[0])
+        # Addlabels to icois! 
+        axes[0].text(-54.9, -25.2, 'coi=1')
+        axes[0].text(-53.4, -25.5, 'coi=2')
+        axes[0].set_xlabel('Longitude')
+        axes[0].set_ylabel('Latitude')
+        for i in range(len(lon_pfs)):
+            axes[0].plot(lon_pfs[i]-0.3, lat_pfs[i], marker='*', markersize=20, markerfacecolor="black",
+            markeredgecolor='black', markeredgewidth=1.5)
+
+    elif caso == '20180208': 
+        axes[0].set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='upper left')
+        CurvedText(
+            x = lon_radius[17000:],
+            y = lat_radius[17000:],
+            text='100 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[0])	
+        # Addlabels to icois! 
+        axes[0].text(-64, -31, 'coi=1')
+        axes[0].text(-65.3, -32.0, 'coi=2')
+        axes[0].text(-65, -32.7, 'coi=3')
+        axes[0].set_xlabel('Longitude')
+        axes[0].set_ylabel('Latitude')
+        for i in range(len(lon_pfs)):
+            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+            markeredgecolor='black', markeredgewidth=1.5)	
+            
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+    
+
+    plt.legend()
     azimuths = radar.azimuth['data'][start_index:end_index]
     # TRANSECTAS:
     for itrans in transects:
@@ -1171,7 +1194,7 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects):
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])	
     #fig.savefig(options['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
     #plt.close()
-    plt.colorbar(im, ax=axes[1])
+    plt.colorbar(im, ax=axes[1],label='(K)')
 
     return
 
@@ -3781,7 +3804,7 @@ def run_general_paper(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,
 		
 
 	
-    plot_gmi_paper(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects)
+    plot_gmi_paper(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
@@ -4530,9 +4553,9 @@ def main_20180208():
 		#plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
     		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i],tbvbin)
     		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=coi_250_LABELS[i])
-    plt.xlabel('TBV (K)')
-    plt.ylabel('Polarization Difference (K)')
-    plt.title('85-GHz')
+    plt.xlabel('89-GHz TBV (K)')
+    plt.ylabel('89-GHz Polarization Difference (K)')
+    plt.title('Case 08/02/2018')
     plt.xlim([50,300])
     plt.ylim([0,15])
     plt.legend()
@@ -4859,17 +4882,27 @@ def RMA5_20200815():
     rfile    = 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc' 
     gfile    = '1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
     era5_file = '20200815_02.grib'
-    reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24]] 
-    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America']
+    reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24], [-25.62, -53.77], [-26.07,-53.05],
+				       [-25.67,-53.81],[-25.66,-53.55],[-26.24,-52.71],[-25.28,-53.95]] 
+    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America', '','','','','','']
     opts = {'xlim_min': -55.0, 'xlim_max': -52.0, 'ylim_min': -27.5, 'ylim_max': -25.0, 
 	    'ZDRoffset': 2, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 'azimuth_ray': 50,
 	    'window_calc_KDP': 7, 'era5_file': era5_file,
-	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/', 
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/',
+    	    'alternate_azi':[331,335,50],'caso':'20200815',
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [7], 'radar_name':'RMA5'}
     icois_input  = [7] 
+    labels_PHAIL = ['coi=X','icoi=X (Phail=72.5%)','icoi=x (Phail=72.5%)'] 
+    xlims_xlims_input  = [190, 190, 10] 
+    xlims_mins_input  = [0, 0, 0]	 
+	
+	
+	
+    run_general_paper(opts, lat_pfs, lon_pfs, [7], [331,335,10], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
 
+	
     GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],1)
 
     coi_250 =  [4]	
