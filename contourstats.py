@@ -4869,6 +4869,29 @@ def main_DOW7_20181214():
 
     coi_250 =  [0]	
     [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],3)
+    tbvbin = 10;	
+    coi_250_LABELS = ['coi=1','coi=2 + coi=3']
+    TBV_bin  = np.arange(50,300,tbvbin)
+    fig = plt.figure(figsize=(5,5))
+    for i in range(len(coi_250)):
+		#plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i],tbvbin)
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=coi_250_LABELS[i])
+    plt.xlabel('89-GHz TBV (K)')
+    plt.ylabel('89-GHz Polarization Difference (K)')
+    plt.title('Case 14/12/2018')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+    plt.legend()
+    plt.grid(True)
+
+	
+	
+	
+	
+	
+	
+	
     for i in range(len(GMI_latlat)):
 		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
 		print('MAX(TBVH 19:', np.max(GMI_tbs1_19[i]-GMI_tbs1_19H[i]))
@@ -4885,6 +4908,16 @@ def main_DOW7_20181214():
     plt.title('85 GHz')
     plt.xlim([50,300])
     plt.ylim([0,15])
+
+
+
+
+
+
+
+
+
+
     fig = plt.figure(figsize=(10,10))
     for i in range(len(coi_250)):
 		plt.plot(GMI_tbs1_37[i], GMI_tbs1_37[i]-GMI_tbs1_37H[i],'x',color=colores_in[i])
@@ -5032,6 +5065,25 @@ def RMA1_20190308():
 
     coi_250 =  [6]	
     [GMI_latlat, GMI_lonlon, GMI_tbs1_19, GMI_tbs1_37, GMI_tbs1_85, GMI_tbs1_19H, GMI_tbs1_37H, GMI_tbs1_85H] = GET_TBVH_250_TBVHplots(opts, coi_250, gmi_dir+opts['gfile'],1)
+    tbvbin = 10;	
+    coi_250_LABELS = ['coi=1','coi=2 + coi=3']
+    TBV_bin  = np.arange(50,300,tbvbin)
+    fig = plt.figure(figsize=(5,5))
+    for i in range(len(coi_250)):
+		#plt.plot(GMI_tbs1_85[i], GMI_tbs1_85[i]-GMI_tbs1_85H[i],'x',color=colores_in[i])
+    		running_median = get_median(GMI_tbs1_85[i]-GMI_tbs1_85H[i], GMI_tbs1_85[i],tbvbin)
+    		plt.plot(TBV_bin-(TBV_bin[1]-TBV_bin[0])/2, np.ravel(running_median), lw=2, color=colores_in[i], linestyle='-', label=coi_250_LABELS[i])
+    plt.xlabel('89-GHz TBV (K)')
+    plt.ylabel('89-GHz Polarization Difference (K)')
+    plt.title('Case 8/3/2019')
+    plt.xlim([50,300])
+    plt.ylim([0,15])
+    plt.legend()
+    plt.grid(True)
+
+
+
+
 
     for i in range(len(GMI_latlat)):
 		print('-------- icoi NR. '+str(coi_250[i])+str(' -----'))
