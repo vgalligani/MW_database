@@ -1146,15 +1146,15 @@ def plot_gmi_paper(fname, options, radar, lon_pfs, lat_pfs, icoi, transects, cas
         axes[0].set_title(r'RMA4 Zh (31/10/2018 0109UTC), Elev: 0.7$^{o}$')
         axes[0].legend(loc='upper left')
         CurvedText(
-            x = lon_radius[17000:],
-            y = lat_radius[17000:],
+            x = lon_radius[50000:],
+            y = lat_radius[50000:],
             text='100 km',#'this this is a very, very long text',
             va = 'bottom', axes=axes[0])	
         # Addlabels to icois! 
         axes[0].text(-61, -28.2, 'coi=1')
-        axes[0].text(-59.5, -28.3, 'coi=2')
-        axes[0].text(-58, -28.4, 'coi=3')
-        axes[0].text(-57.2, -26.3, 'coi=4')
+        axes[0].text(-59.5, -28.2, 'coi=2')
+        axes[0].text(-57.8, -28.4, 'coi=3')
+        axes[0].text(-58.5, -26.4, 'coi=4')
         axes[0].set_xlabel('Longitude')
         axes[0].set_ylabel('Latitude')
         for i in range(len(lon_pfs)):
