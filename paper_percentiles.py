@@ -63,7 +63,22 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf, selectKurpf, PFtype):
     #img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
     #img.set_visible(False)
     axes[0].set_xlabel('Longtiude')
-
+    # 
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    cbar = fig.colorbar(img, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['10', '1', '0.1', '0.01']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
+    
+    
 
     #------ pixels
     axes[1].plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
@@ -83,17 +98,51 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf, selectKurpf, PFtype):
         counter = counter+1
     axes[1].set_xlim([xlim1,xlim2])
     axes[1].set_ylim([ylim1,ylim2])
-    #img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
-    #img.set_visible(False)
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    #-colorbar
+    cbar = fig.colorbar(img, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['90', '99', '99.9', '99.99']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
     
   
     #------ max45ht
     axes[2].plot(prov[:,0],prov[:,1],color='k', linewidth=0.5);   
     axes[2].plot(samerica[:,0],samerica[:,1],color='k', linewidth=0.5);   
-    axes[2].SET_title('PF MAXHT40 intensity distribution')
+    axes[2].set_title('KuRPF MAXHT40T intensity category')
+    MAXHT40_cat, latlat, lonlon, percentiles = get_categoryPF_hi_altfilter(Kurpf, selectKurpf, 'MAXHT40')
+    # here mask latlat and lonlon above 2.4 km altitude
+    sat_alt = griddata((np.ravel(lons_topo),np.ravel(lats_topo)), np.ravel(topo_dat),
+                       (lonlon,latlat), method='nearest')
+    counter = 0
+    for i in reversed(percentiles):
+        LON  = lonlon[np.where( (MAXHT40_cat > i) & (sat_alt < 2.4) )]        
+        LAT = latlat[np.where(  (MAXHT40_cat > i) & (sat_alt < 2.4) )]     
+        if counter < 1:
+            axes[2].scatter(LON, LAT, s=15, marker='o', c = cmap_f(counter))
+        else:
+            axes[2].scatter(LON, LAT, s=30, marker='o', c = cmap_f(counter))      
+        counter = counter+1
 
-    
-    
+    cmap    = sns.color_palette("tab10", as_cmap=True)
+    cmaplist = [cmap(i) for i in range(4)]
+    cmaplist[0] = cmap1(18)
+    cmap_f = matplotlib.colors.LinearSegmentedColormap.from_list('mcm',cmaplist, 4)
+    img = plt.imshow(np.array([[0,1]]), vmin=0, vmax=4, cmap=cmap_f)
+    img.set_visible(False)
+    cbar = fig.colorbar(img, ticks=[0, 1, 2, 3, 4], 
+                        orientation="horizontal")
+    labels = ['90', '99', '99.9', '99.99']
+    loc = np.arange(0, 4 , 1) + .5
+    cbar.set_ticks(loc)
+    cbar.ax.set_xticklabels(labels)
     axes[2].set_xlim([xlim1,xlim2])
     axes[2].set_ylim([ylim1,ylim2])    
     
@@ -105,7 +154,14 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf, selectKurpf, PFtype):
 
 return
 
+
+
+
+
 Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/GPCTF/'
+Kurpf_path = '/home/victoria.galligani/Work/Studies/Hail_MW/GPM.PF/KURPF/'
+
+
 Kurpf_data = merge_GPCTF_dicts_keys(Kurpf_path)
 # So far this generates e.g. Kurpf_data['LON'][0:37]. To to join ... 
 GPCTF = {}
@@ -113,5 +169,15 @@ for key in Kurpf_data.keys():
     GPCTF[key] =  np.concatenate(Kurpf_data[key][:])
 del Kurpf_data
 
-filename = 'MIN37PCT_GMI_parameters.png'
+filename = 'paper_GMI_parameters.png'
 plot_PCT_percentiles_paper(dir_name, filename, GPCTF, selectGPCTF, 'GPCTF')
+
+
+
+
+
+
+
+
+
+
