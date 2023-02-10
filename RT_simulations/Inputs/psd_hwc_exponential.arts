@@ -1,0 +1,19 @@
+Arts2 {
+
+StringSet( species_id_string, "HWC" )
+
+ArrayOfStringSet( pnd_agenda_input_names, [ "HWC" ] )
+
+ArrayOfAgendaAppend( pnd_agenda_array ){
+  ScatSpeciesSizeMassInfo( species_index=agenda_array_index, x_unit="dveq" )
+  Copy( psd_size_grid, scat_species_x )
+  Copy( pnd_size_grid, scat_species_x )
+  psdModifiedGammaMass( n0=4e4, mu=0, la=-999, ga=1, t_min = 230, t_max = 999 )
+  pndFromPsdBasic
+}
+
+Append( scat_species, species_id_string )
+
+Append( pnd_agenda_array_input_names, pnd_agenda_input_names )
+}
+
