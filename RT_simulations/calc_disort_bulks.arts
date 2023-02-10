@@ -1,0 +1,77 @@
+#DEFINITIONS:  -*-sh-*-
+
+Arts2 {
+
+INCLUDE "cfile_common.arts"
+INCLUDE "instrument.arts"
+
+ReadXML( particle_bulkprop_names, "particle_bulkprop_names.xml" )
+ReadXML( particle_bulkprop_field, "particle_bulkprop_field.xml" )
+
+Copy( iy_cloudbox_agenda, iy_cloudbox_agenda__QuarticInterpField ) # His suggestion
+
+StringCreate( species_id_string )
+
+# RWC
+INCLUDE "cfile_psd_rwc.arts"
+
+# HWC
+INCLUDE "cfile_psd_hwc.arts"
+
+# Some special variables
+#
+StringCreate( scat_data_file )
+StringCreate( scat_meta_file )
+ArrayOfSingleScatteringDataCreate( scat_data_1habit )
+ArrayOfScatteringMetaDataCreate( scat_meta_1habit )
+
+# RWC
+#
+ReadXML( scat_data_file, "scat_data_rwc_file.xml" )
+ReadXML( scat_data_1habit, scat_data_file )
+ReadXML( scat_meta_file, "scat_meta_rwc_file.xml" )
+ReadXML( scat_meta_1habit, scat_meta_file )
+#
+Append( scat_data_raw, scat_data_1habit )
+Append( scat_meta, scat_meta_1habit )
+
+# HWC
+#
+ReadXML( scat_data_1habit,  "hail_scatdata.xml")
+ReadXML( scat_meta_1habit, "hail_metascatdata.xml" )
+#
+Append( scat_data_raw, scat_data_1habit )
+Append( scat_meta, scat_meta_1habit )
+#
+scat_dataCalc
+scat_data_checkedCalc
+WriteXML( "ascii", scat_data,  "scat_data.xml" ) 
+WriteXML( "ascii", scat_meta,  "scat_meta.xml" ) 
+WriteXML( "ascii", scat_species,  "scat_species.xml" )
+
+#
+cloudboxSetManuallyAltitude( z1=-9e3, z2=20e3, lat1=-0, lat2=0, lon1=-0, lon2=0 )
+pnd_fieldCalcFromParticleBulkProps
+
+WriteXML( "ascii", cloudbox_limits,  "cloudbox_limits.xml" ) 
+WriteXML( "ascii", pnd_field,  "pnd_field.xml" ) 
+
+# Check data
+#
+abs_xsec_agenda_checkedCalc
+lbl_checkedCalc                          # !!!
+propmat_clearsky_agenda_checkedCalc
+atmfields_checkedCalc
+atmgeom_checkedCalc
+sensor_checkedCalc
+cloudbox_checkedCalc
+
+# Calculate and save
+DOAngularGridsSet( N_za_grid = 38 )
+DisortCalcWithARTSSurface(nstreams = 16) #, pfct_method = "interpolate")
+#DisortCalc( nstreams = 16, pfct_method = "interpolate")
+
+yCalc
+WriteXML( "ascii", y,  "y.xml" )
+WriteXML( "ascii", y_geo,  "y_geo.xml" )
+}
