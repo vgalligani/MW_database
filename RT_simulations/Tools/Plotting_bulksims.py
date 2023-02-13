@@ -416,28 +416,40 @@ for item,i in enumerate([2, 4, 6, 10]):
     arts_exp_HRWCHR[:,item,1] = arts_exp['arts_cl'][0,:]       
 
 #------------------------------------------------------------------------------------------
+# GRAU ONLY
+#------------------------------------------------------------------------------------------
+arts_exp_GRAUPOnly = np.zeros(( len(f_grid), 3, 2 )); arts_exp_GRAUPOnly[:] = np.nan
+arts_exp_GRAUmass  = np.zeros(( 3, len(z_field) )); arts_exp_GRAUmass[:] = np.nan
+
+for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate']):
+    exp_name  = 'BulkSIMS_GrauOnly_GWC'+i 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp = FullData(f_arts)
+    arts_exp_GRAUPOnly[:,item,0] = arts_exp['arts_tb'][0,:]
+    arts_exp_GRAUPOnly[:,item,1] = arts_exp['arts_cl'][0,:]
+    arts_exp_GRAUmass[item,:]    = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
+
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------------------
+# PLOTS ALL
 #------------------------------------------------------------------------------------------
 GHzfreqLim = 100
 Plot_TWOexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
                            arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
+Plot_THREEexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
+                           arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
+
+
 #------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
 #- PLOT ALL IWCs
-plt.matplotlib.rc('font', family='serif', size = 12)
-fig = plt.figure(figsize=(9,6))    
-plt.plot( arts_exp_RainOnly_HR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1,color='darkblue', label = 'Heavy Rain Only')
-plt.plot( arts_exp_RainOnly_LR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1,color='blue', label = 'Light Rain Only')
-plt.plot( arts_exp_mass[0,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='darkred', label = r'Hail Only 2 kg/m$^2$')
-plt.plot( arts_exp_mass[1,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='magenta', label = r'Hail Only 4 kg/m$^2$')
-plt.plot( arts_exp_mass[2,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='salmon', label = r'Hail Only 6 kg/m$^2$')
-plt.plot( arts_exp_mass[3,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='red', label = r'Hail Only 10 kg/m$^2$')
-plt.title( 'Cloud Scenarios (Rain-Only)', fontsize='12', fontweight='bold')
-plt.ylabel(r'Height [km]', color='k')
-plt.xlabel(r'Mass Content [g/m3]', color='k')
-plt.legend()
-plt.ylim([0,15])
-
 colorsin =  ['darkred', 'magenta', 'salmon', 'red']
 fig = plt.figure(figsize=(9,6))    
 for item,i in enumerate([2, 4, 6, 10]):
@@ -454,8 +466,9 @@ for item,i in enumerate([2, 4, 6, 10]):
     if item == 0:
         plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='-', color='darkblue')
     plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000 , z_field[0:5]/1e3, linewidth=2, linestyle='-', color=colorsin[item])
-    
-plt.title( 'Combined Cloud Scenarios (RWC+HWC)', fontsize='12', fontweight='bold')
+
+plt.plot( arts_exp_GRAUmass[0,50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-', color='darkgreen')    
+plt.title( 'Cloud Scenarios', fontsize='12', fontweight='bold')
 plt.ylabel(r'Height [km]', color='k')
 plt.xlabel(r'Mass Content [g/m3]', color='k')
 plt.legend()
