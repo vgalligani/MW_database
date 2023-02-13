@@ -28,9 +28,15 @@ def FullData(fmat):
         dset[k] = dataset[k]
     return dset
   
+    
+    
+    bcheck!
+    
+    
+    
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
-def Plot_exp(dset1, dset2, labels):  #,ititle,name,path):
+def Plot_TWOexps(dset1, dset2, labels):  #,ititle,name,path):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -261,26 +267,55 @@ def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, dset6, dset7, dset8, dset9,
     return
 
 
+
+
+
 #------------------------------------------------------------------------------------------
-# only rain
 #------------------------------------------------------------------------------------------
 main_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/RT_simulations/Output/'
-  
+
+
+#------------------------------------------------------------------------------------------
+# RAIN ONLY
+#------------------------------------------------------------------------------------------
 # HEAVY RAIN ONLY
-f_arts    = main_dir + 'RainOnly_HR_exp1/' + 'GMI_Fascod_RainOnly_HR_exp1.mat'
-arts_exp1 = FullData(f_arts)
+exp_name  = 'BulkSIMS_RainOnly_HR'
+f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+arts_exp_RainOnly_HR = FullData(f_arts)
 
 # LIGHT RAIN ONLY
-f_arts    = main_dir + 'RainOnly_LR_exp2/' + 'GMI_Fascod_RainOnly_LR_exp2.mat'
-arts_exp2 = FullData(f_arts)
+exp_name  = 'BulkSIMS_RainOnly_LR' 
+f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+arts_exp_RainOnly_LR = FullData(f_arts)
+
+# define some variables that I will use throughout
+z_field = arts_exp_RainOnly_HR['D']['z_field'][0][0][0][0][0])
+f_grid  = arts_exp_RainOnly_LR['D']['f_grid'][0][0][0][0][0][0]
+
+#------------------------------------------------------------------------------------------
+# HAIL ONLY
+#------------------------------------------------------------------------------------------
+arts_exp_HailOnly = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2 )); arts_exp_HailOnly[:] = np.nan
+arts_exp_mass     = np.zeros(( len(f_grid), len(z_field) )); arts_exp_mass[:] = np.nan
+
+for item,i in enumerate([2, 4, 6, 10]):
+    exp_name  = 'BulkSIMS_HailOnly_HWC'+str(i) 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp = FullData(f_arts)
+    arts_exp_HailOnly[:,item,0] = arts_exp['arts_tb'][0,:]
+    arts_exp_HailOnly[:,item,1] = arts_exp['arts_cl'][0,:]
+    arts_exp_mass[item,:]       = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
+
+
+
 
 # ----------------------------- plot
-Plot_exp(arts_exp1, arts_exp2)
+Plot_exp(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR)
 
 plt.matplotlib.rc('font', family='serif', size = 12)
 fig = plt.figure(figsize=(9,6))    
-plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0], arts_exp1['D']['z_field'][0][0][0][0][0] / 1e3, linewidth=1,color='darkblue', label = 'Heavy Rain Only')
-plt.plot( arts_exp2['D']['particle_bulkprop_field'][0][0][0][0][0][0] , arts_exp2['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='cyan', label = 'Light Rain Only')
+plt.plot( arts_exp_RainOnly_HR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , arts_exp_RainOnly_HR['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='darkblue', label = 'Heavy Rain Only')
+plt.plot( arts_exp_RainOnly_LR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , arts_exp_RainOnly_LR['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='cyan', label = 'Light Rain Only')
 plt.title( 'Cloud Scenarios (Rain-Only)', fontsize='12', fontweight='bold')
 plt.ylabel(r'Height [km]', color='k')
 plt.xlabel(r'mass content [g/m3]', color='k')
