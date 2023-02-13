@@ -120,9 +120,6 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     for i in range(dhailset.shape[1]):
         plt.plot( np.nan, np.nan, linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')
     plt.legend(ncol=2)
-   
-    
-    
     ax_cbar.axis('off')
     plt.legend(ncol=3)
     
@@ -146,6 +143,96 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     axes[1].set_xlim([5,freqLim])
     #plt.legend(ncol=3)
     
+    # ADD LEGEND
+    p2 = axes[1].get_position().get_points().flatten()
+    ax_cbar = fig.add_axes([p2[0]-0.08, p2[1]-0.08, p2[2], 0.04])   # [left, bottom, width, height] or Bbox 
+    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='-', color='k', label='w/ HR')
+    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='--', color='k', label='w/ LR') 
+    ax_cbar.axis('off')
+    plt.legend(ncol=3)
+    
+
+    #fig.suptitle(str(ititle) ,fontweight='bold' )
+    #plt.tight_layout()
+    #plt.subplots_adjust(top=0.899)
+    #plt.savefig(path+'/'+str(name)+'.png')
+    #plt.close()
+    return
+ 
+    
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------    
+def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1, dcombined2, dgrau, dgrau_SSP, colorcycle, freqLim):
+    """
+    -------------------------------------------------------------
+    Experiment comparison "internal":
+    -------------------------------------------------------------
+    OUT    name.png   Plot stored at the given path
+    IN     d1         ARTS outputs
+           ititle     Title of figure
+           name       Name to store the figure
+           path       Path to store the figure
+    -------------------------------------------------------------
+    """
+    colorcycle_greens = ['darkgreen', 'teal', 'darkslategray']
+    f_grid = dset1['D']['f_grid'][0][0][0][0][0][0]/1e9
+                 
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True, figsize=[9,12])
+    axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain (HR) Only')
+    axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain (LR) Only')
+    
+    for i in range(dhailset.shape[1]):
+        axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
+                 linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')
+    for i in range(dgrau.shape[1]):
+        axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau[:,i,0] - dgrau[:,i,1], 
+                 linewidth=1, color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')        
+      
+    axes[0].set_title( 'Cloud Scenarios (Individual species)', fontsize='12', fontweight='bold')
+    axes[0].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+    axes[0].grid('true')
+    axes[0].axvline(x=10 ,ls='-',color='gray')
+    axes[0].axvline(x=19 ,ls='-',color='gray')
+    axes[0].axvline(x=22 ,ls='-',color='gray')
+    axes[0].axvline(x=37 ,ls='-',color='gray')
+    axes[0].axvline(x=85 ,ls='-',color='gray')
+    axes[0].axvline(x=166 ,ls='-',color='gray')
+    axes[0].set_xlim([5,freqLim])
+    plt.legend(ncol=3)
+    #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
+    # ADD LEGEND
+    p2 = axes[0].get_position().get_points().flatten()
+    ax_cbar = fig.add_axes([p2[0], p2[1]-0.65, p2[2], p2[3]/10])   # [left, bottom, width, height] or Bbox  
+    plt.plot( np.nan, np.nan, linewidth=1, color='darkblue', label = 'Heavy Rain Only')
+    plt.plot(  np.nan, np.nan, linewidth=1, color='cyan', label = 'Light Rain Only')
+    for i in range(dhailset.shape[1]):
+        plt.plot( np.nan, np.nan, linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')
+    for i in range(dgrau.shape[1]):
+        axes[0].plot(np.nan, np.nan, linewidth=1, color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')   
+    plt.legend(ncol=2)
+    ax_cbar.axis('off')
+    plt.legend(ncol=3)
+  
+    #--- axes 2 para combined experiments. 
+    for i in range(dhailset.shape[1]):
+        axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dcombined1[:,i,0] - dcombined1[:,i,1], 
+                 linewidth=1, linestyle='-', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')    
+        axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dcombined2[:,i,0] - dcombined2[:,i,1], 
+                 linewidth=1, linestyle='--', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')            
+ 
+    axes[1].set_title( 'Cloud Scenarios (Combined RWC+HWC)', fontsize='12', fontweight='bold')
+    axes[1].set_xlabel(r'Frequency [GHz]', color='k')
+    axes[1].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+    axes[1].grid('true')
+    axes[1].axvline(x=10 ,ls='-',color='k')
+    axes[1].axvline(x=19 ,ls='-',color='k')
+    axes[1].axvline(x=22 ,ls='-',color='k')
+    axes[1].axvline(x=37 ,ls='-',color='k')
+    axes[1].axvline(x=85 ,ls='-',color='k')
+    axes[1].axvline(x=166 ,ls='-',color='k')
+    axes[1].set_xlim([5,freqLim])
+    #plt.legend(ncol=3)
     
     # ADD LEGEND
     p2 = axes[1].get_position().get_points().flatten()
@@ -155,9 +242,7 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     ax_cbar.axis('off')
     plt.legend(ncol=3)
     
-    
-    
-    
+
     #fig.suptitle(str(ititle) ,fontweight='bold' )
     #plt.tight_layout()
     #plt.subplots_adjust(top=0.899)
@@ -165,9 +250,7 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     #plt.close()
     return
  
-    
-    
-    
+   
     
     
 #------------------------------------------------------------------------------------------
@@ -444,8 +527,8 @@ Plot_TWOexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_
                            arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
 Plot_THREEexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
-                           arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
-
+                           arts_exp_HRWCLR, arts_exp_GRAUPOnly, ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
+                             ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
 #------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
