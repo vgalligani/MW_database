@@ -93,8 +93,8 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
                  
     plt.matplotlib.rc('font', family='serif', size = 12)
     fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True, figsize=[9,12])
-    axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain Only')
-    axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain Only')
+    axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain (HR) Only')
+    axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain (LR) Only')
     
     for i in range(dhailset.shape[1]):
         axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
@@ -114,11 +114,18 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
     # ADD LEGEND
     p2 = axes[0].get_position().get_points().flatten()
-    ax_cbar = fig.add_axes([p2[0], p2[1], p2[2],p2[3]/2])   # [left, bottom, width, height] or Bbox  
-    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='-', color='k', label='w/ HR')
-    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='--', color='k', label='w/ LR') 
+    ax_cbar = fig.add_axes([p2[0], p2[1]-0.65, p2[2], p2[3]/10])   # [left, bottom, width, height] or Bbox  
+    plt.plot( np.nan, np.nan, linewidth=1, color='darkblue', label = 'Heavy Rain Only')
+    plt.plot(  np.nan, np.nan, linewidth=1, color='cyan', label = 'Light Rain Only')
+    for i in range(dhailset.shape[1]):
+        plt.plot( np.nan, np.nan, linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')
+    plt.legend(ncol=2)
+
+    
+    
+    
     ax_cbar.axis('off')
-    #plt.legend(ncol=3)
+    plt.legend(ncol=3)
     
 
     for i in range(dhailset.shape[1]):
