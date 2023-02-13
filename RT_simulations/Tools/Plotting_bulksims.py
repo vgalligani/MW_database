@@ -162,7 +162,7 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------    
-def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1, dcombined2, dgrau, dgrau_SSP, colorcycle, freqLim):
+def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1, dcombined2, dgrau1, dgrau2, dgrau3, dgrau_SSP, colorcycle, freqLim):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -185,10 +185,14 @@ def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombine
     for i in range(dhailset.shape[1]):
         axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
                  linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')
-    for i in range(dgrau.shape[1]):
-        axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau[:,i,0] - dgrau[:,i,1], 
-                 linewidth=1, color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')        
-      
+    for i in range(dgrau1.shape[1]):
+        axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau1[:,i,0] - dgrau1[:,i,1], 
+                 linewidth=1, linestyle='-.', color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')        
+        axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau2[:,i,0] - dgrau2[:,i,1], 
+                 linewidth=1, linestyle='--', color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')   
+        axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau3[:,i,0] - dgrau3[:,i,1], 
+                 linewidth=1, linestyle='--', color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')   
+        
     axes[0].set_title( 'Cloud Scenarios (Individual species)', fontsize='12', fontweight='bold')
     axes[0].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
     axes[0].grid('true')
@@ -201,6 +205,7 @@ def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombine
     axes[0].set_xlim([5,freqLim])
     plt.legend(ncol=3)
     #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
+    
     # ADD LEGEND
     p2 = axes[0].get_position().get_points().flatten()
     ax_cbar = fig.add_axes([p2[0], p2[1]-0.65, p2[2], p2[3]/10])   # [left, bottom, width, height] or Bbox  
@@ -208,8 +213,8 @@ def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombine
     plt.plot(  np.nan, np.nan, linewidth=1, color='cyan', label = 'Light Rain Only')
     for i in range(dhailset.shape[1]):
         plt.plot( np.nan, np.nan, linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')
-    for i in range(dgrau.shape[1]):
-        axes[0].plot(np.nan, np.nan, linewidth=1, color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')   
+    for i in range(dgrau1.shape[1]):
+        plt.plot(np.nan, np.nan, linewidth=1, color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')   
     plt.legend(ncol=2)
     ax_cbar.axis('off')
     plt.legend(ncol=3)
@@ -251,199 +256,7 @@ def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombine
     return
  
    
-    
-    
-#------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------
-def Plot_exp_GRAUPEL(dd, dset1, dset2, dset3):  #,ititle,name,path):
-    """
-    -------------------------------------------------------------
-    Experiment comparison "internal":
-    -------------------------------------------------------------
-    OUT    name.png   Plot stored at the given path
-    IN     d1         ARTS outputs
-           ititle     Title of figure
-           name       Name to store the figure
-           path       Path to store the figure
-    -------------------------------------------------------------
-    """
-    
-    f_grid = dd['D']['f_grid'][0][0][0][0][0][0]/1e9
-                 
-    plt.matplotlib.rc('font', family='serif', size = 12)
-    fig = plt.figure(figsize=(9,6))    
-    
-    # EXPA
-    plt.plot(f_grid, dset1[0],linewidth=1,color='darkblue', label = '8-ColAgg')
-    plt.plot(f_grid, dset1[1],linewidth=1,color='blue', label = 'Column1')
-    plt.plot(f_grid, dset1[2],linewidth=1,color='darkred', label = 'EvansAgg')
-    plt.plot(f_grid, dset1[3],linewidth=1,color='red', label = 'LargeBlockAgg')
-    plt.plot(f_grid, dset1[4],linewidth=1,color='darkgreen', label = 'LargeColumnAgg')
-
-    
-    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP A')
-    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP B', linestyle='--')
-    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP C', linestyle=':')
-    plt.legend()
-
-    
-    # EXPB
-    plt.plot(f_grid, dset2[0],linewidth=1,color='darkblue', label = '8-ColAgg', linestyle='--')
-    plt.plot(f_grid, dset2[1],linewidth=1,color='blue', label = 'Column1', linestyle='--')
-    plt.plot(f_grid, dset2[2],linewidth=1,color='darkred', label = 'EvansAgg', linestyle='--')
-    plt.plot(f_grid, dset2[3],linewidth=1,color='red', label = 'LargeBlockAgg', linestyle='--')
-    plt.plot(f_grid, dset2[4],linewidth=1,color='darkgreen', label = 'LargeColumnAgg', linestyle='--')
-    
-    # EXPC 
-    plt.plot(f_grid, dset3[0],linewidth=1,color='darkblue', label = '8-ColAgg', linestyle=':')
-    plt.plot(f_grid, dset3[1],linewidth=1,color='blue', label = 'Column1', linestyle=':')
-    plt.plot(f_grid, dset3[2],linewidth=1,color='darkred', label = 'EvansAgg', linestyle=':')
-    plt.plot(f_grid, dset3[3],linewidth=1,color='red', label = 'LargeBlockAgg', linestyle=':')
-    plt.plot(f_grid, dset3[4],linewidth=1,color='darkgreen', label = 'LargeColumnAgg', linestyle=':')
-    
-    
-    plt.title( 'Cloud Scenarios (Graupel-only)', fontsize='12', fontweight='bold')
-    plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
-    plt.xlabel(r'Frequency [GHz]', color='k')
-    plt.grid('true')
-    plt.axvline(x=10 ,ls='-',color='k')
-    plt.axvline(x=19 ,ls='-',color='k')
-    plt.axvline(x=22 ,ls='-',color='k')
-    plt.axvline(x=37 ,ls='-',color='k')
-    plt.axvline(x=85 ,ls='-',color='k')
-    plt.axvline(x=166 ,ls='-',color='k')
-    plt.xlim([0,175])
-
-   
-    return
-
-#------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------
-def Plot_exp_RainGrau(dd, dset1, dset2, dset3, infotitle):  #,ititle,name,path):
-    """
-    -------------------------------------------------------------
-    Experiment comparison "internal":
-    -------------------------------------------------------------
-    OUT    name.png   Plot stored at the given path
-    IN     d1         ARTS outputs
-           ititle     Title of figure
-           name       Name to store the figure
-           path       Path to store the figure
-    -------------------------------------------------------------
-    """
-    
-    f_grid = dd['D']['f_grid'][0][0][0][0][0][0]/1e9
-                 
-    plt.matplotlib.rc('font', family='serif', size = 12)
-    fig = plt.figure(figsize=(9,6))    
-    
-    # EXPA
-    plt.plot(f_grid, dset1[0],linewidth=1,color='darkblue', label = '8-ColAgg')
-    plt.plot(f_grid, dset1[1],linewidth=1,color='darkred', label = 'EvansAgg')
-    plt.plot(f_grid, dset1[2],linewidth=1,color='red', label = 'LargeBlockAgg')
-
-    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP A')
-    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP B', linestyle='--')
-    plt.plot(np.nan, linewidth=1,color='k', label = 'EXP C', linestyle=':')
-    plt.legend()
-    
-    # EXPB
-    plt.plot(f_grid, dset2[0],linewidth=1,color='darkblue', label = '8-ColAgg', linestyle='--')
-    plt.plot(f_grid, dset2[1],linewidth=1,color='darkred', label = 'EvansAgg', linestyle='--')
-    plt.plot(f_grid, dset2[2],linewidth=1,color='red', label = 'LargeBlockAgg', linestyle='--')
-    
-    # EXPC 
-    plt.plot(f_grid, dset3[0],linewidth=1,color='darkblue', label = '8-ColAgg', linestyle=':')
-    plt.plot(f_grid, dset3[1],linewidth=1,color='darkred', label = 'EvansAgg', linestyle=':')
-    plt.plot(f_grid, dset3[2],linewidth=1,color='red', label = 'LargeBlockAgg', linestyle=':')
-    
-    plt.title( 'Cloud Scenarios ('+infotitle+' + Graup.)', fontsize='12', fontweight='bold')
-    plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
-    plt.xlabel(r'Frequency [GHz]', color='k')
-    plt.grid('true')
-    plt.axvline(x=10 ,ls='-',color='k')
-    plt.axvline(x=19 ,ls='-',color='k')
-    plt.axvline(x=22 ,ls='-',color='k')
-    plt.axvline(x=37 ,ls='-',color='k')
-    plt.axvline(x=85 ,ls='-',color='k')
-    plt.axvline(x=166 ,ls='-',color='k')
-    plt.xlim([0,175])
-
-   
-    return
-#------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------
-def Plot_exp_hail(dset1, dset2, dset3, dset4, dset5, dset6, dset7, dset8, dset9, dset10, dset11, labels_in):  #,ititle,name,path):
-    """
-    -------------------------------------------------------------
-    Experiment comparison "internal":
-    -------------------------------------------------------------
-    OUT    name.png   Plot stored at the given path
-    IN     d1         ARTS outputs
-           ititle     Title of figure
-           name       Name to store the figure
-           path       Path to store the figure
-    -------------------------------------------------------------
-    """
-
-    f_grid = dset1['D']['f_grid'][0][0][0][0][0][0]/1e9
-
-    plt.matplotlib.rc('font', family='serif', size = 12)
-    fig, axes = plt.subplots(figsize=(10,8),nrows=2, ncols=1)
-    
-    axes[0].plot(dset6['D']['f_grid'][0][0][0][0][0][0]/1e9, dset6['arts_tb'][0,:]-dset6['arts_cl'][0,:],linewidth=1,color='black', label = labels_in[5])
-    axes[0].plot(dset7['D']['f_grid'][0][0][0][0][0][0]/1e9, dset7['arts_tb'][0,:]-dset7['arts_cl'][0,:],linewidth=1,color='gray', label = labels_in[6])
-    axes[0].plot(dset8['D']['f_grid'][0][0][0][0][0][0]/1e9, dset8['arts_tb'][0,:]-dset8['arts_cl'][0,:],linewidth=1,color='rosybrown', label = labels_in[7])
-    axes[0].plot(np.nan, np.nan,linewidth=1,color='black',label='2 g/m$^2$')
-    axes[0].plot(np.nan, np.nan,linewidth=1,color='black', linestyle='--', label='10 g/m$^2$')
-   
-    axes[0].legend(loc='lower right')
-        
-    axes[0].plot(dset9['D']['f_grid'][0][0][0][0][0][0]/1e9, dset9['arts_tb'][0,:]-dset9['arts_cl'][0,:],linewidth=1,color='black', linestyle='--')
-    axes[0].plot(dset10['D']['f_grid'][0][0][0][0][0][0]/1e9, dset10['arts_tb'][0,:]-dset10['arts_cl'][0,:],linewidth=1,color='gray', linestyle='--')
-    axes[0].plot(dset11['D']['f_grid'][0][0][0][0][0][0]/1e9, dset11['arts_tb'][0,:]-dset11['arts_cl'][0,:],linewidth=1,color='rosybrown', linestyle='--')
-    
-    
-    
-    
-    axes[0].set_title( 'Cloud Scenarios Monodisperse (Hail-only)', fontsize='12', fontweight='bold')
-    axes[0].set_ylabel(r'$\Delta$BT(Cloudy-Clear) [K]', color='k')
-    axes[0].grid('true')   
-    axes[0].axvline(x=10 ,ls='--',color='k');  axes[0].text(7,-15,'10 GHz',rotation=90)
-    axes[0].axvline(x=19 ,ls='--',color='k');  axes[0].text(16,-15,'19 GHz',rotation=90)
-    axes[0].axvline(x=22 ,ls='--',color='k');  axes[0].text(23,-15,'22 GHz',rotation=90)
-    axes[0].axvline(x=37 ,ls='--',color='k');  axes[0].text(33,-15,'37 GHz',rotation=90)
-    axes[0].axvline(x=85 ,ls='--',color='k');  axes[0].text(82,-15,'85 GHz',rotation=90)
-    axes[0].set_ylim([-25,2])
-    axes[0].set_xlim([4,100])
-    
-    axes[1].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = labels_in[0])
-    axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='darkred', label = labels_in[1])
-    axes[1].plot(dset3['D']['f_grid'][0][0][0][0][0][0]/1e9, dset3['arts_tb'][0,:]-dset3['arts_cl'][0,:],linewidth=1,color='darkgreen', label = labels_in[2])
-    axes[1].plot(dset4['D']['f_grid'][0][0][0][0][0][0]/1e9, dset4['arts_tb'][0,:]-dset4['arts_cl'][0,:],linewidth=1,color='red', label = labels_in[3])
-    axes[1].plot(dset5['D']['f_grid'][0][0][0][0][0][0]/1e9, dset5['arts_tb'][0,:]-dset5['arts_cl'][0,:],linewidth=1,color='blue', label = labels_in[4])
-    axes[1].set_title( 'Cloud Scenarios PSD (Hail-only)', fontsize='12', fontweight='bold')
-
-    axes[1].set_ylabel(r'$\Delta$BT(Cloudy-Clear) [K]', color='k')
-    axes[1].set_xlabel(r'Frequency [GHz]', color='k')
-    
-    axes[1].grid('true')   
-    axes[1].axvline(x=10 ,ls='--',color='k');  
-    axes[1].axvline(x=19 ,ls='--',color='k');  
-    axes[1].axvline(x=22 ,ls='--',color='k');  
-    axes[1].axvline(x=37 ,ls='--',color='k');  
-    axes[1].axvline(x=85 ,ls='--',color='k');  
-
-    axes[1].set_ylim([-25,2])
-    axes[1].set_xlim([4,100])
-    axes[1].legend(loc='lower right')
-
-
-    return
-
-
-
-
+  
 
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
@@ -501,24 +314,42 @@ for item,i in enumerate([2, 4, 6, 10]):
 #------------------------------------------------------------------------------------------
 # GRAU ONLY
 #------------------------------------------------------------------------------------------
-arts_exp_GRAUPOnly = np.zeros(( len(f_grid), 3, 2 )); arts_exp_GRAUPOnly[:] = np.nan
-arts_exp_GRAUmass  = np.zeros(( 3, len(z_field) )); arts_exp_GRAUmass[:] = np.nan
+arts_exp_GRAUPOnlyIFAC2 = np.zeros(( len(f_grid), 3, 2 )); arts_exp_GRAUPOnlyIFAC2[:] = np.nan
+arts_exp_GRAUmassIFAC2  = np.zeros(( len(z_field) )); arts_exp_GRAUmassIFAC2[:] = np.nan
 
 for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate']):
     exp_name  = 'BulkSIMS_GrauOnly_GWC'+i 
     f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
     arts_exp = FullData(f_arts)
-    arts_exp_GRAUPOnly[:,item,0] = arts_exp['arts_tb'][0,:]
-    arts_exp_GRAUPOnly[:,item,1] = arts_exp['arts_cl'][0,:]
-    arts_exp_GRAUmass[item,:]    = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
+    arts_exp_GRAUPOnlyIFAC2[:,item,0] = arts_exp['arts_tb'][0,:]
+    arts_exp_GRAUPOnlyIFAC2[:,item,1] = arts_exp['arts_cl'][0,:]
+    if item == 0: 
+        arts_exp_GRAUmassIFAC2[:]    = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
+        
+arts_exp_GRAUPOnlyIFAC5 = np.zeros(( len(f_grid), 3, 2 )); arts_exp_GRAUPOnlyIFAC5[:] = np.nan
+arts_exp_GRAUmassIFAC5  = np.zeros(( len(z_field) )); arts_exp_GRAUmassIFAC5[:] = np.nan
 
+for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate']):
+    exp_name  = 'BulkSIMS_GrauOnly_ifac5_GWC'+i 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp = FullData(f_arts)
+    arts_exp_GRAUPOnlyIFAC5[:,item,0] = arts_exp['arts_tb'][0,:]
+    arts_exp_GRAUPOnlyIFAC5[:,item,1] = arts_exp['arts_cl'][0,:]
+    if item == 0: 
+        arts_exp_GRAUmassIFAC5[:]    = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
 
+arts_exp_GRAUPOnlyIFAC1 = np.zeros(( len(f_grid), 3, 2 )); arts_exp_GRAUPOnlyIFAC1[:] = np.nan
+arts_exp_GRAUmassIFAC1  = np.zeros(( len(z_field) )); arts_exp_GRAUmassIFAC1[:] = np.nan
 
-
-
-
-
-
+for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate']):
+    exp_name  = 'BulkSIMS_GrauOnly_ifac1_GWC'+i 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp = FullData(f_arts)
+    arts_exp_GRAUPOnlyIFAC1[:,item,0] = arts_exp['arts_tb'][0,:]
+    arts_exp_GRAUPOnlyIFAC1[:,item,1] = arts_exp['arts_cl'][0,:]
+    if item == 0: 
+        arts_exp_GRAUmassIFAC1[:]    = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
+        
 #------------------------------------------------------------------------------------------
 # PLOTS ALL
 #------------------------------------------------------------------------------------------
@@ -527,7 +358,8 @@ Plot_TWOexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_
                            arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
 Plot_THREEexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
-                           arts_exp_HRWCLR, arts_exp_GRAUPOnly, ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
+                           arts_exp_HRWCLR, arts_exp_GRAUPOnlyIFAC1, arts_exp_GRAUPOnlyIFAC2, arts_exp_GRAUPOnlyIFAC5, 
+                             ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
                              ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
 #------------------------------------------------------------------------------------------
@@ -550,7 +382,10 @@ for item,i in enumerate([2, 4, 6, 10]):
         plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='-', color='darkblue')
     plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000 , z_field[0:5]/1e3, linewidth=2, linestyle='-', color=colorsin[item])
 
-plt.plot( arts_exp_GRAUmass[0,50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-', color='darkgreen')    
+plt.plot( arts_exp_GRAUmassIFAC1[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-.', color='darkgreen')    
+plt.plot( arts_exp_GRAUmassIFAC2[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-', color='darkgreen')    
+plt.plot( arts_exp_GRAUmassIFAC5[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='--', color='darkgreen')    
+
 plt.title( 'Cloud Scenarios', fontsize='12', fontweight='bold')
 plt.ylabel(r'Height [km]', color='k')
 plt.xlabel(r'Mass Content [g/m3]', color='k')
