@@ -98,7 +98,7 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     
     for i in range(dhailset.shape[1]):
         axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
-                 linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')
+                 linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')
         
     axes[0].set_title( 'Cloud Scenarios (Individual species)', fontsize='12', fontweight='bold')
     axes[0].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
@@ -118,10 +118,9 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     plt.plot( np.nan, np.nan, linewidth=1, color='darkblue', label = 'Heavy Rain Only')
     plt.plot(  np.nan, np.nan, linewidth=1, color='cyan', label = 'Light Rain Only')
     for i in range(dhailset.shape[1]):
-        plt.plot( np.nan, np.nan, linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')
+        plt.plot( np.nan, np.nan, linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')
     plt.legend(ncol=2)
-
-    
+   
     
     
     ax_cbar.axis('off')
@@ -130,9 +129,9 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
 
     for i in range(dhailset.shape[1]):
         axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dcombined1[:,i,0] - dcombined1[:,i,1], 
-                 linewidth=1, linestyle='-', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')    
+                 linewidth=1, linestyle='-', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')    
         axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dcombined2[:,i,0] - dcombined2[:,i,1], 
-                 linewidth=1, linestyle='--', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')            
+                 linewidth=1, linestyle='--', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass[i])+' kg/m$^2$')            
  
     axes[1].set_title( 'Cloud Scenarios (Combined RWC+HWC)', fontsize='12', fontweight='bold')
     axes[1].set_xlabel(r'Frequency [GHz]', color='k')
@@ -416,17 +415,14 @@ for item,i in enumerate([2, 4, 6, 10]):
     arts_exp_HRWCHR[:,item,0] = arts_exp['arts_tb'][0,:]
     arts_exp_HRWCHR[:,item,1] = arts_exp['arts_cl'][0,:]       
 
-Plot_TWOexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], ['darkred', 'magenta', 'salmon', 'red'])
-GHzfreqLim = 40
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+GHzfreqLim = 100
 Plot_TWOexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
                            arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
-
-    
-    
-    
-    
-    
+#------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
 #- PLOT ALL IWCs
 plt.matplotlib.rc('font', family='serif', size = 12)
 fig = plt.figure(figsize=(9,6))    
@@ -437,6 +433,29 @@ plt.plot( arts_exp_mass[1,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='mage
 plt.plot( arts_exp_mass[2,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='salmon', label = r'Hail Only 6 kg/m$^2$')
 plt.plot( arts_exp_mass[3,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='red', label = r'Hail Only 10 kg/m$^2$')
 plt.title( 'Cloud Scenarios (Rain-Only)', fontsize='12', fontweight='bold')
+plt.ylabel(r'Height [km]', color='k')
+plt.xlabel(r'Mass Content [g/m3]', color='k')
+plt.legend()
+plt.ylim([0,15])
+
+colorsin =  ['darkred', 'magenta', 'salmon', 'red']
+fig = plt.figure(figsize=(9,6))    
+for item,i in enumerate([2, 4, 6, 10]):
+    exp_name  = 'BulkSIMS_RWCLR_HWC'+str(i) 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp = FullData(f_arts)
+    if item == 0:
+        plt.plot( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='--', color='blue')
+    plt.plot( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000 , z_field[0:5]/1e3, linewidth=2, linestyle='-', color=colorsin[item])
+    
+    exp_name  = 'BulkSIMS_RWCHR_HWC'+str(i) 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp1 = FullData(f_arts)
+    if item == 0:
+        plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='-', color='darkblue')
+    plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000 , z_field[0:5]/1e3, linewidth=2, linestyle='-', color=colorsin[item])
+    
+plt.title( 'Combined Cloud Scenarios (RWC+HWC)', fontsize='12', fontweight='bold')
 plt.ylabel(r'Height [km]', color='k')
 plt.xlabel(r'Mass Content [g/m3]', color='k')
 plt.legend()
