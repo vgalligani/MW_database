@@ -28,15 +28,9 @@ def FullData(fmat):
         dset[k] = dataset[k]
     return dset
   
-    
-    
-    bcheck!
-    
-    
-    
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
-def Plot_TWOexps(dset1, dset2, labels):  #,ititle,name,path):
+def Plot_TWOexps(dset1, dset2, dhailset, dhailset_mass, colorcycle): #,ititle,name,path):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -56,7 +50,11 @@ def Plot_TWOexps(dset1, dset2, labels):  #,ititle,name,path):
     plt.plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain Only')
     plt.plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain Only')
     
-    plt.title( 'Cloud Scenarios (Rain-only)', fontsize='12', fontweight='bold')
+    for i in range(dhailset.shape[1]):
+        plt.plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
+                 linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')
+        
+    plt.title( 'Cloud Scenarios', fontsize='12', fontweight='bold')
     plt.ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
     plt.xlabel(r'Frequency [GHz]', color='k')
     plt.grid('true')
@@ -66,9 +64,93 @@ def Plot_TWOexps(dset1, dset2, labels):  #,ititle,name,path):
     plt.axvline(x=37 ,ls='-',color='k')
     plt.axvline(x=85 ,ls='-',color='k')
     plt.axvline(x=166 ,ls='-',color='k')
-    plt.xlim([0,175])
-    plt.legend()
+    plt.xlim([5,100])
+    
+    plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
+    #fig.suptitle(str(ititle) ,fontweight='bold' )
+    #plt.tight_layout()
+    #plt.subplots_adjust(top=0.899)
+    #plt.savefig(path+'/'+str(name)+'.png')
+    #plt.close()
+    return
+ 
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1, dcombined2, colorcycle, freqLim): #,ititle,name,path):
+    """
+    -------------------------------------------------------------
+    Experiment comparison "internal":
+    -------------------------------------------------------------
+    OUT    name.png   Plot stored at the given path
+    IN     d1         ARTS outputs
+           ititle     Title of figure
+           name       Name to store the figure
+           path       Path to store the figure
+    -------------------------------------------------------------
+    """
+    
+    f_grid = dset1['D']['f_grid'][0][0][0][0][0][0]/1e9
+                 
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True, figsize=[9,12])
+    axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain Only')
+    axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain Only')
+    
+    for i in range(dhailset.shape[1]):
+        axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
+                 linewidth=1, color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')
+        
+    axes[0].set_title( 'Cloud Scenarios (Individual species)', fontsize='12', fontweight='bold')
+    axes[0].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+    axes[0].grid('true')
+    axes[0].axvline(x=10 ,ls='-',color='k')
+    axes[0].axvline(x=19 ,ls='-',color='k')
+    axes[0].axvline(x=22 ,ls='-',color='k')
+    axes[0].axvline(x=37 ,ls='-',color='k')
+    axes[0].axvline(x=85 ,ls='-',color='k')
+    axes[0].axvline(x=166 ,ls='-',color='k')
+    axes[0].set_xlim([5,freqLim])
+    plt.legend(ncol=3)
+    #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
+    # ADD LEGEND
+    p2 = axes[0].get_position().get_points().flatten()
+    ax_cbar = fig.add_axes([p2[0], p2[1], p2[2],p2[3]/2])   # [left, bottom, width, height] or Bbox  
+    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='-', color='k', label='w/ HR')
+    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='--', color='k', label='w/ LR') 
+    ax_cbar.axis('off')
+    #plt.legend(ncol=3)
+    
 
+    for i in range(dhailset.shape[1]):
+        axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dcombined1[:,i,0] - dcombined1[:,i,1], 
+                 linewidth=1, linestyle='-', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')    
+        axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dcombined2[:,i,0] - dcombined2[:,i,1], 
+                 linewidth=1, linestyle='--', color=colorcycle[i], label = r'Hail Only '+str(dhailset_mass)+' kg/m$^2$')            
+ 
+    axes[1].set_title( 'Cloud Scenarios (Combined RWC+HWC)', fontsize='12', fontweight='bold')
+    axes[1].set_xlabel(r'Frequency [GHz]', color='k')
+    axes[1].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+    axes[1].grid('true')
+    axes[1].axvline(x=10 ,ls='-',color='k')
+    axes[1].axvline(x=19 ,ls='-',color='k')
+    axes[1].axvline(x=22 ,ls='-',color='k')
+    axes[1].axvline(x=37 ,ls='-',color='k')
+    axes[1].axvline(x=85 ,ls='-',color='k')
+    axes[1].axvline(x=166 ,ls='-',color='k')
+    axes[1].set_xlim([5,freqLim])
+    #plt.legend(ncol=3)
+    
+    
+    # ADD LEGEND
+    p2 = axes[1].get_position().get_points().flatten()
+    ax_cbar = fig.add_axes([p2[0]-0.08, p2[1]-0.08, p2[2], 0.04])   # [left, bottom, width, height] or Bbox 
+    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='-', color='k', label='w/ HR')
+    ax_cbar.plot(np.nan, np.nan, linewidth=1, linestyle='--', color='k', label='w/ LR') 
+    ax_cbar.axis('off')
+    plt.legend(ncol=3)
+    
+    
+    
     
     #fig.suptitle(str(ititle) ,fontweight='bold' )
     #plt.tight_layout()
@@ -77,7 +159,11 @@ def Plot_TWOexps(dset1, dset2, labels):  #,ititle,name,path):
     #plt.close()
     return
  
-
+    
+    
+    
+    
+    
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
 def Plot_exp_GRAUPEL(dd, dset1, dset2, dset3):  #,ititle,name,path):
@@ -292,6 +378,9 @@ arts_exp_RainOnly_LR = FullData(f_arts)
 z_field = arts_exp_RainOnly_HR['D']['z_field'][0][0][0][0][0])
 f_grid  = arts_exp_RainOnly_LR['D']['f_grid'][0][0][0][0][0][0]
 
+# Plot
+Plot_exp(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, ['HR','LR'])
+
 #------------------------------------------------------------------------------------------
 # HAIL ONLY
 #------------------------------------------------------------------------------------------
@@ -306,22 +395,45 @@ for item,i in enumerate([2, 4, 6, 10]):
     arts_exp_HailOnly[:,item,1] = arts_exp['arts_cl'][0,:]
     arts_exp_mass[item,:]       = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
 
+arts_exp_HRWCLR = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2 )); arts_exp_HRWCLR[:] = np.nan
+arts_exp_HRWCHR = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2 )); arts_exp_HRWCHR[:] = np.nan
+for item,i in enumerate([2, 4, 6, 10]):
+    exp_name  = 'BulkSIMS_RWCLR_HWC'+str(i) 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp = FullData(f_arts)
+    arts_exp_HRWCLR[:,item,0] = arts_exp['arts_tb'][0,:]
+    arts_exp_HRWCLR[:,item,1] = arts_exp['arts_cl'][0,:]    
+    exp_name  = 'BulkSIMS_RWCHR_HWC'+str(i) 
+    f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+    arts_exp = FullData(f_arts)
+    arts_exp_HRWCHR[:,item,0] = arts_exp['arts_tb'][0,:]
+    arts_exp_HRWCHR[:,item,1] = arts_exp['arts_cl'][0,:]       
+
+Plot_TWOexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], ['darkred', 'magenta', 'salmon', 'red'])
+GHzfreqLim = 40
+Plot_TWOexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
+                           arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
 
-
-# ----------------------------- plot
-Plot_exp(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR)
-
+    
+    
+    
+    
+    
+#- PLOT ALL IWCs
 plt.matplotlib.rc('font', family='serif', size = 12)
 fig = plt.figure(figsize=(9,6))    
-plt.plot( arts_exp_RainOnly_HR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , arts_exp_RainOnly_HR['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='darkblue', label = 'Heavy Rain Only')
-plt.plot( arts_exp_RainOnly_LR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , arts_exp_RainOnly_LR['D']['z_field'][0][0][0][0][0]/ 1e3, linewidth=1,color='cyan', label = 'Light Rain Only')
+plt.plot( arts_exp_RainOnly_HR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1,color='darkblue', label = 'Heavy Rain Only')
+plt.plot( arts_exp_RainOnly_LR['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1,color='blue', label = 'Light Rain Only')
+plt.plot( arts_exp_mass[0,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='darkred', label = r'Hail Only 2 kg/m$^2$')
+plt.plot( arts_exp_mass[1,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='magenta', label = r'Hail Only 4 kg/m$^2$')
+plt.plot( arts_exp_mass[2,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='salmon', label = r'Hail Only 6 kg/m$^2$')
+plt.plot( arts_exp_mass[3,0:5]*1000 , z_field[0:5]/1e3, linewidth=2, color='red', label = r'Hail Only 10 kg/m$^2$')
 plt.title( 'Cloud Scenarios (Rain-Only)', fontsize='12', fontweight='bold')
 plt.ylabel(r'Height [km]', color='k')
-plt.xlabel(r'mass content [g/m3]', color='k')
-plt.grid('true')
+plt.xlabel(r'Mass Content [g/m3]', color='k')
 plt.legend()
-plt.ylim([0,20])
+plt.ylim([0,15])
 
 
 
