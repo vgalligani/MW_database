@@ -381,7 +381,7 @@ def Plot_Individual_exps_paper_1GRAUspecies(dset1, dset2, dhailset, dhailset_mas
     return   
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------    
-def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dhailset_mass, 
+def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dcombined3, dhailset_mass, 
                                             dgrau_SSP, colorcycle, freqLim, GrauspeciesNr):
     """
     -------------------------------------------------------------
@@ -414,7 +414,7 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dhail
                  linewidth=1, linestyle='--', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
     axes[1].set_title('RWC-HR + HWC', fontsize='12', fontweight='bold')
     axes[1].set_ylim([-105,5])
-    axes[1].legend(loc='upper right')
+    axes[1].legend(loc='lower right')
 
     for iaxes in [0,1]:
         axes[iaxes].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
@@ -426,8 +426,8 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dhail
         axes[iaxes].axvline(x=85 ,ls='-',color='gray')
         axes[iaxes].axvline(x=166 ,ls='-',color='gray')
         axes[iaxes].set_xlim([5,freqLim])
-    #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
 
+        
 
 
     return   
