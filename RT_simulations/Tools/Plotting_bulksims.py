@@ -416,7 +416,11 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dcomb
     axes[1].set_ylim([-105,5])
     axes[1].legend(loc='lower right')
 
-    for iaxes in [0,1]:
+    # axes[1] rwc HR + HAIL + GWC    
+    for i in range(dcombined3.shape[1]):
+
+            
+    for iaxes in [0,1,2]:
         axes[iaxes].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
         axes[iaxes].grid('true')
         axes[iaxes].axvline(x=10 ,ls='-',color='gray')
@@ -466,7 +470,10 @@ for item,i in enumerate([2, 4, 6, 10]):
     arts_exp_HailOnly[:,item,0] = arts_exp['arts_tb'][0,:]
     arts_exp_HailOnly[:,item,1] = arts_exp['arts_cl'][0,:]
     arts_exp_mass[item,:]       = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
-
+    
+#------------------------------------------------------------------------------------------
+# RWC+HAIL
+#------------------------------------------------------------------------------------------
 arts_exp_HRWCLR = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2 )); arts_exp_HRWCLR[:] = np.nan
 arts_exp_HRWCHR = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2 )); arts_exp_HRWCHR[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):
@@ -519,7 +526,61 @@ for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAgg
     arts_exp_GRAUPOnlyIFAC1[:,item,1] = arts_exp['arts_cl'][0,:]
     if item == 0: 
         arts_exp_GRAUmassIFAC1[:]    = arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]
-        
+ 
+#------------------------------------------------------------------------------------------
+# RWC+HAIL+GRAU (EVANS)
+#------------------------------------------------------------------------------------------
+arts_exp_LR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_EVANS[:] = np.nan
+arts_exp_HR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_EVANS[:] = np.nan
+for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
+    for item2, ifacifac in [1]:  #,2,5]:
+        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate') 
+        f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+        arts_exp = FullData(f_arts)
+        arts_exp_HR_H_GRAU_EVANS[:,item,0,item2] = arts_exp['arts_tb'][0,:]
+        arts_exp_HR_H_GRAU_EVANS[:,item,1,item2] = arts_exp['arts_cl'][0,:]    
+        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate') 
+        f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+        arts_exp = FullData(f_arts)
+        arts_exp_LR_H_GRAU_EVANS[:,item,0,item2] = arts_exp['arts_tb'][0,:]
+        arts_exp_LR_H_GRAU_EVANS[:,item,1,item2] = arts_exp['arts_cl'][0,:]   
+
+#------------------------------------------------------------------------------------------
+# RWC+HAIL+GRAU (8-ColumnAggregate)
+#------------------------------------------------------------------------------------------
+arts_exp_LR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_8COL[:] = np.nan
+arts_exp_HR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_8COL[:] = np.nan
+for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
+    for item2, ifacifac in [1]:  #,2,5]:
+        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate') 
+        f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+        arts_exp = FullData(f_arts)
+        arts_exp_HR_H_GRAU_8COL[:,item,0,item2] = arts_exp['arts_tb'][0,:]
+        arts_exp_HR_H_GRAU_8COL[:,item,1,item2] = arts_exp['arts_cl'][0,:]    
+        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate') 
+        f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+        arts_exp = FullData(f_arts)
+        arts_exp_LR_H_GRAU_8COL[:,item,0,item2] = arts_exp['arts_tb'][0,:]
+        arts_exp_LR_H_GRAU_8COL[:,item,1,item2] = arts_exp['arts_cl'][0,:]   
+   
+#------------------------------------------------------------------------------------------
+# RWC+HAIL+GRAU (LargeBlock)
+#------------------------------------------------------------------------------------------
+arts_exp_LR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_LBLOCK[:] = np.nan
+arts_exp_HR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_LBLOCK[:] = np.nan
+for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
+    for item2, ifacifac in [1]:  #,2,5]:
+        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate') 
+        f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+        arts_exp = FullData(f_arts)
+        arts_exp_HR_H_GRAU_LBLOCK[:,item,0,item2] = arts_exp['arts_tb'][0,:]
+        arts_exp_HR_H_GRAU_LBLOCK[:,item,1,item2] = arts_exp['arts_cl'][0,:]    
+        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate') 
+        f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
+        arts_exp = FullData(f_arts)
+        arts_exp_LR_H_GRAU_LBLOCK[:,item,0,item2] = arts_exp['arts_tb'][0,:]
+        arts_exp_LR_H_GRAU_LBLOCK[:,item,1,item2] = arts_exp['arts_cl'][0,:]       
+    
 #------------------------------------------------------------------------------------------
 # PLOTS ALL
 #------------------------------------------------------------------------------------------
