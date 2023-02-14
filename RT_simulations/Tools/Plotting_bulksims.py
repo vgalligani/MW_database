@@ -256,7 +256,134 @@ def Plot_THREEexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombine
     return
  
    
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------    
+def Plot_Individual_exps_paper(dset1, dset2, dhailset, dhailset_mass, dcombined1, dcombined2, dgrau1, dgrau2, dgrau3, dgrau_SSP, colorcycle, freqLim):
+    """
+    -------------------------------------------------------------
+    Experiment comparison "internal":
+    -------------------------------------------------------------
+    OUT    name.png   Plot stored at the given path
+    IN     d1         ARTS outputs
+           ititle     Title of figure
+           name       Name to store the figure
+           path       Path to store the figure
+    -------------------------------------------------------------
+    """
+    colorcycle_greens = ['darkgreen', 'teal', 'darkslategray']
+    f_grid = dset1['D']['f_grid'][0][0][0][0][0][0]/1e9
+                 
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True, figsize=[9,12])
+    
+    #- axes[0] rwc only
+    axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain (HR) Only')
+    axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain (LR) Only')
+    axes[0].set_title('RWC only', fontsize='12', fontweight='bold')
+    axes[0].legend(loc='upper right')
+   
+    # axes[1] hwc only 
+    for i in range(dhailset.shape[1]):
+        axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
+                 linewidth=1, color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')
+    axes[1].set_title('HWC only', fontsize='12', fontweight='bold')
+        
+    # axes[2] gwc polny
+    for i in range(dgrau1.shape[1]):
+        axes[2].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau1[:,i,0] - dgrau1[:,i,1], 
+                 linewidth=1, linestyle='-.', color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')        
+        axes[2].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau2[:,i,0] - dgrau2[:,i,1], 
+                 linewidth=1, linestyle='--', color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')   
+        axes[2].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau3[:,i,0] - dgrau3[:,i,1], 
+                 linewidth=1, linestyle='--', color=colorcycle_greens[i], label = r'Grau Only ('+ dgrau_SSP[i]+')')   
+    axes[1].legend()
+        
+    axes[2].set_xlabel(r'Frequency [GHz]', color='k')
+    axes[2].set_title( 'GWC only', fontsize='12', fontweight='bold')
+    for iaxes in [0,1,2]:
+        axes[iaxes].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+        axes[iaxes].grid('true')
+        axes[iaxes].axvline(x=10 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=19 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=22 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=37 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=85 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=166 ,ls='-',color='gray')
+        axes[iaxes].set_xlim([5,freqLim])
+    #plt.legend(ncol=3)
+    #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
+
   
+    return
+
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------    
+def Plot_Individual_exps_paper_1GRAUspecies(dset1, dset2, dhailset, dhailset_mass, dcombined1, dcombined2, dgrau1, dgrau2, dgrau3, 
+                                            dgrau_SSP, colorcycle, freqLim, GrauspeciesNr):
+    """
+    -------------------------------------------------------------
+    Experiment comparison "internal":
+    -------------------------------------------------------------
+    OUT    name.png   Plot stored at the given path
+    IN     d1         ARTS outputs
+           ititle     Title of figure
+           name       Name to store the figure
+           path       Path to store the figure
+    -------------------------------------------------------------
+    """
+    colorcycle_greens = ['darkgreen', 'teal', 'darkslategray']
+    f_grid = dset1['D']['f_grid'][0][0][0][0][0][0]/1e9
+
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True, figsize=[9,12])
+
+    #- axes[0] rwc only
+    axes[0].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:],linewidth=1,color='darkblue', label = 'Heavy Rain (HR) Only')
+    axes[0].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dset2['arts_tb'][0,:]-dset2['arts_cl'][0,:],linewidth=1,color='cyan', label = 'Light Rain (LR) Only')
+    axes[0].set_title('RWC only', fontsize='12', fontweight='bold')
+    axes[0].legend(loc='upper right')
+    axes[0].set_ylim([-105,5])
+
+    # axes[1] hwc only 
+    for i in range(dhailset.shape[1]):
+        axes[1].plot(dset2['D']['f_grid'][0][0][0][0][0][0]/1e9, dhailset[:,i,0] - dhailset[:,i,1], 
+                 linewidth=1, color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')
+    axes[1].set_title('HWC only', fontsize='12', fontweight='bold')
+    axes[1].set_ylim([-105,5])
+
+    # axes[2] gwc polny
+    for i in [GrauspeciesNr]: #range(dgrau1.shape[1]):
+        axes[2].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau1[:,i,0] - dgrau1[:,i,1], 
+                 linewidth=1, linestyle='-', color=colorcycle_greens[0], label = r'ifac=1') #r'Grau Only ('+ dgrau_SSP[i]+')')        
+        axes[2].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau2[:,i,0] - dgrau2[:,i,1], 
+                 linewidth=1, linestyle='-', color=colorcycle_greens[1], label = r'ifac=2') #r'Grau Only ('+ dgrau_SSP[i]+')')   
+        axes[2].plot(dset1['D']['f_grid'][0][0][0][0][0][0]/1e9, dgrau3[:,i,0] - dgrau3[:,i,1], 
+                 linewidth=1, linestyle='-', color=colorcycle_greens[2], label = r'ifac=5') #r'Grau Only ('+ dgrau_SSP[i]+')')   
+    axes[1].legend()
+
+    axes[2].set_xlabel(r'Frequency [GHz]', color='k')
+    axes[2].set_title( 'GWC only ('+dgrau_SSP[i]+')', fontsize='12', fontweight='bold')
+    axes[2].set_ylim([-105,5])
+    for iaxes in [0,1,2]:
+        axes[iaxes].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+        axes[iaxes].grid('true')
+        axes[iaxes].axvline(x=10 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=19 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=22 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=37 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=85 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=166 ,ls='-',color='gray')
+        axes[iaxes].set_xlim([5,freqLim])
+    axes[2].legend(loc='lower right')
+    #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
+
+
+
+    return   
+  
+
+#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
@@ -277,11 +404,8 @@ f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
 arts_exp_RainOnly_LR = FullData(f_arts)
 
 # define some variables that I will use throughout
-z_field = arts_exp_RainOnly_HR['D']['z_field'][0][0][0][0][0])
+z_field = arts_exp_RainOnly_HR['D']['z_field'][0][0][0][0][0]
 f_grid  = arts_exp_RainOnly_LR['D']['f_grid'][0][0][0][0][0][0]
-
-# Plot
-Plot_exp(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, ['HR','LR'])
 
 #------------------------------------------------------------------------------------------
 # HAIL ONLY
@@ -354,10 +478,16 @@ for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAgg
 # PLOTS ALL
 #------------------------------------------------------------------------------------------
 GHzfreqLim = 100
+Plot_exp(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, ['HR','LR'])
+
 Plot_TWOexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
                            arts_exp_HRWCLR, ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
 Plot_THREEexps_wCombinedexps(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
+                           arts_exp_HRWCLR, arts_exp_GRAUPOnlyIFAC1, arts_exp_GRAUPOnlyIFAC2, arts_exp_GRAUPOnlyIFAC5, 
+                             ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
+                             ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
+Plot_Individual_exps_paper(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
                            arts_exp_HRWCLR, arts_exp_GRAUPOnlyIFAC1, arts_exp_GRAUPOnlyIFAC2, arts_exp_GRAUPOnlyIFAC5, 
                              ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
                              ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
