@@ -382,7 +382,7 @@ def Plot_Individual_exps_paper_1GRAUspecies(dset1, dset2, dhailset, dhailset_mas
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------    
 def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dsetLR, dsetHR, dcombined1, dcombined2, dhailset_mass, dcombinedGRAU1, dcombinedGRAU2, 
-                                          dgrau_SSP, colorcycle, freqLim, ifacNR, GRAU_SSP,title3):
+                                          colorcycle, freqLim, ifacNR, GRAU_SSP,title3):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -556,7 +556,7 @@ for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAgg
 arts_exp_LR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_EVANS[:] = np.nan
 arts_exp_HR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_EVANS[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for item2, ifacifac in enumerate([1,5]):  #,2,5]:
+    for item2, ifacifac in enumerate([1,2]):  #,2,5]:
         exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
@@ -574,7 +574,7 @@ for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansS
 arts_exp_LR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_8COL[:] = np.nan
 arts_exp_HR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_8COL[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for item2, ifacifac in enumerate([1,5]):  #,2,5]:
+    for item2, ifacifac in enumerate([1,2]):  #,2,5]:
         exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
@@ -592,7 +592,7 @@ for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansS
 arts_exp_LR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_LBLOCK[:] = np.nan
 arts_exp_HR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_LBLOCK[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for item2, ifacifac in enumerate([1,5]):  #,2,5]:
+    for item2, ifacifac in enumerate([1,2]):  #,2,5]:
         exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
@@ -632,15 +632,33 @@ Plot_Individual_exps_paper_1GRAUspecies(arts_exp_RainOnly_HR, arts_exp_RainOnly_
 Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR, arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_LBLOCK, 
                            arts_exp_LR_H_GRAU_8COL,arts_exp_LR_H_GRAU_EVANS,
                            [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 3)
-#- PLOT COMBINED
-Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_EVANS, arts_exp_HR_H_GRAU_EVANS, 
-                           [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 0, 'EvansSnowAggregate', 'RWC-LR + HWC + GWC (LBLOCK, ifac=1)')
+
+#- PLOT COMBINED (with EVANS)
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, 
+                                      arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_EVANS, arts_exp_HR_H_GRAU_EVANS, 
+                           ['darkred', 'magenta', 'salmon', 'red'], 90, 0, 'EvansSnowAggregate', 'RWC-LR + HWC + GWC (EvansSnowAggregate, ifac=1)')
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, 
+                                      arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_EVANS, arts_exp_HR_H_GRAU_EVANS, 
+                           ['darkred', 'magenta', 'salmon', 'red'], 90, 1, 'EvansSnowAggregate', 'RWC-LR + HWC + GWC (EvansSnowAggregate, ifac=2)')
 
 
+#- PLOT COMBINED (with 8-ColumnAggregate)
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, 
+                                      arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_8COL, arts_exp_HR_H_GRAU_8COL, 
+                           ['darkred', 'magenta', 'salmon', 'red'], 90, 0, '8-ColumnAggregat', 'RWC-LR + HWC + GWC (8-ColumnAggregate, ifac=1)')
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, 
+                                      arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_8COL, arts_exp_HR_H_GRAU_8COL, 
+                           ['darkred', 'magenta', 'salmon', 'red'], 90, 1, '8-ColumnAggregat', 'RWC-LR + HWC + GWC (8-ColumnAggregate, ifac=2)')
 
 
+#- PLOT COMBINED (with LargeBlockAggregate)
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, 
+                                      arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_LBLOCK, arts_exp_HR_H_GRAU_LBLOCK, 
+                           ['darkred', 'magenta', 'salmon', 'red'], 90, 0, 'LargeBlockAggregate', 'RWC-LR + HWC + GWC (LargeBlockAggregate, ifac=1)')
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, 
+                                      arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_LBLOCK, arts_exp_HR_H_GRAU_LBLOCK, 
+                           ['darkred', 'magenta', 'salmon', 'red'], 90, 1, 'LargeBlockAggregate', 'RWC-LR + HWC + GWC (LargeBlockAggregate, ifac=2)')
 
-    
 #------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
 #- PLOT ALL IWCs
@@ -674,8 +692,6 @@ plt.xlabel(r'Mass Content (g/m$^{3}$)', color='k')
 plt.legend()
 plt.ylim([0,10])
 plt.legend(ncol=2)
-
-
 
 
 #------------------------------------------------------------------------------------------
