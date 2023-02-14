@@ -381,8 +381,8 @@ def Plot_Individual_exps_paper_1GRAUspecies(dset1, dset2, dhailset, dhailset_mas
     return   
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------    
-def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dcombined3, dhailset_mass, 
-                                            dgrau_SSP, colorcycle, freqLim, GrauspeciesNr):
+def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2, dhailset_mass, dcombinedGRAU1, dcombinedGRAU2, 
+                                          dgrau_SSP, colorcycle, freqLim, ifacNR, GRAU_SSP,title3):
     """
     -------------------------------------------------------------
     Experiment comparison "internal":
@@ -399,27 +399,34 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dcomb
     plt.matplotlib.rc('font', family='serif', size = 12)
     fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True, figsize=[9,12])
 
-    #- axes[0] rwc LR + HAIL
-    #--- axes 2 para combined experiments. 
+    #-----------------------------------------------------
+    #- axes[0] rwc LR + HAIL W AND WITHOUT GWC
     for i in range(dcombined1.shape[1]):
         axes[0].plot(f_grid/1e9, dcombined1[:,i,0] - dcombined1[:,i,1], 
                  linewidth=1, linestyle='-', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
-    axes[0].set_title('RWC-LR + HWC', fontsize='12', fontweight='bold')
-    axes[0].legend(loc='upper right')
+    axes[0].set_title('RWC-LR + HWC + GWC ('+GRAU_SSP+', ifac=1)', fontsize='12', fontweight='bold')
     axes[0].set_ylim([-105,5])
-
-    # axes[1] rwc HR + HAIL
+    axes[0].plot(np.nan, np.nan, color='k', linewidth=1, linestyle='-', label='without GWC')
+    axes[0].plot(np.nan, np.nan, color='k', linewidth=1, linestyle='--', label='with GWC')
+    axes[0].legend(loc='lower center', ncol=3)
+    for i in range(dcombinedGRAU1.shape[1]):
+        axes[0].plot(f_grid/1e9, dcombinedGRAU1[:,i,0,ifacNR] - dcombinedGRAU1[:,i,1,ifacNR], 
+             linewidth=1, linestyle='--', color=colorcycle[i])
+             
+    #-----------------------------------------------------
+    # axes[1] rwc HR + HAIL W AND WITHOUT GWC
     for i in range(dcombined2.shape[1]):
         axes[1].plot(f_grid/1e9, dcombined2[:,i,0] - dcombined2[:,i,1], 
                  linewidth=1, linestyle='--', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
-    axes[1].set_title('RWC-HR + HWC', fontsize='12', fontweight='bold')
+    axes[1].set_title('RWC-HR + HWC + GWC ('+GRAU_SSP+', ifac=1)', fontsize='12', fontweight='bold')
     axes[1].set_ylim([-105,5])
-    axes[1].legend(loc='lower right')
+    for i in range(dcombinedGRAU2.shape[1]):
+        axes[1].plot(f_grid[::3]/1e9, dcombinedGRAU2[::3,i,0,ifacNR] - dcombinedGRAU2[::3,i,1,ifacNR], 
+         marker='x', color=colorcycle[i])
+    
+    #-----------------------------------------------------
+     
 
-    # axes[1] rwc HR + HAIL + GWC    
-    for i in range(dcombined3.shape[1]):
-
-            
     for iaxes in [0,1,2]:
         axes[iaxes].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
         axes[iaxes].grid('true')
@@ -431,10 +438,13 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dcomb
         axes[iaxes].axvline(x=166 ,ls='-',color='gray')
         axes[iaxes].set_xlim([5,freqLim])
 
-        
 
 
-    return   
+
+    return
+
+
+
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
 main_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/RT_simulations/Output/'
@@ -530,16 +540,18 @@ for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAgg
 #------------------------------------------------------------------------------------------
 # RWC+HAIL+GRAU (EVANS)
 #------------------------------------------------------------------------------------------
+item2=0
+
 arts_exp_LR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_EVANS[:] = np.nan
 arts_exp_HR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_EVANS[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for item2, ifacifac in [1]:  #,2,5]:
-        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate') 
+    for ifacifac in [1]:  #,2,5]:
+        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
         arts_exp_HR_H_GRAU_EVANS[:,item,0,item2] = arts_exp['arts_tb'][0,:]
         arts_exp_HR_H_GRAU_EVANS[:,item,1,item2] = arts_exp['arts_cl'][0,:]    
-        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate') 
+        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate' 
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
         arts_exp_LR_H_GRAU_EVANS[:,item,0,item2] = arts_exp['arts_tb'][0,:]
@@ -551,13 +563,13 @@ for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansS
 arts_exp_LR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_8COL[:] = np.nan
 arts_exp_HR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_8COL[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for item2, ifacifac in [1]:  #,2,5]:
-        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate') 
+    for ifacifac in [1]:  #,2,5]:
+        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
         arts_exp_HR_H_GRAU_8COL[:,item,0,item2] = arts_exp['arts_tb'][0,:]
         arts_exp_HR_H_GRAU_8COL[:,item,1,item2] = arts_exp['arts_cl'][0,:]    
-        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate') 
+        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate' 
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
         arts_exp_LR_H_GRAU_8COL[:,item,0,item2] = arts_exp['arts_tb'][0,:]
@@ -569,13 +581,13 @@ for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansS
 arts_exp_LR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_LBLOCK[:] = np.nan
 arts_exp_HR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_LBLOCK[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for item2, ifacifac in [1]:  #,2,5]:
-        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate') 
+    for ifacifac in [1]:  #,2,5]:
+        exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
         arts_exp_HR_H_GRAU_LBLOCK[:,item,0,item2] = arts_exp['arts_tb'][0,:]
         arts_exp_HR_H_GRAU_LBLOCK[:,item,1,item2] = arts_exp['arts_cl'][0,:]    
-        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate') 
+        exp_name  = 'BulkSIMS_RWC_LR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
         arts_exp_LR_H_GRAU_LBLOCK[:,item,0,item2] = arts_exp['arts_tb'][0,:]
@@ -604,9 +616,18 @@ Plot_Individual_exps_paper_1GRAUspecies(arts_exp_RainOnly_HR, arts_exp_RainOnly_
                            arts_exp_HRWCLR, arts_exp_GRAUPOnlyIFAC1, arts_exp_GRAUPOnlyIFAC2, arts_exp_GRAUPOnlyIFAC5, 
                              ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
                              ['darkred', 'magenta', 'salmon', 'red'], 90, 2)
-#- Plot combined experiments: RWC-LR + HWC, and RWC-HR + HWC 
-Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR,arts_exp_HRWCHR,  [2, 4, 6, 10], 
-                                           [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 3)
+
+#- Plot combined experiments: RWC-LR + HWC, and RWC-HR + HWC, RWC-LR + HWC + GWC (ifac=1)
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR, arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_LBLOCK, 
+                           arts_exp_LR_H_GRAU_8COL,arts_exp_LR_H_GRAU_EVANS,
+                           [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 3)
+#- PLOT COMBINED
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR, arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_EVANS, arts_exp_HR_H_GRAU_EVANS, 
+                           [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 0, 'EvansSnowAggregate', 'RWC-LR + HWC + GWC (LBLOCK, ifac=1)')
+
+
+
+
 
     
 #------------------------------------------------------------------------------------------
