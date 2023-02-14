@@ -158,7 +158,6 @@ def Plot_TWOexps_wCombinedexps(dset1, dset2, dhailset, dhailset_mass, dcombined1
     #plt.savefig(path+'/'+str(name)+'.png')
     #plt.close()
     return
- 
     
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------    
@@ -380,11 +379,58 @@ def Plot_Individual_exps_paper_1GRAUspecies(dset1, dset2, dhailset, dhailset_mas
 
 
     return   
-  
-
 #------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------    
+def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2,  dhailset_mass, 
+                                            dgrau_SSP, colorcycle, freqLim, GrauspeciesNr):
+    """
+    -------------------------------------------------------------
+    Experiment comparison "internal":
+    -------------------------------------------------------------
+    OUT    name.png   Plot stored at the given path
+    IN     d1         ARTS outputs
+           ititle     Title of figure
+           name       Name to store the figure
+           path       Path to store the figure
+    -------------------------------------------------------------
+    """
+    colorcycle_greens = ['darkgreen', 'teal', 'darkslategray']
 
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    fig, axes = plt.subplots(nrows=3, ncols=1, constrained_layout=True, figsize=[9,12])
+
+    #- axes[0] rwc LR + HAIL
+    #--- axes 2 para combined experiments. 
+    for i in range(dcombined1.shape[1]):
+        axes[0].plot(f_grid/1e9, dcombined1[:,i,0] - dcombined1[:,i,1], 
+                 linewidth=1, linestyle='-', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
+    axes[0].set_title('RWC-LR + HWC', fontsize='12', fontweight='bold')
+    axes[0].legend(loc='upper right')
+    axes[0].set_ylim([-105,5])
+
+    # axes[1] rwc HR + HAIL
+    for i in range(dcombined2.shape[1]):
+        axes[1].plot(f_grid/1e9, dcombined2[:,i,0] - dcombined2[:,i,1], 
+                 linewidth=1, linestyle='--', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
+    axes[1].set_title('RWC-HR + HWC', fontsize='12', fontweight='bold')
+    axes[1].set_ylim([-105,5])
+    axes[1].legend(loc='upper right')
+
+    for iaxes in [0,1]:
+        axes[iaxes].set_ylabel(r'$\Delta$(Cloudy-Clear) [K]', color='k')
+        axes[iaxes].grid('true')
+        axes[iaxes].axvline(x=10 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=19 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=22 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=37 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=85 ,ls='-',color='gray')
+        axes[iaxes].axvline(x=166 ,ls='-',color='gray')
+        axes[iaxes].set_xlim([5,freqLim])
+    #plt.legend(ncol=3, loc='lower center', bbox_to_anchor=(0.5, -0.35))
+
+
+
+    return   
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------
 main_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/RT_simulations/Output/'
@@ -492,6 +538,16 @@ Plot_Individual_exps_paper(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_
                              ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
                              ['darkred', 'magenta', 'salmon', 'red'], GHzfreqLim)
 
+#- Plot the individual experiments: RWC-ONL, HWC-ONL (w/ different HWP) and GWC-ONLY for different species (AND DIFFERENT IFAC)
+Plot_Individual_exps_paper_1GRAUspecies(arts_exp_RainOnly_HR, arts_exp_RainOnly_LR, arts_exp_HailOnly, [2, 4, 6, 10], arts_exp_HRWCHR, 
+                           arts_exp_HRWCLR, arts_exp_GRAUPOnlyIFAC1, arts_exp_GRAUPOnlyIFAC2, arts_exp_GRAUPOnlyIFAC5, 
+                             ['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAggregate'], 
+                             ['darkred', 'magenta', 'salmon', 'red'], 90, 2)
+#- Plot combined experiments: RWC-LR + HWC, and RWC-HR + HWC 
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR,arts_exp_HRWCHR,  [2, 4, 6, 10], 
+                                           [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 3)
+
+    
 #------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
 #- PLOT ALL IWCs
