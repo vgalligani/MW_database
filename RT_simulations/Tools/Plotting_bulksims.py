@@ -381,7 +381,7 @@ def Plot_Individual_exps_paper_1GRAUspecies(dset1, dset2, dhailset, dhailset_mas
     return   
 #------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------    
-def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2, dhailset_mass, dcombinedGRAU1, dcombinedGRAU2, 
+def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dsetLR, dsetHR, dcombined1, dcombined2, dhailset_mass, dcombinedGRAU1, dcombinedGRAU2, 
                                           dgrau_SSP, colorcycle, freqLim, ifacNR, GRAU_SSP,title3):
     """
     -------------------------------------------------------------
@@ -401,6 +401,7 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2, dhails
 
     #-----------------------------------------------------
     #- axes[0] rwc LR + HAIL W AND WITHOUT GWC
+    axes[0].plot(f_grid/1e9, dsetLR['arts_tb'][0,:]-dsetLR['arts_cl'][0,:],linewidth=1,color='--k', label = 'Light Rain (LR) Only')
     for i in range(dcombined1.shape[1]):
         axes[0].plot(f_grid/1e9, dcombined1[:,i,0] - dcombined1[:,i,1], 
                  linewidth=1, linestyle='-', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
@@ -412,9 +413,10 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2, dhails
     for i in range(dcombinedGRAU1.shape[1]):
         axes[0].plot(f_grid/1e9, dcombinedGRAU1[:,i,0,ifacNR] - dcombinedGRAU1[:,i,1,ifacNR], 
              linewidth=1, linestyle='--', color=colorcycle[i])
-             
+
     #-----------------------------------------------------
     # axes[1] rwc HR + HAIL W AND WITHOUT GWC
+    axes[1].plot(f_grid/1e9, dsetHR['arts_tb'][0,:]-dsetHR['arts_cl'][0,:],linewidth=1,color='--k', label = 'Heavy Rain (HR) Only')
     for i in range(dcombined2.shape[1]):
         axes[1].plot(f_grid/1e9, dcombined2[:,i,0] - dcombined2[:,i,1], 
                  linewidth=1, linestyle='--', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
@@ -438,7 +440,18 @@ def Plot_Combined_exps_paper_1GRAUspecies(f_grid, dcombined1, dcombined2, dhails
         axes[iaxes].axvline(x=166 ,ls='-',color='gray')
         axes[iaxes].set_xlim([5,freqLim])
 
-
+    #-----------------------------------------------------
+    # axes[2] diff. 
+    for i in range(dcombined2.shape[1]):
+        axes[2].plot(f_grid/1e9, (dset1['arts_tb'][0,:]-dset1['arts_cl'][0,:]) - (dcombined2[:,i,0] - dcombined2[:,i,1]), 
+                linewidth=1, linestyle='--', color=colorcycle[i], label = r'HWP: '+str(dhailset_mass[i])+' kg/m$^2$')   
+    axes[2].set_title('RWC-HR + HWC + GWC ('+GRAU_SSP+', ifac=1)', fontsize='12', fontweight='bold')
+    for i in range(dcombinedGRAU2.shape[1]):
+        axes[2].plot(f_grid[::3]/1e9, (dset1['arts_tb'][0,::3]-dset1['arts_cl'][0,::3])-(dcombinedGRAU2[::3,i,0,ifacNR] - dcombinedGRAU2[::3,i,1,ifacNR]), 
+        marker='x', color=colorcycle[i])
+    axes[2].set_xlim([5,freqLim])
+    axes[2].set_ylim([0,40])
+    #-----------------------------------------------------
 
 
     return
@@ -540,12 +553,10 @@ for item,i in enumerate(['8-ColumnAggregate','EvansSnowAggregate','LargeBlockAgg
 #------------------------------------------------------------------------------------------
 # RWC+HAIL+GRAU (EVANS)
 #------------------------------------------------------------------------------------------
-item2=0
-
 arts_exp_LR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_EVANS[:] = np.nan
 arts_exp_HR_H_GRAU_EVANS = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_EVANS[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for ifacifac in [1]:  #,2,5]:
+    for item2, ifacifac in enumerate([1,5]):  #,2,5]:
         exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'EvansSnowAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
@@ -563,7 +574,7 @@ for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansS
 arts_exp_LR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_8COL[:] = np.nan
 arts_exp_HR_H_GRAU_8COL = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_8COL[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for ifacifac in [1]:  #,2,5]:
+    for item2, ifacifac in enumerate([1,5]):  #,2,5]:
         exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'8-ColumnAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
@@ -581,7 +592,7 @@ for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansS
 arts_exp_LR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_LR_H_GRAU_LBLOCK[:] = np.nan
 arts_exp_HR_H_GRAU_LBLOCK = np.zeros(( len(f_grid), len([2, 4, 6, 10]), 2, 3 )); arts_exp_HR_H_GRAU_LBLOCK[:] = np.nan
 for item,i in enumerate([2, 4, 6, 10]):  # BulkSIMS_RWC_HR_HWC_10GWC_ifac1EvansSnowAggregate
-    for ifacifac in [1]:  #,2,5]:
+    for item2, ifacifac in enumerate([1,5]):  #,2,5]:
         exp_name  = 'BulkSIMS_RWC_HR_HWC_'+str(i)+'GWC_ifac'+str(ifacifac)+'LargeBlockAggregate'
         f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
         arts_exp = FullData(f_arts)
@@ -622,7 +633,7 @@ Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR, arts_exp_HRWCHR, 
                            arts_exp_LR_H_GRAU_8COL,arts_exp_LR_H_GRAU_EVANS,
                            [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 3)
 #- PLOT COMBINED
-Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR, arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_EVANS, arts_exp_HR_H_GRAU_EVANS, 
+Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_RainOnly_LR, arts_exp_RainOnly_HR, arts_exp_HRWCLR, arts_exp_HRWCHR,  [2, 4, 6, 10], arts_exp_LR_H_GRAU_EVANS, arts_exp_HR_H_GRAU_EVANS, 
                            [0,0,1], ['darkred', 'magenta', 'salmon', 'red'], 90, 0, 'EvansSnowAggregate', 'RWC-LR + HWC + GWC (LBLOCK, ifac=1)')
 
 
@@ -633,6 +644,7 @@ Plot_Combined_exps_paper_1GRAUspecies(f_grid, arts_exp_HRWCLR, arts_exp_HRWCHR, 
 #------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------
 #- PLOT ALL IWCs
+dhailset_mass = [2, 4, 6, 10]
 colorsin =  ['darkred', 'magenta', 'salmon', 'red']
 fig = plt.figure(figsize=(9,6))    
 for item,i in enumerate([2, 4, 6, 10]):
@@ -640,25 +652,29 @@ for item,i in enumerate([2, 4, 6, 10]):
     f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
     arts_exp = FullData(f_arts)
     if item == 0:
-        plt.plot( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='--', color='blue')
-    plt.plot( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000 , z_field[0:5]/1e3, linewidth=2, linestyle='-', color=colorsin[item])
+        plt.plot( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='--', color='blue', label='LR')
+    plt.plot( arts_exp['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000/5 , z_field[0:5]/1e3, linewidth=2, 
+             linestyle='-', color=colorsin[item]) 
     
     exp_name  = 'BulkSIMS_RWCHR_HWC'+str(i) 
     f_arts    = main_dir + exp_name + '/' + 'GMI_Fascod_'+ exp_name + '.mat'
     arts_exp1 = FullData(f_arts)
     if item == 0:
-        plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='-', color='darkblue')
-    plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000 , z_field[0:5]/1e3, linewidth=2, linestyle='-', color=colorsin[item])
+        plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][0]*1000 , z_field/1e3, linewidth=1, linestyle='-', color='darkblue', label='HR')
+    plt.plot( arts_exp1['D']['particle_bulkprop_field'][0][0][0][0][0][1][0:5]*1000/5 , z_field[0:5]/1e3, linewidth=2, linestyle='-', 
+             color=colorsin[item], label=r'HWP: '+str(dhailset_mass[item])+' kg/m$^2$')  
 
-plt.plot( arts_exp_GRAUmassIFAC1[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-.', color='darkgreen')    
-plt.plot( arts_exp_GRAUmassIFAC2[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-', color='darkgreen')    
-plt.plot( arts_exp_GRAUmassIFAC5[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='--', color='darkgreen')    
+plt.plot( arts_exp_GRAUmassIFAC1[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-.', color='darkgreen', label='GWP: 1  kg/m$^2$')    
+plt.plot( arts_exp_GRAUmassIFAC2[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='-', color='darkgreen', label='GWP: 2  kg/m$^2$')      
+plt.plot( arts_exp_GRAUmassIFAC5[50:80]*1000 , z_field[50:80]/1e3, linewidth=2, linestyle='--', color='darkgreen', label='GWP: 5 kg/m$^2$')      
 
 plt.title( 'Cloud Scenarios', fontsize='12', fontweight='bold')
-plt.ylabel(r'Height [km]', color='k')
-plt.xlabel(r'Mass Content [g/m3]', color='k')
+plt.ylabel(r'Height (km)', color='k')
+plt.xlabel(r'Mass Content (g/m$^{3}$)', color='k')
 plt.legend()
-plt.ylim([0,15])
+plt.ylim([0,10])
+plt.legend(ncol=2)
+
 
 
 
