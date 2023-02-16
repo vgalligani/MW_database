@@ -1028,15 +1028,25 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
             
     elif caso == '20181111': 
         axes[0].set_title(r'CSPR2 Zh (11/11/2018 1300UTC), Elev: 0.7$^{o}$')
+
         axes[0].legend(loc='upper left')
+
+        # RADAR RINGS	      
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+        axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
         CurvedText(
-            x = lon_radius[18000:],
-            y = lat_radius[18000:],
+            x = lon_radius[25000:],
+            y = lat_radius[25000:],
+            text='50 km',#'this this is a very, very long text',
+            va = 'top', axes=axes[0])
+
+        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+        axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+        CurvedText(
+            x = lon_radius[30000:],
+            y = lat_radius[30000:],
             text='100 km',#'this this is a very, very long text',
-            va = 'bottom', axes=axes[0])	
-       	for i in range(len(lon_pfs)):
-            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
-            markeredgecolor='black', markeredgewidth=1.5)
+            va = 'bottom', axes=axes[0])
 
     elif caso == '20180208': 
         axes[0].set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
@@ -4185,7 +4195,7 @@ def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects
 		
 
 	
-    plot_gmi_paper(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
+    plot_gmi_paper_fig5(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
