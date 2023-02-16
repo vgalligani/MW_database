@@ -859,6 +859,7 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
         ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
 
     elif options['radar_name'] == 'DOW7':
+
         reflectivity_name = 'DBZHCC'   
         lats        = radar.gate_latitude['data']
         lons        = radar.gate_longitude['data']
@@ -1092,7 +1093,10 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
 
 
     plt.legend()
-    azimuths = radar.azimuth['data'][start_index:end_index]
+    if options['radar_name'] == 'DOW7':
+	azimuths = radar.azimuth['data']
+    else:
+	azimuths = radar.azimuth['data'][start_index:end_index]
     # TRANSECTAS:
     for itrans in transects:
         target_azimuth = azimuths[itrans]
@@ -1119,7 +1123,6 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
     for i in range(len(lon_pfs)):
         axes[1].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
         markeredgecolor='black', markeredgewidth=1.5)	
-    azimuths = radar.azimuth['data'][start_index:end_index]
     # TRANSECTAS:
     for itrans in transects:
         target_azimuth = azimuths[itrans]
@@ -4189,7 +4192,8 @@ def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
 
     if options['radar_name'] == 'DOW7':
-        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], options['lat_pfs'], options['lon_pfs']) 
+	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/',options['era5_file'], 
+								options['lat_pfs'], options['lon_pfs']) 
         radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
         radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
 		
@@ -5224,17 +5228,25 @@ def main_DOW7_20181214():
     gfile     = '1B.GPM.GMI.TB2016.20181214-S015009-E032242.027231.V05A.HDF5'
     era5_file = '20181214_03_RMA1.grib'
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
-    reportes_granizo_twitterAPI_meta = [['0320UTC','0100']]
-    opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0,
+    reportes_granizo_twitterAPI_meta = [['0320UTC'],['0100']]
+    opts = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0, 'caso':'20181214',
 	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0,
-	     'radar_name':'DOW7', 'era5_file': era5_file,
+	     'radar_name':'DOW7', 'era5_file': era5_file,'alternate_azi':[30], 'ZDRoffset': 0,
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	     'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [15], 'files_list':files_list}
     icois_input  = [15] 
-	
-    
+    labels_PHAIL = ['Phail=X%'] 
+    xlims_xlims_input  = [80] 
+    xlims_mins_input  = [20]		
+
+    run_general_paper_Figure_onlyHID(opts, lat_pfs, lon_pfs, [15], [205], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
+
+
+
+
+
 
     GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],3)
 
@@ -5357,7 +5369,7 @@ def main_CSPR2_20181111():
     xlims_mins_input  = [0]		
 
 
-    run_general_paper_Figure_onlyHID(opts, lat_pfs, lon_pfs, [3], [30], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
+    run_general_paper_Figure_onlyHID(opts, lat_pfs, lon_pfs, [3], [205], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
 
 
 
