@@ -841,6 +841,300 @@ class CurvedText(mtext.Text):
             rel_pos += w-used
 
 
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects, caso):
+
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12  
+
+    if options['radar_name'] == 'RMA1':
+        reflectivity_name = 'TH'   		
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'DOW7':
+        reflectivity_name = 'DBZHCC'   
+        lats        = radar.gate_latitude['data']
+        lons        = radar.gate_longitude['data']
+        ZH          = radar.fields[reflectivity_name]['data']
+
+    elif options['radar_name'] == 'CSPR2':
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]	
+        reflectivity_name = 'corrected_reflectivity'   
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'RMA5':
+        reflectivity_name = 'DBZH'; nlev=0;
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'RMA4':
+        reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'RMA8':
+        reflectivity_name = 'TH'   
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    elif options['radar_name'] == 'RMA3':
+        reflectivity_name = 'TH' 
+        nlev = 0 
+        start_index = radar.sweep_start_ray_index['data'][nlev]
+        end_index   = radar.sweep_end_ray_index['data'][nlev]
+        lats        = radar.gate_latitude['data'][start_index:end_index]
+        lons        = radar.gate_longitude['data'][start_index:end_index]
+        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+
+    s_sizes=450
+    user = platform.system()
+    if   user == 'Linux':
+        home_dir = '/home/victoria.galligani/'  
+    elif user == 'Darwin':
+        home_dir = '/Users/victoria.galligani'
+
+    # Shapefiles for cartopy 
+    geo_reg_shp = home_dir+'Work/Tools/Shapefiles/ne_50m_lakes/ne_50m_lakes.shp'
+    geo_reg = shpreader.Reader(geo_reg_shp)
+
+    countries = shpreader.Reader(home_dir+'Work/Tools/Shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp')
+    states_provinces = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+    rivers = cfeature.NaturalEarthFeature(
+        category='physical',
+        name='rivers_lake_centerlines',
+        scale='10m',
+        facecolor='none',
+        edgecolor='black')
+
+    cmaps = GMI_colormap() 
+
+    # read file
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb   = tb_s1_gmi.copy()
+    S2_sub_tb   = tb_s2_gmi.copy()
+    S2_sub_lat  = lat_s2_gmi.copy()
+    S2_sub_lon  = lon_s2_gmi.copy()	
+
+    # Tambien se puenden hacer recortes guardando los indices. ejemplo para S1: 
+    idx1 = (lat_gmi>=options['ylim_min']-5) & (lat_gmi<=options['ylim_max']+5) & (lon_gmi>=options['xlim_min']-5) & (lon_gmi<=options['xlim_max']+5)
+    idx2 = (lat_s2_gmi>=options['ylim_min']-5) & (lat_s2_gmi<=options['ylim_max']+5) & (lon_s2_gmi>=options['xlim_min']-5) & (lon_s2_gmi<=options['xlim_max']+5)
+
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    S2_sub_lat = np.where(idx2 != False, S2_sub_lat, np.nan) 
+    S2_sub_lon = np.where(idx2 != False, S2_sub_lon, np.nan) 
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
+    for i in range(tb_s2_gmi.shape[2]):
+        S2_sub_tb[:,:,i]  = np.where(np.isnan(S2_sub_lon) != 1, tb_s2_gmi[:,:,i], np.nan)	
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
+
+
+
+    #----------------------------------------------------------------------------------------
+    # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
+    #----------------------------------------------------------------------------------------
+    fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,figsize=[10,5])
+
+    [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
+    #ZH[np.where(ZH<20)]=np.nan
+    pcm1=axes[0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[0].set_title('Ground Level')
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+    plt.colorbar(pcm1, ax=axes[0],label='(dBZ)')
+
+
+    # -----
+    # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
+    contorno89 = axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
+
+
+    # LIMITS	 
+    axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
+    # RADAR RINGS	      
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    CurvedText(
+        x = lon_radius[20000:],
+        y = lat_radius[20000:],
+        text='50 km',#'this this is a very, very long text',
+        va = 'bottom', axes=axes[0])
+
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+
+    # Add labels:
+    labels = ["PCT 89-GHz 200 K contour"] 
+    for i in range(len(labels)):
+        contorno89.collections[i].set_label(labels[i])
+
+
+
+    if caso == '20200815': 
+        axes[0].set_title(r'RMA5 Zh (15/8/2018 0216UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='lower left')
+        CurvedText(
+           	x = lon_radius[19000:],
+           	y = lat_radius[19000:],
+           	text='100 km',#'this this is a very, very long text',
+           	va = 'bottom', axes=axes[0])
+        # Addlabels to icois! 
+        axes[0].text(-54.9, -25.2, 'coi=1')
+        axes[0].text(-53.4, -25.5, 'coi=2')
+        axes[0].set_xlabel('Longitude')
+        axes[0].set_ylabel('Latitude')
+        for i in range(len(lon_pfs)):
+            axes[0].plot(lon_pfs[i]-0.3, lat_pfs[i], marker='*', markersize=20, markerfacecolor="black",
+            markeredgecolor='black', markeredgewidth=1.5)
+            
+    elif caso == '20181111': 
+        axes[0].set_title(r'CSPR2 Zh (11/11/2018 1300UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='upper left')
+        CurvedText(
+            x = lon_radius[18000:],
+            y = lat_radius[18000:],
+            text='100 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[0])	
+       	for i in range(len(lon_pfs)):
+            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+            markeredgecolor='black', markeredgewidth=1.5)
+
+    elif caso == '20180208': 
+        axes[0].set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='upper left')
+        CurvedText(
+            x = lon_radius[17000:],
+            y = lat_radius[17000:],
+            text='100 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[0])	
+        # Addlabels to icois! 
+        axes[0].text(-64, -31, 'coi=1')
+        axes[0].text(-65.3, -32.0, 'coi=2')
+        axes[0].text(-65, -32.7, 'coi=3')
+        axes[0].set_xlabel('Longitude')
+        axes[0].set_ylabel('Latitude')
+        for i in range(len(lon_pfs)):
+            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+            markeredgecolor='black', markeredgewidth=1.5)	
+
+    elif caso == '20181031': 
+        axes[0].set_title(r'RMA4 Zh (31/10/2018 0109UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='upper left')
+        CurvedText(
+            x = lon_radius[50000:],
+            y = lat_radius[50000:],
+            text='100 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[0])	
+        # Addlabels to icois! 
+        axes[0].text(-61, -28.2, 'coi=1')
+        axes[0].text(-59.5, -28.2, 'coi=2')
+        axes[0].text(-57.8, -28.4, 'coi=3')
+        axes[0].text(-58.5, -26.4, 'coi=4')
+        axes[0].set_xlabel('Longitude')
+        axes[0].set_ylabel('Latitude')
+        for i in range(len(lon_pfs)):
+            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+            markeredgecolor='black', markeredgewidth=1.5)	
+
+
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+
+
+    plt.legend()
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    # TRANSECTAS:
+    for itrans in transects:
+        target_azimuth = azimuths[itrans]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect     = lons[filas,:]
+        lat_transect     = lats[filas,:]
+        axes[0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        #plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+        plt.legend() 
+
+
+
+    im = axes[1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
+    axes[1].set_title('PCT 89-GHz')
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    contorno89 = axes[1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
+    for i in range(len(lon_pfs)):
+        axes[1].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
+        markeredgecolor='black', markeredgewidth=1.5)	
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    # TRANSECTAS:
+    for itrans in transects:
+        target_azimuth = azimuths[itrans]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect     = lons[filas,:]
+        lat_transect     = lats[filas,:]
+        axes[1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        #plt.title('Transecta Nr:'+ str(test_transect), Fontsize=20)
+
+    if len(options['REPORTES_meta'])>0:
+        for ireportes in range(len(options['REPORTES_geo'])):
+            axes[1].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+    axes[0].set_xlabel('Longitude')
+    axes[0].set_ylabel('Latitude')	
+    axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
+    axes[1].set_ylim([options['ylim_min'], options['ylim_max']])	
+    #fig.savefig(options['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
+    #plt.close()
+    plt.colorbar(im, ax=axes[1],label='(K)')
+
+
+
+
+
+    return
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -3771,9 +4065,76 @@ def run_general_case(options, lat_pfs, lon_pfs, icois):
     #	    GATES_PHAIL, GATES_NOPHAIL, ZHarray_PHAIL, ZHarray_NOPHAIL, ZDRarray_PHAIL, ZDRarray_NOPHAIL]
   
 #------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------
 def run_general_paper(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,  xlims_mins_input, xlims_xlims_input):
+
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+    radar = pyart.io.read(r_dir+options['rfile'])
+    
+    if options['radar_name'] == 'RMA3':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIDP_nans.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIDP_nans, replace_existing=True)
+	
+    if options['radar_name'] == 'RMA1':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+ 
+    if options['radar_name'] == 'RMA5':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+	
+    if options['radar_name'] == 'RMA4':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+	
+    if options['radar_name'] == 'RMA8':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+
+    if options['radar_name'] == 'DOW7':
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
+		
+
+	
+    plot_gmi_paper(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
+    alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+    radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+    radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+    radar = add_43prop_field(radar)     
+    radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+
+    # 500m grid! 
+    grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+      		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+					 roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+    gc.collect()
+    #make_pseudoRHISfromGrid_4(grided, radar, azimuths_oi, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+    make_pseudoRHISfromGrid(grided, radar, transects, labels_PHAIL, xlims_mins_input, xlims_xlims_input, alt_ref, tfield_ref, options)
+    gc.collect()
+    return
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects, labels_PHAIL,  xlims_mins_input, xlims_xlims_input):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
@@ -4969,14 +5330,25 @@ def main_CSPR2_20181111():
     era5_file = '20181111_13_RMA1.grib'
     reportes_granizo_twitterAPI_geo = [[]]
     reportes_granizo_twitterAPI_meta = []
-    opts = {'xlim_min': -65.5, 'xlim_max': -63.6, 'ylim_min': -33, 'ylim_max': -31.5, 
-    	    'ZDRoffset': 0, 'era5_file': era5_file,
-	    'rfile': 'CSPR2_data/'+rfile, 'gfile': gfile, 'azimuth_ray': 0,
+    opts = {'xlim_min': -65, 'xlim_max': -63.6, 'ylim_min': -32.6, 'ylim_max': -31.5, 
+	    'azimuth_ray': 0,
+	    'rfile': 'CSPR2_data/'+rfile, 
+   	    'era5_file': era5_file,'caso':'20181111',
+	    'gfile': gfile,
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
+	    'alternate_azi':[30],
+	    'ZDRoffset': 0,
     	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2'}
-    icois_input  = [6,5] 
+    icois_input  = [3] 
+    labels_PHAIL = ['Phail=65.3%'] 
+    xlims_xlims_input  = [60] 
+    xlims_mins_input  = [0]		
+
+
+    run_general_paper_Figure_onlyHID(opts, lat_pfs, lon_pfs, [3], [30], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
+
 
 
 
