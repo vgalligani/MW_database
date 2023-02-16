@@ -5683,27 +5683,33 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
     plt.rcParams['ytick.labelsize']=12  
-		  
-    [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_CSPR2) #, opts_DOW7, opts_RMA1, opts_RMA5
-		  
+
     #---- plot hid ppi  
     hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
                 'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
-    cmaphid = colors.ListedColormap(hid_colors)	  
+    cmaphid = colors.ListedColormap(hid_colors)	    
 		  
     # ---- FIGFIG --------------------------------------------------------------- HIDs! 
     fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,figsize=[3,11])	
-						   
-    im_HID = axes[0].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[0].set_title('TITLE1') 
-    axes[0].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
-    axes[0].set_ylim([0,15])
-    pm1    = axes[0].get_position().get_points().flatten()
-    p_last = axes[0].get_position().get_points().flatten(); 
-    ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
-    cbar    = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+			
+    [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA1) #, opts_DOW7, opts_RMA1, opts_RMA5
+    im_HID = axes[2].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[2].set_title('TITLE1') 
+    axes[2].set_xlim([opts_RMA1['xlims_mins_input'],opts_RMA1['xlims_xlims_input']])
+    axes[2].set_ylim([0,15])
+    #pm1    = axes[0].get_position().get_points().flatten()
+    #p_last = axes[0].get_position().get_points().flatten(); 
+    #ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
+    cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
     cbar = adjust_fhc_colorbar_for_pyart(cbar)
-	
+		      
+    [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
+    im_HID = axes[3].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[3].set_title('TITLE1') 
+    axes[3].set_xlim([opts_RMA5['xlims_mins_input'],opts_RMA5['xlims_xlims_input']])
+    axes[3].set_ylim([0,15])
+    cbar    = fig.colorbar(im_HID,  axes[3], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+    cbar = adjust_fhc_colorbar_for_pyart(cbar)		      
 
     return
 #----------------------------------------------------------------------------------------------     
@@ -5789,7 +5795,7 @@ def main_fig5():
 	    'ZDRoffset': 2, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 'azimuth_ray': 50,
 	    'window_calc_KDP': 7, 'era5_file': era5_file,
 	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/','transects': [331],
-    	    'alternate_azi':[331],'caso':'20200815',
+    	    'alternate_azi':[331],'caso':'20200815','azi_oi':[331],
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [7], 'radar_name':'RMA5','xlims_xlims_input' : [190], 'xlims_mins_input' : [0]}
