@@ -5207,8 +5207,6 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
         for ireportes in range(len(opts_CSPR2['REPORTES_geo'])):
             axes[0,1].plot( opts_CSPR2['REPORTES_geo'][ireportes][1],  opts_CSPR2['REPORTES_geo'][ireportes][0], 'D', 
 			   markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_CSPR2['REPORTES_meta'][ireportes])
-    axes[0,1].set_xlabel('Longitude')
-    axes[0,1].set_ylabel('Latitude')	
     axes[0,1].set_xlim([opts_CSPR2['xlim_min'], opts_CSPR2['xlim_max']])
     axes[0,1].set_ylim([opts_CSPR2['ylim_min'], opts_CSPR2['ylim_max']])	
     #fig.savefig(opts_CSPR2['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
