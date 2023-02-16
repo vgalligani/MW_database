@@ -5618,7 +5618,7 @@ def get_HIDoutput(options):
     lats        = radar.gate_latitude['data'][start_index:end_index]
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
-
+    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[15,10])
     for iz in range(len(azi_oi)):
         target_azimuth = azimuths[options['alternate_azi'][iz]]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
