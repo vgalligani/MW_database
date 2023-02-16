@@ -5069,46 +5069,15 @@ def get_median(y, x, tbvbin):
     return [running_median]
 
 #----------------------------------------------------------------------------------------------
-def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7):
+def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
 
-
-    if options['radar_name'] == 'RMA1':
-        PHIORIG = radar.fields['PHIDP']['data'].copy() 
-        mask = radar.fields['PHIDP']['data'].data.copy()    
-        mask[:] = False
-        PHIORIG.mask = mask
-        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
-         reflectivity_name = 'TH'   		
-        nlev = 0 
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats        = radar.gate_latitude['data'][start_index:end_index]
-        lons        = radar.gate_longitude['data'][start_index:end_index]
-        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-	
-	
-    if options['radar_name'] == 'RMA5':
-        PHIORIG = radar.fields['PHIDP']['data'].copy() 
-        mask = radar.fields['PHIDP']['data'].data.copy()    
-        mask[:] = False
-        PHIORIG.mask = mask
-        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
-        reflectivity_name = 'DBZH'; nlev=0;
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats        = radar.gate_latitude['data'][start_index:end_index]
-        lons        = radar.gate_longitude['data'][start_index:end_index]
-        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-	
-
     plt.matplotlib.rc('font', family='serif', size = 12)
     plt.rcParams['xtick.labelsize']=12
     plt.rcParams['ytick.labelsize']=12  
-
 
     s_sizes=450
     user = platform.system()
@@ -5305,7 +5274,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7):
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
     # Titles and legend:
-    axes[1,0].set_title(r'CSPR2 Zh (11/11/2018 1300UTC), Elev: 0.7$^{o}$')
+    axes[1,0].set_title(r'DOW7 Zh (14/12/2018 0220UTC), Elev: 0.7$^{o}$')
     axes[1,0].legend(loc='upper left')
     # RADAR RINGS	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
@@ -5340,13 +5309,11 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7):
     if len(opts_DOW7['REPORTES_meta'])>0:
         for ireportes in range(len(opts_DOW7['REPORTES_geo'])):
             axes[1,1].plot( opts_DOW7['REPORTES_geo'][ireportes][1],  opts_DOW7['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_DOW7['REPORTES_meta'][ireportes])
-    axes[1,1].set_xlabel('Longitude')
-    axes[1,1].set_ylabel('Latitude')	
     axes[1,1].set_xlim([opts_DOW7['xlim_min'], opts_DOW7['xlim_max']])
     axes[1,1].set_ylim([opts_DOW7['ylim_min'], opts_DOW7['ylim_max']])	
     plt.colorbar(im, ax=axes[1,1],label='(K)')
     # ---- in both:
-    azimuths = radar.azimuth['data'][start_index:end_index]	
+    azimuths = radar.azimuth['data']
     for itrans in opts_DOW7['transects']:
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
@@ -5355,10 +5322,229 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7):
         axes[1,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
         axes[1,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
+    # CASO 20190308 #----------------------------------------------------
+    fname = gmi_dir+opts_RMA1['gfile']
+    #
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb   = tb_s1_gmi.copy()
+    S2_sub_tb   = tb_s2_gmi.copy()
+    S2_sub_lat  = lat_s2_gmi.copy()
+    S2_sub_lon  = lon_s2_gmi.copy()	
+    # Tambien se puenden hacer recortes guardando los indices. ejemplo para S1: 
+    idx1 = (lat_gmi>=opts_RMA1['ylim_min']-5) & (lat_gmi<=opts_RMA1['ylim_max']+5) & (lon_gmi>=opts_RMA1['xlim_min']-5) & (lon_gmi<=opts_RMA1['xlim_max']+5)
+    idx2 = (lat_s2_gmi>=opts_RMA1['ylim_min']-5) & (lat_s2_gmi<=opts_RMA1['ylim_max']+5) & (lon_s2_gmi>=opts_RMA1['xlim_min']-5) & (lon_s2_gmi<=opts_RMA1['xlim_max']+5)
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    S2_sub_lat = np.where(idx2 != False, S2_sub_lat, np.nan) 
+    S2_sub_lon = np.where(idx2 != False, S2_sub_lon, np.nan) 
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
+    for i in range(tb_s2_gmi.shape[2]):
+        S2_sub_tb[:,:,i]  = np.where(np.isnan(S2_sub_lon) != 1, tb_s2_gmi[:,:,i], np.nan)	
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
+
+    # ---- ZH ---------------------------------------------------------------
+    radar = pyart.io.read(r_dir+opts_RMA1['rfile'])
+    reflectivity_name = 'TH'   
+    nlev = 0 
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats        = radar.gate_latitude['data'][start_index:end_index]
+    lons        = radar.gate_longitude['data'][start_index:end_index]
+    ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+    ZH[np.where(ZH<20)]=np.nan
+    #
+    pcm1=axes[2,0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[2,0].set_title('Ground Level')
+    axes[2,0].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
+    axes[2,].set_ylim([opts_RMA1['ylim_min'], opts_RMA1['ylim_max']])
+    plt.colorbar(pcm1, ax=axes[2,0],label='(dBZ)')
+    # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
+    contorno89 = axes[2,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
+    axes[2,0].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
+    axes[2,0].set_ylim([opts_RMA1['ylim_min'], opts_RMA1['ylim_max']])
+    # Add labels:
+    labels = ["PCT 89-GHz 200 K contour"] 
+    for i in range(len(labels)):
+        contorno89.collections[i].set_label(labels[i])
+    # Titles and legend:
+    axes[2,0].set_title(r'RMA1 Zh (03/08/2019 0240UTC), Elev: 0.7$^{o}$')
+    axes[2,0].legend(loc='upper left')
+    # RADAR RINGS	      
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[2,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    CurvedText(
+            x = lon_radius[25000:],
+            y = lat_radius[25000:],
+            text='50 km',#'this this is a very, very long text',
+            va = 'top', axes=axes[2,0])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[2,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    CurvedText(
+            x = lon_radius[30000:],
+            y = lat_radius[30000:],
+            text='100 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[2,0])
+    if len(opts_RMA1['REPORTES_meta'])>0:
+        for ireportes in range(len(opts_RMA1['REPORTES_geo'])):
+            axes[2,0].plot( opts_RMA1['REPORTES_geo'][ireportes][1],  opts_RMA1['REPORTES_geo'][ireportes][0], 'D', 
+			   markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_RMA1['REPORTES_meta'][ireportes])
+
+    # ---- PCT ---------------------------------------------------------------
+    im = axes[2,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
+    axes[2,1].set_title('PCT 89-GHz')
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[2,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[2,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    contorno89 = axes[2,1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
+    for i in range(len(opts_RMA1['lon_pfs'])):
+        axes[2,1].plot(opts_RMA1['lon_pfs'][i], opts_RMA1['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)	
+    if len(opts_RMA1['REPORTES_meta'])>0:
+        for ireportes in range(len(opts_RMA1['REPORTES_geo'])):
+            axes[2,1].plot( opts_RMA1['REPORTES_geo'][ireportes][1],  opts_RMA1['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, 
+			   label=opts_RMA1['REPORTES_meta'][ireportes])
+    axes[2,1].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
+    axes[2,1].set_ylim([opts_RMA1['ylim_min'], opts_RMA1['ylim_max']])	
+    plt.colorbar(im, ax=axes[2,1],label='(K)')
+    # ---- in both:
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    for itrans in opts_RMA1['transects']:
+        target_azimuth = azimuths[itrans]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect     = lons[filas,:]
+        lat_transect     = lats[filas,:]
+        axes[2,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        axes[2,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+
+	
+    # CASO 20200815 #----------------------------------------------------
+    fname = gmi_dir+opts_RMA5['gfile']
+    #
+    f = h5py.File( fname, 'r')
+    tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
+    lon_gmi = f[u'/S1/Longitude'][:,:] 
+    lat_gmi = f[u'/S1/Latitude'][:,:]
+    tb_s2_gmi = f[u'/S2/Tb'][:,:,:]           
+    lon_s2_gmi = f[u'/S2/Longitude'][:,:] 
+    lat_s2_gmi = f[u'/S2/Latitude'][:,:]
+    f.close()
+    S1_sub_lat  = lat_gmi.copy()
+    S1_sub_lon  = lon_gmi.copy()
+    S1_sub_tb   = tb_s1_gmi.copy()
+    S2_sub_tb   = tb_s2_gmi.copy()
+    S2_sub_lat  = lat_s2_gmi.copy()
+    S2_sub_lon  = lon_s2_gmi.copy()	
+    # Tambien se puenden hacer recortes guardando los indices. ejemplo para S1: 
+    idx1 = (lat_gmi>=opts_RMA5['ylim_min']-5) & (lat_gmi<=opts_RMA5['ylim_max']+5) & (lon_gmi>=opts_RMA5['xlim_min']-5) & (lon_gmi<=opts_RMA5['xlim_max']+5)
+    idx2 = (lat_s2_gmi>=opts_RMA5['ylim_min']-5) & (lat_s2_gmi<=opts_RMA5['ylim_max']+5) & (lon_s2_gmi>=opts_RMA5['xlim_min']-5) & (lon_s2_gmi<=opts_RMA5['xlim_max']+5)
+    S1_sub_lat = np.where(idx1 != False, S1_sub_lat, np.nan) 
+    S1_sub_lon = np.where(idx1 != False, S1_sub_lon, np.nan) 
+    S2_sub_lat = np.where(idx2 != False, S2_sub_lat, np.nan) 
+    S2_sub_lon = np.where(idx2 != False, S2_sub_lon, np.nan) 
+    for i in range(tb_s1_gmi.shape[2]):
+        S1_sub_tb[:,:,i]  = np.where(np.isnan(S1_sub_lon) != 1, tb_s1_gmi[:,:,i], np.nan)	
+    for i in range(tb_s2_gmi.shape[2]):
+        S2_sub_tb[:,:,i]  = np.where(np.isnan(S2_sub_lon) != 1, tb_s2_gmi[:,:,i], np.nan)	
+    PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
+
+    # ---- ZH ---------------------------------------------------------------
+    radar = pyart.io.read(r_dir+opts_RMA5['rfile'])
+    nlev = 0
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    reflectivity_name = 'DBZH'   
+    lats        = radar.gate_latitude['data'][start_index:end_index]
+    lons        = radar.gate_longitude['data'][start_index:end_index]
+    ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
+    ZH[np.where(ZH<20)]=np.nan
+    #
+    pcm1=axes[3,0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
+    axes[3,0].set_title('Ground Level')
+    axes[3,0].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
+    axes[3,0].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])
+    plt.colorbar(pcm1, ax=axes[3,0],label='(dBZ)')
+    # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
+    contorno89 = axes[3,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
+    axes[3,0].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
+    axes[3,0].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])
+    # Add labels:
+    labels = ["PCT 89-GHz 200 K contour"] 
+    for i in range(len(labels)):
+        contorno89.collections[i].set_label(labels[i])
+    # Titles and legend:
+    axes[3,0].set_title(r'Rma5 Zh (15/08/2020 0109UTC), Elev: 0.7$^{o}$')
+    axes[3,0].legend(loc='upper left')
+    # RADAR RINGS	      
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[3,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    CurvedText(
+            x = lon_radius[25000:],
+            y = lat_radius[25000:],
+            text='50 km',#'this this is a very, very long text',
+            va = 'top', axes=axes[3,0])
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[3,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
+    CurvedText(
+            x = lon_radius[30000:],
+            y = lat_radius[30000:],
+            text='100 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[3,0])
+    if len(opts_RMA5['REPORTES_meta'])>0:
+        for ireportes in range(len(opts_RMA5['REPORTES_geo'])):
+            axes[3,0].plot( opts_RMA5['REPORTES_geo'][ireportes][1],  opts_RMA5['REPORTES_geo'][ireportes][0], 'D', 
+			   markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_RMA5['REPORTES_meta'][ireportes])
+
+    # ---- PCT ---------------------------------------------------------------
+    im = axes[3,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
+    axes[3,1].set_title('PCT 89-GHz')
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    axes[3,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[3,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    contorno89 = axes[3,1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
+    for i in range(len(opts_RMA5['lon_pfs'])):
+        axes[3,1].plot(opts_RMA5['lon_pfs'][i], opts_RMA5['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", 
+		       markeredgecolor='black', markeredgewidth=1.5)	
+    if len(opts_RMA5['REPORTES_meta'])>0:
+        for ireportes in range(len(opts_RMA5['REPORTES_geo'])):
+            axes[3,1].plot( opts_RMA5['REPORTES_geo'][ireportes][1],  opts_RMA5['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', 
+			   markerfacecolor='none', markersize=10, label=opts_RMA5['REPORTES_meta'][ireportes])
+    axes[3,1].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
+    axes[3,1].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])	
+    plt.colorbar(im, ax=axes[1,1],label='(K)')
+    # ---- in both:
+    azimuths = radar.azimuth['data'][start_index:end_index]
+    for itrans in opts_RMA5['transects']:
+        target_azimuth = azimuths[itrans]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+        lon_transect     = lons[filas,:]
+        lat_transect     = lats[filas,:]
+        axes[3,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        axes[3,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+
+	
+	
+	
+	
+    axes[3,1].set_xlabel('Longitude')
+    axes[3,1].set_ylabel('Latitude')	
 	
     return
 	
-	
+
+
+        target_azimuth = azimuths[azi_oi[iz]]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()	 # <==== ?????
 	
 	
 	
@@ -5490,17 +5676,56 @@ def main_fig5():
     reportes_granizo_twitterAPI_meta = [['0320UTC'],['0100']]
     opts_DOW7 = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0, 'caso':'20181214',
 	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0,
-	     'radar_name':'DOW7', 'era5_file': era5_file,'alternate_azi':[30], 'ZDRoffset': 0, 'transects': [205],
+	     'radar_name':'DOW7', 'era5_file': era5_file,'alternate_azi':[30], 'ZDRoffset': 0, 'transects': [270],
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	     'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
 	   'icoi_PHAIL': [15], 'files_list':files_list, 'xlims_xlims_input' : [80], 'xlims_mins_input' : [20]}
     del lon_pfs, lat_pfs, phail, rfile, gfile, era5_file, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta
 
-	
-	
+    # RMA1
+    lon_pfs  = [-63.74]
+    lat_pfs  = [-30.75]
+    time_pfs = ['0204UTC']
+    phail    = [0.895]
+    rfile    = 'cfrad.20190308_024050.0000_to_20190308_024731.0000_RMA1_0301_01.nc'
+    gfile     = '1B.GPM.GMI.TB2016.20190308-S004613-E021846.028537.V05A.HDF5'
+    era5_file = '20190308_02_RMA1.grib'
+    reportes_granizo_twitterAPI_geo = [[]]
+    reportes_granizo_twitterAPI_meta = []
+    opts_RMA1 = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
+    	    'ZDRoffset': 0.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
+    	    'window_calc_KDP': 7, 'era5_file': era5_file, 'azimuth_ray': 50,
+    	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 'transects': [270],
+    	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+    	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+     	   'icoi_PHAIL': [3], 'radar_name':'RMA1', 'xlims_xlims_input' : [200], 'xlims_mins_input' : [0]}
+    del lon_pfs, lat_pfs, phail, rfile, gfile, era5_file, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta
 
-    run_general_paper_Figure_FIG5(opts_cspr2, opts_DOW7)
+
+    # rma5		
+    lon_pfs  = [ -54.11 ]
+    lat_pfs  = [ -25.28 ]
+    time_pfs = ['0215UTC']
+    phail    = [ 0.725 ]
+    rfile    = 'cfrad.20200815_021618.0000_to_20200815_021906.0000_RMA5_0200_02.nc' 
+    gfile    = '1B.GPM.GMI.TB2016.20200815-S015947-E033219.036720.V05A.HDF5'
+    era5_file = '20200815_02.grib'
+    reportes_granizo_twitterAPI_geo = [[-25.93, -54.57], [-27.03, -55.24], [-25.62, -53.77], [-26.07,-53.05],
+				       [-25.67,-53.81],[-25.66,-53.55],[-26.24,-52.71],[-25.28,-53.95]] 
+    reportes_granizo_twitterAPI_meta = ['Wanda', 'Jardin de America', '','','','','','']
+    opts_RMA5 = {'xlim_min': -55.0, 'xlim_max': -52.0, 'ylim_min': -27.5, 'ylim_max': -25.0, 
+	    'ZDRoffset': 2, 'rfile': 'RMA5/'+rfile, 'gfile': gfile, 'azimuth_ray': 50,
+	    'window_calc_KDP': 7, 'era5_file': era5_file,
+	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20200815_RMA5/','transects': [331],
+    	    'alternate_azi':[331],'caso':'20200815',
+	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
+	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
+	   'icoi_PHAIL': [7], 'radar_name':'RMA5','xlims_xlims_input' : [190], 'xlims_mins_input' : [0]}
+    del lon_pfs, lat_pfs, phail, rfile, gfile, era5_file, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta
+
+	
+    run_general_paper_Figure_FIG5(opts_cspr2, opts_DOW7, [], opts_RMA5)
 	
 	
 	
