@@ -1027,6 +1027,15 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
             axes[0].plot(lon_pfs[i]-0.3, lat_pfs[i], marker='*', markersize=20, markerfacecolor="black",
             markeredgecolor='black', markeredgewidth=1.5)
             
+    elif caso == '20181214': 
+        axes[0].set_title(r'DOW7 Zh (14/12/2018 0220UTC), Elev: 0.7$^{o}$')
+        axes[0].legend(loc='upper left')
+        CurvedText(
+            x = lon_radius[30000:],
+            y = lat_radius[30000:],
+            text='50 km',#'this this is a very, very long text',
+            va = 'bottom', axes=axes[0])
+	
     elif caso == '20181111': 
         axes[0].set_title(r'CSPR2 Zh (11/11/2018 1300UTC), Elev: 0.7$^{o}$')
 
@@ -1094,9 +1103,9 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
 
     plt.legend()
     if options['radar_name'] == 'DOW7':
-	azimuths = radar.azimuth['data']
+       	azimuths = radar.azimuth['data']
     else:
-	azimuths = radar.azimuth['data'][start_index:end_index]
+       	azimuths = radar.azimuth['data'][start_index:end_index]
     # TRANSECTAS:
     for itrans in transects:
         target_azimuth = azimuths[itrans]
