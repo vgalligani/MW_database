@@ -5620,13 +5620,8 @@ def get_HIDoutput(options):
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
     figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[15,10])
-    target_azimuth = azimuths[options['alternate_azi'][0]]
+    target_azimuth = azimuths[options['azi_oi'][0]]
     filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
-    if options['radar_name'] == 'CSPR2':
-    	del filas
-        target_azimuth = azimuths[options['alternate_azi'][iz]]		
-        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
-        axescheck.plot(lons[filas,:], lats[filas,:],'-k')
     grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
     grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
     grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
@@ -5638,31 +5633,31 @@ def get_HIDoutput(options):
     grid_HID   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
     grid_KDP   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
 
-        # need to find x/y pair for each gate at the surface 
-        for i in range(lons[filas,:].shape[2]):	
-            # First, find the index of the grid point nearest a specific lat/lon.   
-            abslat = np.abs(gridded_radar.point_latitude['data'][0,:,:]  - lats[filas,i])
-            abslon = np.abs(gridded_radar.point_longitude['data'][0,:,:] - lons[filas,i])
-            c = np.maximum(abslon, abslat)
-            ([xloc], [yloc]) = np.where(c == np.min(c))	
-            grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
-            grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
-            grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
-            #grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
-            grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
-            grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
-            grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
-            grid_alt[:,i]   = gridded_radar.z['data'][:]
-            x               = gridded_radar.point_x['data'][:,xloc,yloc]
-            y               = gridded_radar.point_y['data'][:,xloc,yloc]
-            z               = gridded_radar.point_z['data'][:,xloc,yloc]
-            grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
-            grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
-            #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
-            # CALCUALTE HID FROM THESE GRIDDED FIELDS:
-            scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+    # need to find x/y pair for each gate at the surface 
+    for i in range(lons[filas,:].shape[2]):	
+        # First, find the index of the grid point nearest a specific lat/lon.   
+        abslat = np.abs(gridded_radar.point_latitude['data'][0,:,:]  - lats[filas,i])
+        abslon = np.abs(gridded_radar.point_longitude['data'][0,:,:] - lons[filas,i])
+        c = np.maximum(abslon, abslat)
+        ([xloc], [yloc]) = np.where(c == np.min(c))	
+        grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
+        grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
+        grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+        #grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+        grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
+        grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
+        grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
+        grid_alt[:,i]   = gridded_radar.z['data'][:]
+        x               = gridded_radar.point_x['data'][:,xloc,yloc]
+        y               = gridded_radar.point_y['data'][:,xloc,yloc]
+        z               = gridded_radar.point_z['data'][:,xloc,yloc]
+        grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
+        grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
+        #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
+        # CALCUALTE HID FROM THESE GRIDDED FIELDS:
+        scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
 					    use_temp=True, band='C', T=gridded_radar.fields['sounding_temperature']['data'][:,xloc,yloc])
-            grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
+        grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
 
         ni = grid_HID.shape[0]
         nj = grid_HID.shape[1]
