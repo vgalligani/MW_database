@@ -4201,8 +4201,7 @@ def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
 
     if options['radar_name'] == 'DOW7':
-	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/',options['era5_file'], 
-								options['lat_pfs'], options['lon_pfs']) 
+	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/',options['era5_file'],options['lat_pfs'], options['lon_pfs']) 
         radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
         radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
 		
@@ -5217,7 +5216,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     plt.colorbar(im, ax=axes[0,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]	
-    for itrans in opts_cspr2['transects']:
+    for itrans in opts_CSPR2['transects']:
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
@@ -5270,8 +5269,6 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     plt.colorbar(pcm1, ax=axes[1,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[1,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
-    axes[1,0].set_xlim([opts_DOW7['xlim_min'], opts_DOW7['xlim_max']])
-    axes[1,0].set_ylim([opts_DOW7['ylim_min'], opts_DOW7['ylim_max']])
     # Add labels:
     labels = ["PCT 89-GHz 200 K contour"] 
     for i in range(len(labels)):
@@ -5298,7 +5295,6 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
         for ireportes in range(len(opts_DOW7['REPORTES_geo'])):
             axes[1,0].plot( opts_DOW7['REPORTES_geo'][ireportes][1],  opts_DOW7['REPORTES_geo'][ireportes][0], 'D', 
 			   markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_DOW7['REPORTES_meta'][ireportes])
-    axes[1,0].plot(opts_DOW7['lon_pfs'][0], opts_DOW7['lat_pfs'][0], marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)
     # ---- PCT ---------------------------------------------------------------
     im = axes[1,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=150, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
     axes[1,1].set_title('PCT 89-GHz')
@@ -5308,10 +5304,10 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     contorno89 = axes[1,1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
     print(opts_DOW7['lat_pfs'])
-    
 
-    axes[1,1].plot(opts_DOW7['lon_pfs'][0], opts_DOW7['lat_pfs'][0], marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)	
-        
+
+    axes[1,1].plot(opts_DOW7['lon_pfs'][0]-1, opts_DOW7['lat_pfs'][0]+0.5, marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)	
+    axes[1,0].plot(opts_DOW7['lon_pfs'][0]-1, opts_DOW7['lat_pfs'][0]+0.5, marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)
 
     if len(opts_DOW7['REPORTES_meta'])>0:
         for ireportes in range(len(opts_DOW7['REPORTES_geo'])):
@@ -5330,7 +5326,8 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
         axes[1,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
     # CASO 20190308 #----------------------------------------------------
-    fname = gmi_dir+opts_RMA1['gfile']
+    del fname
+    fname = gmi_dir+opts_RMA1['gfile'][0]
     #
     f = h5py.File( fname, 'r')
     tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
@@ -5639,7 +5636,7 @@ def main_fig5():
     del lon_pfs, lat_pfs, phail, rfile, gfile, era5_file, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta
 
 	
-    run_general_paper_Figure_FIG5(opts_cspr2, opts_DOW7, [], opts_RMA5)
+    run_general_paper_Figure_FIG5(opts_cspr2, opts_DOW7, opts_RMA1, opts_RMA5)
 	
 	
 	
