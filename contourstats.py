@@ -5264,7 +5264,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[1,0].set_title('Ground Level')
     axes[1,0].set_xlim([opts_DOW7['xlim_min'], opts_DOW7['xlim_max']])
     axes[1,0].set_ylim([opts_DOW7['ylim_min'], opts_DOW7['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[1,0],label='Zh (dBZ)')
+    # plt.colorbar(pcm1, ax=axes[1,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[1,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
     # Add labels:
@@ -5312,7 +5312,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
             axes[1,1].plot( opts_DOW7['REPORTES_geo'][ireportes][1],  opts_DOW7['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_DOW7['REPORTES_meta'][ireportes])
     axes[1,1].set_xlim([opts_DOW7['xlim_min'], opts_DOW7['xlim_max']])
     axes[1,1].set_ylim([opts_DOW7['ylim_min'], opts_DOW7['ylim_max']])	
-    plt.colorbar(im, ax=axes[1,1],label='(K)')
+    # plt.colorbar(im, ax=axes[1,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data']
     for itrans in opts_DOW7['transects']:
@@ -5369,7 +5369,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[2,0].set_title('Ground Level')
     axes[2,0].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
     axes[2,0].set_ylim([opts_RMA1['ylim_min'], opts_RMA1['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[2,0],label='Zh (dBZ)')
+    # plt.colorbar(pcm1, ax=axes[2,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[2,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
     axes[2,0].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
@@ -5419,7 +5419,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 			   label=opts_RMA1['REPORTES_meta'][ireportes])
     axes[2,1].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
     axes[2,1].set_ylim([opts_RMA1['ylim_min'], opts_RMA1['ylim_max']])	
-    plt.colorbar(im, ax=axes[2,1],label='(K)')
+    # plt.colorbar(im, ax=axes[2,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
     for itrans in opts_RMA1['transects']:
@@ -5476,7 +5476,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[3,0].set_title('Ground Level')
     axes[3,0].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
     axes[3,0].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[3,0],label='Zh (dBZ)')
+    # plt.colorbar(pcm1, ax=axes[3,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[3,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
     axes[3,0].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
@@ -5527,7 +5527,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 			   markerfacecolor='none', markersize=10, label=opts_RMA5['REPORTES_meta'][ireportes])
     axes[3,1].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
     axes[3,1].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])	
-    plt.colorbar(im, ax=axes[3,1],label='(K)')
+    # plt.colorbar(im, ax=axes[3,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
     for itrans in opts_RMA5['transects']:
