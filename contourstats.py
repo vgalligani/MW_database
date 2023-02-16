@@ -5889,8 +5889,8 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     #pm1    = axes[0].get_position().get_points().flatten()
     #p_last = axes[0].get_position().get_points().flatten(); 
     #ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
-    cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
-    cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    #cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+    #cbar = adjust_fhc_colorbar_for_pyart(cbar)
 		      
     [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
     im_HID = axes[3].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
