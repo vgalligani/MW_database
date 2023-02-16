@@ -5543,7 +5543,174 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[3,0].set_ylabel('Latitude')	
 
     return
+#----------------------------------------------------------------------------------------------
 
+def get_HIDoutput(options):
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+    radar = pyart.io.read(r_dir+options['rfile'])
+    azi_oi = options['azi_oi']
+    if options['radar_name'] == 'RMA1':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+
+    if options['radar_name'] == 'RMA5':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+
+    if options['radar_name'] == 'DOW7':
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
+
+    if options['radar_name'] == 'CSPR2':
+    	print('falta CSPR2')
+
+    if 'TH' in radar.fields.keys():  
+            THname= 'TH'
+            TVname= 'TV'
+            KDPname='corrKDP'
+            RHOHVname = 'RHOHV'
+    elif 'DBZHCC' in radar.fields.keys():        
+           THname = 'DBZHCC'
+           KDPname='corrKDP'
+    elif 'corrected_reflectivity' in radar.fields.keys():        
+           TH   = 'corrected_reflectivity'
+           ZDRname =  'corrected_differential_reflectivity'
+           RHOHVname = 'copol_correlation_coeff'       
+           PHIname = 'filtered_corrected_differential_phase'       
+           KDPname = 'filtered_corrected_specific_diff_phase'
+           THname =  'corrected_reflectivity'
+    elif 'DBZH' in radar.fields.keys():        
+           THname = 'DBZH'
+           KDPname ='corrKDP'
+           TVname   = 'DBZV'  
+           RHOHVname   = 'RHOHV'  
+
+    nlev = 0 
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats        = radar.gate_latitude['data'][start_index:end_index]
+    lons        = radar.gate_longitude['data'][start_index:end_index]
+    azimuths    = radar.azimuth['data'][start_index:end_index]
+
+    for iz in range(len(azi_oi)):
+        target_azimuth = azimuths[options['alternate_azi'][iz]]
+        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
+        if options['radar_name'] == 'CSPR2':
+            del filas
+            target_azimuth = azimuths[options['alternate_azi'][iz]]		
+            filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
+            axescheck.plot(lons[filas,:], lats[filas,:],'-k')
+        grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
+        grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
+        grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
+        grid_TVTV  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
+        grid_ZDR   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
+        grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
+        grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
+        grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
+        grid_HID   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
+        grid_KDP   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
+
+        # need to find x/y pair for each gate at the surface 
+        for i in range(lons[filas,:].shape[2]):	
+            # First, find the index of the grid point nearest a specific lat/lon.   
+            abslat = np.abs(gridded_radar.point_latitude['data'][0,:,:]  - lats[filas,i])
+            abslon = np.abs(gridded_radar.point_longitude['data'][0,:,:] - lons[filas,i])
+            c = np.maximum(abslon, abslat)
+            ([xloc], [yloc]) = np.where(c == np.min(c))	
+            grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
+            grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
+            grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+            #grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+            grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
+            grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
+            grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
+            grid_alt[:,i]   = gridded_radar.z['data'][:]
+            x               = gridded_radar.point_x['data'][:,xloc,yloc]
+            y               = gridded_radar.point_y['data'][:,xloc,yloc]
+            z               = gridded_radar.point_z['data'][:,xloc,yloc]
+            grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
+            grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
+            #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
+            # CALCUALTE HID FROM THESE GRIDDED FIELDS:
+            scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+					    use_temp=True, band='C', T=gridded_radar.fields['sounding_temperature']['data'][:,xloc,yloc])
+            grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
+
+        ni = grid_HID.shape[0]
+        nj = grid_HID.shape[1]
+        for i in range(ni):
+            rho_h = grid_RHO[i,:]
+            zh_h = grid_THTH[i,:]
+            for j in range(nj):
+                if (rho_h[j]<0.7) or (zh_h[j]<10):
+                    grid_THTH[i,j]  = np.nan
+                    grid_TVTV[i,j]  = np.nan
+                    grid_RHO[i,j]  = np.nan	
+                    grid_ZDR[i,j]  = np.nan
+                    grid_HID[i,j]  = np.nan
+        gc.collect()
+        return grid_HID, grid_lon, grid_lat
+#----------------------------------------------------------------------------------------------     
+def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
+
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12  
+		  
+    [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_CSPR2) #, opts_DOW7, opts_RMA1, opts_RMA5
+		  
+    #---- plot hid ppi  
+    hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
+                'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)	  
+		  
+    # ---- FIGFIG --------------------------------------------------------------- HIDs! 
+    fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,figsize=[3,11])	
+						   
+    im_HID = axes[0].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[0].set_title('TITLE1') 
+    axes[0].set_xlim([xlims_xlims_mins[1],xlims_xlims[1]])
+    axes[0].set_ylim([0,15])
+    pm1    = axes[0].get_position().get_points().flatten()
+    p_last = axes[0].get_position().get_points().flatten(); 
+    ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
+    cbar    = fig.colorbar(im_HID,  cax=ax_cbar, shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+    cbar = adjust_fhc_colorbar_for_pyart(cbar)
+	
+
+    return
 #----------------------------------------------------------------------------------------------     
 #----------------------------------------------------------------------------------------------     
 def main_fig5():
@@ -5562,7 +5729,7 @@ def main_fig5():
     reportes_granizo_twitterAPI_geo = [[]]
     reportes_granizo_twitterAPI_meta = []
     opts_cspr2 = {'xlim_min': -65, 'xlim_max': -63.6, 'ylim_min': -32.6, 'ylim_max': -31.5, 
-	    'azimuth_ray': 0,
+	    'azimuth_ray': 0,'azi_oi':[205],
 	    'rfile': 'CSPR2_data/'+rfile, 
    	    'era5_file': era5_file,'caso':'20181111',
 	    'gfile': gfile,
@@ -5584,7 +5751,7 @@ def main_fig5():
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
     reportes_granizo_twitterAPI_meta = [['0320UTC'],['0100']]
     opts_DOW7 = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0, 'caso':'20181214',
-	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0,
+	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0, 'azi_oi':[270],
 	     'radar_name':'DOW7', 'era5_file': era5_file,'alternate_azi':[30], 'ZDRoffset': 0, 'transects': [270],
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
