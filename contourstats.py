@@ -5051,7 +5051,6 @@ def colormaps(variable):
     if variable == 'dv':
        return cmap_nws_dv
 
-
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------     
 def get_median(y, x, tbvbin):
@@ -5066,6 +5065,180 @@ def get_median(y, x, tbvbin):
     del counts, xedges, yedges
     plt.close()
     return [running_median]
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+def stack_ppis(radar, files_list, options, freezing_lev, radar_T, tfield_ref, alt_ref): 
+	
+    #- HERE MAKE PPIS SIMILAR TO RMA1S ... ? to achive the gridded field ... 
+    #- Radar sweep
+    lats0        = radar.gate_latitude['data']
+    lons0        = radar.gate_longitude['data']
+    azimuths     = radar.azimuth['data']
+    #
+    Ze     = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); Ze[:]=np.nan
+    ZDR    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); ZDR[:]=np.nan
+    lon    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lon[:]=np.nan
+    lat    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); lat[:]=np.nan
+    RHO    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); RHO[:]=np.nan
+    PHIDP  = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); PHIDP[:]=np.nan
+    HID    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); HID[:]=np.nan
+    KDP    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); KDP[:]=np.nan
+    approx_altitude = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); approx_altitude[:]=np.nan
+    #gate_range      = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); gate_range[:]=np.nan
+    alt_43aproox    = np.zeros( [len(files_list), lats0.shape[0], lats0.shape[1] ]); alt_43aproox[:]=np.nan
+    #
+    gate_range      = np.zeros( [len(files_list), lats0.shape[1] ]); gate_range[:]=np.nan
+    azy   = np.zeros( [len(files_list), lats0.shape[0] ]); azy[:]=np.nan
+    fixed_angle     = np.zeros( [len(files_list)] ); fixed_angle[:]=np.nan
+    #
+    nlev = 0
+    for file in files_list:
+        if 'low_v176' in file:
+            radar   = pyart.io.read('/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/DOW7/'+file) 
+            fixed_angle[nlev] = radar.fixed_angle['data'].data[0]
+            azy[nlev,:]  = radar.azimuth['data']
+            ZHZH    = radar.fields['DBZHCC']['data']
+            TV      = radar.fields['DBZVCC']['data']   
+            ZDRZDR  = radar.fields['ZDRC']['data']      
+            RHORHO  = radar.fields['RHOHV']['data']
+            KDPKDP  = radar.fields['KDP']['data']  	
+            PHIPHI  = radar.fields['PHIDP']['data']   
+            #
+            radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+            radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+            dzh_  = radar.fields['DBZHCC']['data'].copy()
+            dzv_  = radar.fields['DBZVCC']['data'].copy()
+            dZDR  = radar.fields['ZDRC']['data'].copy()
+            drho_ = radar.fields['RHOHV']['data'].copy()
+            dkdp_ = radar.fields['KDP']['data'].copy()
+            dphi_ = radar.fields['PHIDP']['data'].copy()
+            # Filters
+            ni = dzh_.shape[0]
+            nj = dzh_.shape[1]
+            for i in range(ni):
+                rho_h = drho_[i,:]
+                zh_h = dzh_[i,:]
+                for j in range(nj):
+                    if (rho_h[j]<0.7) or (zh_h[j]<30):
+                        dzh_[i,j]  = np.nan
+                        dzv_[i,j]  = np.nan
+                        drho_[i,j]  = np.nan
+                        dkdp_[i,j]  = np.nan
+                        dphi_[i,j]  = np.nan
+            scores = csu_fhc.csu_fhc_summer(dz=dzh_, zdr=dZDR - options['ZDRoffset'], rho=drho_, kdp=dkdp_, use_temp=True, band='C', T=radar_T)            
+            HIDHID = np.argmax(scores, axis=0) + 1 
+	    #
+            gateZ    = radar.gate_z['data']
+            gateX    = radar.gate_x['data']
+            gateY    = radar.gate_y['data']
+            gates_range  = np.sqrt(gateX**2 + gateY**2 + gateZ**2)
+            #
+            lats        = radar.gate_latitude['data']
+            lons        = radar.gate_longitude['data']	     
+		
+            #------- aca hay que stack correctamente por azimuths? 
+            for TransectNo in range(lats0.shape[0]): 
+                [xgate, ygate, zgate]    = pyart.core.antenna_to_cartesian(gates_range[TransectNo,:]/1e3, azimuths[TransectNo], np.double(    file[41:45]) );       
+                Ze[nlev,TransectNo,:]    = dzh_[TransectNo,:]
+                ZDR[nlev,TransectNo,:]   = dZDR[TransectNo,:]  
+                RHO[nlev,TransectNo,:]   = drho_[TransectNo,:]
+                PHIDP[nlev,TransectNo,:] = dphi_[TransectNo,:]
+                HID[nlev,TransectNo,:]   = HIDHID[TransectNo,:] 
+                KDP[nlev,TransectNo,:]   = dkdp_[TransectNo,:]
+                lon[nlev,TransectNo,:]   = lons[TransectNo,:]   
+                lat[nlev,TransectNo,:]   = lats[TransectNo,:] 
+
+            nlev = nlev + 1
+	
+    # From https://arm-doe.github.io/pyart/notebooks/basic_ingest_using_test_radar_object.html	
+    radar_stack = pyart.testing.make_empty_ppi_radar(lat.shape[2], lat.shape[1], lat.shape[0])
+    # Start filling the radar attributes with variables in the dataset.
+    radar_stack.latitude['data']    = np.array([radar.latitude['data'][0]])
+    radar_stack.longitude['data']   = np.array([radar.longitude['data'][0]])
+    radar_stack.range['data']       = np.array( radar.range['data'][:] )
+    radar_stack.fixed_angle['data'] = np.array( fixed_angle )
+    azi_all = []
+    rays_per_sweep = []
+    raye_per_sweep = []
+    rayN = 0
+    elev = np.zeros( [azy.shape[0]*azy.shape[1]] ); elev[:]=np.nan  
+    for i in range(azy.shape[0]):
+        rays_per_sweep.append(rayN)
+        rayN = rayN + azy.shape[1]
+        raye_per_sweep.append(rayN-1)
+        for j in range(azy.shape[1]):
+            azi_all.append(  azy[i,j] ) 
+    ii = 0
+    for i in range(azy.shape[0]):
+        for j in range(azy.shape[1]):
+            elev[ii] = fixed_angle[i]
+            ii=ii+1
+    radar_stack.azimuth['data'] = np.array( azi_all ) 
+    radar_stack.sweep_number['data'] = np.array(  np.arange(0,nlev,1) )
+    radar_stack.sweep_start_ray_index['data'] = np.array( rays_per_sweep )
+    radar_stack.sweep_end_ray_index['data']   = np.array( raye_per_sweep )
+    radar_stack.altitude['data']        = [ radar.altitude['data'][0] ]
+    # elevation is theta too. 
+    radar_stack.elevation['data'] = elev
+    radar_stack.init_gate_altitude()
+    radar_stack.init_gate_longitude_latitude()
+
+    #plt.plot(radar_stack.gate_longitude['data'], radar_stack.gate_latitude['data'], 'ok') 
+    # Let's work on the field data, we will just do reflectivity for now, but any of the
+    # other fields can be done the same way and added as a key pair in the fields dict.
+    from pyart.config import get_metadata
+    Ze_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); Ze_all[:]=np.nan  
+    ZDR_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); ZDR_all[:]=np.nan  
+    RHOHV_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); RHOHV_all[:]=np.nan  
+    PHIDP_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); PHIDP_all[:]=np.nan  
+    KDP_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); KDP_all[:]=np.nan  
+    HID_all = np.zeros( [azy.shape[0]*azy.shape[1], Ze.shape[2]] ); HID_all[:]=np.nan  
+    ii = 0
+    for i in range(azy.shape[0]):
+        for j in range(Ze.shape[1]):
+            Ze_all[ii,:]    = Ze[i,j,:]
+            ZDR_all[ii,:]   = ZDR[i,j,:]
+            RHOHV_all[ii,:] = RHO[i,j,:]
+            PHIDP_all[ii,:] = PHIDP[i,j,:]
+            KDP_all[ii,:] = KDP[i,j,:]
+            HID_all[ii,:] = HID[i,j,:]
+            ii=ii+1
+		
+    #- REFLECTIVITY 
+    ref_dict_ZH = get_metadata('DBZHCC')
+    ref_dict_ZH['data'] = np.array(Ze_all)
+ 
+    #- ZDR
+    ref_dict_ZDR = get_metadata('ZDRC')
+    ref_dict_ZDR['data'] = np.array(ZDR_all)
+
+    #- RHOHV
+    ref_dict_RHOHV = get_metadata('RHOHV')
+    ref_dict_RHOHV['data'] = np.array(RHOHV_all)
+
+    #- PHIDP
+    ref_dict_PHIDP = get_metadata('PHIDP')
+    ref_dict_PHIDP['data'] = np.array(PHIDP_all)
+    
+    #- KDP
+    ref_dict_KDP = get_metadata('KDP')
+    ref_dict_KDP['data'] = np.array(KDP_all)
+    
+    #- HID
+    ref_dict_HID = get_metadata('HID')
+    ref_dict_HID['data'] = np.array(HID_all)
+	
+    radar_stack.fields = {'DBZHCC': ref_dict_ZH, 
+			  'ZDRC':   ref_dict_ZDR,
+			  'RHOHV':  ref_dict_RHOHV,
+			  'PHIDP':  ref_dict_PHIDP,
+			  'KDP':    ref_dict_KDP,
+			  'HID':    ref_dict_HID}
+			  
+
+		
+    return radar_stack
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
@@ -5550,6 +5723,7 @@ def get_HIDoutput(options):
     radar = pyart.io.read(r_dir+options['rfile'])
     azi_oi = options['azi_oi']
     era5_file = options['era5_file']
+	
     if options['radar_name'] == 'RMA1':
         PHIORIG = radar.fields['PHIDP']['data'].copy() 
         mask = radar.fields['PHIDP']['data'].data.copy()    
@@ -5588,9 +5762,24 @@ def get_HIDoutput(options):
         alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], options['lat_pfs'], options['lon_pfs']) 
         radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
         radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
-
+        radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()	
+	
     if options['radar_name'] == 'CSPR2':
-    	print('falta CSPR2')
+       alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+       radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+       radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+       radar = add_43prop_field(radar)    
+       radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)	
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()	
 
     if 'TH' in radar.fields.keys():  
             THname= 'TH'
@@ -5695,7 +5884,7 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA1) #, opts_DOW7, opts_RMA1, opts_RMA5
     im_HID = axes[2].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[2].set_title('TITLE1') 
-    axes[2].set_xlim([opts_RMA1['xlims_mins_input'],opts_RMA1['xlims_xlims_input']])
+    axes[2].set_xlim([opts_RMA1['xlims_mins_input'][0],opts_RMA1['xlims_xlims_input'][0]])
     axes[2].set_ylim([0,15])
     #pm1    = axes[0].get_position().get_points().flatten()
     #p_last = axes[0].get_position().get_points().flatten(); 
@@ -5706,7 +5895,7 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
     im_HID = axes[3].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[3].set_title('TITLE1') 
-    axes[3].set_xlim([opts_RMA5['xlims_mins_input'],opts_RMA5['xlims_xlims_input']])
+    axes[3].set_xlim([opts_RMA5['xlims_mins_input'][0],opts_RMA5['xlims_xlims_input'][0]])
     axes[3].set_ylim([0,15])
     cbar    = fig.colorbar(im_HID,  axes[3], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
     cbar = adjust_fhc_colorbar_for_pyart(cbar)		      
@@ -5736,14 +5925,36 @@ def main_fig5():
 	    'gfile': gfile,
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
 	    'alternate_azi':[30], 'transects': [205],
-	    'ZDRoffset': 0,
+	    'ZDRoffset': 0,'azi_oi':[205],
     	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2', 'xlims_xlims_input' : [60], 'xlims_mins_input' : [20]}
     del lon_pfs, lat_pfs, phail, rfile, gfile, era5_file, reportes_granizo_twitterAPI_geo, reportes_granizo_twitterAPI_meta
 	
     # DOW		
-    lon_pfs  = [-63.11] # [-61.40] [-59.65]
+    files_list = ['cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc',
+		  'cfrad.20181214_022019_DOW7low_v176_s02_el1.98_SUR.nc',
+		  'cfrad.20181214_022031_DOW7low_v176_s03_el3.97_SUR.nc',
+		  'cfrad.20181214_022043_DOW7low_v176_s04_el5.98_SUR.nc',
+		  'cfrad.20181214_022055_DOW7low_v176_s05_el7.98_SUR.nc',
+		  'cfrad.20181214_022106_DOW7low_v176_s06_el9.98_SUR.nc',
+		  'cfrad.20181214_022118_DOW7low_v176_s07_el11.98_SUR.nc',
+		  'cfrad.20181214_022130_DOW7low_v176_s08_el13.99_SUR.nc',
+		  'cfrad.20181214_022142_DOW7low_v176_s09_el15.97_SUR.nc',
+		  'cfrad.20181214_022154_DOW7low_v176_s10_el17.97_SUR.nc',
+		  'cfrad.20181214_022206_DOW7low_v176_s11_el19.98_SUR.nc',	  
+		  'cfrad.20181214_022218_DOW7low_v176_s12_el21.98_SUR.nc',
+		  'cfrad.20181214_022230_DOW7low_v176_s13_el23.99_SUR.nc',
+		  'cfrad.20181214_022241_DOW7low_v176_s14_el25.98_SUR.nc',	  
+		  'cfrad.20181214_022253_DOW7low_v176_s15_el27.98_SUR.nc',
+		  'cfrad.20181214_022305_DOW7low_v176_s16_el29.98_SUR.nc',
+		  'cfrad.20181214_022317_DOW7low_v176_s17_el31.98_SUR.nc',
+		  'cfrad.20181214_022329_DOW7low_v176_s18_el33.98_SUR.nc',	    
+		  'cfrad.20181214_022341_DOW7low_v176_s19_el36.98_SUR.nc',
+		  'cfrad.20181214_022353_DOW7low_v176_s20_el40.97_SUR.nc',
+		  'cfrad.20181214_022405_DOW7low_v176_s21_el44.98_SUR.nc',
+		  'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']	
+	lon_pfs  = [-63.11] # [-61.40] [-59.65]
     lat_pfs  = [-31.90] # [-32.30] [-33.90]
     phail    = [0.967] # [0.998] [0.863]
     rfile = 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc' 
@@ -5752,7 +5963,7 @@ def main_fig5():
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
     reportes_granizo_twitterAPI_meta = [['0320UTC'],['0100']]
     opts_DOW7 = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0, 'caso':'20181214',
-	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0, 'azi_oi':[270],
+	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0, 'azi_oi':[300],  # [300, 273, 450]
 	     'radar_name':'DOW7', 'era5_file': era5_file,'alternate_azi':[30], 'ZDRoffset': 0, 'transects': [270],
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
