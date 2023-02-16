@@ -5069,6 +5069,7 @@ def get_median(y, x, tbvbin):
     return [running_median]
 
 #----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
 def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
@@ -5140,7 +5141,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
 
     # ---- FIGFIG ---------------------------------------------------------------
-    fig, axes = plt.subplots(nrows=4, ncols=2, constrained_layout=True,figsize=[10,4*5])
+    fig, axes = plt.subplots(nrows=4, ncols=2, constrained_layout=True,figsize=[8,11])
     # ---- ZH ---------------------------------------------------------------
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
     nlev = 0 
@@ -5159,7 +5160,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[0,0].set_title('Ground Level')
     axes[0,0].set_xlim([opts_CSPR2['xlim_min'], opts_CSPR2['xlim_max']])
     axes[0,0].set_ylim([opts_CSPR2['ylim_min'], opts_CSPR2['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[0,0],label='(dBZ)')
+    plt.colorbar(pcm1, ax=axes[0,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[0,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
     axes[0,0].set_xlim([opts_CSPR2['xlim_min'], opts_CSPR2['xlim_max']])
@@ -5169,8 +5170,8 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
     # Titles and legend:
-    axes[0,0].set_title(r'CSPR2 Zh (11/11/2018 1300UTC), Elev: 0.7$^{o}$')
-    axes[0,0].legend(loc='upper left')
+    axes[0,0].set_title(r'CSPR2 11/11/2018')
+    #axes[0,0].legend(loc='upper left')
     # RADAR RINGS	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
     axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
@@ -5191,7 +5192,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
             axes[0,0].plot( opts_CSPR2['REPORTES_geo'][ireportes][1],  opts_CSPR2['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_DOW7['REPORTES_meta'][ireportes])
 
     # ---- PCT ---------------------------------------------------------------
-    im = axes[0,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
+    im = axes[0,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=150, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
     axes[0,1].set_title('PCT 89-GHz')
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
     axes[0,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
@@ -5201,6 +5202,8 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     for i in range(len(opts_CSPR2['lon_pfs'])):
         axes[0,1].plot(opts_CSPR2['lon_pfs'][i], opts_CSPR2['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", 
 		       markeredgecolor='black', markeredgewidth=1.5)	
+        axes[0,0].plot(opts_CSPR2['lon_pfs'][i], opts_CSPR2['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", 
+		       markeredgecolor='black', markeredgewidth=1.5)		
     if len(opts_CSPR2['REPORTES_meta'])>0:
         for ireportes in range(len(opts_CSPR2['REPORTES_geo'])):
             axes[0,1].plot( opts_CSPR2['REPORTES_geo'][ireportes][1],  opts_CSPR2['REPORTES_geo'][ireportes][0], 'D', 
@@ -5264,7 +5267,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[1,0].set_title('Ground Level')
     axes[1,0].set_xlim([opts_DOW7['xlim_min'], opts_DOW7['xlim_max']])
     axes[1,0].set_ylim([opts_DOW7['ylim_min'], opts_DOW7['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[1,0],label='(dBZ)')
+    plt.colorbar(pcm1, ax=axes[1,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[1,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
     axes[1,0].set_xlim([opts_DOW7['xlim_min'], opts_DOW7['xlim_max']])
@@ -5274,8 +5277,8 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
     # Titles and legend:
-    axes[1,0].set_title(r'DOW7 Zh (14/12/2018 0220UTC), Elev: 0.7$^{o}$')
-    axes[1,0].legend(loc='upper left')
+    axes[1,0].set_title(r'DOW7 14/12/2018')
+    #axes[1,0].legend(loc='upper left')
     # RADAR RINGS	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
     axes[1,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
@@ -5295,17 +5298,21 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
         for ireportes in range(len(opts_DOW7['REPORTES_geo'])):
             axes[1,0].plot( opts_DOW7['REPORTES_geo'][ireportes][1],  opts_DOW7['REPORTES_geo'][ireportes][0], 'D', 
 			   markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_DOW7['REPORTES_meta'][ireportes])
-
+    axes[1,0].plot(opts_DOW7['lon_pfs'][0], opts_DOW7['lat_pfs'][0], marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)
     # ---- PCT ---------------------------------------------------------------
-    im = axes[1,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
+    im = axes[1,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=150, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
     axes[1,1].set_title('PCT 89-GHz')
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
     axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[1,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     contorno89 = axes[1,1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
-    for i in range(len(opts_DOW7['lon_pfs'])):
-        axes[1,1].plot(opts_DOW7['lon_pfs'][i], opts_DOW7['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)	
+    print(opts_DOW7['lat_pfs'])
+    
+
+    axes[1,1].plot(opts_DOW7['lon_pfs'][0], opts_DOW7['lat_pfs'][0], marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)	
+        
+
     if len(opts_DOW7['REPORTES_meta'])>0:
         for ireportes in range(len(opts_DOW7['REPORTES_geo'])):
             axes[1,1].plot( opts_DOW7['REPORTES_geo'][ireportes][1],  opts_DOW7['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_DOW7['REPORTES_meta'][ireportes])
@@ -5366,8 +5373,8 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     pcm1=axes[2,0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
     axes[2,0].set_title('Ground Level')
     axes[2,0].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
-    axes[2,].set_ylim([opts_RMA1['ylim_min'], opts_RMA1['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[2,0],label='(dBZ)')
+    axes[2,0].set_ylim([opts_RMA1['ylim_min'], opts_RMA1['ylim_max']])
+    plt.colorbar(pcm1, ax=axes[2,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[2,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
     axes[2,0].set_xlim([opts_RMA1['xlim_min'], opts_RMA1['xlim_max']])
@@ -5377,8 +5384,8 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
     # Titles and legend:
-    axes[2,0].set_title(r'RMA1 Zh (03/08/2019 0240UTC), Elev: 0.7$^{o}$')
-    axes[2,0].legend(loc='upper left')
+    axes[2,0].set_title(r'RMA1 03/08/2019')
+    #axes[2,0].legend(loc='lower left')
     # RADAR RINGS	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
     axes[2,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
@@ -5408,7 +5415,9 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[2,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     contorno89 = axes[2,1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
     for i in range(len(opts_RMA1['lon_pfs'])):
-        axes[2,1].plot(opts_RMA1['lon_pfs'][i], opts_RMA1['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)	
+        axes[2,0].plot(opts_RMA1['lon_pfs'][i], opts_RMA1['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)
+        axes[2,1].plot(opts_RMA1['lon_pfs'][i], opts_RMA1['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", 
+		       markeredgecolor='black', markeredgewidth=1.5)	
     if len(opts_RMA1['REPORTES_meta'])>0:
         for ireportes in range(len(opts_RMA1['REPORTES_geo'])):
             axes[2,1].plot( opts_RMA1['REPORTES_geo'][ireportes][1],  opts_RMA1['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, 
@@ -5426,7 +5435,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
         axes[2,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
         axes[2,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
-	
+
     # CASO 20200815 #----------------------------------------------------
     fname = gmi_dir+opts_RMA5['gfile']
     #
@@ -5472,7 +5481,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[3,0].set_title('Ground Level')
     axes[3,0].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
     axes[3,0].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])
-    plt.colorbar(pcm1, ax=axes[3,0],label='(dBZ)')
+    plt.colorbar(pcm1, ax=axes[3,0],label='Zh (dBZ)')
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[3,0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5); 
     axes[3,0].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
@@ -5482,8 +5491,9 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
     # Titles and legend:
-    axes[3,0].set_title(r'Rma5 Zh (15/08/2020 0109UTC), Elev: 0.7$^{o}$')
-    axes[3,0].legend(loc='upper left')
+    axes[3,0].set_title(r'RMA5 15/08/2020')
+    axes[3,0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.3),
+          fancybox=True, shadow=False, ncol=1)
     # RADAR RINGS	      
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
     axes[3,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
@@ -5513,6 +5523,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[3,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     contorno89 = axes[3,1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
     for i in range(len(opts_RMA5['lon_pfs'])):
+        axes[3,0].plot(opts_RMA5['lon_pfs'][i], opts_RMA5['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", markeredgecolor='black', markeredgewidth=1.5)
         axes[3,1].plot(opts_RMA5['lon_pfs'][i], opts_RMA5['lat_pfs'][i]-0.05, marker='*', markersize=20, markerfacecolor="black", 
 		       markeredgecolor='black', markeredgewidth=1.5)	
     if len(opts_RMA5['REPORTES_meta'])>0:
@@ -5521,7 +5532,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 			   markerfacecolor='none', markersize=10, label=opts_RMA5['REPORTES_meta'][ireportes])
     axes[3,1].set_xlim([opts_RMA5['xlim_min'], opts_RMA5['xlim_max']])
     axes[3,1].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])	
-    plt.colorbar(im, ax=axes[1,1],label='(K)')
+    plt.colorbar(im, ax=axes[3,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
     for itrans in opts_RMA5['transects']:
@@ -5532,110 +5543,13 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
         axes[3,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
         axes[3,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
-	
-	
-	
-	
-    axes[3,1].set_xlabel('Longitude')
-    axes[3,1].set_ylabel('Latitude')	
-	
+
+    axes[3,0].set_xlabel('Longitude')
+    axes[3,0].set_ylabel('Latitude')	
+
     return
-	
 
-
-        target_azimuth = azimuths[azi_oi[iz]]
-        filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()	 # <==== ?????
-	
-	
-	
-
-	
-	
-	
-	
-	
-	
-
-    if caso == '20200815': 
-        axes[0].set_title(r'RMA5 Zh (15/8/2018 0216UTC), Elev: 0.7$^{o}$')
-        axes[0].legend(loc='lower left')
-        CurvedText(
-           	x = lon_radius[19000:],
-           	y = lat_radius[19000:],
-           	text='100 km',#'this this is a very, very long text',
-           	va = 'bottom', axes=axes[0])
-        # Addlabels to icois! 
-        axes[0].text(-54.9, -25.2, 'coi=1')
-        axes[0].text(-53.4, -25.5, 'coi=2')
-        axes[0].set_xlabel('Longitude')
-        axes[0].set_ylabel('Latitude')
-        for i in range(len(lon_pfs)):
-            axes[0].plot(lon_pfs[i]-0.3, lat_pfs[i], marker='*', markersize=20, markerfacecolor="black",
-            markeredgecolor='black', markeredgewidth=1.5)
-            
-    elif caso == '20181214': 
-        axes[0].set_title(r'DOW7 Zh (14/12/2018 0220UTC), Elev: 0.7$^{o}$')
-        axes[0].legend(loc='upper left')
-        CurvedText(
-            x = lon_radius[30000:],
-            y = lat_radius[30000:],
-            text='50 km',#'this this is a very, very long text',
-            va = 'bottom', axes=axes[0])
-	
-
-    elif caso == '20180208': 
-        axes[0].set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
-        axes[0].legend(loc='upper left')
-        CurvedText(
-            x = lon_radius[17000:],
-            y = lat_radius[17000:],
-            text='100 km',#'this this is a very, very long text',
-            va = 'bottom', axes=axes[0])	
-        # Addlabels to icois! 
-        axes[0].text(-64, -31, 'coi=1')
-        axes[0].text(-65.3, -32.0, 'coi=2')
-        axes[0].text(-65, -32.7, 'coi=3')
-        axes[0].set_xlabel('Longitude')
-        axes[0].set_ylabel('Latitude')
-        for i in range(len(lon_pfs)):
-            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
-            markeredgecolor='black', markeredgewidth=1.5)	
-
-    elif caso == '20181031': 
-        axes[0].set_title(r'RMA4 Zh (31/10/2018 0109UTC), Elev: 0.7$^{o}$')
-        axes[0].legend(loc='upper left')
-        CurvedText(
-            x = lon_radius[50000:],
-            y = lat_radius[50000:],
-            text='100 km',#'this this is a very, very long text',
-            va = 'bottom', axes=axes[0])	
-        # Addlabels to icois! 
-        axes[0].text(-61, -28.2, 'coi=1')
-        axes[0].text(-59.5, -28.2, 'coi=2')
-        axes[0].text(-57.8, -28.4, 'coi=3')
-        axes[0].text(-58.5, -26.4, 'coi=4')
-        axes[0].set_xlabel('Longitude')
-        axes[0].set_ylabel('Latitude')
-        for i in range(len(lon_pfs)):
-            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
-            markeredgecolor='black', markeredgewidth=1.5)	
-
-
-	
-    plt.legend()
-    if options['radar_name'] == 'DOW7':
-       	azimuths = radar.azimuth['data']
-    else:
-
-
-
-
-
-
-	
-	
-	return
-
+#----------------------------------------------------------------------------------------------     
 #----------------------------------------------------------------------------------------------     
 def main_fig5():
 
@@ -5693,10 +5607,10 @@ def main_fig5():
     era5_file = '20190308_02_RMA1.grib'
     reportes_granizo_twitterAPI_geo = [[]]
     reportes_granizo_twitterAPI_meta = []
-    opts_RMA1 = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -33, 'ylim_max': -30, 
+    opts_RMA1 = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -32, 'ylim_max': -30, 
     	    'ZDRoffset': 0.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
     	    'window_calc_KDP': 7, 'era5_file': era5_file, 'azimuth_ray': 50,
-    	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 'transects': [270],
+    	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 'transects': [50],
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'RMA1', 'xlims_xlims_input' : [200], 'xlims_mins_input' : [0]}
