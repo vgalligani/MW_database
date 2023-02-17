@@ -5643,7 +5643,7 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     nlev = 0
     start_index = radar.sweep_start_ray_index['data'][nlev]
     end_index   = radar.sweep_end_ray_index['data'][nlev]
-    reflectivity_name = 'DBZH'   
+    reflectivity_name = 'TH'   
     lats        = radar.gate_latitude['data'][start_index:end_index]
     lons        = radar.gate_longitude['data'][start_index:end_index]
     ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
@@ -5667,19 +5667,19 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     axes[3,0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.3),
           fancybox=True, shadow=False, ncol=1)
     # RADAR RINGS	      
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[3,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     CurvedText(
             x = lon_radius[25000:],
             y = lat_radius[25000:],
-            text='50 km',#'this this is a very, very long text',
+            text='100 km',#'this this is a very, very long text',
             va = 'top', axes=axes[3,0])
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
     axes[3,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     CurvedText(
             x = lon_radius[30000:],
             y = lat_radius[30000:],
-            text='100 km',#'this this is a very, very long text',
+            text='200 km',#'this this is a very, very long text',
             va = 'bottom', axes=axes[3,0])
     if len(opts_RMA5['REPORTES_meta'])>0:
         for ireportes in range(len(opts_RMA5['REPORTES_geo'])):
@@ -5689,9 +5689,9 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # ---- PCT ---------------------------------------------------------------
     im = axes[3,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
     axes[3,1].set_title('PCT 89-GHz')
-    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-    axes[3,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
+    axes[3,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
+    [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
     axes[3,1].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     contorno89 = axes[3,1].contour(lon_gmi, lat_gmi, PCT89, [200], colors=('k'), linewidths=2);    
     for i in range(len(opts_RMA5['lon_pfs'])):
@@ -6612,7 +6612,7 @@ def main_fig5():
     era5_file = '20190209_20_RMA4.grib' 
     reportes_granizo_twitterAPI_geo = []
     reportes_granizo_twitterAPI_meta = []
-    opts_02092019 = {'xlim_min': -61.5, 'xlim_max': -56.5, 'ylim_min': -29.5, 'ylim_max': -26, 
+    opts_02092019 = {'xlim_min': -61.5, 'xlim_max': -58, 'ylim_min': -29.5, 'ylim_max': -26, 
 	    'ZDRoffset': 1,   
 	    'rfile': 'RMA4/'+rfile, 'gfile': gfile, 'azimuth_ray': 268,'transects':[268],
 	    'window_calc_KDP': 7,  'era5_file': era5_file,
