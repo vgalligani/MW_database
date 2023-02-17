@@ -5900,28 +5900,39 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     [grid_HID_DOW7, grid_lon_DOW7, grid_lat_DOW7, grid_range_DOW7, grid_alt_DOW7] = get_HIDoutput(opts_DOW7) #, opts_DOW7, opts_RMA1, opts_RMA5
 
     # ---- FIGFIG ---------------------------------------------------------------
-    fig, axes = plt.subplots(nrows=4, ncols=2, constrained_layout=True,figsize=[8,11])
+    fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,figsize=[7,10])
+    im_HID = axes[0].pcolormesh(grid_range_CSPR2/1e3, grid_alt_CSPR2/1e3, grid_HID_CSPR2, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[0].set_xlim([0, 80])
+    axes[0].set_ylim([0,15])
+    axes[0].set_title('HID Transect of interest') 
+    cbar_HID = plt.colorbar(im_HID, ax=axes[0], shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+	
     im_HID = axes[2].pcolormesh(grid_range_RMA1/1e3, grid_alt_RMA1/1e3, grid_HID_RMA1, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[2].set_title('HID Transect of interest') 
     axes[2].set_xlim([opts_RMA1['xlims_mins_input'][0], opts_RMA1['xlims_xlims_input'][0]])
     axes[2].set_ylim([0,15])
     #pm1    = axes[2].get_position().get_points().flatten()
     #p_last = axes[0].get_position().get_points().flatten(); 
     #ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
-    cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
-    cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    #cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+    #cbar = adjust_fhc_colorbar_for_pyart(cbar)
 	
     im_HID = axes[3].pcolormesh(grid_range_RMA5/1e3, grid_alt_RMA5/1e3, grid_HID_RMA5, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[3].set_xlim([opts_RMA5['xlims_mins_input'][0], opts_RMA5['xlims_xlims_input'][0]])
     axes[3].set_ylim([0,15])
+    axes[3].set_xlabel('Range (km)')
+    axes[3].set_ylabel('Altitude (km)')
+    axes[0].grid(True)
+    axes[1].grid(True)
+    axes[2].grid(True)
+    axes[3].grid(True)
+	
 
-    im_HID = axes[0].pcolormesh(grid_range_CSPR2/1e3, grid_alt_CSPR2/1e3, grid_HID_CSPR2, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[0].set_xlim([opts_CSPR2['xlims_mins_input'][0], opts_CSPR2['xlims_xlims_input'][0]])
-    axes[0].set_ylim([0,15])
 
-    im_HID = axes[0].pcolormesh(grid_range_DOW7/1e3, grid_alt_DOW7/1e3, grid_HID_DOW7, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[0].set_xlim([opts_DOW7['xlims_mins_input'][0], opts_DOW7['xlims_xlims_input'][0]])
-    axes[0].set_ylim([0,15])
+
+    im_HID = axes[1].pcolormesh(grid_range_DOW7/1e3, grid_alt_DOW7/1e3, grid_HID_DOW7, cmap=cmaphid, vmin=0.2, vmax=10)
+    #axes[1].set_xlim([opts_DOW7['xlims_mins_input'][0], opts_DOW7['xlims_xlims_input'][0]])
+    #axes[1].set_ylim([0,15])
 
 
     return
@@ -5949,7 +5960,7 @@ def main_fig5():
 	    'gfile': gfile,
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
 	    'alternate_azi':[30], 'transects': [205],
-	    'ZDRoffset': 0,'azi_oi':[205],
+	    'ZDRoffset': 0,'azi_oi':[30],
     	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2', 'xlims_xlims_input' : [60], 'xlims_mins_input' : [20]}
