@@ -5761,7 +5761,8 @@ def get_HIDoutput(options):
         gc.collect()
 
     if options['radar_name'] == 'DOW7':
-        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'+options['era5_file'], options['lat_pfs'], options['lon_pfs']) 
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, options['era5_file'], 
+								options['lat_pfs'], options['lon_pfs']) 
         radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
         radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
         radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
@@ -5781,6 +5782,7 @@ def get_HIDoutput(options):
         gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),   #20,470,470 is for 1km
         (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
         gc.collect()	
+        TVname   = 'reflectivity_v'  #corrected_differential_reflectivity
 
     if 'TH' in radar.fields.keys():  
             THname= 'TH'
