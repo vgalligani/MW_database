@@ -5880,10 +5880,10 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     cmaphid = colors.ListedColormap(hid_colors)	    
 		  
     # ---- FIGFIG --------------------------------------------------------------- HIDs! 		
-    [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA1) #, opts_DOW7, opts_RMA1, opts_RMA5
-    im_HID = axes[2].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[2].set_title('TITLE1') 
-    axes[2].set_xlim([opts_RMA1['xlims_mins_input'][0],opts_RMA1['xlims_xlims_input'][0]])
+    [grid_HID_RMA1, grid_lon_RMA1, grid_lat_RMA1, grid_range_RMA1, grid_alt_RMA1] = get_HIDoutput(opts_RMA1) #, opts_DOW7, opts_RMA1, opts_RMA5
+    im_HID = axes[2].pcolormesh(grid_range_RMA1/1e3, grid_alt_RMA1/1e3, grid_HID_RMA1, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[2].set_title('HID Transect of interest') 
+    axes[2].set_xlim([opts_RMA1['xlims_mins_input'][0], opts_RMA1['xlims_xlims_input'][0]])
     axes[2].set_ylim([0,15])
     #pm1    = axes[0].get_position().get_points().flatten()
     #p_last = axes[0].get_position().get_points().flatten(); 
@@ -5891,20 +5891,19 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     #cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
     #cbar = adjust_fhc_colorbar_for_pyart(cbar)
 	
-    del grid_HID, grid_lon, grid_lat
-    [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
-    im_HID = axes[3].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[3].set_title('TITLE1') 
-    axes[3].set_xlim([opts_RMA5['xlims_mins_input'][0],opts_RMA5['xlims_xlims_input'][0]])
+    [grid_HID_RMA5, grid_lon_RMA5, grid_lat_RMA5, grid_range_RMA5, grid_alt_RMA5] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
+    im_HID = axes[3].pcolormesh(grid_range_RMA5/1e3, grid_alt_RMA5/1e3, grid_HID_RMA5, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[3].set_xlim([opts_RMA5['xlims_mins_input'][0], opts_RMA5['xlims_xlims_input'][0]])
     axes[3].set_ylim([0,15])
-    #cbar    = fig.colorbar(im_HID,  axes[3], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
-    #cbar = adjust_fhc_colorbar_for_pyart(cbar)		      
 
-    del grid_HID, grid_lon, grid_lat
-    [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_CSPR2) #, opts_DOW7, opts_RMA1, opts_RMA5
-    im_HID = axes[0].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[0].set_title('TITLE1') 
-    axes[0].set_xlim([opts_CSPR2['xlims_mins_input'][0],opts_CSPR2['xlims_xlims_input'][0]])
+    [grid_HID_CSPR2, grid_lon_CSPR2, grid_lat_CSPR2, grid_range_CSPR2, grid_alt_CSPR2] = get_HIDoutput(opts_CSPR2) #, opts_DOW7, opts_RMA1, opts_RMA5
+    im_HID = axes[0].pcolormesh(grid_range_CSPR2/1e3, grid_alt_CSPR2/1e3, grid_HID_CSPR2, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[0].set_xlim([opts_CSPR2['xlims_mins_input'][0], opts_CSPR2['xlims_xlims_input'][0]])
+    axes[0].set_ylim([0,15])
+
+    [grid_HID_DOW7, grid_lon_DOW7, grid_lat_DOW7, grid_range_DOW7, grid_alt_DOW7] = get_HIDoutput(opts_DOW7) #, opts_DOW7, opts_RMA1, opts_RMA5
+    im_HID = axes[0].pcolormesh(grid_range_DOW7/1e3, grid_alt_DOW7/1e3, grid_HID_DOW7, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[0].set_xlim([opts_DOW7['xlims_mins_input'][0], opts_DOW7['xlims_xlims_input'][0]])
     axes[0].set_ylim([0,15])
 
 
