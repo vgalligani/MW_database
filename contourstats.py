@@ -5859,7 +5859,7 @@ def get_HIDoutput(options):
         grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
         #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
         # CALCUALTE HID FROM THESE GRIDDED FIELDS:
-        scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+        scores = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
 					    use_temp=True, band='C', T=gridded_radar.fields['sounding_temperature']['data'][:,xloc,yloc])
         grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
 
@@ -5998,9 +5998,14 @@ def main_fig5():
     era5_file = '20181214_03_RMA1.grib'
     reportes_granizo_twitterAPI_geo = [[-32.19, -64.57],[-32.07, -64.54]]
     reportes_granizo_twitterAPI_meta = [['0320UTC'],['0100']]
-    opts_DOW7 = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0, 'caso':'20181214',
-	    'rfile': 'DOW7/'+rfile, 'gfile': gfile, 'azimuth_ray': 0, 'azi_oi':[300],  # [300, 273, 450]
-	     'radar_name':'DOW7', 'era5_file': era5_file,'alternate_azi':[30], 'ZDRoffset': 0, 'transects': [270],
+    opts_DOW7 = {'xlim_min': -65.3, 'xlim_max': -63.3, 'ylim_min': -32.4, 'ylim_max': -31, 'ZDRoffset': 0, 
+		 'caso':'20181214',
+	         'rfile': 'DOW7/'+rfile, 'gfile': gfile, 
+		 'azimuth_ray': 0, 
+		 'azi_oi':[300],  ##[300, 273, 450]
+		 'alternate_azi':[30],
+		 'transects': [270]
+	     'radar_name':'DOW7', 'era5_file': era5_file, 'ZDRoffset': 0, ,
 	     'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181214_RMA1/', 
 	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	     'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
@@ -6019,7 +6024,7 @@ def main_fig5():
     reportes_granizo_twitterAPI_meta = []
     opts_RMA1 = {'xlim_min': -65.2, 'xlim_max': -62, 'ylim_min': -32, 'ylim_max': -30, 
     	    'ZDRoffset': 0.5, 'rfile': 'RMA1/'+rfile, 'gfile': gfile, 
-    	    'window_calc_KDP': 7, 'era5_file': era5_file, 'azimuth_ray': 50, 'azi_oi':[50],
+    	    'window_calc_KDP': 7, 'era5_file': era5_file, 'azimuth_ray': 50, 'azi_oi':[50], 
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20190308/', 'transects': [50],
     	     'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 'era5_file':era5_file, 
