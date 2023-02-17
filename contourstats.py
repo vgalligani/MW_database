@@ -5809,7 +5809,7 @@ def get_HIDoutput(options):
     lats        = radar.gate_latitude['data'][start_index:end_index]
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
-    figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[15,10])
+    #figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[15,10])
     target_azimuth = azimuths[options['azi_oi'][0]]
     filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
     grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
@@ -5861,8 +5861,9 @@ def get_HIDoutput(options):
                     grid_RHO[i,j]  = np.nan	
                     grid_ZDR[i,j]  = np.nan
                     grid_HID[i,j]  = np.nan
-        gc.collect()
-        return grid_HID, grid_lon, grid_lat, grid_range, grid_alt
+		
+    gc.collect()
+    return grid_HID, grid_lon, grid_lat, grid_range, grid_alt
 #----------------------------------------------------------------------------------------------     
 def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
