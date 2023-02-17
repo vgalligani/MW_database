@@ -5716,8 +5716,9 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     axes[3,0].set_ylabel('Latitude')	
 
     return
-#----------------------------------------------------------------------------------------------
 
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
 def get_HIDoutput(options):
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
     radar = pyart.io.read(r_dir+options['rfile'])
@@ -5770,15 +5771,14 @@ def get_HIDoutput(options):
         gc.collect()	
 	
     if options['radar_name'] == 'CSPR2':
-       alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
-       radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
-       radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
-       radar = add_43prop_field(radar)    
-       radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)	
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)    
+        radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
         # 500m grid!
         gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),   #20,470,470 is for 1km
-        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
-        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
         gc.collect()	
 
     if 'TH' in radar.fields.keys():  
@@ -5861,7 +5861,7 @@ def get_HIDoutput(options):
                     grid_ZDR[i,j]  = np.nan
                     grid_HID[i,j]  = np.nan
         gc.collect()
-        return grid_HID, grid_lon, grid_lat
+        return grid_HID, grid_lon, grid_lat, grid_range, grid_alt
 #----------------------------------------------------------------------------------------------     
 def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
@@ -5878,9 +5878,7 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
                 'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
     cmaphid = colors.ListedColormap(hid_colors)	    
 		  
-    # ---- FIGFIG --------------------------------------------------------------- HIDs! 
-    fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,figsize=[3,11])	
-			
+    # ---- FIGFIG --------------------------------------------------------------- HIDs! 		
     [grid_HID, grid_lon, grid_lat] = get_HIDoutput(opts_RMA1) #, opts_DOW7, opts_RMA1, opts_RMA5
     im_HID = axes[2].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[2].set_title('TITLE1') 
