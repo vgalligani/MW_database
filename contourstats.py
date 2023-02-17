@@ -5771,7 +5771,8 @@ def get_HIDoutput(options):
         (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
         roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
         gc.collect()
-           TVname='ZDRC'          		
+        ZDRname='ZDRC'
+        RHOHVname = 'RHOHV'
 	
 	
     if options['radar_name'] == 'CSPR2':
