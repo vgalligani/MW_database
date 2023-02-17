@@ -5770,7 +5770,9 @@ def get_HIDoutput(options):
         gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),   #20,470,470 is for 1km
         (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
         roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
-        gc.collect()	
+        gc.collect()
+           TVname='ZDRC'          		
+	
 	
     if options['radar_name'] == 'CSPR2':
         alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
