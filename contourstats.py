@@ -5959,8 +5959,8 @@ def main_fig5():
    	    'era5_file': era5_file,'caso':'20181111',
 	    'gfile': gfile,
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
-	    'alternate_azi':[30], 'transects': [205],
-	    'ZDRoffset': 0,'azi_oi':[30],
+	    'alternate_azi':[205], 'transects': [205],
+	    'ZDRoffset': 0,'azi_oi':[205],
     	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2', 'xlims_xlims_input' : [60], 'xlims_mins_input' : [20]}
