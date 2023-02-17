@@ -5794,7 +5794,7 @@ def get_HIDoutput(options):
             RHOHVname = 'RHOHV'
     elif 'DBZHCC' in radar.fields.keys():        
            THname = 'DBZHCC'
-           KDPname='corrKDP'
+           KDPname='KDP'
            TVname='ZDRC'          		
     elif 'corrected_reflectivity' in radar.fields.keys():        
            TH   = 'corrected_reflectivity'
