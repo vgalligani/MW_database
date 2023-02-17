@@ -5802,6 +5802,11 @@ def get_HIDoutput(options):
            KDPname ='corrKDP'
            TVname   = 'DBZV'  
            RHOHVname   = 'RHOHV'  
+    elif 'attenuation_corrected_reflectivity_h' in radar.keys():
+           THname = 'attenuation_corrected_reflectivity_h'
+           KDPname ='filtered_corrected_specific_diff_phase'
+           TVname   = 'attenuation_corrected_reflectivity_v'  #corrected_differential_reflectivity
+           RHOHVname   = 'copol_correlation_coeff'  	
 
     nlev = 0 
     start_index = radar.sweep_start_ray_index['data'][nlev]
@@ -5879,30 +5884,33 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
                 'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
     cmaphid = colors.ListedColormap(hid_colors)	    
-		  
-    # ---- FIGFIG --------------------------------------------------------------- HIDs! 		
+
+    # ---- GET HIDs ---------------------------------------------------------------
     [grid_HID_RMA1, grid_lon_RMA1, grid_lat_RMA1, grid_range_RMA1, grid_alt_RMA1] = get_HIDoutput(opts_RMA1) #, opts_DOW7, opts_RMA1, opts_RMA5
+    [grid_HID_RMA5, grid_lon_RMA5, grid_lat_RMA5, grid_range_RMA5, grid_alt_RMA5] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
+    [grid_HID_CSPR2, grid_lon_CSPR2, grid_lat_CSPR2, grid_range_CSPR2, grid_alt_CSPR2] = get_HIDoutput(opts_CSPR2) #, opts_DOW7, opts_RMA1, opts_RMA5
+    [grid_HID_DOW7, grid_lon_DOW7, grid_lat_DOW7, grid_range_DOW7, grid_alt_DOW7] = get_HIDoutput(opts_DOW7) #, opts_DOW7, opts_RMA1, opts_RMA5
+
+    # ---- FIGFIG ---------------------------------------------------------------
+    fig, axes = plt.subplots(nrows=4, ncols=2, constrained_layout=True,figsize=[8,11])
     im_HID = axes[2].pcolormesh(grid_range_RMA1/1e3, grid_alt_RMA1/1e3, grid_HID_RMA1, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[2].set_title('HID Transect of interest') 
     axes[2].set_xlim([opts_RMA1['xlims_mins_input'][0], opts_RMA1['xlims_xlims_input'][0]])
     axes[2].set_ylim([0,15])
-    #pm1    = axes[0].get_position().get_points().flatten()
+    #pm1    = axes[2].get_position().get_points().flatten()
     #p_last = axes[0].get_position().get_points().flatten(); 
     #ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
-    #cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
-    #cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+    cbar = adjust_fhc_colorbar_for_pyart(cbar)
 	
-    [grid_HID_RMA5, grid_lon_RMA5, grid_lat_RMA5, grid_range_RMA5, grid_alt_RMA5] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
     im_HID = axes[3].pcolormesh(grid_range_RMA5/1e3, grid_alt_RMA5/1e3, grid_HID_RMA5, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[3].set_xlim([opts_RMA5['xlims_mins_input'][0], opts_RMA5['xlims_xlims_input'][0]])
     axes[3].set_ylim([0,15])
 
-    [grid_HID_CSPR2, grid_lon_CSPR2, grid_lat_CSPR2, grid_range_CSPR2, grid_alt_CSPR2] = get_HIDoutput(opts_CSPR2) #, opts_DOW7, opts_RMA1, opts_RMA5
     im_HID = axes[0].pcolormesh(grid_range_CSPR2/1e3, grid_alt_CSPR2/1e3, grid_HID_CSPR2, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[0].set_xlim([opts_CSPR2['xlims_mins_input'][0], opts_CSPR2['xlims_xlims_input'][0]])
     axes[0].set_ylim([0,15])
 
-    [grid_HID_DOW7, grid_lon_DOW7, grid_lat_DOW7, grid_range_DOW7, grid_alt_DOW7] = get_HIDoutput(opts_DOW7) #, opts_DOW7, opts_RMA1, opts_RMA5
     im_HID = axes[0].pcolormesh(grid_range_DOW7/1e3, grid_alt_DOW7/1e3, grid_HID_DOW7, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[0].set_xlim([opts_DOW7['xlims_mins_input'][0], opts_DOW7['xlims_xlims_input'][0]])
     axes[0].set_ylim([0,15])
@@ -5962,7 +5970,7 @@ def main_fig5():
 		  'cfrad.20181214_022353_DOW7low_v176_s20_el40.97_SUR.nc',
 		  'cfrad.20181214_022405_DOW7low_v176_s21_el44.98_SUR.nc',
 		  'cfrad.20181214_022416_DOW7low_v176_s22_el49.98_SUR.nc']	
-	lon_pfs  = [-63.11] # [-61.40] [-59.65]
+    lon_pfs  = [-63.11] # [-61.40] [-59.65]
     lat_pfs  = [-31.90] # [-32.30] [-33.90]
     phail    = [0.967] # [0.998] [0.863]
     rfile = 'cfrad.20181214_022007_DOW7low_v176_s01_el0.77_SUR.nc' 
