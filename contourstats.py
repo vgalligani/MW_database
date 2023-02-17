@@ -5720,6 +5720,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
 def get_HIDoutput(options):
+	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
     radar = pyart.io.read(r_dir+options['rfile'])
     azi_oi = options['azi_oi']
