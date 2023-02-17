@@ -5775,6 +5775,7 @@ def get_HIDoutput(options):
         RHOHVname = 'RHOHV'
 	
 	
+	
     if options['radar_name'] == 'CSPR2':
         alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
         radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
@@ -5844,10 +5845,10 @@ def get_HIDoutput(options):
         grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
         grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
         grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
-	if options['radar_name'] == 'DOW7':
-		grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
-	else:
-        	grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
+        if options['radar_name'] == 'DOW7':
+            grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+        else:
+            grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]									   
         grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
         grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
         grid_alt[:,i]   = gridded_radar.z['data'][:]
@@ -5954,13 +5955,13 @@ def main_fig5():
     reportes_granizo_twitterAPI_geo = [[]]
     reportes_granizo_twitterAPI_meta = []
     opts_cspr2 = {'xlim_min': -65, 'xlim_max': -63.6, 'ylim_min': -32.6, 'ylim_max': -31.5, 
-	    'azimuth_ray': 0,'azi_oi':[205],
+	    'azimuth_ray': 220,'azi_oi':[220],
 	    'rfile': 'CSPR2_data/'+rfile, 
    	    'era5_file': era5_file,'caso':'20181111',
 	    'gfile': gfile,
     	    'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20181111am/', 
-	    'alternate_azi':[205], 'transects': [205],
-	    'ZDRoffset': 0,'azi_oi':[205],
+	    'alternate_azi':[220], 'transects': [220],
+	    'ZDRoffset': 0,'azi_oi':[220],
     	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
     	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':[],'MINPCTs':[], 'phail': phail, 
      	   'icoi_PHAIL': [3], 'radar_name':'CSPR2', 'xlims_xlims_input' : [60], 'xlims_mins_input' : [20]}
