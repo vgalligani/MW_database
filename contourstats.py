@@ -4307,7 +4307,7 @@ def make_pseudoRHISfromGrid_4(gridded_radar, radar, azi_oi, titlecois, xlims_xli
             grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
             #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
             # CALCUALTE HID FROM THESE GRIDDED FIELDS:
-            scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+            scores = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
 					    use_temp=True, band='C', T=gridded_radar.fields['sounding_temperature']['data'][:,xloc,yloc])
             grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
 		
@@ -4501,7 +4501,7 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
             grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
             #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
             # CALCUALTE HID FROM THESE GRIDDED FIELDS:
-            scores = csu_fhc.csu_fhc_summer(dz=grid_TVTV[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+            scores = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
 					    use_temp=True, band='C', T=gridded_radar.fields['sounding_temperature']['data'][:,xloc,yloc])
             grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
 		
