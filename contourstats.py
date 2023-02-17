@@ -5932,8 +5932,8 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
 
     im_HID = axes[1].pcolormesh(grid_range_DOW7/1e3, grid_alt_DOW7/1e3, grid_HID_DOW7, cmap=cmaphid, vmin=0.2, vmax=10)
-    #axes[1].set_xlim([opts_DOW7['xlims_mins_input'][0], opts_DOW7['xlims_xlims_input'][0]])
-    #axes[1].set_ylim([0,15])
+    axes[1].set_xlim([opts_DOW7['xlims_mins_input'][0], opts_DOW7['xlims_xlims_input'][0]])
+    axes[1].set_ylim([0,15])
 
 
     return
