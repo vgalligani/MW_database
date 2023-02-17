@@ -5670,15 +5670,15 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[3,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     CurvedText(
-            x = lon_radius[25000:],
-            y = lat_radius[25000:],
+            x = lon_radius[15000:],
+            y = lat_radius[15000:],
             text='100 km',#'this this is a very, very long text',
             va = 'top', axes=axes[3,0])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],200)
     axes[3,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     CurvedText(
-            x = lon_radius[30000:],
-            y = lat_radius[30000:],
+            x = lon_radius[1000:],
+            y = lat_radius[1000:],
             text='200 km',#'this this is a very, very long text',
             va = 'bottom', axes=axes[3,0])
     if len(opts_RMA5['REPORTES_meta'])>0:
