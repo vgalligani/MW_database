@@ -5802,10 +5802,10 @@ def get_HIDoutput(options):
            KDPname ='corrKDP'
            TVname   = 'DBZV'  
            RHOHVname   = 'RHOHV'  
-    elif 'attenuation_corrected_reflectivity_h' in radar.keys():
+    elif 'attenuation_corrected_reflectivity_h' in radar.fields.keys():
            THname = 'attenuation_corrected_reflectivity_h'
            KDPname ='filtered_corrected_specific_diff_phase'
-           TVname   = 'attenuation_corrected_reflectivity_v'  #corrected_differential_reflectivity
+           TVname   = 'reflectivity_v'  #corrected_differential_reflectivity
            RHOHVname   = 'copol_correlation_coeff'  	
 
     nlev = 0 
