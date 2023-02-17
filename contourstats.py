@@ -4201,7 +4201,7 @@ def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects
         radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
 
     if options['radar_name'] == 'DOW7':
-	alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/',options['era5_file'],options['lat_pfs'], options['lon_pfs']) 
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel( '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/',options['era5_file'],options['lat_pfs'], options['lon_pfs']) 
         radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
         radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
 		
