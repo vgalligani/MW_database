@@ -5792,6 +5792,7 @@ def get_HIDoutput(options):
     elif 'DBZHCC' in radar.fields.keys():        
            THname = 'DBZHCC'
            KDPname='corrKDP'
+           TVname='ZDRC'          		
     elif 'corrected_reflectivity' in radar.fields.keys():        
            TH   = 'corrected_reflectivity'
            ZDRname =  'corrected_differential_reflectivity'
@@ -5840,8 +5841,10 @@ def get_HIDoutput(options):
         grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
         grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
         grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
-        #grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
-        grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
+	if options['radar_name'] == 'DOW7':
+		grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+	else:
+        	grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]								   
         grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
         grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
         grid_alt[:,i]   = gridded_radar.z['data'][:]
