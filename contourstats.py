@@ -6908,68 +6908,82 @@ def run_FIG7_HIDs(opts_0902, opts_3110, opts_0503, opts_09022019):
     # -- 4 azis in gridded_radar_0902
     opts_0902['azi_oi'] = [225,245]
     [grid_HID_1_1, grid_lon_1_1, grid_lat_1_1, grid_range_1_1, grid_alt_1_1] = get_HIDoutput_fromGriddedField(opts_0902, 0, gridded_radar_0902)
-    [grid_HID_1_2, grid_lon_1_1, grid_lat_1_2, grid_range_1_2, grid_alt_1_2] = get_HIDoutput_fromGriddedField(opts_0902, 1, gridded_radar_0902)
+    [grid_HID_1_2, grid_lon_1_2, grid_lat_1_2, grid_range_1_2, grid_alt_1_2] = get_HIDoutput_fromGriddedField(opts_0902, 1, gridded_radar_0902)
 
     # -- 4 azis in gridded_radar_3110
     [grid_HID_2_1, grid_lon_2_1, grid_lat_2_1, grid_range_2_1, grid_alt_2_1] = get_HIDoutput_fromGriddedField(opts_3110, 0, gridded_radar_3110)
-    [grid_HID_2_2, grid_lon_2_1, grid_lat_2_2, grid_range_2_2, grid_alt_2_2] = get_HIDoutput_fromGriddedField(opts_3110, 1, gridded_radar_3110)
-    [grid_HID_2_3, grid_lon_2_1, grid_lat_2_3, grid_range_2_3, grid_alt_2_3] = get_HIDoutput_fromGriddedField(opts_3110, 2, gridded_radar_3110)
+    [grid_HID_2_2, grid_lon_2_2, grid_lat_2_2, grid_range_2_2, grid_alt_2_2] = get_HIDoutput_fromGriddedField(opts_3110, 1, gridded_radar_3110)
+    [grid_HID_2_3, grid_lon_2_3, grid_lat_2_3, grid_range_2_3, grid_alt_2_3] = get_HIDoutput_fromGriddedField(opts_3110, 2, gridded_radar_3110)
     [grid_HID_2_4, grid_lon_2_4, grid_lat_2_4, grid_range_2_4, grid_alt_2_4] = get_HIDoutput_fromGriddedField(opts_3110, 3, gridded_radar_3110)	
 
     # -- 2 azis in gridded_radar_0502
     [grid_HID_3_1, grid_lon_3_1, grid_lat_3_1, grid_range_3_1, grid_alt_3_1] = get_HIDoutput_fromGriddedField(opts_0503, 0, gridded_radar_0503)
-    [grid_HID_3_2, grid_lon_3_1, grid_lat_3_2, grid_range_3_1, grid_alt_3_2] = get_HIDoutput_fromGriddedField(opts_0503, 1, gridded_radar_0503)
+    [grid_HID_3_2, grid_lon_3_2, grid_lat_3_2, grid_range_3_2, grid_alt_3_2] = get_HIDoutput_fromGriddedField(opts_0503, 1, gridded_radar_0503)
 	
     # -- 1 azis in gridded_radar_09022019
     [grid_HID_4_1, grid_lon_4_1, grid_lat_4_1, grid_range_4_1, grid_alt_4_1] = get_HIDoutput_fromGriddedField(opts_09022019, 0, gridded_radar_09022019)
 
    
     # ---- FIGFIG ---------------------------------------------------------------
-    fig, axes = plt.subplots(nrows=4, ncols=2, constrained_layout=True,figsize=[7,10])
+    # ADD HARDCODED P_HAIL
+    fig, axes = plt.subplots(nrows=4, ncols=2, constrained_layout=True,figsize=[10,11])
 
     im_HID = axes[0,0].pcolormesh(grid_range_1_1/1e3, grid_alt_1_1/1e3, grid_HID_1_1, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[0,0].set_xlim([80, 140])
     axes[0,0].set_ylim([0,15])
     axes[0,0].set_title('HID Transect of interest 1') 
+    axes[0,0].grid(True)
+    axes[0,0].text(82, 12, r'P$_{hail}$ = 2.6% ', fontweight='bold')
 
     im_HID = axes[0,1].pcolormesh(grid_range_1_2/1e3, grid_alt_1_2/1e3, grid_HID_1_2, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[0,1].set_xlim([80, 140])
     axes[0,1].set_ylim([0,15])
     axes[0,1].set_title('HID Transect of interest 2') 
-
     cbar_HID = plt.colorbar(im_HID, ax=axes[0,1], shrink=1.1, label=r'HID')    
     cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+    axes[0,1].grid(True)
+    axes[0,1].text(82,12, r'P$_{hail}$ = 76.2% ', fontweight='bold')
+
 	
     # de este caso muestro uno que tiene hid>0.5 y otro que no. == 199 [1] y 157 [2]
     im_HID = axes[1,0].pcolormesh(grid_range_2_2/1e3, grid_alt_2_2/1e3, grid_HID_2_2, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[1,0].set_xlim([opts_3110['xlims_mins_input'][0], opts_3110['xlims_xlims_input'][0]])
+    axes[1,0].set_xlim([125,200])
     axes[1,0].set_ylim([0,15])
+    axes[1,0].grid(True)
+    axes[1,0].text(127, 12, r'P$_{hail}$ = 93.1% ', fontweight='bold')
 
     im_HID = axes[1,1].pcolormesh(grid_range_2_3/1e3, grid_alt_2_3/1e3, grid_HID_2_3, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[1,1].set_xlim([opts_3110['xlims_mins_input'][0], opts_3110['xlims_xlims_input'][0]])
+    axes[1,1].set_xlim([100,175])
     axes[1,1].set_ylim([0,15])
+    axes[1,1].grid(True)
+    axes[1,1].text(102, 12, r'P$_{hail}$ = 26.2% ', fontweight='bold')
 
-
-    im_HID = axes[2].pcolormesh(grid_range_3/1e3, grid_alt_3/1e3, grid_HID_3, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[2].set_xlim([opts_0503['xlims_mins_input'][0], opts_0503['xlims_xlims_input'][0]])
-    axes[2].set_ylim([0,15])
-    #pm1    = axes[2].get_position().get_points().flatten()
-    #p_last = axes[0].get_position().get_points().flatten(); 
-    #ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
-    #cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
-    #cbar = adjust_fhc_colorbar_for_pyart(cbar)
+    # de este caso muestro los dos
+    im_HID = axes[2,0].pcolormesh(grid_range_3_1/1e3, grid_alt_3_1/1e3, grid_HID_3_1, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[2,0].set_xlim([50, 180])
+    axes[2,0].set_ylim([0,15])
+    axes[2,0].grid(True)
+    axes[2,0].text(52, 12, r'P$_{hail}$ = 74.7% ', fontweight='bold')
+    
+    im_HID = axes[2,1].pcolormesh(grid_range_3_2/1e3, grid_alt_3_2/1e3, grid_HID_3_2, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[2,1].set_xlim([50, 200])
+    axes[2,1].set_ylim([0,15])
+    axes[2,1].grid(True)
+    axes[2,1].text(52, 12, r'P$_{hail}$ = 10.3% ', fontweight='bold')
 	
-    im_HID = axes[3].pcolormesh(grid_range_4/1e3, grid_alt_4/1e3, grid_HID_4, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[3].set_xlim([opts_09022019['xlims_mins_input'][0], opts_09022019['xlims_xlims_input'][0]])
-    axes[3].set_ylim([0,15])
-    axes[3].set_xlabel('Range (km)')
-    axes[3].set_ylabel('Altitude (km)')
-    axes[0].grid(True)
-    axes[1].grid(True)
-    axes[2].grid(True)
-    axes[3].grid(True)
-	
+    # caso 2019:
+    im_HID = axes[3,0].pcolormesh(grid_range_4_1/1e3, grid_alt_4_1/1e3, grid_HID_4_1, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[3,0].set_xlim([80, 160])
+    axes[3,0].set_ylim([0,15])
+    axes[3,0].text(80, 12, r'P$_{hail}$ = 98.9% ', fontweight='bold')
 
+    axes[3,0].set_xlabel('Range (km)')
+    axes[3,0].set_ylabel('Altitude (km)')
+    axes[3,0].grid(True)
+    axes[3,1].axis('off')
+    
+    axes[3,0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.3),
+          fancybox=True, shadow=False, ncol=1)
 
 
     return
