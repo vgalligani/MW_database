@@ -5398,7 +5398,7 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
         dy = (p2[1] - p1[1])
         dx = (p2[0] - p1[0])
         rotn = np.degrees(np.arctan2(dy, dx))
-        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
+        axes[0,1].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn, weight='bold')
 	
         axes[0,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
@@ -5496,19 +5496,21 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # plt.colorbar(im, ax=axes[1,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
-    lat_label = [-28.3, -28.8]
+    lat_label = [-28.3, -27]
+    opts_31102018['transects'] = [199,157]
+
     for item, itrans in enumerate(opts_31102018['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[1,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-        p1 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
-        p2 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
+        p1 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p2 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
         dy = (p2[1] - p1[1])
         dx = (p2[0] - p1[0])
         rotn = np.degrees(np.arctan2(dy, dx))
-        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
+        axes[1,1].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn, weight='bold')
         axes[1,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
     # CASO 0305 #----------------------------------------------------
     del fname
@@ -5614,19 +5616,19 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # plt.colorbar(im, ax=axes[2,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
-    lat_label = [-26.5, -26.7]
+    lat_label = [-26.8, -27.8]
     for item, itrans in enumerate(opts_RMA1['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[2,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-        p1 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
-        p2 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
+        p1 = axes[2,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p2 = axes[2,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
         dy = (p2[1] - p1[1])
         dx = (p2[0] - p1[0])
         rotn = np.degrees(np.arctan2(dy, dx))
-        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
+        axes[2,1].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn, weight='bold')
         axes[2,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
     # CASO 20200815 #---------------------------------------------------- 
@@ -5729,19 +5731,19 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # plt.colorbar(im, ax=axes[3,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]      
-    lat_label = [-27.5]
+    lat_label = [-27.4]
     for item, itrans in enumerate(opts_RMA5['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[3,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-        p1 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
-        p2 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
+        p1 = axes[3,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p2 = axes[3,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
         dy = (p2[1] - p1[1])
         dx = (p2[0] - p1[0])
         rotn = np.degrees(np.arctan2(dy, dx))
-        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
+        axes[3,1].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn , weight='bold')
         axes[3,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
     axes[3,0].set_xlabel('Longitude')
