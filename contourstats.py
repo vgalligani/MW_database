@@ -5278,6 +5278,7 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
         edgecolor='black')
 
     cmaps = GMI_colormap() 
+    cois_text = ['coi=1', 'coi=2']
 
     #----------------------------------------------------------------------------------------
     # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
@@ -5346,22 +5347,23 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
     CurvedText(
-            x = lon_radius[1000:],
-            y = lat_radius[1000:],
+            x = lon_radius[100:],
+            y = lat_radius[100:],
             text='100 km',#'this this is a very, very long text',
-            va = 'top', axes=axes[0,0])
+            va = 'bottom', axes=axes[0,0])
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],220)
     axes[0,0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
     CurvedText(
-            x = lon_radius[500:],
-            y = lat_radius[500:],
+            x = lon_radius[100:],
+            y = lat_radius[100:],
             text='200 km',#'this this is a very, very long text',
             va = 'bottom', axes=axes[0,0])
     if len(opts_09022018['REPORTES_meta'])>0:
         for ireportes in range(len(opts_09022018['REPORTES_geo'])):
             axes[0,0].plot( opts_09022018['REPORTES_geo'][ireportes][1],  opts_09022018['REPORTES_geo'][ireportes][0], 'D', 
 			   markeredgecolor='black', markerfacecolor='none', markersize=10, label=opts_09022018['REPORTES_meta'][ireportes])
-
+    
+	
     # ---- PCT ---------------------------------------------------------------
     im = axes[0,1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=150, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
     axes[0,1].set_title('PCT 89-GHz')
@@ -5384,12 +5386,20 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     plt.colorbar(im, ax=axes[0,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]	
-    for itrans in opts_09022018['transects']:
+    lat_label = [-28.3, -28.8]
+    for item, itrans in enumerate(opts_09022018['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[0,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        p1 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p2 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
+        dy = (p2[1] - p1[1])
+        dx = (p2[0] - p1[0])
+        rotn = np.degrees(np.arctan2(dy, dx))
+        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
+	
         axes[0,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
 
     # CASO 3110201 #----------------------------------------------------
@@ -5486,14 +5496,20 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # plt.colorbar(im, ax=axes[1,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
-    for itrans in opts_31102018['transects']:
+    lat_label = [-28.3, -28.8]
+    for item, itrans in enumerate(opts_31102018['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[1,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        p1 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p2 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
+        dy = (p2[1] - p1[1])
+        dx = (p2[0] - p1[0])
+        rotn = np.degrees(np.arctan2(dy, dx))
+        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
         axes[1,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-
     # CASO 0305 #----------------------------------------------------
     del fname
     opts_RMA1 = opts_12152018.copy() 
@@ -5598,14 +5614,20 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # plt.colorbar(im, ax=axes[2,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
-    for itrans in opts_RMA1['transects']:
+    lat_label = [-26.5, -26.7]
+    for item, itrans in enumerate(opts_RMA1['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[2,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        p1 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p2 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
+        dy = (p2[1] - p1[1])
+        dx = (p2[0] - p1[0])
+        rotn = np.degrees(np.arctan2(dy, dx))
+        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
         axes[2,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-
 
     # CASO 20200815 #---------------------------------------------------- 
     opts_RMA5 = opts_02092019.copy()
@@ -5706,15 +5728,21 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     axes[3,1].set_ylim([opts_RMA5['ylim_min'], opts_RMA5['ylim_max']])	
     # plt.colorbar(im, ax=axes[3,1],label='(K)')
     # ---- in both:
-    azimuths = radar.azimuth['data'][start_index:end_index]
-    for itrans in opts_RMA5['transects']:
+    azimuths = radar.azimuth['data'][start_index:end_index]      
+    lat_label = [-27.5]
+    for item, itrans in enumerate(opts_RMA5['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[3,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
+        p1 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p2 = axes[0,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
+        dy = (p2[1] - p1[1])
+        dx = (p2[0] - p1[0])
+        rotn = np.degrees(np.arctan2(dy, dx))
+        axes[0,0].text(np.nanmin(np.ravel(lon_transect)), lat_label[item], cois_text[item], rotation=rotn)
         axes[3,1].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-
 
     axes[3,0].set_xlabel('Longitude')
     axes[3,0].set_ylabel('Latitude')	
@@ -6931,14 +6959,14 @@ def run_FIG7_HIDs(opts_0902, opts_3110, opts_0503, opts_09022019):
     im_HID = axes[0,0].pcolormesh(grid_range_1_1/1e3, grid_alt_1_1/1e3, grid_HID_1_1, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[0,0].set_xlim([80, 140])
     axes[0,0].set_ylim([0,15])
-    axes[0,0].set_title('HID Transect of interest 1') 
+    axes[0,0].set_title('HID coi=1') 
     axes[0,0].grid(True)
     axes[0,0].text(82, 12, r'P$_{hail}$ = 2.6% ', fontweight='bold')
 
     im_HID = axes[0,1].pcolormesh(grid_range_1_2/1e3, grid_alt_1_2/1e3, grid_HID_1_2, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[0,1].set_xlim([80, 140])
     axes[0,1].set_ylim([0,15])
-    axes[0,1].set_title('HID Transect of interest 2') 
+    axes[0,1].set_title('HID coi=2') 
     cbar_HID = plt.colorbar(im_HID, ax=axes[0,1], shrink=1.1, label=r'HID')    
     cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
     axes[0,1].grid(True)
