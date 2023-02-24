@@ -5496,7 +5496,7 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # plt.colorbar(im, ax=axes[1,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
-    lat_label = [-28.3, -27]
+    lat_label = [-28.3, -28.3]
     opts_31102018['transects'] = [199,157]
 
     for item, itrans in enumerate(opts_31102018['transects']):
@@ -5505,7 +5505,7 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[1,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-        p1 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+	p1 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
         p2 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
         dy = (p2[1] - p1[1])
         dx = (p2[0] - p1[0])
@@ -5616,7 +5616,7 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
     # plt.colorbar(im, ax=axes[2,1],label='(K)')
     # ---- in both:
     azimuths = radar.azimuth['data'][start_index:end_index]
-    lat_label = [-26.8, -27.8]
+    lat_label = [-25.5, -26]
     for item, itrans in enumerate(opts_RMA1['transects']):
         target_azimuth = azimuths[itrans]
         filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()
