@@ -6201,7 +6201,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
-def get_HIDoutput(options):
+def get_HIDoutput(options, azi_element):
 	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
     radar = pyart.io.read(r_dir+options['rfile'])
@@ -6256,6 +6256,42 @@ def get_HIDoutput(options):
         ZDRname='ZDRC'
         RHOHVname = 'RHOHV'
 	
+    if options['radar_name'] == 'RMA4':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+
+    if options['radar_name'] == 'RMA3':	
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIDP_nans.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+	
 	
 	
     if options['radar_name'] == 'CSPR2':
@@ -6304,7 +6340,7 @@ def get_HIDoutput(options):
     lons        = radar.gate_longitude['data'][start_index:end_index]
     azimuths    = radar.azimuth['data'][start_index:end_index]
     #figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[15,10])
-    target_azimuth = azimuths[options['azi_oi'][0]]
+    target_azimuth = azimuths[options['azi_oi'][azi_element]]
     filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
     grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
     grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
