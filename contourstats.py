@@ -6361,7 +6361,7 @@ def get_HIDoutput(options):
     gc.collect()
     return grid_HID, grid_lon, grid_lat, grid_range, grid_alt
 #----------------------------------------------------------------------------------------------     
-def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
+def run_FIG6_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
@@ -6420,7 +6420,7 @@ def run_FIG5_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     return
 #----------------------------------------------------------------------------------------------     
 #----------------------------------------------------------------------------------------------     
-def main_fig5():
+def main_fig6():
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
     era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'
@@ -6623,17 +6623,74 @@ def main_fig5():
 	
     run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_03052019, opts_02092019) 
 
-
-
-
-		
-		
-		
-	
-
-	
-	
 	return
+
+
+
+#----------------------------------------------------------------------------------------------     
+def run_FIG7_HIDs(opts_0902, opts_3110, opts_0503, opts_09022019):
+
+    gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
+    era5_dir = '/home/victoria.galligani/Work/Studies/Hail_MW/ERA5/'	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+
+    plt.matplotlib.rc('font', family='serif', size = 12)
+    plt.rcParams['xtick.labelsize']=12
+    plt.rcParams['ytick.labelsize']=12  
+
+    #---- plot hid ppi  
+    hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
+                'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    cmaphid = colors.ListedColormap(hid_colors)	    
+
+    # ---- GET HIDs ---------------------------------------------------------------
+    [grid_HID_1, grid_lon_1, grid_lat_1, grid_range_1, grid_alt_1] = get_HIDoutput(opts_0902) #, opts_DOW7, opts_RMA1, opts_RMA5
+    breakpoint()
+    [grid_HID_2, grid_lon_2, grid_lat_2, grid_range_2, grid_alt_2] = get_HIDoutput(opts_3110) #, opts_DOW7, opts_RMA1, opts_RMA5
+    [grid_HID_3, grid_lon_3, grid_lat_3, grid_range_3, grid_alt_3] = get_HIDoutput(opts_0503) #, opts_DOW7, opts_RMA1, opts_RMA5
+    [grid_HID_4, grid_lon_4, grid_lat_4, grid_range_4, grid_alt_4] = get_HIDoutput(opts_09022019) #, opts_DOW7, opts_RMA1, opts_RMA5
+
+   
+    # ---- FIGFIG ---------------------------------------------------------------
+    fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,figsize=[7,10])
+    im_HID = axes[0].pcolormesh(grid_range_1/1e3, grid_alt_1/1e3, grid_HID_1, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[1].set_xlim([opts_0902['xlims_mins_input'][0], opts_0902['xlims_xlims_input'][0]])
+    axes[0].set_ylim([0,15])
+    axes[0].set_title('HID Transect of interest') 
+    cbar_HID = plt.colorbar(im_HID, ax=axes[0], shrink=1.1, label=r'HID')    
+    cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
+	
+    im_HID = axes[1].pcolormesh(grid_range_2/1e3, grid_alt_2/1e3, grid_HID_2, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[1].set_xlim([opts_3110['xlims_mins_input'][0], opts_3110['xlims_xlims_input'][0]])
+    axes[1].set_ylim([0,15])
+
+    im_HID = axes[2].pcolormesh(grid_range_3/1e3, grid_alt_3/1e3, grid_HID_3, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[2].set_xlim([opts_0503['xlims_mins_input'][0], opts_0503['xlims_xlims_input'][0]])
+    axes[2].set_ylim([0,15])
+    #pm1    = axes[2].get_position().get_points().flatten()
+    #p_last = axes[0].get_position().get_points().flatten(); 
+    #ax_cbar = fig.add_axes([p_last[0]+(p_last[0]-pm1[0])+0.08, 0.76, 0.02, 0.2])  
+    #cbar    = fig.colorbar(im_HID,  axes[2], shrink=0.9, label='HID')#, ticks=np.arange(0,np.round(VMAXX,2)+0.02,0.01)); 
+    #cbar = adjust_fhc_colorbar_for_pyart(cbar)
+	
+    im_HID = axes[3].pcolormesh(grid_range_4/1e3, grid_alt_4/1e3, grid_HID_4, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[3].set_xlim([opts_09022019['xlims_mins_input'][0], opts_09022019['xlims_xlims_input'][0]])
+    axes[3].set_ylim([0,15])
+    axes[3].set_xlabel('Range (km)')
+    axes[3].set_ylabel('Altitude (km)')
+    axes[0].grid(True)
+    axes[1].grid(True)
+    axes[2].grid(True)
+    axes[3].grid(True)
+	
+
+
+
+    return
+#----------------------------------------------------------------------------------------------     
+#----------------------------------------------------------------------------------------------     
+
+
 
 def main_main(): 
 	
