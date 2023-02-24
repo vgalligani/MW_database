@@ -6509,6 +6509,113 @@ def get_HIDoutput(options, azi_element):
     gc.collect()
     return grid_HID, grid_lon, grid_lat, grid_range, grid_alt
 #----------------------------------------------------------------------------------------------     
+#----------------------------------------------------------------------------------------------     
+
+
+
+
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+def get_HIDoutput_fromGriddedField(options, azi_element, gridded_radar):
+	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+    radar = pyart.io.read(r_dir+options['rfile'])
+    azi_oi = options['azi_oi']
+
+    if 'TH' in radar.fields.keys():  
+            THname= 'TH'
+            TVname= 'TV'
+            KDPname='corrKDP'
+            RHOHVname = 'RHOHV'
+    elif 'DBZHCC' in radar.fields.keys():        
+           THname = 'DBZHCC'
+           KDPname='KDP'
+           TVname='ZDRC'          		
+    elif 'corrected_reflectivity' in radar.fields.keys():        
+           TH   = 'corrected_reflectivity'
+           ZDRname =  'corrected_differential_reflectivity'
+           RHOHVname = 'copol_correlation_coeff'       
+           PHIname = 'filtered_corrected_differential_phase'       
+           KDPname = 'filtered_corrected_specific_diff_phase'
+           THname =  'corrected_reflectivity'
+    elif 'DBZH' in radar.fields.keys():        
+           THname = 'DBZH'
+           KDPname ='corrKDP'
+           TVname   = 'DBZV'  
+           RHOHVname   = 'RHOHV'  
+    elif 'attenuation_corrected_reflectivity_h' in radar.fields.keys():
+           THname = 'attenuation_corrected_reflectivity_h'
+           KDPname ='filtered_corrected_specific_diff_phase'
+           TVname   = 'reflectivity_v'  #corrected_differential_reflectivity
+           RHOHVname   = 'copol_correlation_coeff'  	
+
+    nlev = 0 
+    start_index = radar.sweep_start_ray_index['data'][nlev]
+    end_index   = radar.sweep_end_ray_index['data'][nlev]
+    lats        = radar.gate_latitude['data'][start_index:end_index]
+    lons        = radar.gate_longitude['data'][start_index:end_index]
+    azimuths    = radar.azimuth['data'][start_index:end_index]
+    #figcheck, axescheck = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[15,10])
+    target_azimuth = azimuths[options['azi_oi'][azi_element]]
+    filas = np.asarray(abs(azimuths-target_azimuth)<=0.1).nonzero()		
+    grid_lon   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lon[:]   = np.nan
+    grid_lat   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_lat[:]   = np.nan
+    grid_THTH  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_THTH[:]  = np.nan
+    grid_TVTV  = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_TVTV[:]  = np.nan
+    grid_ZDR   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_ZDR[:]  = np.nan
+    grid_alt   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_alt[:]   = np.nan
+    grid_range = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_range[:] = np.nan
+    grid_RHO   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_RHO[:]   = np.nan
+    grid_HID   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_HID[:]   = np.nan
+    grid_KDP   = np.zeros((gridded_radar.fields[THname]['data'].shape[0], lons[filas,:].shape[2])); grid_KDP[:]  = np.nan
+
+    # need to find x/y pair for each gate at the surface 
+    for i in range(lons[filas,:].shape[2]):	
+        # First, find the index of the grid point nearest a specific lat/lon.   
+        abslat = np.abs(gridded_radar.point_latitude['data'][0,:,:]  - lats[filas,i])
+        abslon = np.abs(gridded_radar.point_longitude['data'][0,:,:] - lons[filas,i])
+        c = np.maximum(abslon, abslat)
+        ([xloc], [yloc]) = np.where(c == np.min(c))	
+        grid_lon[:,i]   = gridded_radar.point_longitude['data'][:,xloc,yloc]
+        grid_lat[:,i]   = gridded_radar.point_latitude['data'][:,xloc,yloc]
+        grid_TVTV[:,i]  = gridded_radar.fields[TVname]['data'][:,xloc,yloc]
+        if options['radar_name'] == 'DOW7':
+            grid_ZDR[:,i] = gridded_radar.fields[ZDRname]['data'][:,xloc,yloc]
+        else:
+            grid_ZDR[:,i] = gridded_radar.fields[THname]['data'][:,xloc,yloc]-gridded_radar.fields[TVname]['data'][:,xloc,yloc]									   
+        grid_THTH[:,i]  = gridded_radar.fields[THname]['data'][:,xloc,yloc]
+        grid_RHO[:,i]   = gridded_radar.fields[RHOHVname]['data'][:,xloc,yloc]
+        grid_alt[:,i]   = gridded_radar.z['data'][:]
+        x               = gridded_radar.point_x['data'][:,xloc,yloc]
+        y               = gridded_radar.point_y['data'][:,xloc,yloc]
+        z               = gridded_radar.point_z['data'][:,xloc,yloc]
+        grid_range[:,i] = ( x**2 + y**2 + z**2 ) ** 0.5
+        grid_KDP[:,i]   = gridded_radar.fields[KDPname]['data'][:,xloc,yloc]
+        #grid_HID[:,i]   = gridded_radar.fields['HID']['data'][:,xloc,yloc]
+        # CALCUALTE HID FROM THESE GRIDDED FIELDS:
+        scores = csu_fhc.csu_fhc_summer(dz=grid_THTH[:,i], zdr=grid_ZDR[:,i] - options['ZDRoffset'], rho=grid_RHO[:,i], kdp=grid_KDP[:,i], 
+					    use_temp=True, band='C', T=gridded_radar.fields['sounding_temperature']['data'][:,xloc,yloc])
+        grid_HID[:,i] = np.argmax(scores, axis=0) + 1 
+
+        ni = grid_HID.shape[0]
+        nj = grid_HID.shape[1]
+        for i in range(ni):
+            rho_h = grid_RHO[i,:]
+            zh_h = grid_THTH[i,:]
+            for j in range(nj):
+                if (rho_h[j]<0.7) or (zh_h[j]<10):
+                    grid_THTH[i,j]  = np.nan
+                    grid_TVTV[i,j]  = np.nan
+                    grid_RHO[i,j]  = np.nan	
+                    grid_ZDR[i,j]  = np.nan
+                    grid_HID[i,j]  = np.nan
+		
+    gc.collect()
+    return grid_HID, grid_lon, grid_lat, grid_range, grid_alt
+
+#----------------------------------------------------------------------------------------------     
+#----------------------------------------------------------------------------------------------
 def run_FIG6_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
     gmi_dir  = '/home/victoria.galligani/Work/Studies/Hail_MW/GMI_data/'
@@ -6797,12 +6904,25 @@ def run_FIG7_HIDs(opts_0902, opts_3110, opts_0503, opts_09022019):
     gridded_radar_0503 = get_gridded4HIDoutput(opts_0503)
     gridded_radar_09022019 = get_gridded4HIDoutput(opts_09022019)
     breakpoint()
-	
-    [grid_HID_1_1, grid_lon_1_1, grid_lat_1_1, grid_range_1_1, grid_alt_1_1] = get_HIDoutput(opts_0902, 0) #, opts_DOW7, opts_RMA1, opts_RMA5
 
-    [grid_HID_2, grid_lon_2, grid_lat_2, grid_range_2, grid_alt_2] = get_HIDoutput(opts_3110) #, opts_DOW7, opts_RMA1, opts_RMA5
-    [grid_HID_3, grid_lon_3, grid_lat_3, grid_range_3, grid_alt_3] = get_HIDoutput(opts_0503) #, opts_DOW7, opts_RMA1, opts_RMA5
-    [grid_HID_4, grid_lon_4, grid_lat_4, grid_range_4, grid_alt_4] = get_HIDoutput(opts_09022019) #, opts_DOW7, opts_RMA1, opts_RMA5
+    # -- 4 azis in gridded_radar_0902
+    [grid_HID_1_1, grid_lon_1_1, grid_lat_1_1, grid_range_1_1, grid_alt_1_1] = get_HIDoutput_fromGriddedField(opts_0902, 0, gridded_radar_0902)
+    [grid_HID_1_2, grid_lon_1_1, grid_lat_1_2, grid_range_1_1, grid_alt_1_2] = get_HIDoutput_fromGriddedField(opts_0902, 1, gridded_radar_0902)
+    [grid_HID_1_3, grid_lon_1_1, grid_lat_1_3, grid_range_1_1, grid_alt_1_3] = get_HIDoutput_fromGriddedField(opts_0902, 2, gridded_radar_0902)
+    [grid_HID_1_4, grid_lon_1_4, grid_lat_1_4, grid_range_1_4, grid_alt_1_4] = get_HIDoutput_fromGriddedField(opts_0902, 3, gridded_radar_0902)
+
+    # -- 4 azis in gridded_radar_3110
+    [grid_HID_2_1, grid_lon_2_1, grid_lat_2_1, grid_range_2_1, grid_alt_2_1] = get_HIDoutput_fromGriddedField(opts_3110, 0, gridded_radar_3110)
+    [grid_HID_2_2, grid_lon_2_1, grid_lat_2_2, grid_range_2_1, grid_alt_2_2] = get_HIDoutput_fromGriddedField(opts_3110, 1, gridded_radar_3110)
+    [grid_HID_2_3, grid_lon_2_1, grid_lat_2_3, grid_range_2_1, grid_alt_2_3] = get_HIDoutput_fromGriddedField(opts_3110, 2, gridded_radar_3110)
+    [grid_HID_2_4, grid_lon_2_4, grid_lat_2_4, grid_range_2_4, grid_alt_2_4] = get_HIDoutput_fromGriddedField(opts_3110, 3, gridded_radar_3110)	
+
+    # -- 2 azis in gridded_radar_0502
+    [grid_HID_3_1, grid_lon_3_1, grid_lat_3_1, grid_range_3_1, grid_alt_3_1] = get_HIDoutput_fromGriddedField(opts_0503, 0, gridded_radar_0503)
+    [grid_HID_3_2, grid_lon_3_1, grid_lat_3_2, grid_range_3_1, grid_alt_3_2] = get_HIDoutput_fromGriddedField(opts_0503, 1, gridded_radar_0503)
+	
+    # -- 2 azis in gridded_radar_09022019
+    [grid_HID_4, grid_lon_4, grid_lat_4, grid_range_4, grid_alt_4] = get_HIDoutput_fromGriddedField(opts_09022019, 0, gridded_radar_09022019)
 
    
     # ---- FIGFIG ---------------------------------------------------------------
