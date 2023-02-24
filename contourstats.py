@@ -6906,37 +6906,49 @@ def run_FIG7_HIDs(opts_0902, opts_3110, opts_0503, opts_09022019):
     breakpoint()
 
     # -- 4 azis in gridded_radar_0902
+    opts_0902['azi_oi'] = [225,245]
     [grid_HID_1_1, grid_lon_1_1, grid_lat_1_1, grid_range_1_1, grid_alt_1_1] = get_HIDoutput_fromGriddedField(opts_0902, 0, gridded_radar_0902)
-    [grid_HID_1_2, grid_lon_1_1, grid_lat_1_2, grid_range_1_1, grid_alt_1_2] = get_HIDoutput_fromGriddedField(opts_0902, 1, gridded_radar_0902)
-    [grid_HID_1_3, grid_lon_1_1, grid_lat_1_3, grid_range_1_1, grid_alt_1_3] = get_HIDoutput_fromGriddedField(opts_0902, 2, gridded_radar_0902)
-    [grid_HID_1_4, grid_lon_1_4, grid_lat_1_4, grid_range_1_4, grid_alt_1_4] = get_HIDoutput_fromGriddedField(opts_0902, 3, gridded_radar_0902)
+    [grid_HID_1_2, grid_lon_1_1, grid_lat_1_2, grid_range_1_2, grid_alt_1_2] = get_HIDoutput_fromGriddedField(opts_0902, 1, gridded_radar_0902)
 
     # -- 4 azis in gridded_radar_3110
     [grid_HID_2_1, grid_lon_2_1, grid_lat_2_1, grid_range_2_1, grid_alt_2_1] = get_HIDoutput_fromGriddedField(opts_3110, 0, gridded_radar_3110)
-    [grid_HID_2_2, grid_lon_2_1, grid_lat_2_2, grid_range_2_1, grid_alt_2_2] = get_HIDoutput_fromGriddedField(opts_3110, 1, gridded_radar_3110)
-    [grid_HID_2_3, grid_lon_2_1, grid_lat_2_3, grid_range_2_1, grid_alt_2_3] = get_HIDoutput_fromGriddedField(opts_3110, 2, gridded_radar_3110)
+    [grid_HID_2_2, grid_lon_2_1, grid_lat_2_2, grid_range_2_2, grid_alt_2_2] = get_HIDoutput_fromGriddedField(opts_3110, 1, gridded_radar_3110)
+    [grid_HID_2_3, grid_lon_2_1, grid_lat_2_3, grid_range_2_3, grid_alt_2_3] = get_HIDoutput_fromGriddedField(opts_3110, 2, gridded_radar_3110)
     [grid_HID_2_4, grid_lon_2_4, grid_lat_2_4, grid_range_2_4, grid_alt_2_4] = get_HIDoutput_fromGriddedField(opts_3110, 3, gridded_radar_3110)	
 
     # -- 2 azis in gridded_radar_0502
     [grid_HID_3_1, grid_lon_3_1, grid_lat_3_1, grid_range_3_1, grid_alt_3_1] = get_HIDoutput_fromGriddedField(opts_0503, 0, gridded_radar_0503)
     [grid_HID_3_2, grid_lon_3_1, grid_lat_3_2, grid_range_3_1, grid_alt_3_2] = get_HIDoutput_fromGriddedField(opts_0503, 1, gridded_radar_0503)
 	
-    # -- 2 azis in gridded_radar_09022019
-    [grid_HID_4, grid_lon_4, grid_lat_4, grid_range_4, grid_alt_4] = get_HIDoutput_fromGriddedField(opts_09022019, 0, gridded_radar_09022019)
+    # -- 1 azis in gridded_radar_09022019
+    [grid_HID_4_1, grid_lon_4_1, grid_lat_4_1, grid_range_4_1, grid_alt_4_1] = get_HIDoutput_fromGriddedField(opts_09022019, 0, gridded_radar_09022019)
 
    
     # ---- FIGFIG ---------------------------------------------------------------
-    fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,figsize=[7,10])
-    im_HID = axes[0].pcolormesh(grid_range_1/1e3, grid_alt_1/1e3, grid_HID_1, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[1].set_xlim([opts_0902['xlims_mins_input'][0], opts_0902['xlims_xlims_input'][0]])
-    axes[0].set_ylim([0,15])
-    axes[0].set_title('HID Transect of interest') 
-    cbar_HID = plt.colorbar(im_HID, ax=axes[0], shrink=1.1, label=r'HID')    
+    fig, axes = plt.subplots(nrows=4, ncols=2, constrained_layout=True,figsize=[7,10])
+
+    im_HID = axes[0,0].pcolormesh(grid_range_1_1/1e3, grid_alt_1_1/1e3, grid_HID_1_1, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[0,0].set_xlim([80, 140])
+    axes[0,0].set_ylim([0,15])
+    axes[0,0].set_title('HID Transect of interest 1') 
+
+    im_HID = axes[0,1].pcolormesh(grid_range_1_2/1e3, grid_alt_1_2/1e3, grid_HID_1_2, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[0,1].set_xlim([80, 140])
+    axes[0,1].set_ylim([0,15])
+    axes[0,1].set_title('HID Transect of interest 2') 
+
+    cbar_HID = plt.colorbar(im_HID, ax=axes[0,1], shrink=1.1, label=r'HID')    
     cbar_HID = adjust_fhc_colorbar_for_pyart(cbar_HID)	
 	
-    im_HID = axes[1].pcolormesh(grid_range_2/1e3, grid_alt_2/1e3, grid_HID_2, cmap=cmaphid, vmin=0.2, vmax=10)
-    axes[1].set_xlim([opts_3110['xlims_mins_input'][0], opts_3110['xlims_xlims_input'][0]])
-    axes[1].set_ylim([0,15])
+    # de este caso muestro uno que tiene hid>0.5 y otro que no. == 199 [1] y 157 [2]
+    im_HID = axes[1,0].pcolormesh(grid_range_2_2/1e3, grid_alt_2_2/1e3, grid_HID_2_2, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[1,0].set_xlim([opts_3110['xlims_mins_input'][0], opts_3110['xlims_xlims_input'][0]])
+    axes[1,0].set_ylim([0,15])
+
+    im_HID = axes[1,1].pcolormesh(grid_range_2_3/1e3, grid_alt_2_3/1e3, grid_HID_2_3, cmap=cmaphid, vmin=0.2, vmax=10)
+    axes[1,1].set_xlim([opts_3110['xlims_mins_input'][0], opts_3110['xlims_xlims_input'][0]])
+    axes[1,1].set_ylim([0,15])
+
 
     im_HID = axes[2].pcolormesh(grid_range_3/1e3, grid_alt_3/1e3, grid_HID_3, cmap=cmaphid, vmin=0.2, vmax=10)
     axes[2].set_xlim([opts_0503['xlims_mins_input'][0], opts_0503['xlims_xlims_input'][0]])
