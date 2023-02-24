@@ -6680,7 +6680,8 @@ def run_FIG7_HIDs(opts_0902, opts_3110, opts_0503, opts_09022019):
     cmaphid = colors.ListedColormap(hid_colors)	    
 
     # ---- GET HIDs ---------------------------------------------------------------
-    [grid_HID_1, grid_lon_1, grid_lat_1, grid_range_1, grid_alt_1] = get_HIDoutput(opts_0902) #, opts_DOW7, opts_RMA1, opts_RMA5
+    for i in range(len( opts_0902['azi_oi'] )): 
+    	[grid_HID_1[i], grid_lon_1[i], grid_lat_1[i], grid_range_1[i], grid_alt_1[i]] = get_HIDoutput(opts_0902, i) #, opts_DOW7, opts_RMA1, opts_RMA5
     breakpoint()
     [grid_HID_2, grid_lon_2, grid_lat_2, grid_range_2, grid_alt_2] = get_HIDoutput(opts_3110) #, opts_DOW7, opts_RMA1, opts_RMA5
     [grid_HID_3, grid_lon_3, grid_lat_3, grid_range_3, grid_alt_3] = get_HIDoutput(opts_0503) #, opts_DOW7, opts_RMA1, opts_RMA5
