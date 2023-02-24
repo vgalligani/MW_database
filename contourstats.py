@@ -6201,6 +6201,118 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
 #----------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------
+def get_gridded4HIDoutput(options):
+	
+    r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
+    radar = pyart.io.read(r_dir+options['rfile'])
+    azi_oi = options['azi_oi']
+    era5_file = options['era5_file']
+	
+    if options['radar_name'] == 'RMA1':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+
+    if options['radar_name'] == 'RMA5':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+
+    if options['radar_name'] == 'DOW7':
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, options['era5_file'], 
+								options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = stack_ppis(radar, options['files_list'], options, freezing_lev, radar_T, tfield_ref, alt_ref)
+        radar = DOW7_NOcorrect_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(41, 355, 355), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+        ZDRname='ZDRC'
+        RHOHVname = 'RHOHV'
+	
+    if options['radar_name'] == 'RMA4':
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIORIG.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+
+    if options['radar_name'] == 'RMA3':	
+        PHIORIG = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans = radar.fields['PHIDP']['data'].copy() 
+        PHIDP_nans[np.where(PHIDP_nans.data==radar.fields['PHIDP']['data'].fill_value)] = np.nan
+        mask = radar.fields['PHIDP']['data'].data.copy()    
+        mask[:] = False
+        PHIDP_nans.mask = mask
+        radar.add_field_like('PHIDP', 'PHIDP', PHIORIG, replace_existing=True)	
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)     
+        radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
+        roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()
+	
+	
+	
+    if options['radar_name'] == 'CSPR2':
+        alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, options['lat_pfs'], options['lon_pfs']) 
+        radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
+        radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
+        radar = add_43prop_field(radar)    
+        radar = CSPR2_correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
+        # 500m grid!
+        gridded_radar  = pyart.map.grid_from_radars(radar, grid_shape=(41, 440, 440), grid_limits=((0.,20000,),   #20,470,470 is for 1km
+        (-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))), roi_func='dist', min_radius=100.0, weighting_function='BARNES2')  
+        gc.collect()	
+        TVname   = 'reflectivity_v'  #corrected_differential_reflectivity
+
+    return gridded_radar 
+
+
+
+
+#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
 def get_HIDoutput(options, azi_element):
 	
     r_dir    = '/home/victoria.galligani/Work/Studies/Hail_MW/radar_data/'
@@ -6680,9 +6792,14 @@ def run_FIG7_HIDs(opts_0902, opts_3110, opts_0503, opts_09022019):
     cmaphid = colors.ListedColormap(hid_colors)	    
 
     # ---- GET HIDs ---------------------------------------------------------------
-    for i in range(len( opts_0902['azi_oi'] )): 
-    	[grid_HID_1[i], grid_lon_1[i], grid_lat_1[i], grid_range_1[i], grid_alt_1[i]] = get_HIDoutput(opts_0902, i) #, opts_DOW7, opts_RMA1, opts_RMA5
+    gridded_radar_0902 = get_gridded4HIDoutput(opts_0902)
+    gridded_radar_3110 = get_gridded4HIDoutput(opts_3110)
+    gridded_radar_0503 = get_gridded4HIDoutput(opts_0503)
+    gridded_radar_09022019 = get_gridded4HIDoutput(opts_09022019)
     breakpoint()
+	
+    [grid_HID_1_1, grid_lon_1_1, grid_lat_1_1, grid_range_1_1, grid_alt_1_1] = get_HIDoutput(opts_0902, 0) #, opts_DOW7, opts_RMA1, opts_RMA5
+
     [grid_HID_2, grid_lon_2, grid_lat_2, grid_range_2, grid_alt_2] = get_HIDoutput(opts_3110) #, opts_DOW7, opts_RMA1, opts_RMA5
     [grid_HID_3, grid_lon_3, grid_lat_3, grid_range_3, grid_alt_3] = get_HIDoutput(opts_0503) #, opts_DOW7, opts_RMA1, opts_RMA5
     [grid_HID_4, grid_lon_4, grid_lat_4, grid_range_4, grid_alt_4] = get_HIDoutput(opts_09022019) #, opts_DOW7, opts_RMA1, opts_RMA5
