@@ -4420,14 +4420,13 @@ def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects
 		
 
 	
-    plot_gmi_paper_fig5_RMA1(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
+    #plot_gmi_paper_fig5_RMA1(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
     #plot_gmi_paper_fig5(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)     
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-    keyboard()
     # 500m grid! 
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
@@ -4777,7 +4776,9 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
         #im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_THTH-grid_TVTV)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
         im_ZDR = axes[1,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, (grid_ZDR)-options['ZDRoffset'], cmap=discrete_cmap(int(5+2), 'jet') , vmin=-2, vmax=5)
 
-        im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
+        #im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.RefDiff , vmin=0.7, vmax=1.)
+        im_RHO = axes[2,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_RHO, cmap=pyart.graph.cm.BrBu12, vmin=0.7, vmax=1.)
+
 
         im_HID = axes[3,iz].pcolormesh(grid_range/1e3, grid_alt/1e3, grid_HID, cmap=cmaphid, vmin=0.2, vmax=10)
 
@@ -4856,7 +4857,9 @@ def make_pseudoRHISfromGrid(gridded_radar, radar, azi_oi, titlecois, xlims_xlims
     fig.savefig(options['fig_dir']+'PseudoRHIS_GRIDDED'+'.png', dpi=300,transparent=False)   
     #plt.close()
     del grid_THTH, grid_RHO, grid_TVTV, grid_HID
+    fig.savefig('/home/victoria.galligani/Dropbox/FigsPaper/PseudoRHIS_GRIDDED_RMA1.png', bbox_inches='tight',format='png',dpi=300)
 
+	
     #-------------------------------
     for i in range(20):
         fig, ax = plt.subplots(nrows=1, ncols=1, constrained_layout=True, figsize=[13,12])
