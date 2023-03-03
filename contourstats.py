@@ -972,10 +972,10 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
     #----------------------------------------------------------------------------------------
     # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
     #----------------------------------------------------------------------------------------
-    fig, axes = plt.subplots(nrows=1, ncols=2, constrained_layout=True,figsize=[10,5])
+    fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[10,5])
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    #ZH[np.where(ZH<20)]=np.nan
+    ZH[np.where(ZH<20)]=np.nan
     pcm1=axes[0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
     axes[0].set_title('Ground Level')
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
@@ -1007,7 +1007,9 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
     labels = ["PCT 89-GHz 200 K contour"] 
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
-
+    
+    if len(options['REPORTES_meta'])>0:
+        axes[0].plot( np.nan,  np.nan, 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label='Surface reports')
 
 
     if caso == '20200815': 
@@ -1059,7 +1061,7 @@ def plot_gmi_paper_fig5(fname, options, radar, lon_pfs, lat_pfs, icoi, transects
             va = 'bottom', axes=axes[0])
 
     elif caso == '20180208': 
-        axes[0].set_title(r'RMA1 Zh (8/2/2018 2057UTC), Elev: 0.7$^{o}$')
+        axes[0].set_title(r'RMA1 Zh 8/2/2018 2057 UTC') # Elev: 0.7$^{o}$
         axes[0].legend(loc='upper left')
         CurvedText(
             x = lon_radius[17000:],
@@ -4213,7 +4215,7 @@ def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects
     radar = add_field_to_radar_object(radar_T, radar, field_name='sounding_temperature')  
     radar = add_43prop_field(radar)     
     radar = correct_PHIDP_KDP(radar, options, nlev=0, azimuth_ray=options['azimuth_ray'], diff_value=280, tfield_ref=tfield_ref, alt_ref=alt_ref)
-
+    keyboard()
     # 500m grid! 
     grided  = pyart.map.grid_from_radars(radar, grid_shape=(40, 940, 940), grid_limits=((0.,20000,),   #20,470,470 is for 1km
       		(-np.max(radar.range['data']), np.max(radar.range['data'])),(-np.max(radar.range['data']), np.max(radar.range['data']))),
@@ -6908,7 +6910,7 @@ def main_fig6():
 	
     #run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_03052019, opts_02092019) 
     run_FIG7_HIDs(opts_09022018, opts_31102018, opts_03052019, opts_02092019)
-	return
+return
 
 
 
@@ -7070,7 +7072,7 @@ def main_20180208():
 	    'era5_file': era5_file,
 	    'radar_name':'RMA1',
 	    'icoi_PHAIL':[4], 
-	    'alternate_azi':[356,220,192],
+	    'alternate_azi':[356,220,192], 'caso':'20180208',
 	    'gfile': gfile, 'fig_dir':'/home/victoria.galligani/Work/Studies/Hail_MW/Figures/Caso_20180208_RMA1/', 
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
@@ -7078,7 +7080,11 @@ def main_20180208():
     labels_PHAIL = ['coi=3','icoi=2 (Phail=53.4%)','icoi=1 (Phail=9.1%)'] 
     xlims_xlims_input  = [60, 100, 150] 
     xlims_mins_input  = [10, 40, 60]		
+
 	
+    run_general_paper_Figure_onlyHID(opts, lat_pfs, lon_pfs, [2,4,5], [356,220,192], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
+		
+		
     run_general_paper(opts, lat_pfs, lon_pfs, [2,4,5], [356,220,192], labels_PHAIL,  xlims_mins_input, xlims_xlims_input)
     GET_TBVH_250ICOIS(opts, gmi_dir+opts['gfile'],1)
 
