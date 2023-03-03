@@ -5722,7 +5722,7 @@ def run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_12152018, o
         lon_transect     = lons[filas,:]
         lat_transect     = lats[filas,:]
         axes[1,0].plot(np.ravel(lon_transect), np.ravel(lat_transect), 'k', linestyle='--')
-	p1 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
+        p1 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[1], np.ravel(lat_transect)[1]))
         p2 = axes[1,0].transData.transform_point((np.ravel(lon_transect)[0], np.ravel(lat_transect)[0]))
         dy = (p2[1] - p1[1])
         dx = (p2[0] - p1[0])
@@ -7125,7 +7125,7 @@ def main_fig6():
 	
     #run_general_paper_Figure_FIG7(opts_09022018, opts_31102018, opts_03052019, opts_02092019) 
     run_FIG7_HIDs(opts_09022018, opts_31102018, opts_03052019, opts_02092019)
-return
+    return
 
 
 
