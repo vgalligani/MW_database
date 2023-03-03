@@ -1188,58 +1188,6 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
                 if (rho_h[j]<0.7) or (zh_h[j]<30):
                     ZH[i,j]=np.nan
 		
-
-    elif options['radar_name'] == 'DOW7':
-
-        reflectivity_name = 'DBZHCC'   
-        lats        = radar.gate_latitude['data']
-        lons        = radar.gate_longitude['data']
-        ZH          = radar.fields[reflectivity_name]['data']
-
-    elif options['radar_name'] == 'CSPR2':
-        nlev = 0 
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]	
-        reflectivity_name = 'corrected_reflectivity'   
-        lats        = radar.gate_latitude['data'][start_index:end_index]
-        lons        = radar.gate_longitude['data'][start_index:end_index]
-        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-
-    elif options['radar_name'] == 'RMA5':
-        reflectivity_name = 'DBZH'; nlev=0;
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats        = radar.gate_latitude['data'][start_index:end_index]
-        lons        = radar.gate_longitude['data'][start_index:end_index]
-        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-
-    elif options['radar_name'] == 'RMA4':
-        reflectivity_name = 'TH'   
-        nlev = 0 
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats        = radar.gate_latitude['data'][start_index:end_index]
-        lons        = radar.gate_longitude['data'][start_index:end_index]
-        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-
-    elif options['radar_name'] == 'RMA8':
-        reflectivity_name = 'TH'   
-        nlev = 0 
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats        = radar.gate_latitude['data'][start_index:end_index]
-        lons        = radar.gate_longitude['data'][start_index:end_index]
-        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-
-    elif options['radar_name'] == 'RMA3':
-        reflectivity_name = 'TH' 
-        nlev = 0 
-        start_index = radar.sweep_start_ray_index['data'][nlev]
-        end_index   = radar.sweep_end_ray_index['data'][nlev]
-        lats        = radar.gate_latitude['data'][start_index:end_index]
-        lons        = radar.gate_longitude['data'][start_index:end_index]
-        ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
-
     s_sizes=450
     user = platform.system()
     if   user == 'Linux':
@@ -1299,27 +1247,21 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
     PCT10, PCT19, PCT37, PCT89 = calc_PCTs(S1_sub_tb)
 
 
-
     #----------------------------------------------------------------------------------------
     # NEW FIGURE. solo dos paneles: Same as above but plt lowest level y closest to freezing level!
     #----------------------------------------------------------------------------------------
     fig, axes = plt.subplots(nrows=2, ncols=1, constrained_layout=True,figsize=[5,10])
 
     [units, cmap, vmin, vmax, max, intt, under, over] = set_plot_settings('Zhh')
-    #ZH[np.where(ZH<20)]=np.nan
-    #ZH[np.where(RHOHV<0.8)]=np.nan
-
     pcm1=axes[0].pcolormesh(lons, lats, ZH, cmap=cmap, vmax=vmax, vmin=vmin)
     axes[0].set_title('Ground Level')
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[0].set_ylim([options['ylim_min'], options['ylim_max']])
     plt.colorbar(pcm1, ax=axes[0],label='(dBZ)')
 
-
     # -----
     # CONTORNO CORREGIDO POR PARALAJE Y PODER CORRER LOS ICOIS, simplemente pongo nans fuera del area de interes ... 
     contorno89 = axes[0].contour(lon_gmi[1:,:], lat_gmi[1:,:], PCT89[0:-1,:], [200], colors=(['k']), linewidths=1.5);
-
 
     # LIMITS	 
     axes[0].set_xlim([options['xlim_min'], options['xlim_max']])
@@ -1332,7 +1274,6 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
         y = lat_radius[20000:],
         text='50 km',#'this this is a very, very long text',
         va = 'bottom', axes=axes[0])
-
     [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
     axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
 
@@ -1342,105 +1283,33 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
         contorno89.collections[i].set_label(labels[i])
     
     if len(options['REPORTES_meta'])>0:
-        axes[0].plot( np.nan,  np.nan, 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label='Surface reports')
+        axes[1].plot( np.nan,  np.nan, 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label='Surface reports')
 
-
-    if caso == '20200815': 
-        axes[0].set_title(r'RMA5 Zh (15/8/2018 0216UTC), Elev: 0.7$^{o}$')
-        axes[0].legend(loc='lower left')
-        CurvedText(
-           	x = lon_radius[19000:],
-           	y = lat_radius[19000:],
-           	text='100 km',#'this this is a very, very long text',
-           	va = 'bottom', axes=axes[0])
-        # Addlabels to icois! 
-        axes[0].text(-54.9, -25.2, 'coi=1')
-        axes[0].text(-53.4, -25.5, 'coi=2')
-        axes[0].set_xlabel('Longitude')
-        axes[0].set_ylabel('Latitude')
-        for i in range(len(lon_pfs)):
-            axes[0].plot(lon_pfs[i]-0.3, lat_pfs[i], marker='*', markersize=20, markerfacecolor="black",
-            markeredgecolor='black', markeredgewidth=1.5)
-            
-    elif caso == '20181214': 
-        axes[0].set_title(r'DOW7 Zh (14/12/2018 0220UTC), Elev: 0.7$^{o}$')
-        axes[0].legend(loc='upper left')
-        CurvedText(
-            x = lon_radius[30000:],
-            y = lat_radius[30000:],
-            text='50 km',#'this this is a very, very long text',
-            va = 'bottom', axes=axes[0])
-	
-    elif caso == '20181111': 
-        axes[0].set_title(r'CSPR2 Zh (11/11/2018 1300UTC), Elev: 0.7$^{o}$')
-
-        axes[0].legend(loc='upper left')
-
-        # RADAR RINGS	      
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],50)
-        axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8) 
-        CurvedText(
-            x = lon_radius[25000:],
-            y = lat_radius[25000:],
-            text='50 km',#'this this is a very, very long text',
-            va = 'top', axes=axes[0])
-
-        [lat_radius, lon_radius] = pyplot_rings(radar.latitude['data'][0],radar.longitude['data'][0],100)
-        axes[0].plot(lon_radius, lat_radius, 'k', linewidth=0.8)
-        CurvedText(
-            x = lon_radius[30000:],
-            y = lat_radius[30000:],
-            text='100 km',#'this this is a very, very long text',
-            va = 'bottom', axes=axes[0])
-
-    elif caso == '20180208': 
+    if caso == '20180208': 
         axes[0].set_title(r'RMA1 Zh 8/2/2018 2057 UTC') # Elev: 0.7$^{o}$
-        axes[0].legend(loc='upper left')
+        #axes[0].legend(loc='upper left')
         CurvedText(
             x = lon_radius[17000:],
             y = lat_radius[17000:],
             text='100 km',#'this this is a very, very long text',
             va = 'bottom', axes=axes[0])	
         # Addlabels to icois! 
-        axes[0].text(-64, -31, 'coi=1')
-        axes[0].text(-64.7, -31.8, 'coi=2')
-        axes[0].text(-65, -32.7, 'coi=3')
-        axes[0].set_xlabel('Longitude')
-        axes[0].set_ylabel('Latitude')
+        axes[0].text(-64.3, -31, 'coi=1')
+        axes[0].text(-65, -31.8, 'coi=2')
+        axes[0].text(-65, -32.5, 'coi=3')
+        #axes[0].set_xlabel('Longitude')
+        #axes[0].set_ylabel('Latitude')
         for i in range(len(lon_pfs)):
             axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
             markeredgecolor='black', markeredgewidth=1.5)	
-
-    elif caso == '20181031': 
-        axes[0].set_title(r'RMA4 Zh (31/10/2018 0109UTC), Elev: 0.7$^{o}$')
-        axes[0].legend(loc='upper left')
-        CurvedText(
-            x = lon_radius[50000:],
-            y = lat_radius[50000:],
-            text='100 km',#'this this is a very, very long text',
-            va = 'bottom', axes=axes[0])	
-        # Addlabels to icois! 
-        axes[0].text(-61, -28.2, 'coi=1')
-        axes[0].text(-59.5, -28.2, 'coi=2')
-        axes[0].text(-57.8, -28.4, 'coi=3')
-        axes[0].text(-58.5, -26.4, 'coi=4')
-        axes[0].set_xlabel('Longitude')
-        axes[0].set_ylabel('Latitude')
-        for i in range(len(lon_pfs)):
-            axes[0].plot(lon_pfs[i], lat_pfs[i]-0.05, marker='*', markersize=20, markerfacecolor="black",
-            markeredgecolor='black', markeredgewidth=1.5)	
-
 
     if len(options['REPORTES_meta'])>0:
         for ireportes in range(len(options['REPORTES_geo'])):
-            axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+            axes[1].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', 
+			 markeredgecolor='black', markerfacecolor='none', markersize=10)#, label=options['REPORTES_meta'][ireportes])
 
 
-    plt.legend()
-    if options['radar_name'] == 'DOW7':
-       	azimuths = radar.azimuth['data']
-    else:
-       	azimuths = radar.azimuth['data'][start_index:end_index]
+    azimuths = radar.azimuth['data'][start_index:end_index]
     # TRANSECTAS:
     for itrans in transects:
         target_azimuth = azimuths[itrans]
@@ -1452,9 +1321,8 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
 
     if len(options['REPORTES_meta'])>0:
         for ireportes in range(len(options['REPORTES_geo'])):
-            axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
-        plt.legend() 
-
+            axes[0].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', 
+			 markerfacecolor='none', markersize=10) #, label=options['REPORTES_meta'][ireportes])
 
 
     im = axes[1].scatter(lon_gmi, lat_gmi, c=PCT89, marker='h', s=100, vmin=100, vmax=300, cmap=cmaps['turbo_r'])  
@@ -1478,18 +1346,23 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
 
     if len(options['REPORTES_meta'])>0:
         for ireportes in range(len(options['REPORTES_geo'])):
-            axes[1].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label=options['REPORTES_meta'][ireportes])
+            axes[1].plot( options['REPORTES_geo'][ireportes][1],  options['REPORTES_geo'][ireportes][0], 'D', markeredgecolor='black', 
+			 markerfacecolor='none', markersize=10)#, label=options['REPORTES_meta'][ireportes])
     axes[1].set_xlabel('Longitude')
     axes[1].set_ylabel('Latitude')	
     axes[1].set_xlim([options['xlim_min'], options['xlim_max']])
     axes[1].set_ylim([options['ylim_min'], options['ylim_max']])	
-    #fig.savefig(options['fig_dir']+'GMI_icois_onZH.png', dpi=300, transparent=False)  
-    #plt.close()
     plt.colorbar(im, ax=axes[1],label='(K)')
+    # Add labels:
+    labels = ["PCT 89-GHz 200 K contour"] 
+    for i in range(len(labels)):
+        contorno89.collections[i].set_label(labels[i])
 
-
-
-
+    # Titles and legend:
+    axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
+          fancybox=True, shadow=False, ncol=1)
+		
+    fig.savefig('/home/victoria.galligani/Dropbox/FigsPaper/fig5ab.png',bbox_inches='tight',format='png',dpi=300)
 
     return
 
