@@ -1357,7 +1357,7 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
     labels = ["PCT 89-GHz 200 K contour"] 
     for i in range(len(labels)):
         contorno89.collections[i].set_label(labels[i])
-
+    axes[1].plot(np.nan, np.nan, 'k', linestyle='--', label='Transects of interest') 
     # Titles and legend:
     axes[1].legend(loc='upper center', bbox_to_anchor=(0.5, -0.15),
           fancybox=True, shadow=False, ncol=1)
