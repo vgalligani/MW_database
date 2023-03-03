@@ -1179,14 +1179,14 @@ def plot_gmi_paper_fig5_RMA1(fname, options, radar, lon_pfs, lat_pfs, icoi, tran
         ZH          = radar.fields[reflectivity_name]['data'][start_index:end_index]
         RHOHV       = radar.fields['RHOHV']['data'][start_index:end_index]
         # Filters
-        ni = ZH.shape[0]
-        nj = ZH.shape[1]
-        for i in range(ni):
-            rho_h = RHOHV[i,:]
-            zh_h = ZH[i,:]
-            for j in range(nj):
-                if (rho_h[j]<0.7) or (zh_h[j]<30):
-                    ZH[i,j]=np.nan
+        #ni = ZH.shape[0]
+        #nj = ZH.shape[1]
+        #for i in range(ni):
+        #    rho_h = RHOHV[i,:]
+        #    zh_h = ZH[i,:]
+        #    for j in range(nj):
+        #        if (rho_h[j]<0.7) or (zh_h[j]<30):
+        #            ZH[i,j]=np.nan
 		
     s_sizes=450
     user = platform.system()
@@ -1805,7 +1805,7 @@ def correct_PHIDP_KDP(radar, options, nlev, azimuth_ray, diff_value, tfield_ref,
         rho_h = drho_[i,:]
         zh_h = dzh_[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):
+            if (rho_h[j]<0.7) or (zh_h[j]<20):
                 dzh_[i,j]  = np.nan
                 dzv_[i,j]  = np.nan
                 drho_[i,j]  = np.nan
@@ -3186,13 +3186,13 @@ def correct_phidp(phi, rho_data, zh, sys_phase, diferencia):
         rho_h = rho[i,:]
         zh_h = zh[i,:]
         for j in range(nj):
-            if (rho_h[j]<0.7) or (zh_h[j]<30):  # 0.7 y 0.3
+            if (rho_h[j]<0.7) or (zh_h[j]<20):  # 0.7 y 30
                 phiphi[i,j]  = np.nan 
                 rho[i,j]     = np.nan
 
 		
-    phiphi[:,0:80]  = np.nan 
-    rho[:,0:80]    = np.nan 
+    phiphi[:,0:40]  = np.nan 
+    rho[:,0:40]    = np.nan 
 	
     dphi = despeckle_phidp(phiphi, rho, zh)
     uphi_i = unfold_phidp(dphi, rho, diferencia) 
@@ -4420,7 +4420,7 @@ def run_general_paper_Figure_onlyHID(options, lat_pfs, lon_pfs, icois, transects
 		
 
 	
-    #plot_gmi_paper_fig5_RMA1(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
+    plot_gmi_paper_fig5_RMA1(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
     #plot_gmi_paper_fig5(gmi_dir+options['gfile'], options, radar, lon_pfs, lat_pfs, icois, transects, options['caso'])
     alt_ref, tfield_ref, freezing_lev =  calc_freezinglevel(era5_dir, era5_file, lat_pfs, lon_pfs) 
     radar_T,radar_z =  interpolate_sounding_to_radar(tfield_ref, alt_ref, radar)
@@ -6227,7 +6227,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
 
     # CASO 20190308 #----------------------------------------------------
     del fname
-    fname = gmi_dir+opts_RMA1['gfile'][0]
+    fname = gmi_dir+opts_RMA1['gfile']
     #
     f = h5py.File( fname, 'r')
     tb_s1_gmi = f[u'/S1/Tb'][:,:,:]           
@@ -6389,6 +6389,7 @@ def run_general_paper_Figure_FIG5(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
         contorno89.collections[i].set_label(labels[i])
     # Titles and legend:
     axes[3,0].set_title(r'RMA5 15/08/2020')
+    axes[3,0].plot(np.nan, np.nan, 'D', markeredgecolor='black', markerfacecolor='none', markersize=10, label='Surface reports')
     axes[3,0].legend(loc='upper center', bbox_to_anchor=(0.5, -0.3),
           fancybox=True, shadow=False, ncol=1)
     # RADAR RINGS	      
@@ -6877,13 +6878,13 @@ def run_FIG6_HIDs(opts_CSPR2, opts_DOW7, opts_RMA1, opts_RMA5):
     hid_colors = ['White', 'LightBlue','MediumBlue', 'DarkOrange', 'LightPink',
                 'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
     cmaphid = colors.ListedColormap(hid_colors)	    
-
     # ---- GET HIDs ---------------------------------------------------------------
+    [grid_HID_DOW7, grid_lon_DOW7, grid_lat_DOW7, grid_range_DOW7, grid_alt_DOW7] = get_HIDoutput(opts_DOW7) #, opts_DOW7, opts_RMA1, opts_RMA5
+     breakpoint()
     [grid_HID_RMA1, grid_lon_RMA1, grid_lat_RMA1, grid_range_RMA1, grid_alt_RMA1] = get_HIDoutput(opts_RMA1) #, opts_DOW7, opts_RMA1, opts_RMA5
     [grid_HID_RMA5, grid_lon_RMA5, grid_lat_RMA5, grid_range_RMA5, grid_alt_RMA5] = get_HIDoutput(opts_RMA5) #, opts_DOW7, opts_RMA1, opts_RMA5
     [grid_HID_CSPR2, grid_lon_CSPR2, grid_lat_CSPR2, grid_range_CSPR2, grid_alt_CSPR2] = get_HIDoutput(opts_CSPR2) #, opts_DOW7, opts_RMA1, opts_RMA5
-    [grid_HID_DOW7, grid_lon_DOW7, grid_lat_DOW7, grid_range_DOW7, grid_alt_DOW7] = get_HIDoutput(opts_DOW7) #, opts_DOW7, opts_RMA1, opts_RMA5
-
+     
     # ---- FIGFIG ---------------------------------------------------------------
     fig, axes = plt.subplots(nrows=4, ncols=1, constrained_layout=True,figsize=[7,10])
     im_HID = axes[0].pcolormesh(grid_range_CSPR2/1e3, grid_alt_CSPR2/1e3, grid_HID_CSPR2, cmap=cmaphid, vmin=0.2, vmax=10)
@@ -7282,7 +7283,7 @@ def main_20180208():
     reportes_granizo_twitterAPI_geo = [[-31.49, -64.54], [-31.42, -64.50], [-31.42, -64.19]]
     reportes_granizo_twitterAPI_meta = ['SAA (1930UTC)', 'VCP (1942UTC)', 'CDB (24UTC)']
     opts = {'xlim_min': -65.5, 'xlim_max': -63.5, 'ylim_min': -33, 'ylim_max': -30.5,  'ZDRoffset': 4,
-	    'azimuth_ray': 210,
+	    'azimuth_ray': 220,
 	    'rfile': 'RMA1/'+rfile, 
 	    'era5_file': era5_file,
 	    'radar_name':'RMA1',
@@ -7292,7 +7293,7 @@ def main_20180208():
 	    'REPORTES_geo': reportes_granizo_twitterAPI_geo, 'REPORTES_meta': reportes_granizo_twitterAPI_meta, 'gmi_dir':gmi_dir, 
 	    'lat_pfs':lat_pfs, 'lon_pfs':lon_pfs, 'MINPCTs_labels':MINPCTs_labels,'MINPCTs':MINPCTs, 'phail': phail}
     icois_input  = [2,4,5] 
-    labels_PHAIL = ['coi=3','icoi=2 (Phail=53.4%)','icoi=1 (Phail=9.1%)'] 
+    labels_PHAIL = ['icoi=1 (Phail=9.1%)', 'icoi=2 (Phail=53.4%)', 'coi=3'] 
     xlims_xlims_input  = [60, 100, 150] 
     xlims_mins_input  = [10, 40, 60]		
 
