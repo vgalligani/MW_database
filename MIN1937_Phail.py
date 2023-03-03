@@ -48,16 +48,23 @@ plt.xlabel('MIN19PCT')
 plt.ylabel('MIN37PCT')
 fig.colorbar(im, label='P$_{hail}$ %')   
 
-plt.plot(242.9253, 207.4241, 'kv', markersize=15, markerfacecolor='None')
-plt.plot(270.2810, 238.8242, 'Pk', markersize=15, markerfacecolor='None')
-plt.plot(241.5902, 181.1631, '*k', markersize=20, markerfacecolor='None')
-plt.plot(237.4247, 151.6656, 'dk', markersize=15, markerfacecolor='None')
-plt.plot(198.3740, 111.7183, 'Dk', markersize=15, markerfacecolor='None')
-plt.plot(244.4909, 174.1353, '^k', markersize=15, markerfacecolor='None')
+plt.plot(242.9253, 207.4241, 'kv', markersize=15, markerfacecolor='None') # coi2 08/02/2018
+plt.plot(270.2810, 238.8242, 'Pk', markersize=15, markerfacecolor='None') # coi1 08/02/2018
 
+#plt.plot(241.5902, 181.1631, '*k', markersize=20, markerfacecolor='None') # este estaba mal
 
+plt.plot(237.4247, 151.6656, 'dk', markersize=15, markerfacecolor='None') #
+plt.plot(198.3740, 111.7183, 'Dk', markersize=15, markerfacecolor='None') #
+plt.plot(244.4909, 174.1353, '^k', markersize=15, markerfacecolor='None') #
 
+plt.plot(249.4, 190.1, '',   markersize=15, markerfacecolor='None') # 11/11/2018 contour north
+plt.plot(273.5, 250.8, '',   markersize=15, markerfacecolor='None') # 11/11/2018 contour south
 
+plt.plot(260.0201, 201.8675, '',  markersize=15, markerfacecolor='None') # 14/12/2018
+
+plt.plot(271.6930, 241.9306, , '',  markersize=15, markerfacecolor='None') # 09/03/2019
+
+plt.plot(273.2686, 241.5902, , '',  markersize=15, markerfacecolor='None') # 15/08/2020
 
 
 
