@@ -227,7 +227,15 @@ TBV_bin  = np.arange(50,300,tbvbin)
 gmi_dir  = '/Users/vito.galligani/Work/Studies/Hail_MW/GMI_data/'
 r_dir    = '/Users/vito.galligani/Work/Studies/Hail_MW/radar_data/'
 
+#------------------------------------------------------------------------------
+# VER DE AGREGAR PARAMETRIZACION?
+# 89 GHz
+TB89 = np.arange(70,10,250)
+PD89 = [np.nan, 1.52, 1.59, 1.85, 2.07, 2.09, 2.41, 2.82, 3.11, 3.57, 4.15, 4.82, 5.77, 7.25, 8.04, 8.13, 7.71, 6.68, 5.13]
 
+# 166 GHz
+TB166 = np.arange(70,10,250)
+PD166 = [np.nan, 1.91, 2.46, 2.67, 2.86, 3.16m 3.80, 5.06, 7.16, 8.80, 9.61, 10.16, 10.53, 10.89, 10.91, 10.27, 9.00, 7.26, 4.97]
 #----------------------------------------------------------------------------------------------     
 # primero con contarnos de 250 K solo aquellas con phail > 50%
 
