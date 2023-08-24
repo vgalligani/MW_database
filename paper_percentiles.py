@@ -213,6 +213,10 @@ def plot_PCT_percentiles_paper(dir, filename, Kurpf,  selectKurpf, realKurpf, re
     axes[2].set_ylim([ylim1,ylim2])    
     print('MAXHT40 percentiles:', percentiles, file=Stats)  
     Stats.close()
+
+    fig.savefig('/home/victoria.galligani/Dropbox/FigsPaper/FIG8.png', dpi=300,transparent=False)   
+
+
         
     return fig
     
